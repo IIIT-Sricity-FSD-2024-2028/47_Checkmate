@@ -1,0 +1,156 @@
+Event:
+  definition:
+    A planned function or occasion organized by a client, such as a wedding, conference,
+    or corporate meeting.
+  examples:
+    - Wedding ceremony at a banquet hall
+    - Business conference with audio-visual setup
+  aliases:
+    - Function
+    - Occasion
+
+EventRequest:
+  definition:
+    A formal request created by a client to organize an event, including selected venue,
+    date, and required resources.
+  examples:
+    - Request for a conference hall with sound system
+    - Wedding event request with lighting and seating
+  aliases:
+    - BookingRequest
+    - EventApplication
+
+Venue:
+  definition: A physical location where events are conducted and managed by vendors or administrators.
+  examples:
+    - Convention center
+    - Outdoor garden venue
+  aliases:
+    - EventLocation
+    - Hall
+
+Resource:
+  definition: Equipment or materials required to conduct an event.
+  examples:
+    - Chairs and tables
+    - Sound system and lighting
+  aliases:
+    - Equipment
+    - EventAsset
+
+Staff:
+  definition: Personnel assigned to perform tasks during an event based on availability and skills.
+  examples:
+    - Event coordinator
+    - Technical support staff
+  aliases:
+    - Personnel
+    - Workforce
+
+Allocation:
+  definition: The assignment of venues, resources, or staff to an approved event.
+  examples:
+    - Allocating staff to manage a conference
+    - Assigning sound equipment to a wedding event
+  aliases:
+    - Assignment
+    - Scheduling
+
+StaffAssignment:
+  definition: A specific task or responsibility assigned to a staff member for an event.
+  examples:
+    - Managing guest seating
+    - Operating audio equipment
+  aliases:
+    - TaskAssignment
+    - Duty
+
+Availability:
+  definition: The time periods during which staff, venues, or resources are free for allocation.
+  examples:
+    - Staff available on weekends
+    - Venue unavailable due to maintenance
+  aliases:
+    - Schedule
+    - FreeSlot
+
+Approval:
+  definition: The decision-making process where vendors or administrators accept or reject event requests.
+  examples:
+    - Vendor approving a venue booking
+    - Rejecting an event due to resource conflict
+  aliases:
+    - Authorization
+    - Decision
+
+Vendor:
+  definition: A user responsible for providing venues and event resources and managing allocations.
+  examples:
+    - Venue owner
+    - Event equipment provider
+  aliases:
+    - ServiceProvider
+    - Supplier
+
+Client:
+  definition: A user who creates event requests and organizes events through the system.
+  examples:
+    - Individual booking a wedding venue
+    - Company organizing a conference
+  aliases:
+    - EventOrganizer
+    - Customer
+
+Admin:
+  definition: A system user who manages users, venues, resources, and monitors overall system activity.
+  examples:
+    - Managing vendor accounts
+    - Viewing system reports
+  aliases:
+    - SystemAdministrator
+    - Manager
+
+Report:
+  definition: A summarized view of system data used for monitoring and decision-making.
+  examples:
+    - Monthly event summary
+    - Resource utilization report
+  aliases:
+    - SystemReport
+    - Analytics
+
+Authentication:
+  definition: The process of verifying user identity and granting access based on assigned roles.
+  examples:
+    - Admin login
+    - Staff role-based access
+  aliases:
+    - UserVerification
+    - LoginProcess
+
+Schedule:
+  definition: A planned timetable specifying event dates, staff shifts, and resource usage.
+  examples:
+    - Event scheduled for 15th March from 10 AM to 6 PM
+    - Staff work schedule for weekend events
+  aliases:
+    - Timetable
+    - Calendar
+
+Conflict:
+  definition: A situation where a venue, resource, or staff member is requested for overlapping events.
+  examples:
+    - Double booking of a conference hall
+    - Staff assigned to two events at the same time
+  aliases:
+    - SchedulingIssue
+    - Clash
+
+Task:
+  definition: A specific activity assigned to staff members as part of an event.
+  examples:
+    - Setting up lighting equipment
+    - Managing guest registration desk
+  aliases:
+    - Activity
+    - Job
