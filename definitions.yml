@@ -173,3 +173,53 @@ Task:
   aliases:
     - Activity
     - Job
+DependencyMapping:
+  definition: >
+    The process of identifying and managing dependencies between staff, resources,
+    and venues to ensure smooth execution.
+  examples:
+    - Linking sound setup to power availability
+    - Coordinating stage setup before lighting installation
+  aliases:
+    - DependencyAnalysis
+    - TaskDependency
+
+BufferPlanning:
+  definition: >
+    The practice of keeping extra time and resources to handle unexpected delays.
+  examples:
+    - Keeping additional setup time
+    - Arranging backup equipment
+  aliases:
+    - TimeBuffer
+    - ResourceBuffer
+
+ContingencyPlanning:
+  definition: >
+    The preparation of backup plans to handle emergencies or failures during events.
+  examples:
+    - Backup generator for power failure
+    - Standby staff for absentees
+  aliases:
+    - BackupPlan
+    - EmergencyPlan
+
+ManualOverride:
+  definition: >
+    Human intervention used to make quick decisions when automated systems fail.
+  examples:
+    - Manually reallocating staff during equipment failure
+    - Emergency venue change by manager
+  aliases:
+    - HumanIntervention
+    - EmergencyOverride
+
+TechnicalRehearsal:
+  definition: >
+    A trial run conducted before an event to test equipment, timing, and coordination.
+  examples:
+    - Sound and lighting testing before a concert
+    - Stage rehearsal before inauguration
+  aliases:
+    - DryRun
+    - TrialSetup
