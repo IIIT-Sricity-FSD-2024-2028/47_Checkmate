@@ -96,9 +96,6 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 **Post-Event Resource Release**
 - Update and release resources after events
 
-**Vendor Authorization & Onboarding**
-- Role-based access for vendor staff
-
 ---
 
 ### 👷 Staff
