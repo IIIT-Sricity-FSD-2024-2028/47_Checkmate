@@ -1,6 +1,6 @@
 # Event Management System
 
-## 📌 Problem Statement
+## Problem Statement
 
 **Venue, Resources and Staff Allocation System**
 
@@ -10,7 +10,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-## 👥 Identified Actors
+##  Identified Actors
 
 - **Admin**
 - **Vendor**
@@ -19,9 +19,9 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-## 🧩 Planned Features by Actor
+##  Planned Features by Actor
 
-### 🔑 Admin
+###  Admin
 
 **User Management**
 - Create, edit, and remove user accounts  
@@ -49,7 +49,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-### 🎯 Client
+###  Client
 
 **Create Event Requests**
 - Request marriage or other events  
@@ -62,7 +62,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-### 🏢 Vendor
+###  Vendor
 
 **Inventory and Status Management**
 - Track available resources and their condition  
@@ -98,7 +98,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-### 👷 Staff
+###  Staff
 
 **Staff Registration**
 - Secure login and account management  
@@ -122,7 +122,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 ---
 
-## 🚀 System Goals
+##  System Goals
 
 - Improve efficiency in vendor approval and event request handling  
 - Ensure optimal allocation of staff and resources  
