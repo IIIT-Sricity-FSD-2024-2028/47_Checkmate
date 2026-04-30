@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Issue Tracking</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item active">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Issue Tracking</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Manage support tickets and site issues</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="table-container">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Open Tickets</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Subject</th>
+                            <th>Reported By</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issueTableBody">
+                        <tr>
+                            <td>TKT-108</td>
+                            <td class="vendor-name-col">Payment gateway error</td>
+                            <td>john.doe@email.com</td>
+                            <td><span style="color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="arrow-up" style="width: 14px;"></i> High</span></td>
+                            <td class="status-cell"><span class="status-badge open">Open</span></td>
+                            <td class="actions-cell">
+                                <button class="action-btn action-btn-clean" onclick="window.location.href='admin-coordination.html?user=john.doe@email.com'"><i data-lucide="reply"></i> Reply</button>
+                                <button class="action-btn approve-btn resolve-issue-btn" data-state="open"><i data-lucide="check-circle-2"></i> Resolve</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>TKT-109</td>
+                            <td class="vendor-name-col">Can't upload profile picture</td>
+                            <td>jane.smith@email.com</td>
+                            <td><span style="color: #a855f7; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="minus" style="width: 14px;"></i> Medium</span></td>
+                            <td class="status-cell"><span class="status-badge investigating">Investigating</span></td>
+                            <td class="actions-cell">
+                                <button class="action-btn action-btn-clean" onclick="window.location.href='admin-coordination.html?user=jane.smith@email.com'"><i data-lucide="reply"></i> Reply</button>
+                                <button class="action-btn approve-btn resolve-issue-btn" data-state="investigating" style="background-color: var(--blue); border-color: var(--blue); color: #fff;"><i data-lucide="wrench"></i> Fix</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Real-time Issue Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px;">
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Open Issues</h4>
+                <div id="statOpen" style="font-size: 24px; font-weight: 700; color: #ef4444;">1</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Investigating</h4>
+                <div id="statInvestigating" style="font-size: 24px; font-weight: 700; color: #3b82f6;">1</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Resolved Issues</h4>
+                <div id="statResolved" style="font-size: 24px; font-weight: 700; color: #00e676;">0</div>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let openCount = 1;
+        let investigatingCount = 1;
+        let resolvedCount = 0;
+        
+        const updateStats = () => {
+            const elOpen = document.getElementById('statOpen');
+            const elInv = document.getElementById('statInvestigating');
+            const elRes = document.getElementById('statResolved');
+            if(elOpen) elOpen.textContent = openCount;
+            if(elInv) elInv.textContent = investigatingCount;
+            if(elRes) elRes.textContent = resolvedCount;
+        };
+
+        const tbody = document.getElementById('issueTableBody');
+        if(tbody) {
+            tbody.addEventListener('click', (e) => {
+                const resolveBtn = e.target.closest('.resolve-issue-btn');
+                if(resolveBtn) {
+                    const tr = resolveBtn.closest('tr');
+                    const statusTd = tr.querySelector('.status-cell');
+                    const currentState = resolveBtn.getAttribute('data-state');
+
+                    if (currentState === 'open') {
+                        if(statusTd) {
+                            statusTd.innerHTML = '<span class="status-badge investigating">Investigating</span>';
+                        }
+                        resolveBtn.setAttribute('data-state', 'investigating');
+                        
+                        resolveBtn.style.backgroundColor = 'var(--blue)';
+                        resolveBtn.style.borderColor = 'var(--blue)';
+                        resolveBtn.style.color = '#fff';
+                        resolveBtn.innerHTML = '<i data-lucide="wrench"></i> Fix';
+                        if (window.lucide) lucide.createIcons();
+                        
+                        if (openCount > 0) {
+                            openCount--;
+                            investigatingCount++;
+                            updateStats();
+                        }
+                    } 
+                    else if (currentState === 'investigating') {
+                        if(statusTd) {
+                            statusTd.innerHTML = '<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Resolved</span>';
+                        }
+                        
+                        resolveBtn.setAttribute('data-state', 'resolved');
+                        resolveBtn.style.opacity = '0.5';
+                        resolveBtn.style.pointerEvents = 'none';
+                        resolveBtn.style.backgroundColor = '#00e676';
+                        resolveBtn.style.borderColor = '#00e676';
+                        resolveBtn.style.color = '#fff';
+                        resolveBtn.innerHTML = '<i data-lucide="check-circle-2"></i> Fixed';
+                        if (window.lucide) lucide.createIcons();
+                        
+                        if (investigatingCount > 0) {
+                            investigatingCount--;
+                            resolvedCount++;
+                            updateStats();
+                        }
+                    }
+                }
+            });
+        }
+    });
+  </script>
+</body>
+</html>

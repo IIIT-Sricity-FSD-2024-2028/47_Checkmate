@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item active"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title">Create Event Request</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Fill in the details for your event and submit for vendor review</div>
+                </div>
+            </div>
+            
+            <div class="content" style="max-width:800px; margin:0 auto; width:100%;">
+                <div class="card">
+                    <form id="create-event-form">
+                        <div class="form-section">
+                            <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:16px;">General Details</h3>
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>Event Name *</label>
+                                    <input type="text" id="fieldEventName" class="form-control" placeholder="E.g., Sarah & Mike's Wedding" required>
+                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Event name is required.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Event Type *</label>
+                                    <select id="fieldEventType" class="form-control" required>
+                                        <option value="" disabled selected>Select an event type</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Birthday">Birthday</option>
+                                        <option value="Conference">Conference</option>
+                                        <option value="Party">Party</option>
+                                        <option value="Corporate">Corporate</option>
+                                    </select>
+                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select an event type.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Event Date *</label>
+                                    <input type="date" id="fieldEventDate" class="form-control" required>
+                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select a date.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Event Time</label>
+                                    <input type="time" id="fieldEventTime" class="form-control" value="09:00">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Venue (Optional)</label>
+                                    <input type="text" id="fieldVenue" class="form-control" placeholder="E.g., Grand Ballroom, Downtown">
+                                </div>
+                                <div class="form-group">
+                                    <label>Estimated Guest Count *</label>
+                                    <input type="number" id="fieldPeople" class="form-control" placeholder="E.g., 150" required>
+                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please enter guest count.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Required Services</label>
+                                    <select id="fieldServices" class="form-control" multiple style="height:100px;">
+                                        <option value="catering">Catering</option>
+                                        <option value="lighting">Lighting & AV</option>
+                                        <option value="photography">Photography</option>
+                                        <option value="decoration">Decoration</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label>Additional Notes</label>
+                                <textarea class="form-control" rows="4" placeholder="Any special requirements?"></textarea>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:12px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:20px;">
+                            <a href="client-dashboard.html" class="btn btn-ghost">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit"><i class="ph ph-paper-plane-tilt"></i> Submit Request</button>
+                        </div>
+                        <div id="formFeedback" style="color:var(--red); font-size:13px; margin-top:12px; text-align:right;"></div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/client_js/create_event_client.js"></script>
+    <script src="../../scripts/client_js/client_utils.js"></script>
+</body>
+</html>

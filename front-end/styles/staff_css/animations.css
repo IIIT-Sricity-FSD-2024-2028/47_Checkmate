@@ -1,0 +1,249 @@
+/* ============================================================
+   animations.css
+   Hardware-accelerated, performant animations
+   ============================================================ */
+
+/* 1. Page Fade-In (Global) */
+@keyframes pageFadeUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.main > * {
+  /* This ensures the initial children of main animate gracefully */
+  animation: pageFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.main > *:nth-child(2) { animation-delay: 0.05s; }
+.main > *:nth-child(3) { animation-delay: 0.1s; }
+.main > *:nth-child(4) { animation-delay: 0.15s; }
+.main > *:nth-child(5) { animation-delay: 0.2s; }
+
+/* 2. Scroll/Observe Entrance (Staggered Fade-Up) */
+.anim-target {
+  opacity: 0;
+  transform: translateY(15px);
+  will-change: opacity, transform;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.anim-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 3. Global Hover Effects */
+/* Cards */
+.card, .stat-card, .event-card, .sch-item, .task-card, .msg-conv-item {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  will-change: transform, box-shadow;
+}
+
+.card:hover, .stat-card:hover, .event-card:hover, .task-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(233, 30, 140, 0.15); /* Soft pink glow */
+  border-color: rgba(233, 30, 140, 0.4);
+}
+
+/* Interactive item generic hover scaling */
+.sch-item:hover, .msg-conv-item:hover {
+  transform: translateX(4px);
+  box-shadow: -2px 4px 12px rgba(233, 30, 140, 0.1);
+  border-left-color: var(--pink);
+}
+
+/* 4. Button & Links */
+.sb-link, .btn, .qa-btn, .event-btn, .ri-submit-btn, .chat-send-btn {
+  transition: all 0.25s ease-in-out;
+  transform: scale(1);
+  will-change: transform, box-shadow;
+}
+
+.sb-link:hover, .btn:hover, .qa-btn:hover, .event-btn:hover, .ri-submit-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(233, 30, 140, 0.2);
+}
+
+.sb-link:active, .btn:active, .qa-btn:active, .event-btn:active, .ri-submit-btn:active {
+  transform: scale(0.97); /* Active click shrink */
+  box-shadow: 0 2px 6px rgba(233, 30, 140, 0.1);
+}
+
+/* Sidebar Active Shift */
+.sb-link.active {
+  position: relative;
+  overflow: hidden;
+  animation: glowShift 3s ease-in-out infinite alternate;
+}
+
+@keyframes glowShift {
+  0%   { background: rgba(233, 30, 140, 0.1); }
+  100% { background: rgba(233, 30, 140, 0.18); }
+}
+
+/* 5. Progress Bar Smoothing */
+.prog-fill {
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 6. Dashboard / Notifications */
+@keyframes slideInRight {
+  0% { transform: translateX(20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.rt-item, .msg-bubble-wrap {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 7. Live Dot & Badge Pulse */
+@keyframes pulseBadge {
+  0% { box-shadow: 0 0 0 0 rgba(233, 30, 140, 0.6); }
+  70% { box-shadow: 0 0 0 6px rgba(233, 30, 140, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(233, 30, 140, 0); }
+}
+
+.live-dot, .stat-ico.ico-red .live-dot, .online-dot {
+  animation: pulseBadge 2s infinite ease-out !important; /* override js blink with css pulse */
+  opacity: 1 !important;
+}
+
+/* Unread bubble pulse */
+.msg-unread {
+  animation: pulseBadge 3s infinite;
+}
+
+/* 8. Drag and Drop Lift (Kanban) */
+.task-card.dragging {
+  opacity: 0.8;
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 10px 25px rgba(233, 30, 140, 0.3);
+  z-index: 1000;
+}
+
+.kanban-col.drag-over {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--pink);
+  transform: scale(1.01);
+  transition: all 0.2s;
+}
+
+/* 9. Calendar / Schedule */
+.cal-day {
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.cal-day:hover {
+  transform: scale(1.15);
+}
+
+.cal-day.selected {
+  animation: bounceScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bounceScale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Event Drawer Slide Mock */
+@keyframes slideDrawerIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* 10. Performance Charts & Badges */
+.chart-wrap canvas {
+  animation: pageFadeUp 1s ease-out;
+}
+
+.ach-item {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ach-item:hover {
+  transform: scale(1.05);
+}
+
+.r-stars span {
+  transition: text-shadow 0.2s, color 0.2s;
+  cursor: default;
+}
+
+.r-stars span:hover {
+  text-shadow: 0 0 8px var(--pink);
+  color: var(--pink);
+}
+
+/* 11. Report Issue Interactions */
+.form-input, .form-textarea, .form-select {
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.15);
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shakeError 0.3s ease-in-out;
+}
+
+/* 12. Chat Typing Dots */
+.typing-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--text2);
+  margin: 0 1px;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3;}
+  40% { transform: scale(1); opacity: 1;}
+}
+
+/* --- Global Professional Animations & Modern UI --- */
+
+a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
+    transition: all 0.3s ease !important;
+}
+
+@keyframes fadeUpMod {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body, main, .dashboard-content, .container, .page-content, .wrapper {
+    animation: fadeUpMod 0.6s ease forwards;
+}
+
+.card:hover, .task-card:hover, .event-card:hover, .booking-card:hover, .stat-card:hover, .package-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 15px rgba(255, 105, 180, 0.2) !important;
+}
+
+button:hover, .btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+}
+
+body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }

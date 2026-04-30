@@ -1,0 +1,289 @@
+# Domain: Event Management
+# Problem Statement: Resource, Staff, and Venue Allocation under Event Management
+# Last Updated: 2026-02-03
+
+Event:
+  definition: >
+    A planned function or occasion organized by a client, such as a wedding,
+    conference, or corporate meeting.
+  examples:
+    - Wedding ceremony at a banquet hall
+    - Business conference with audio-visual setup
+  aliases:
+    - Function
+    - Occasion
+
+EventRequest:
+  definition: >
+    A formal request created by a client to organize an event, including selected
+    venue, date, and required resources.
+  examples:
+    - Request for a conference hall with sound system
+    - Wedding event request with lighting and seating
+  aliases:
+    - BookingRequest
+    - EventApplication
+
+Venue:
+  definition: >
+    A physical location where events are conducted and managed by vendors or administrators.
+  examples:
+    - Convention center
+    - Outdoor garden venue
+  aliases:
+    - EventLocation
+    - Hall
+
+Resource:
+  definition: >
+    Equipment or materials required to conduct an event.
+  examples:
+    - Chairs and tables
+    - Sound system and lighting
+  aliases:
+    - Equipment
+    - EventAsset
+
+Staff:
+  definition: >
+    Personnel assigned to perform tasks during an event based on availability and skills.
+  examples:
+    - Event coordinator
+    - Technical support staff
+  aliases:
+    - Personnel
+    - Workforce
+
+Allocation:
+  definition: >
+    The assignment of venues, resources, or staff to an approved event.
+  examples:
+    - Allocating staff to manage a conference
+    - Assigning sound equipment to a wedding event
+  aliases:
+    - Assignment
+    - Scheduling
+
+StaffAssignment:
+  definition: >
+    A specific task or responsibility assigned to a staff member for an event.
+  examples:
+    - Managing guest seating
+    - Operating audio equipment
+  aliases:
+    - TaskAssignment
+    - Duty
+
+Availability:
+  definition: >
+    The time periods during which staff, venues, or resources are free for allocation.
+  examples:
+    - Staff available on weekends
+    - Venue unavailable due to maintenance
+  aliases:
+    - Schedule
+    - FreeSlot
+
+Approval:
+  definition: >
+    The decision-making process where vendors or administrators accept or reject event requests.
+  examples:
+    - Vendor approving a venue booking
+    - Rejecting an event due to resource conflict
+  aliases:
+    - Authorization
+    - Decision
+
+Vendor:
+  definition: >
+    A user responsible for providing venues and event resources and managing allocations.
+  examples:
+    - Venue owner
+    - Event equipment provider
+  aliases:
+    - ServiceProvider
+    - Supplier
+
+Client:
+  definition: >
+    A user who creates event requests and organizes events through the system.
+  examples:
+    - Individual booking a wedding venue
+    - Company organizing a conference
+  aliases:
+    - EventOrganizer
+    - Customer
+
+Admin:
+  definition: >
+    A system user who manages users, vendors, resources, and monitors overall system activity.
+  examples:
+    - Managing vendor accounts
+    - Viewing system reports
+  aliases:
+    - SystemAdministrator
+    - Manager
+
+ProgramDirector:
+  definition: >
+    The primary authority responsible for overall event planning, budgeting,
+    coordination, and crisis management.
+  examples:
+    - Supervising all departments during a corporate event
+    - Approving emergency decisions during disruptions
+  aliases:
+    - EventHead
+    - ProjectDirector
+
+Report:
+  definition: >
+    A summarized view of system data used for monitoring and decision-making.
+  examples:
+    - Monthly event summary
+    - Resource utilization report
+  aliases:
+    - SystemReport
+    - Analytics
+
+Authentication:
+  definition: >
+    The process of verifying user identity and granting access based on assigned roles.
+  examples:
+    - Admin login
+    - Staff role-based access
+  aliases:
+    - UserVerification
+    - LoginProcess
+
+Schedule:
+  definition: >
+    A planned timetable specifying event dates, staff shifts, and resource usage.
+  examples:
+    - Event scheduled for 15th March from 10 AM to 6 PM
+    - Staff work schedule for weekend events
+  aliases:
+    - Timetable
+    - Calendar
+
+Conflict:
+  definition: >
+    A situation where a venue, resource, or staff member is requested for overlapping events.
+  examples:
+    - Double booking of a conference hall
+    - Staff assigned to two events at the same time
+  aliases:
+    - SchedulingIssue
+    - Clash
+
+Task:
+  definition: >
+    A specific activity assigned to staff members as part of an event.
+  examples:
+    - Setting up lighting equipment
+    - Managing guest registration desk
+  aliases:
+    - Activity
+    - Job
+
+DependencyMapping:
+  definition: >
+    The process of identifying and managing dependencies between staff, resources,
+    and venues to ensure smooth execution.
+  examples:
+    - Linking sound setup to power availability
+    - Coordinating stage setup before lighting installation
+  aliases:
+    - DependencyAnalysis
+    - TaskDependency
+
+BufferPlanning:
+  definition: >
+    The practice of keeping extra time and resources to handle unexpected delays.
+  examples:
+    - Keeping additional setup time
+    - Arranging backup equipment
+  aliases:
+    - TimeBuffer
+    - ResourceBuffer
+
+ContingencyPlanning:
+  definition: >
+    The preparation of backup plans to handle emergencies or failures during events.
+  examples:
+    - Backup generator for power failure
+    - Standby staff for absentees
+  aliases:
+    - BackupPlan
+    - EmergencyPlan
+
+ManualOverride:
+  definition: >
+    Human intervention used to make quick decisions when automated systems fail.
+  examples:
+    - Manually reallocating staff during equipment failure
+    - Emergency venue change by manager
+  aliases:
+    - HumanIntervention
+    - EmergencyOverride
+
+TechnicalRehearsal:
+  definition: >
+    A trial run conducted before an event to test equipment, timing, and coordination.
+  examples:
+    - Sound and lighting testing before a concert
+    - Stage rehearsal before inauguration
+  aliases:
+    - DryRun
+    - TrialSetup
+
+RequirementAnalysis:
+  definition: >
+    The process of collecting and analyzing detailed client requirements
+    before planning an event.
+  examples:
+    - Asking 20–30 questions about budget, venue, and preferences
+    - Identifying participant profile
+  aliases:
+    - RequirementGathering
+    - NeedsAssessment
+
+LogisticsManagement:
+  definition: >
+    The planning and control of transportation, storage, and movement of
+    equipment and materials.
+  examples:
+    - Transporting sound systems to venue
+    - Arranging stage materials
+  aliases:
+    - EventLogistics
+    - MaterialHandling
+
+BackstageManagement:
+  definition: >
+    Coordination of behind-the-scenes activities during event execution.
+  examples:
+    - Managing performer entry timing
+    - Controlling technical crew backstage
+  aliases:
+    - StageManagement
+    - BehindScenesControl
+
+VisualAsset:
+  definition: >
+    Signboards, banners, and displays used for navigation and branding.
+  examples:
+    - VIP seating sign
+    - Restroom direction board
+  aliases:
+    - Signage
+    - DisplayBoard
+
+CrisisManagement:
+  definition: >
+    Handling unexpected disruptions through communication and corrective actions.
+  examples:
+    - Managing government restrictions
+    - Handling weather-related disruptions
+  aliases:
+    - EmergencyHandling
+    - IncidentManagement

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Vendor Approvals</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item active">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Vendor Approvals</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Review and approve vendor applications</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="table-container">
+            <div class="data-table-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
+                    <div class="table-header-title" style="margin-bottom: 0;">Vendor Applications</div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <select id="vendorStatusFilter" style="padding: 10px 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <div style="position: relative; width: 250px;">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
+                            <input type="text" id="vendorSearchInput" placeholder="Search vendors..." style="width: 100%; padding: 10px 12px 10px 36px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Business Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendorTableBody">
+                        <!-- Populated by admin.js -->
+                    </tbody>
+                </table>
+                <div id="vendorPagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <div style="font-size: 13px; color: var(--text-muted);" id="paginationInfo">Showing 1 to 10 of 25</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="prevPageBtn" class="action-btn action-btn-clean" style="padding: 6px 12px;">Previous</button>
+                        <button id="nextPageBtn" class="action-btn action-btn-clean" style="padding: 6px 12px;">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <!-- Vendor Review Modal -->
+  <div id="vendorReviewModal" class="notif-modal-overlay">
+    <div class="notif-window" style="width: 650px; max-width: 95vw;">
+      <div class="notif-header">
+        <h3>Vendor Application Review</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body" style="padding: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Left details -->
+            <div>
+                <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Business Profile</h4>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+                    <strong style="color: var(--text-primary); display:block; margin-bottom: 4px;">Business Name</strong>
+                    <span id="modalBusinessName">Dream Events Ltd.</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+                    <strong style="color: var(--text-primary); display:block; margin-bottom: 4px;">Primary Contact</strong>
+                    <span id="modalVendorName">Jane Vendor</span> (<span id="modalEmail">vendor2@demo.com</span>)<br>
+                    <span id="modalPhone">555-0105</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    <strong style="color: var(--text-primary); display:block; margin-bottom: 4px;">Service Category</strong>
+                    <span id="modalCategory" class="status-badge active">Event Planning</span>
+                </div>
+            </div>
+            <!-- Right documents -->
+            <div>
+                <h4 style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Submitted Documents</h4>
+                <div class="vendor-docs-list" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-hover); padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer;" title="Preview Document">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i data-lucide="file-text" style="color: var(--pink); width: 18px;"></i>
+                            <span style="font-size: 13px; color: var(--text-primary);">Business_License.pdf</span>
+                        </div>
+                        <button class="notif-close-btn" style="pointer-events: none;"><i data-lucide="download" style="width: 16px;"></i></button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-hover); padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer;" title="Preview Document">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i data-lucide="file-text" style="color: var(--blue); width: 18px;"></i>
+                            <span style="font-size: 13px; color: var(--text-primary);">Tax_ID_Verification.pdf</span>
+                        </div>
+                        <button class="notif-close-btn" style="pointer-events: none;"><i data-lucide="download" style="width: 16px;"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="notif-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border);text-align: right;">
+        <button class="action-btn action-btn-clean" data-close="modal">Cancel</button>
+        <button id="modalRejectBtn" class="action-btn reject-btn"><i data-lucide="x-circle"></i> Reject Application</button>
+        <button id="modalApproveBtn" class="action-btn approve-btn"><i data-lucide="check-circle"></i> Approve Vendor</button>
+      </div>
+    </div>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script src="../../scripts/admin_js/admin.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

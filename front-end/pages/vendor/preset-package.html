@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Preset Package</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <!-- Lucide Icons -->
+  <style>
+    /* ══════════════════════
+       PRESET PACKAGE PAGE
+    ══════════════════════ */
+
+    /* Page header row */
+    .pp-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .pp-header__left h2 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .pp-header__left p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Search + Filter toolbar */
+    .pp-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pp-search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      transition: border-color 0.18s;
+      min-width: 260px;
+    }
+    .pp-search:focus-within { border-color: rgba(233,30,140,0.4); }
+    .pp-search i { font-size: 13px; color: var(--text-muted); }
+    .pp-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      width: 100%;
+    }
+    .pp-search input::placeholder { color: var(--text-muted); }
+
+    .pp-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .pp-filter-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    /* Category filter tabs */
+    .pp-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pp-tab {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .pp-tab:hover { border-color: var(--pink); color: var(--pink); }
+    .pp-tab.active {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+      box-shadow: 0 3px 12px var(--pink-glow);
+    }
+
+    /* Package grid */
+    .pp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) { .pp-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 680px)  { .pp-grid { grid-template-columns: 1fr; } }
+
+    /* Package card */
+    .pkg-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .pkg-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    }
+
+    /* Card image */
+    .pkg-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      background: #1a1030;
+    }
+
+    .pkg-img-placeholder {
+      width: 100%;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .pkg-img-placeholder--wedding  { background: linear-gradient(135deg,#3b0764 0%,#1e1b4b 100%); }
+    .pkg-img-placeholder--birthday { background: linear-gradient(135deg,#431407 0%,#7c2d12 100%); }
+    .pkg-img-placeholder--conference{ background: linear-gradient(135deg,#0c4a6e 0%,#1e3a5f 100%); }
+    .pkg-img-placeholder--corporate { background: linear-gradient(135deg,#14532d 0%,#1a2e3b 100%); }
+
+    /* Card body */
+    .pkg-body {
+      padding: 18px 18px 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pkg-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pkg-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Resources / Staff tags section */
+    .pkg-section-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .pkg-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pkg-tag {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .pkg-tag--more {
+      color: var(--pink);
+      border-color: rgba(233,30,140,0.3);
+      background: rgba(233,30,140,0.08);
+    }
+
+    /* Card footer */
+    .pkg-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .pkg-price {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .pkg-price__amount {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--pink);
+    }
+
+    .pkg-price__duration {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .pkg-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pkg-action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.18s;
+    }
+    .pkg-action-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
+    .pkg-action-btn.edit:hover  { color: var(--blue); border-color: rgba(59,130,246,0.4); }
+    .pkg-action-btn.delete:hover { color: var(--red); border-color: rgba(239,68,68,0.4); }
+    .pkg-action-btn i { width: 14px; height: 14px; }
+
+    /* Empty state */
+    .pp-empty {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .pp-empty i { width: 48px; height: 48px; opacity: 0.4; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: min(540px, 94vw);
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      transform: translateY(16px);
+      transition: transform 0.22s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal__header h3 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .modal__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.18s;
+    }
+    .modal__close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .modal__body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1/-1; }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.18s;
+      width: 100%;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: rgba(233,30,140,0.5);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+    .form-select { cursor: pointer; }
+    .form-select option { background: #2e1c40; }
+    .form-textarea { min-height: 80px; resize: vertical; }
+
+    .tag-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      cursor: text;
+      transition: border-color 0.18s;
+      min-height: 44px;
+      align-items: center;
+    }
+    .tag-input-wrap:focus-within { border-color: rgba(233,30,140,0.5); }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(233,30,140,0.12);
+      border: 1px solid rgba(233,30,140,0.3);
+      color: var(--pink-light);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .tag-chip button {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      opacity: 0.7;
+      font-size: 13px;
+    }
+    .tag-chip button:hover { opacity: 1; }
+
+    .tag-input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      flex: 1;
+      min-width: 80px;
+    }
+    .tag-input::placeholder { color: var(--text-muted); }
+
+    .modal__footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Footer result count */
+    .pp-result-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="event-request.html" class="nav-item">
+          <i data-lucide="clipboard-list"></i>
+          <span>Event Request</span>
+        </a>
+        <a href="manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i>
+          <span>Manage Resource</span>
+        </a>
+        <a href="manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Manage Staff</span>
+        </a>
+        <a href="preset-package.html" class="nav-item active">
+          <i data-lucide="box"></i>
+          <span>Preset Package</span>
+        </a>
+        <a href="report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i>
+          <span>Report Issue</span>
+        </a>
+        <a href="coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i>
+          <span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <h1 class="page-title">Preset Package</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Page header -->
+        <div class="pp-header">
+          <div class="pp-header__left">
+            <h2>Preset Event Packages</h2>
+            <p>Create and manage your event packages</p>
+          </div>
+          <button class="btn btn-primary" id="openAddModal">
+            <i data-lucide="plus"></i>
+            Add Presets
+          </button>
+        </div>
+
+        <!-- Toolbar: search + filter -->
+        <div class="pp-toolbar">
+          <div class="pp-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="pkgSearch" placeholder="Search packages..." />
+          </div>
+          <button class="pp-filter-btn">
+            <i data-lucide="sliders-horizontal"></i>
+            Filter
+          </button>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="pp-tabs">
+          <button class="pp-tab active" data-cat="all">All</button>
+          <button class="pp-tab" data-cat="Wedding">Wedding</button>
+          <button class="pp-tab" data-cat="Birthday">Birthday</button>
+          <button class="pp-tab" data-cat="Conference">Conference</button>
+          <button class="pp-tab" data-cat="Corporate">Corporate</button>
+        </div>
+
+        <!-- Package Grid -->
+        <div class="pp-grid" id="pkgGrid">
+
+          <!-- Card 1 – Wedding -->
+          <div class="pkg-card" data-cat="Wedding">
+            <div class="pkg-img-placeholder pkg-img-placeholder--wedding">💍</div>
+            <div class="pkg-body">
+              <div>
+                <div class="pkg-title">Elegant Wedding Package</div>
+                <span class="badge badge--wedding" style="margin-top:6px">Wedding</span>
+              </div>
+              <p class="pkg-desc">Complete wedding package with premium decorations, catering and full day event support. Ideal for 100–300 guests.</p>
+              <div>
+                <div class="pkg-section-label">Included Resources</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Banquet Chairs (250)</span>
+                  <span class="pkg-tag">Round Tables (30)</span>
+                  <span class="pkg-tag">Floral Arrangements</span>
+                  <span class="pkg-tag pkg-tag--more">+5 more</span>
+                </div>
+              </div>
+              <div>
+                <div class="pkg-section-label">Required Staff</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Event Coordinator</span>
+                  <span class="pkg-tag">Photographer</span>
+                </div>
+              </div>
+            </div>
+            <div class="pkg-footer">
+              <div class="pkg-price">
+                <span class="pkg-price__amount">$4,500</span>
+                <span class="pkg-price__duration">per event · up to 8 hrs</span>
+              </div>
+              <div class="pkg-actions">
+                <button class="pkg-action-btn edit" title="Edit"><i data-lucide="pencil"></i></button>
+                <button class="pkg-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 – Birthday -->
+          <div class="pkg-card" data-cat="Birthday">
+            <div class="pkg-img-placeholder pkg-img-placeholder--birthday">🎉</div>
+            <div class="pkg-body">
+              <div>
+                <div class="pkg-title">Birthday Celebration Special</div>
+                <span class="badge badge--birthday" style="margin-top:6px">Birthday</span>
+              </div>
+              <p class="pkg-desc">Fun and vibrant birthday party setup with decorations, catering, and amusements. Ideal for 30–80 guests.</p>
+              <div>
+                <div class="pkg-section-label">Included Resources</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Banquet Chairs (80)</span>
+                  <span class="pkg-tag">Party Tables (10)</span>
+                  <span class="pkg-tag">Balloon Decorations</span>
+                  <span class="pkg-tag pkg-tag--more">+4 more</span>
+                </div>
+              </div>
+              <div>
+                <div class="pkg-section-label">Required Staff</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Event Coordinator</span>
+                  <span class="pkg-tag">DJ</span>
+                  <span class="pkg-tag pkg-tag--more">+3 more</span>
+                </div>
+              </div>
+            </div>
+            <div class="pkg-footer">
+              <div class="pkg-price">
+                <span class="pkg-price__amount">$1,200</span>
+                <span class="pkg-price__duration">per event · up to 5 hrs</span>
+              </div>
+              <div class="pkg-actions">
+                <button class="pkg-action-btn edit" title="Edit"><i data-lucide="pencil"></i></button>
+                <button class="pkg-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 – Conference -->
+          <div class="pkg-card" data-cat="Conference">
+            <div class="pkg-img-placeholder pkg-img-placeholder--conference">🎤</div>
+            <div class="pkg-body">
+              <div>
+                <div class="pkg-title">Professional Conference Setup</div>
+                <span class="badge badge--conference" style="margin-top:6px">Conference</span>
+              </div>
+              <p class="pkg-desc">Complete conference package with AV equipment, professional seating, and catering. Perfect for 100–500 delegates.</p>
+              <div>
+                <div class="pkg-section-label">Included Resources</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Conference Chairs (500)</span>
+                  <span class="pkg-tag">LED Screens (3)</span>
+                  <span class="pkg-tag">Registration Desk</span>
+                  <span class="pkg-tag pkg-tag--more">+5 more</span>
+                </div>
+              </div>
+              <div>
+                <div class="pkg-section-label">Required Staff</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Event Manager</span>
+                  <span class="pkg-tag">Audio/Visual Technicians (3)</span>
+                </div>
+              </div>
+            </div>
+            <div class="pkg-footer">
+              <div class="pkg-price">
+                <span class="pkg-price__amount">$3,800</span>
+                <span class="pkg-price__duration">per event · up to 10 hrs</span>
+              </div>
+              <div class="pkg-actions">
+                <button class="pkg-action-btn edit" title="Edit"><i data-lucide="pencil"></i></button>
+                <button class="pkg-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 – Corporate -->
+          <div class="pkg-card" data-cat="Corporate">
+            <div class="pkg-img-placeholder pkg-img-placeholder--corporate">🏢</div>
+            <div class="pkg-body">
+              <div>
+                <div class="pkg-title">Corporate Gala Evening</div>
+                <span class="badge badge--corporate" style="margin-top:6px">Corporate</span>
+              </div>
+              <p class="pkg-desc">Premium corporate event package with elegant setup, gourmet catering, and entertainment. Perfect for 100–300 guests.</p>
+              <div>
+                <div class="pkg-section-label">Included Resources</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Premium Seating (300)</span>
+                  <span class="pkg-tag">Ambient Lighting</span>
+                  <span class="pkg-tag">Executive Tables (40)</span>
+                  <span class="pkg-tag pkg-tag--more">+4 more</span>
+                </div>
+              </div>
+              <div>
+                <div class="pkg-section-label">Required Staff</div>
+                <div class="pkg-tags">
+                  <span class="pkg-tag">Event Director</span>
+                  <span class="pkg-tag">Professional MC</span>
+                  <span class="pkg-tag pkg-tag--more">+4 more</span>
+                </div>
+              </div>
+            </div>
+            <div class="pkg-footer">
+              <div class="pkg-price">
+                <span class="pkg-price__amount">$6,200</span>
+                <span class="pkg-price__duration">per event · up to 12 hrs</span>
+              </div>
+              <div class="pkg-actions">
+                <button class="pkg-action-btn edit" title="Edit"><i data-lucide="pencil"></i></button>
+                <button class="pkg-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /pp-grid -->
+
+        <!-- Result info -->
+        <p class="pp-result-info" id="resultInfo">Showing 4 packages</p>
+
+      </div><!-- /content -->
+    </main>
+  </div>
+
+  <!-- ── Add / Edit Package Modal ── -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 id="modalTitle">Add New Package</h3>
+        <button class="modal__close" id="closeModal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body">
+        <div class="form-row">
+          <div class="form-group full">
+            <label class="form-label">Package Name</label>
+            <input class="form-input" type="text" placeholder="e.g. Elegant Wedding Package" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select">
+              <option value="">Select category</option>
+              <option>Wedding</option>
+              <option>Birthday</option>
+              <option>Conference</option>
+              <option>Corporate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price ($)</label>
+            <input class="form-input" type="number" placeholder="e.g. 4500" min="0" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Duration (hrs)</label>
+            <input class="form-input" type="number" placeholder="e.g. 8" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Guest Capacity</label>
+            <input class="form-input" type="text" placeholder="e.g. 100–300" />
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" placeholder="Describe what this package includes…"></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Included Resources</label>
+          <div class="tag-input-wrap" id="resourceTagWrap">
+            <span class="tag-chip">Banquet Chairs (250) <button onclick="removeTag(this)">×</button></span>
+            <input class="tag-input" id="resourceTagInput" placeholder="Add resource &amp; press Enter" />
+          </div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Required Staff</label>
+          <div class="tag-input-wrap" id="staffTagWrap">
+            <span class="tag-chip">Event Coordinator <button onclick="removeTag(this)">×</button></span>
+            <input class="tag-input" id="staffTagInput" placeholder="Add staff role &amp; press Enter" />
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-ghost" id="cancelModal">Cancel</button>
+        <button class="btn btn-primary">Save Package</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script>lucide.createIcons();</script>
+  <script src="../../scripts/vendor_js/preset-package.js"></script>
+</body>
+</html>

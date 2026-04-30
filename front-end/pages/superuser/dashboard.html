@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — EventPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../../styles/superuser_css/dashboard.css">
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sb">
+      <div class="sb-brand">
+        <div class="sb-logo">📅</div>
+        <div>
+          <div class="sb-name">EventPro</div>
+          <div class="sb-badge">Superuser</div>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <a href="dashboard.html" class="nl active">⊞ Dashboard</a>
+        <a href="events.html" class="nl">🛡 All Events</a>
+        <a href="bookings.html" class="nl">📖 All Bookings</a>
+        <a href="resources.html" class="nl">📦 All Resources</a>
+        <a href="staff.html" class="nl">👤 All Staff</a>
+        <a href="users.html" class="nl">👥 Users Management</a>
+      </nav>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="sb-av">S</div>
+          <div>
+            <div class="sb-un">Super Admin</div>
+            <div class="sb-ue">superuser@demo.com</div>
+          </div>
+        </div>
+       <a href="../LandingPage/index.html"> <button class="sb-out">⇥ Logout</button> </a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="page">
+      <div class="ph">
+        <h1><span style="color: #ec4899">🛡</span> System Overview</h1>
+        <p>Complete system-level control and analytics</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="sc" style="border-color: rgba(236, 72, 153, 0.3)">
+          <div class="sc-lb">
+            Total Users <span class="sc-ico" style="color: #ec4899">👥</span>
+          </div>
+          <div class="sc-val pink" id="su-users">1,247</div>
+          <div class="sc-sub">↑ +12% from last month</div>
+        </div>
+        <div class="sc" style="border-color: rgba(34, 211, 238, 0.25)">
+          <div class="sc-lb">
+            Total Vendors <span class="sc-ico" style="color: #22d3ee">📦</span>
+          </div>
+          <div class="sc-val teal" id="su-vendors">156</div>
+          <div class="sc-sub">↑ +5% from last month</div>
+        </div>
+        <div class="sc" style="border-color: rgba(16, 185, 129, 0.25)">
+          <div class="sc-lb">
+            Total Events <span class="sc-ico" style="color: #10b981">📅</span>
+          </div>
+          <div class="sc-val green" id="su-events">892</div>
+          <div class="sc-sub">↑ +18% from last month</div>
+        </div>
+        <div class="sc" style="border-color: rgba(16, 185, 129, 0.25)">
+          <div class="sc-lb">
+            System Revenue <span class="sc-ico" style="color: #10b981">$</span>
+          </div>
+          <div class="sc-val green" id="su-rev">$2.4M</div>
+          <div class="sc-sub">↑ +22% from last month</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="ch2">
+        <div class="cc">
+          <div class="cc-title">
+            <span style="color: #22d3ee">👥</span> Monthly User Registrations
+          </div>
+          <div style="height: 200px"><canvas id="uc"></canvas></div>
+        </div>
+        <div class="cc">
+          <div class="cc-title">
+            <span style="color: #f59e0b">📅</span> Event Growth Trend
+          </div>
+          <div style="height: 200px"><canvas id="ec"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Revenue chart -->
+      <div class="rc">
+        <div class="cc-title">
+          <span style="color: #f59e0b">$</span> Revenue Summary
+        </div>
+        <div style="height: 230px"><canvas id="rvc"></canvas></div>
+      </div>
+
+      <!-- System Health -->
+      <div class="hc">
+        <div class="hc-title">
+          <span style="color: #ec4899">♦</span> System Health Status
+        </div>
+        <div class="hgrid">
+          <div class="hi">
+            <div class="hi-l">
+              <span style="color: #10b981; font-size: 17px">✓</span>
+              <div>
+                <div class="hi-name">Database</div>
+                <div class="hi-st">Operational</div>
+              </div>
+            </div>
+            <div class="hi-pct">99.9%</div>
+          </div>
+          <div class="hi">
+            <div class="hi-l">
+              <span style="color: #10b981; font-size: 17px">✓</span>
+              <div>
+                <div class="hi-name">API Services</div>
+                <div class="hi-st">Operational</div>
+              </div>
+            </div>
+            <div class="hi-pct">99.8%</div>
+          </div>
+          <div class="hi">
+            <div class="hi-l">
+              <span style="color: #10b981; font-size: 17px">✓</span>
+              <div>
+                <div class="hi-name">Payment Gateway</div>
+                <div class="hi-st">Operational</div>
+              </div>
+            </div>
+            <div class="hi-pct">100%</div>
+          </div>
+          <div class="hi">
+            <div class="hi-l">
+              <span style="color: #10b981; font-size: 17px">✓</span>
+              <div>
+                <div class="hi-name">Backup System</div>
+                <div class="hi-st">Operational</div>
+              </div>
+            </div>
+            <div class="hi-pct">99.7%</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="../../scripts/superuser_js/store.js"></script>
+    <script>
+      const cg = { color: "rgba(255,255,255,.035)" },
+        ct = { color: "#64748b", font: { size: 11 } };
+
+      // User registrations line
+      new Chart(document.getElementById("uc"), {
+        type: "line",
+        data: {
+          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          datasets: [
+            {
+              data: [128, 155, 163, 148, 180, 200],
+              borderColor: "#3b82f6",
+              backgroundColor: "rgba(59,130,246,.07)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#3b82f6",
+              pointRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: cg, ticks: ct },
+            y: { grid: cg, ticks: { ...ct, stepSize: 50 }, min: 0, max: 225 },
+          },
+        },
+      });
+
+      // Event growth bar
+      new Chart(document.getElementById("ec"), {
+        type: "bar",
+        data: {
+          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          datasets: [
+            {
+              data: [35, 48, 55, 65, 88, 115],
+              backgroundColor: "rgba(16,185,129,.7)",
+              borderRadius: 5,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: cg, ticks: ct },
+            y: { grid: cg, ticks: ct, min: 0 },
+          },
+        },
+      });
+
+      // Revenue line
+      new Chart(document.getElementById("rvc"), {
+        type: "line",
+        data: {
+          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          datasets: [
+            {
+              data: [295000, 315000, 385000, 405000, 472000, 530000],
+              borderColor: "#10b981",
+              backgroundColor: "rgba(16,185,129,.05)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#10b981",
+              pointRadius: 5,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: cg, ticks: ct },
+            y: {
+              grid: cg,
+              ticks: {
+                ...ct,
+                callback: (v) => "$" + (v / 1000).toFixed(0) + "k",
+              },
+              min: 0,
+            },
+          },
+        },
+      });
+
+      // Live counts from store
+      document.getElementById("su-users").textContent =
+        EP.users.length.toLocaleString();
+      document.getElementById("su-vendors").textContent = EP.vendors.length;
+      document.getElementById("su-events").textContent = EP.events.length;
+      document.getElementById("su-rev").textContent = UI.cur(EP.totalRev());
+    </script>
+  </body>
+</html>

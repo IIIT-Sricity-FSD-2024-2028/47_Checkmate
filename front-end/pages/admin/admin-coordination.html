@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Coordination Hub</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item active">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Coordination Hub</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors and Staff</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="bipartite-section" style="grid-template-columns: 1fr 2fr; height: 600px;">
+            <div class="data-table-wrapper" style="overflow-y: auto;">
+                <h3 class="table-header-title">Active Conversations</h3>
+                <div class="search-box" style="width: 100%; margin-bottom: 20px;">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="userSearchInput" placeholder="Search users..." />
+                </div>
+                <div class="approval-list" id="chatListContainer">
+                    <div class="approval-item chat-item" style="cursor: pointer; background: rgba(233, 30, 140, 0.1); border-color: var(--pink);">
+                        <div class="vendor-info">
+                            <div class="vendor-avatar">S</div>
+                            <div>
+                                <h4>Starlight Events</h4>
+                                <p style="color: var(--text-primary); font-weight: 500;">Yes, we updated our insurance policy.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="approval-item chat-item" style="cursor: pointer;">
+                        <div class="vendor-info">
+                            <div class="vendor-avatar" style="background: var(--blue);">M</div>
+                            <div>
+                                <h4>Melody Music</h4>
+                                <p>Can you explain the commission cut?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Broadcast Button -->
+                <button class="export-btn" id="openBroadcastBtn" style="width: 100%; margin-top: 24px; justify-content: center;"><i data-lucide="radio"></i> Broadcast Message</button>
+            </div>
+            
+            <div class="data-table-wrapper" style="display: flex; flex-direction: column;">
+                <!-- Chat Header -->
+                <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" id="activeChatAvatar">S</div>
+                        <div>
+                            <h4 id="activeChatName">Starlight Events</h4>
+                            <p style="color: #22c55e;"><span style="display:inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; margin-right: 4px;"></span>Online</p>
+                        </div>
+                    </div>
+                    <button class="action-btn action-btn-clean" id="deleteChatBtn" title="Delete Chat"><i data-lucide="trash-2"></i></button>
+                </div>
+                <!-- Chat History -->
+                <div id="chatHistory" style="flex: 1; padding: 20px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
+                        <p style="font-size: 14px; color: var(--text-primary);">Hello Admin, I have submitted the requested liability insurance document. Can you please review my profile?</p>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:24 AM</span>
+                    </div>
+                    <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px;">
+                        <p style="font-size: 14px; color: #fff;">Hello! Thank you for the update. Our team will review the document and reinstate your account shortly.</p>
+                        <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">10:45 AM</span>
+                    </div>
+                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
+                        <p style="font-size: 14px; color: var(--text-primary);">Perfect, thank you! I will await your confirmation.</p>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:47 AM</span>
+                    </div>
+                </div>
+                <!-- Message Input -->
+                <div style="padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="chatInput" class="form-control" placeholder="Type a message to Starlight Events..." />
+                    <button id="sendMsgBtn" class="export-btn" style="border-radius: 50%; padding: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><i data-lucide="send"></i></button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Broadcast Modal -->
+  <div id="broadcastModal" class="notif-modal-overlay">
+    <div class="notif-window" style="max-width: 500px; width: 90%;">
+      <div class="notif-header">
+        <h3>Broadcast Message</h3>
+        <button class="notif-close-btn" data-close="broadcast"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body" style="padding: 24px;">
+         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Select Recipients</label>
+         <div style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                 <input type="checkbox" checked style="accent-color: var(--pink); width: 16px; height: 16px;">
+                 <span style="font-size: 13.5px; color: var(--text-primary);">Starlight Events</span>
+             </label>
+             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                 <input type="checkbox" checked style="accent-color: var(--pink); width: 16px; height: 16px;">
+                 <span style="font-size: 13.5px; color: var(--text-primary);">Melody Music</span>
+             </label>
+             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                 <input type="checkbox" style="accent-color: var(--pink); width: 16px; height: 16px;">
+                 <span style="font-size: 13.5px; color: var(--text-primary);">All Vendors</span>
+             </label>
+             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                 <input type="checkbox" style="accent-color: var(--pink); width: 16px; height: 16px;">
+                 <span style="font-size: 13.5px; color: var(--text-primary);">All Staff</span>
+             </label>
+         </div>
+         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Message</label>
+         <textarea id="broadcastInput" style="width: 100%; min-height: 100px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; color: var(--text-primary); font-family: var(--font-body); resize: vertical; outline: none;" placeholder="Type your broadcast message..."></textarea>
+      </div>
+      <div class="notif-footer" style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
+         <button class="btn btn-ghost" data-close="broadcast" style="padding: 8px 16px; border-radius: 6px; background: transparent; color: var(--text-secondary); border: 1px solid transparent; cursor: pointer;">Cancel</button>
+         <button id="sendBroadcastBtn" style="padding: 8px 16px; border-radius: 6px; background: var(--pink); color: #fff; border: none; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;"><i data-lucide="send" style="width: 14px;"></i> Send Broadcast</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 1. User Search Filtering ---
+        const searchInput = document.getElementById('userSearchInput');
+        const approvalItems = document.querySelectorAll('.approval-list .approval-item');
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                approvalItems.forEach(item => {
+                    const name = item.querySelector('h4').textContent.toLowerCase();
+                    if(name.includes(term)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // --- 1.5 Chat Switching ---
+        const chatItems = document.querySelectorAll('.chat-item');
+        const activeChatAvatar = document.getElementById('activeChatAvatar');
+        const activeChatName = document.getElementById('activeChatName');
+        const chatInputPlaceholder = document.getElementById('chatInput');
+        const chatHistoryNode = document.getElementById('chatHistory');
+
+        chatItems.forEach(item => {
+            item.addEventListener('click', () => {
+                chatItems.forEach(i => {
+                    i.style.background = 'transparent';
+                    i.style.borderColor = 'transparent';
+                });
+                
+                item.style.background = 'rgba(233, 30, 140, 0.1)';
+                item.style.borderColor = 'var(--pink)';
+                
+                const vendorName = item.querySelector('h4').textContent;
+                const avatarNode = item.querySelector('.vendor-avatar');
+                const avatarLetter = avatarNode.textContent;
+                const avatarBg = avatarNode.style.background;
+                
+                activeChatName.textContent = vendorName;
+                activeChatAvatar.textContent = avatarLetter;
+                activeChatAvatar.style.background = vendorName === 'Melody Music' ? 'var(--blue)' : ''; 
+                
+                chatInputPlaceholder.placeholder = `Type a message to ${vendorName}...`;
+                
+                if (vendorName === 'Melody Music') {
+                    chatHistoryNode.innerHTML = `
+                        <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
+                            <p style="font-size: 14px; color: var(--text-primary);">Hello Admin! Can you explain the commission cut from last invoice?</p>
+                            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">09:15 AM</span>
+                        </div>
+                    `;
+                } else {
+                    chatHistoryNode.innerHTML = `
+                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
+                        <p style="font-size: 14px; color: var(--text-primary);">Hello Admin, I have submitted the requested liability insurance document. Can you please review my profile?</p>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:24 AM</span>
+                    </div>
+                    <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px;">
+                        <p style="font-size: 14px; color: #fff;">Hello! Thank you for the update. Our team will review the document and reinstate your account shortly.</p>
+                        <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">10:45 AM</span>
+                    </div>
+                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
+                        <p style="font-size: 14px; color: var(--text-primary);">Perfect, thank you! I will await your confirmation.</p>
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:47 AM</span>
+                    </div>
+                    `;
+                }
+            });
+        });
+
+        // --- 2. Chat Deletion (Trash Can) ---
+        const deleteChatBtn = document.getElementById('deleteChatBtn');
+        const chatHistory = document.getElementById('chatHistory');
+        
+        if (deleteChatBtn && chatHistory) {
+            deleteChatBtn.addEventListener('click', () => {
+                const confirmed = confirm("Are you sure you want to clear this conversation?");
+                if (confirmed) {
+                    chatHistory.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted); font-size: 13px;">Chat history cleared.</div>';
+                }
+            });
+        }
+
+        // --- 3. Sending Individual Messages ---
+        const chatInput = document.getElementById('chatInput');
+        const sendMsgBtn = document.getElementById('sendMsgBtn');
+        
+        const appendMessage = (text) => {
+            if (!text.trim()) return;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const msgHtml = `
+                <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px; margin-top: 16px; animation: fadeIn 0.3s ease;">
+                    <p style="font-size: 14px; color: #fff;">${text}</p>
+                    <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">${timeStr}</span>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', msgHtml);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            chatInput.value = '';
+        };
+
+        if (sendMsgBtn && chatInput) {
+            sendMsgBtn.addEventListener('click', () => appendMessage(chatInput.value));
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') appendMessage(chatInput.value);
+            });
+        }
+
+        // --- 4. Broadcast Modal Logic ---
+        const broadcastModal = document.getElementById('broadcastModal');
+        const openBroadcastBtn = document.getElementById('openBroadcastBtn');
+        const sendBroadcastBtn = document.getElementById('sendBroadcastBtn');
+        const broadcastInput = document.getElementById('broadcastInput');
+
+        const closeBroadcast = () => {
+            broadcastModal.classList.remove('active');
+        };
+
+        if (openBroadcastBtn) {
+            openBroadcastBtn.addEventListener('click', () => {
+                broadcastInput.value = '';
+                broadcastModal.classList.add('active');
+            });
+        }
+
+        document.querySelectorAll('[data-close="broadcast"]').forEach(btn => {
+            btn.addEventListener('click', closeBroadcast);
+        });
+
+        if (sendBroadcastBtn) {
+            sendBroadcastBtn.addEventListener('click', () => {
+                const msg = broadcastInput.value;
+                if (!msg.trim()) {
+                    alert('Please enter a message to broadcast.');
+                    return;
+                }
+                
+                // Simulate appending broadcast to current chat as well if it makes sense visually
+                appendMessage(msg);
+                
+                // alert('Broadcast message sent successfully!');
+                closeBroadcast();
+            });
+        }
+    });
+  </script>
+</body>
+</html>

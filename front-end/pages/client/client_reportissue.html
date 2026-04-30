@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Issue - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .ph-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item active"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title">Report Issue</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Submit details about any problems you're facing</div>
+                </div>
+            </div>
+            
+            <div class="content" style="max-width:800px; margin:0 auto; width:100%;">
+                <div class="card">
+                     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border);">
+                         <div style="width:40px; height:40px; border-radius:10px; background:rgba(233,30,140,0.12); border:1px solid rgba(233,30,140,0.3); display:flex; align-items:center; justify-content:center; color:var(--pink); font-size:20px;">
+                             <i class="ph-fill ph-warning-circle"></i>
+                         </div>
+                         <div>
+                             <h3 style="font-family:var(--font-display); font-size:16px; font-weight:600;">Report an Issue</h3>
+                             <p style="font-size:13px; color:var(--text-secondary); margin-top:4px;">Help us resolve issues quickly by providing detailed information</p>
+                         </div>
+                     </div>
+                     
+                     <form id="reportIssueForm">
+                        <div class="form-section">
+                            <div class="form-group mb-4">
+                                <label>Issue Title *</label>
+                                <input type="text" class="form-control" placeholder="Brief description of the issue" required>
+                            </div>
+                            
+                            <div class="form-group mb-6">
+                                <label>Detailed Description *</label>
+                                <textarea class="form-control" rows="5" placeholder="Provide as much detail as possible about the issue" required></textarea>
+                            </div>
+                            
+                            <div class="form-grid mb-4">
+                                <div class="form-group">
+                                    <label>Priority Level</label>
+                                    <select class="form-control" required>
+                                        <option value="" disabled selected>Select Priority</option>
+                                        <option>🔴 Critical</option>
+                                        <option>🟠 High</option>
+                                        <option>🟡 Medium</option>
+                                        <option>🟢 Low</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Related Event (Optional)</label>
+                                    <select class="form-control">
+                                        <option value="" disabled selected>Select Event</option>
+                                        <option>Corporate Gala</option>
+                                        <option>Wedding - Sarah & Mike</option>
+                                        <option>Birthday Party</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-bottom:24px;">
+                            <h4 style="font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:12px;">Reporter Information</h4>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                                <div style="font-size:13px; color:var(--text-muted);">Name: <span style="color:var(--text-primary); font-weight:500;">John</span></div>
+                                <div style="font-size:13px; color:var(--text-muted);">Role: <span style="color:var(--text-primary); font-weight:500;">Client</span></div>
+                                <div style="font-size:13px; color:var(--text-muted); grid-column:span 2;">Email: <span style="color:var(--text-primary); font-weight:500;">john@gmail.com</span></div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:12px; justify-content:flex-end;">
+                            <a href="client-dashboard.html" class="btn btn-ghost">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit"><i class="ph ph-warning-circle"></i> Submit Issue</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+      document.getElementById('reportIssueForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const btn = document.getElementById('btnSubmit');
+          btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Submitting...';
+          btn.disabled = true;
+          
+          setTimeout(() => {
+              btn.innerHTML = '<i class="ph ph-check-circle"></i> Sent Successfully';
+              btn.style.background = 'var(--green)';
+              btn.style.boxShadow = 'none';
+              
+              setTimeout(() => {
+                  window.location.href = 'client-dashboard.html';
+              }, 1500);
+          }, 1500);
+      });
+    </script>
+    <script src="../../scripts/client_js/client_utils.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Dashboard</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item active">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i>
+          <span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i>
+          <span>Monitor Events</span>
+        </a>
+        <a href="manage-booking.html" class="nav-item">
+          <i data-lucide="ticket"></i>
+          <span>Manage Booking</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i>
+          <span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i>
+          <span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i>
+          <span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i>
+          <span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i>
+          <span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i>
+          <span>Global Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div>
+            <div class="user-name">Admin User</div>
+            <div class="user-email">admin@eventpro.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Admin Dashboard</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">System overview and management</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Stats Grid -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--blue"><i data-lucide="users"></i></div>
+                </div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">1,245</div>
+                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +30 since last login
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--purple"><i data-lucide="store"></i></div>
+                </div>
+                <div class="stat-label">Total Vendors</div>
+                <div class="stat-value">320</div>
+                <div style="font-size: 13px; color: #ef4444; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="trending-down" style="width: 14px; height: 14px;"></i> -10 since last login
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--green"><i data-lucide="calendar"></i></div>
+                </div>
+                <div class="stat-label">Active Events</div>
+                <div class="stat-value">84</div>
+                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +5 since last login
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
+                </div>
+                <div class="stat-label">Pending Approvals</div>
+                <div class="stat-value">12</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change
+                </div>
+            </div>
+        </section>
+
+        <!-- Second Section -->
+        <section class="bipartite-section">
+            <!-- Left: Pending Vendor Approvals -->
+            <div class="card lg-card">
+                <div class="card__header">
+                    <h3>Pending Vendor Approvals</h3>
+                    <a href="vendor-approvals.html" style="font-size: 13px; color: var(--pink); font-weight: 500; text-decoration: none;">View All &rarr;</a>
+                </div>
+                <div class="approval-list">
+                    <div class="approval-item">
+                        <div class="vendor-info">
+                            <div class="vendor-avatar" style="background:var(--pink);">S</div>
+                            <div>
+                                <h4>Starlight Events</h4>
+                                <p>Submitted 2 hours ago</p>
+                            </div>
+                        </div>
+                        <button class="action-btn action-btn-clean" onclick="window.location.href='vendor-approvals.html?action=review'">Review</button>
+                    </div>
+                    <div class="approval-item">
+                        <div class="vendor-info">
+                            <div class="vendor-avatar" style="background:var(--blue);">C</div>
+                            <div>
+                                <h4>Catering Co.</h4>
+                                <p>Submitted 5 hours ago</p>
+                            </div>
+                        </div>
+                        <button class="action-btn action-btn-clean" onclick="window.location.href='vendor-approvals.html?action=review'">Review</button>
+                    </div>
+                    <div class="approval-item">
+                        <div class="vendor-info">
+                            <div class="vendor-avatar" style="background:var(--purple);">M</div>
+                            <div>
+                                <h4>Melody Music</h4>
+                                <p>Submitted 1 day ago</p>
+                            </div>
+                        </div>
+                        <button class="action-btn action-btn-clean" onclick="window.location.href='vendor-approvals.html?action=review'">Review</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: User Distribution -->
+            <div class="card sm-card">
+                <div class="card__header">
+                    <h3>User Distribution</h3>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i data-lucide="user"></i></div>
+                            <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Clients</span>
+                        </div>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">850</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(168, 85, 247, 0.1); color: #a855f7;"><i data-lucide="store"></i></div>
+                            <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Vendors</span>
+                        </div>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">300</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); color: #22c55e;"><i data-lucide="shield-check"></i></div>
+                            <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Staff</span>
+                        </div>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">95</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script src="../../scripts/admin_js/admin.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

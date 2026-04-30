@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Events - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item active"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title">My Events</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">View and manage all your events</div>
+                </div>
+                <div class="topbar__right">
+                    <a href="create_event_client.html" class="btn btn-primary"><i class="ph ph-plus"></i> Create Event</a>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div class="card__header" style="flex-wrap:wrap; gap:12px;">
+                        <h3 style="margin:0;">All Events</h3>
+                        <div class="search-box" style="width:280px; background:rgba(0,0,0,0.2);">
+                            <i class="ph ph-magnifying-glass"></i>
+                            <input type="text" id="searchEvents" placeholder="Search by Event ID or Venue...">
+                        </div>
+                    </div>
+                    
+                    <div class="er-table-wrap">
+                        <table class="er-table">
+                            <thead>
+                                <tr>
+                                    <th>Event ID</th>
+                                    <th>Event Name</th>
+                                    <th>Event Type</th>
+                                    <th>Date</th>
+                                    <th>Venue</th>
+                                    <th>Guests</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myEventsBody">
+                                <!-- Dynamically populated by client_myevents.js -->
+                            </tbody>
+                        </table>
+                        <div id="myEventsEmpty" style="display:none; text-align:center; padding:48px 24px; color:var(--text-secondary);">
+                            <i class="ph ph-calendar-blank" style="font-size:48px; margin-bottom:16px; opacity:0.3; display:block;"></i>
+                            <div style="font-size:15px; font-weight:600;">You haven't created any events yet</div>
+                            <div style="font-size:13px; margin:8px 0 20px; opacity:0.7;">Submit your first event request to get started tracking!</div>
+                            <a href="create_event_client.html" class="btn btn-primary" style="font-size:13px;"><i class="ph ph-plus"></i> Create Event</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/vendor_js/data.js"></script> <!-- Shared state connectivity -->
+    <script src="../../scripts/client_js/client_myevents.js"></script>
+    <script src="../../scripts/client_utils.js"></script>
+</body>
+</html>
+

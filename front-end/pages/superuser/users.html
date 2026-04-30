@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Users Management — EventPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="../../styles/superuser_css/user.css">
+  </head>
+  <body>
+    <aside class="sb">
+      <div class="sb-brand">
+        <div class="sb-logo">📅</div>
+        <div>
+          <div class="sb-name">EventPro</div>
+          <div class="sb-badge">Superuser</div>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <a href="dashboard.html" class="nl">⊞ Dashboard</a>
+        <a href="events.html" class="nl">🛡 All Events</a>
+        <a href="bookings.html" class="nl">📖 All Bookings</a>
+        <a href="resources.html" class="nl">📦 All Resources</a>
+        <a href="staff.html" class="nl">👤 All Staff</a>
+        <a href="users.html" class="nl active">👥 Users Management</a>
+      </nav>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="sb-av">S</div>
+          <div>
+            <div class="sb-un">Super Admin</div>
+            <div class="sb-ue">superuser@demo.com</div>
+          </div>
+        </div>
+        <button class="sb-out">⇥ Logout</button>
+      </div>
+    </aside>
+
+    <main class="page">
+      <div class="page-top">
+        <div class="ph">
+          <h1><span style="color: #ec4899">👥</span> Users Management</h1>
+          <p>Manage all system users and roles</p>
+        </div>
+        <button class="btn btn-p" onclick="openM()" style="margin-top: 4px">
+          + Create User
+        </button>
+      </div>
+
+      <div class="sw">
+        <span class="sw-ico">🔍</span>
+        <input
+          type="text"
+          id="q"
+          placeholder="Search by name or email..."
+          oninput="render()"
+        />
+      </div>
+
+      <div class="tw">
+        <div class="th">
+          <span style="color: #ec4899">🛡</span> <span id="cnt">All Users</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty" style="display: none">
+          <p>No users found</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Create/Edit Modal -->
+    <div class="ov" id="modal">
+      <div class="modal">
+        <div class="mh">
+          <span class="mt" id="mt">Create User</span
+          ><button class="mx" onclick="closeM()">✕</button>
+        </div>
+        <form id="mform" onsubmit="return false;">
+          <div class="fg2">
+            <div class="fg">
+              <label class="fl">Full Name *</label
+              ><input class="fc" id="f_nm" placeholder="e.g. John Smith" />
+              <div class="ferr" id="f_nm_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Email Address *</label
+              ><input
+                class="fc"
+                type="email"
+                id="f_em"
+                placeholder="john@example.com"
+              />
+              <div class="ferr" id="f_em_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Role *</label>
+              <select class="fc" id="f_rl">
+                <option value="">Select role...</option>
+                <option>Admin</option>
+                <option>Vendor</option>
+                <option>Staff</option>
+                <option>Client</option>
+              </select>
+              <div class="ferr" id="f_rl_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Status *</label>
+              <select class="fc" id="f_st">
+                <option value="">Select...</option>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+              <div class="ferr" id="f_st_e"></div>
+            </div>
+          </div>
+          <div class="fg" id="pwg">
+            <label class="fl">Password *</label>
+            <input
+              class="fc"
+              type="password"
+              id="f_pw"
+              placeholder="Minimum 6 characters"
+            />
+            <div class="ferr" id="f_pw_e"></div>
+          </div>
+          <div class="mf">
+            <button class="btn btn-s" onclick="closeM()">Cancel</button>
+            <button class="btn btn-p" onclick="save()">Save User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="../../scripts/superuser_js/store.js"></script>
+    <script>
+      let eid = null;
+      const roleMap = {
+        Admin: "b-admin",
+        Vendor: "b-vendor",
+        Staff: "b-staff",
+        Client: "b-client",
+      };
+      const statMap = { Active: "b-active", Inactive: "b-inactive" };
+      function roleBadge(r) {
+        return `<span class="badge ${roleMap[r] || "b-client"}">${r}</span>`;
+      }
+      function statBadge(s) {
+        return `<span class="badge ${statMap[s] || "b-inactive"}">${s}</span>`;
+      }
+
+      function render() {
+        const q = document.getElementById("q").value.toLowerCase();
+        let data = EP.users;
+        if (q)
+          data = data.filter(
+            (u) =>
+              u.name.toLowerCase().includes(q) ||
+              u.email.toLowerCase().includes(q) ||
+              u.role.toLowerCase().includes(q),
+          );
+        document.getElementById("cnt").textContent =
+          `All Users (${data.length})`;
+        document.getElementById("empty").style.display = data.length
+          ? "none"
+          : "block";
+        document.getElementById("tbody").innerHTML = data
+          .map(
+            (u) => `
+    <tr>
+      <td class="tname">${u.name}</td>
+      <td>${u.email}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${statBadge(u.status)}</td>
+      <td>${u.created}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="ib ib-e" onclick="editU('${u.id}')" title="Edit">✏</button>
+        <button class="ib ib-d" onclick="delU('${u.id}')" title="Delete">🗑</button>
+      </div></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      function openM(id = null) {
+        eid = id;
+        UI.clearV("mform");
+        const pwg = document.getElementById("pwg");
+        if (id) {
+          const u = EP.users.find((x) => x.id === id);
+          document.getElementById("mt").textContent = "Edit User";
+          document.getElementById("f_nm").value = u.name;
+          document.getElementById("f_em").value = u.email;
+          document.getElementById("f_rl").value = u.role;
+          document.getElementById("f_st").value = u.status;
+          pwg.style.display = "none";
+        } else {
+          document.getElementById("mt").textContent = "Create User";
+          document.getElementById("mform").reset();
+          pwg.style.display = "block";
+        }
+        document.getElementById("modal").classList.add("open");
+      }
+      function closeM() {
+        document.getElementById("modal").classList.remove("open");
+        eid = null;
+      }
+      function editU(id) {
+        openM(id);
+      }
+
+      function save() {
+        const rules = {
+          f_nm: [{ req: "Name required" }],
+          f_em: [{ req: "Email required" }, { email: "Enter a valid email" }],
+          f_rl: [{ req: "Select a role" }],
+          f_st: [{ req: "Select a status" }],
+        };
+        if (!eid)
+          rules.f_pw = [
+            { req: "Password required" },
+            { ml: "Minimum 6 characters" },
+          ];
+        if (!UI.validate(rules)) return;
+
+        const email = document.getElementById("f_em").value.trim();
+        const dup = EP.users.find((u) => u.email === email && u.id !== eid);
+        if (dup) {
+          const el = document.getElementById("f_em");
+          el.classList.add("fc-err");
+          const er = document.getElementById("f_em_e");
+          er.textContent = "Email already in use.";
+          er.style.display = "block";
+          return;
+        }
+        const p = {
+          name: document.getElementById("f_nm").value.trim(),
+          email,
+          role: document.getElementById("f_rl").value,
+          status: document.getElementById("f_st").value,
+          created: new Date().toLocaleDateString(),
+        };
+        if (eid) {
+          EP.updateUser(eid, p);
+          UI.toast("User updated!");
+        } else {
+          EP.addUser(p);
+          UI.toast("User created!");
+        }
+        closeM();
+        render();
+      }
+
+      function delU(id) {
+        const u = EP.users.find((x) => x.id === id);
+        UI.confirm("Delete User", `Permanently delete "${u.name}"?`, () => {
+          EP.deleteUser(id);
+          UI.toast("User deleted.", "info");
+          render();
+        });
+      }
+
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeM();
+      });
+      render();
+    </script>
+  </body>
+</html>

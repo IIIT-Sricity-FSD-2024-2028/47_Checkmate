@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Global Settings</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item active">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Global Settings</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Manage platform business configurations and feature toggles</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="bipartite-section" style="grid-template-columns: 1fr 1fr;">
+            <!-- Left Config -->
+            <div class="data-table-wrapper">
+                <h3 class="table-header-title">Platform Business Settings</h3>
+                <div class="filter-grid" style="grid-template-columns: 1fr;">
+                    <div class="input-group">
+                        <label>Global Platform Commission Fee (%)</label>
+                        <input type="number" class="form-control" value="10" />
+                    </div>
+                    <div class="input-group">
+                        <label>Tax Withholding Rate (%)</label>
+                        <input type="number" class="form-control" value="0" />
+                    </div>
+                    <div class="input-group">
+                        <label>Minimum Vendor Payout Threshold ($)</label>
+                        <input type="number" class="form-control" value="500" />
+                    </div>
+                    <div style="margin-top: 10px;">
+                      <button class="export-btn">Save Business Rules</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Config -->
+            <div class="data-table-wrapper">
+                <h3 class="table-header-title">System Features Toggles</h3>
+                <div class="approval-list">
+                    <div class="approval-item" style="padding: 16px;">
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Vendor Auto-Approval</h4>
+                            <p style="font-size: 12px; color: var(--text-muted);">Automatically approve trusted vendor documents</p>
+                        </div>
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                    </div>
+                    <div class="approval-item" style="padding: 16px;">
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Maintenance Mode</h4>
+                            <p style="font-size: 12px; color: var(--text-muted);">Prevent client and vendor logins</p>
+                        </div>
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                    </div>
+                    <div class="approval-item" style="padding: 16px;">
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Public Event Directory</h4>
+                            <p style="font-size: 12px; color: var(--text-muted);">Allow non-registered users to view public events</p>
+                        </div>
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" checked />
+                    </div>
+                </div>
+                <button class="export-btn" style="margin-top: 24px;">Save Toggles</button>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

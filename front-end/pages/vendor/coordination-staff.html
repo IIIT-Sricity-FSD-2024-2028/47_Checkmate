@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Coordination Hub (Vendor–Staff)</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <link rel="stylesheet" href="../../styles/message-animations.css">
+  <style>
+    .content { gap: 16px; overflow-y: auto; }
+
+    /* ── Section switcher tabs ── */
+    .ch-section-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .ch-section-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.18s;
+    }
+    .ch-section-tab i { width: 15px; height: 15px; }
+    .ch-section-tab:hover { border-color: var(--pink); color: var(--pink); background: rgba(233,30,140,0.06); }
+    .ch-section-tab.active {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+      box-shadow: 0 3px 14px var(--pink-glow);
+    }
+
+    /* ── Participants strip ── */
+    .ch-participants {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .ch-participants h4 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+    .ch-participant-list { display: flex; gap: 10px; flex-wrap: wrap; }
+    .ch-participant {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .ch-participant.active-user { border-color: rgba(233,30,140,0.4); background: rgba(233,30,140,0.06); }
+    .ch-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 13px;
+      color: #fff; flex-shrink: 0; position: relative;
+    }
+    .ch-avatar--sw { background: var(--pink); }
+    .ch-avatar--jt { background: #c2410c; }
+    .ch-avatar--lm { background: #0e7490; }
+    .ch-avatar--rk { background: #7e22ce; }
+    .ch-avatar--np { background: #15803d; }
+    .ch-online-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green); border: 2px solid var(--bg-card);
+      position: absolute; bottom: 0; right: 0;
+    }
+    .ch-offline-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--text-muted); border: 2px solid var(--bg-card);
+      position: absolute; bottom: 0; right: 0;
+    }
+    .ch-participant-info { line-height: 1.3; }
+    .ch-participant-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ch-participant-role { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .role-badge-staff {
+      display: inline-block;
+      background: rgba(59,130,246,0.15); color: #93c5fd;
+      font-size: 9.5px; font-weight: 700; padding: 1px 6px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px;
+      margin-right: 4px;
+    }
+
+    /* ── Main grid ── */
+    .ch-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      align-items: stretch;
+    }
+    @media (max-width: 1000px) { .ch-grid { grid-template-columns: 1fr; } }
+
+    /* ── Chat panel ── */
+    .ch-chat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      min-height: 560px;
+      height: 100%;
+    }
+    .ch-chat__header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+    .ch-chat__header h4 {
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 2px;
+    }
+    .ch-chat__sub { font-size: 12px; color: var(--text-muted); }
+
+    /* Channel tabs */
+    .ch-channel-tabs {
+      display: flex; gap: 6px; padding: 10px 18px;
+      border-bottom: 1px solid var(--border); overflow-x: auto;
+    }
+    .ch-channel-tabs::-webkit-scrollbar { height: 0; }
+    .ch-tab {
+      padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary);
+      font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
+      cursor: pointer; white-space: nowrap; transition: all 0.18s;
+    }
+    .ch-tab:hover { border-color: var(--pink); color: var(--pink); }
+    .ch-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; box-shadow: 0 2px 10px var(--pink-glow); }
+
+    /* Messages */
+    .ch-messages {
+      flex: 1; overflow-y: auto; padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .ch-sys-msg {
+      text-align: center; font-size: 12px; color: var(--text-muted);
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .ch-sys-msg.info   { color: #93c5fd; border-color: rgba(59,130,246,0.25); background: rgba(59,130,246,0.06); }
+    .ch-sys-msg.alert  { color: #fca5a5; border-color: rgba(239,68,68,0.25);  background: rgba(239,68,68,0.06); }
+    .ch-sys-msg.success{ color: #86efac; border-color: rgba(34,197,94,0.25);  background: rgba(34,197,94,0.06); }
+    .sys-time { color: var(--text-muted); margin-left: 6px; font-size: 11px; }
+
+    .ch-msg { display: flex; align-items: flex-start; gap: 10px; }
+    .ch-msg__avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 11px;
+      color: #fff; flex-shrink: 0;
+    }
+    .ch-msg__body { flex: 1; }
+    .ch-msg__meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .ch-msg__name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ch-msg__role-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-muted);
+    }
+    .ch-msg__time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+    .ch-msg__bubble {
+      display: inline-block; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+      padding: 9px 13px; font-size: 13.5px; color: var(--text-secondary);
+      line-height: 1.5; max-width: 100%;
+    }
+
+    /* Input bar */
+    .ch-input-bar {
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ch-input-icon-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+    }
+    .ch-input-icon-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .ch-input {
+      flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text-primary);
+      font-family: var(--font-body); font-size: 13.5px; outline: none; transition: border-color 0.18s;
+    }
+    .ch-input:focus { border-color: rgba(233,30,140,0.4); }
+    .ch-input::placeholder { color: var(--text-muted); }
+    .ch-send-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: var(--pink); display: flex; align-items: center; justify-content: center;
+      color: #fff; cursor: pointer; flex-shrink: 0;
+      box-shadow: 0 3px 12px var(--pink-glow); transition: background 0.18s;
+    }
+    .ch-send-btn:hover { background: var(--pink-light); }
+
+    /* ── Right column ── */
+    .ch-right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Staff Roster card */
+    .cs-roster {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .cs-roster__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    }
+    .cs-roster__header h4 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .cs-roster__sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+    .cs-roster-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .cs-staff-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      transition: background 0.15s;
+    }
+    .cs-staff-item:hover { background: var(--bg-hover); }
+    .cs-staff-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 11px;
+      color: #fff; flex-shrink: 0; position: relative;
+    }
+    .cs-staff-avatar .online  { width:8px;height:8px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card);position:absolute;bottom:0;right:0; }
+    .cs-staff-avatar .offline { width:8px;height:8px;border-radius:50%;background:var(--text-muted);border:2px solid var(--bg-card);position:absolute;bottom:0;right:0; }
+    .cs-staff-info { flex:1; }
+    .cs-staff-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .cs-staff-role { font-size: 11.5px; color: var(--text-muted); }
+    .cs-staff-status {
+      font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+    }
+    .cs-staff-status.on-duty  { background: rgba(34,197,94,0.12); color: var(--green); }
+    .cs-staff-status.off-duty { background: rgba(107,93,126,0.15); color: var(--text-muted); }
+    .cs-staff-status.break    { background: rgba(234,179,8,0.12);  color: var(--yellow); }
+
+    /* Shift Schedule card */
+    .cs-schedule {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .cs-schedule__header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    }
+    .cs-schedule__header i { color: var(--blue); width: 15px; height: 15px; }
+    .cs-schedule__header h4 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .cs-schedule-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .cs-shift {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+    }
+    .cs-shift__left { display: flex; flex-direction: column; gap: 2px; }
+    .cs-shift__name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .cs-shift__time { font-size: 11.5px; color: var(--text-muted); }
+    .cs-shift__zone {
+      font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; background: rgba(59,130,246,0.12); color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
+      <div>
+        <div class="brand-name">EventPro</div>
+        <div class="brand-role">Event Coordinator</div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html"       class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a href="event-request.html"   class="nav-item"><i data-lucide="clipboard-list"></i><span>Event Request</span></a>
+      <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
+      <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
+      <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
+      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
+      <a href="coordination.html"    class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="user-avatar">S</div>
+        <div>
+          <div class="user-name">Sarah</div>
+          <div class="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e3908291828ba3848e828a8fcd808c8e">[email&#160;protected]</a></div>
+        </div>
+      </div>
+      <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <header class="topbar">
+      <h1 class="page-title">Coordination Hub</h1>
+      <div class="topbar__right">
+        <button class="notif-btn">
+          <i data-lucide="bell"></i>
+          <span class="notif-badge">2</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Intro -->
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary);">Coordination Hub</h2>
+        <p style="font-size:13px;color:var(--text-secondary);">Tech Summit 2026 – Real-time collaboration</p>
+      </div>
+
+      <!-- Section switcher -->
+      <div class="ch-section-tabs">
+        <a href="coordination.html"        class="ch-section-tab">
+          <i data-lucide="store"></i>
+          Vendor – Vendor
+        </a>
+        <a href="coordination-staff.html"  class="ch-section-tab active">
+          <i data-lucide="hard-hat"></i>
+          Vendor – Staff
+        </a>
+        <a href="coordination-client.html" class="ch-section-tab">
+          <i data-lucide="user-round"></i>
+          Vendor – Client
+        </a>
+      </div>
+
+      <!-- Participants -->
+      <div class="ch-participants">
+        <h4>Staff Members</h4>
+        <div class="ch-participant-list">
+
+          <div class="ch-participant active-user">
+            <div class="ch-avatar ch-avatar--sw">SW<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Sarah Williams</div>
+              <div class="ch-participant-role"><span class="role-badge-staff">Vendor</span> Audio Vendor</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--jt">JT<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">James Turner</div>
+              <div class="ch-participant-role">Sound Technician</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--lm">LM<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Lisa Moore</div>
+              <div class="ch-participant-role">Lighting Tech</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--rk">RK<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Ryan Kim</div>
+              <div class="ch-participant-role">Stage Manager</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--np">NP<span class="ch-offline-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Nina Patel</div>
+              <div class="ch-participant-role">AV Support</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="ch-grid">
+
+        <!-- ── Chat ── -->
+        <div class="ch-chat">
+          <div class="ch-chat__header">
+            <h4>Staff Chat</h4>
+            <span class="ch-chat__sub">Vendor ↔ Staff coordination</span>
+          </div>
+
+          <div class="ch-channel-tabs">
+            <button class="ch-tab active">All</button>
+            <button class="ch-tab">Audio</button>
+            <button class="ch-tab">Lighting</button>
+            <button class="ch-tab">Stage</button>
+          </div>
+
+          <div class="ch-messages" id="messagesArea">
+
+            <div class="ch-sys-msg info">
+              <i data-lucide="zap" style="width:13px;height:13px"></i>
+              Staff briefing session started for Tech Summit 2026
+              <span class="sys-time">9:00 AM</span>
+            </div>
+
+            <div class="ch-msg">
+              <div class="ch-msg__avatar ch-avatar--sw">SW</div>
+              <div class="ch-msg__body">
+                <div class="ch-msg__meta">
+                  <span class="ch-msg__name">Sarah Williams</span>
+                  <span class="ch-msg__role-tag">Event Coordinator</span>
+                  <span class="ch-msg__time">9:05 AM</span>
+                </div>
+                <div class="ch-msg__bubble">James, please ensure the main stage speakers are tested before 10 AM.</div>
+              </div>
+            </div>
+
+            <div class="ch-msg">
+              <div class="ch-msg__avatar ch-avatar--jt">JT</div>
+              <div class="ch-msg__body">
+                <div class="ch-msg__meta">
+                  <span class="ch-msg__name">James Turner</span>
+                  <span class="ch-msg__role-tag">Sound Technician</span>
+                  <span class="ch-msg__time">9:08 AM</span>
+                </div>
+                <div class="ch-msg__bubble">On it! Running the soundcheck now. Mics are up and balanced.</div>
+              </div>
+            </div>
+
+            <div class="ch-msg">
+              <div class="ch-msg__avatar ch-avatar--lm">LM</div>
+              <div class="ch-msg__body">
+                <div class="ch-msg__meta">
+                  <span class="ch-msg__name">Lisa Moore</span>
+                  <span class="ch-msg__role-tag">Lighting Tech</span>
+                  <span class="ch-msg__time">9:15 AM</span>
+                </div>
+                <div class="ch-msg__bubble">Stage lighting is configured. Backup LED panels are on standby in Hall B.</div>
+              </div>
+            </div>
+
+            <div class="ch-sys-msg alert">
+              <i data-lucide="alert-triangle" style="width:13px;height:13px"></i>
+              Shift gap detected: No staff assigned to Hall C from 11 AM – 1 PM
+              <span class="sys-time">9:20 AM</span>
+            </div>
+
+            <div class="ch-msg">
+              <div class="ch-msg__avatar ch-avatar--sw">SW</div>
+              <div class="ch-msg__body">
+                <div class="ch-msg__meta">
+                  <span class="ch-msg__name">Sarah Williams</span>
+                  <span class="ch-msg__role-tag">Event Coordinator</span>
+                  <span class="ch-msg__time">9:22 AM</span>
+                </div>
+                <div class="ch-msg__bubble">Ryan, can you cover Hall C during that window? We need someone on the monitors.</div>
+              </div>
+            </div>
+
+            <div class="ch-msg">
+              <div class="ch-msg__avatar ch-avatar--rk">RK</div>
+              <div class="ch-msg__body">
+                <div class="ch-msg__meta">
+                  <span class="ch-msg__name">Ryan Kim</span>
+                  <span class="ch-msg__role-tag">Stage Manager</span>
+                  <span class="ch-msg__time">9:25 AM</span>
+                </div>
+                <div class="ch-msg__bubble">Sure, I'll shift my break to later and cover Hall C. No problem.</div>
+              </div>
+            </div>
+
+            <div class="ch-sys-msg success">
+              <i data-lucide="check-circle" style="width:13px;height:13px"></i>
+              Shift gap resolved – Ryan Kim assigned to Hall C
+              <span class="sys-time">9:26 AM</span>
+            </div>
+
+          </div><!-- /messages -->
+
+          <div class="ch-input-bar">
+            <button class="ch-input-icon-btn" title="Attach"><i data-lucide="paperclip" style="width:16px;height:16px;display:block"></i></button>
+            <button class="ch-input-icon-btn" title="Emoji"><i data-lucide="smile" style="width:16px;height:16px;display:block"></i></button>
+            <input class="ch-input" id="msgInput" type="text" placeholder="Type a message..." />
+            <button class="ch-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block"></i></button>
+          </div>
+        </div><!-- /chat -->
+
+        <!-- ── Right ── -->
+        <div class="ch-right">
+
+          <!-- Staff Roster -->
+          <div class="cs-roster">
+            <div class="cs-roster__header">
+              <div>
+                <h4>Staff Roster</h4>
+                <div class="cs-roster__sub">4 on duty · 1 offline</div>
+              </div>
+            </div>
+            <div class="cs-roster-list">
+
+              <div class="cs-staff-item">
+                <div class="cs-staff-avatar ch-avatar--jt">JT<span class="online"></span></div>
+                <div class="cs-staff-info">
+                  <div class="cs-staff-name">James Turner</div>
+                  <div class="cs-staff-role">Sound Technician · Main Stage</div>
+                </div>
+                <span class="cs-staff-status on-duty">On Duty</span>
+              </div>
+
+              <div class="cs-staff-item">
+                <div class="cs-staff-avatar ch-avatar--lm">LM<span class="online"></span></div>
+                <div class="cs-staff-info">
+                  <div class="cs-staff-name">Lisa Moore</div>
+                  <div class="cs-staff-role">Lighting Tech · Hall A</div>
+                </div>
+                <span class="cs-staff-status on-duty">On Duty</span>
+              </div>
+
+              <div class="cs-staff-item">
+                <div class="cs-staff-avatar ch-avatar--rk">RK<span class="online"></span></div>
+                <div class="cs-staff-info">
+                  <div class="cs-staff-name">Ryan Kim</div>
+                  <div class="cs-staff-role">Stage Manager · Hall C</div>
+                </div>
+                <span class="cs-staff-status on-duty">On Duty</span>
+              </div>
+
+              <div class="cs-staff-item">
+                <div class="cs-staff-avatar ch-avatar--np">NP<span class="offline"></span></div>
+                <div class="cs-staff-info">
+                  <div class="cs-staff-name">Nina Patel</div>
+                  <div class="cs-staff-role">AV Support</div>
+                </div>
+                <span class="cs-staff-status off-duty">Offline</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Shift Schedule -->
+          <div class="cs-schedule">
+            <div class="cs-schedule__header">
+              <i data-lucide="calendar-clock"></i>
+              <h4>Today's Shifts</h4>
+            </div>
+            <div class="cs-schedule-list">
+
+              <div class="cs-shift">
+                <div class="cs-shift__left">
+                  <div class="cs-shift__name">James Turner</div>
+                  <div class="cs-shift__time">8:00 AM – 4:00 PM</div>
+                </div>
+                <span class="cs-shift__zone">Main Stage</span>
+              </div>
+
+              <div class="cs-shift">
+                <div class="cs-shift__left">
+                  <div class="cs-shift__name">Lisa Moore</div>
+                  <div class="cs-shift__time">9:00 AM – 5:00 PM</div>
+                </div>
+                <span class="cs-shift__zone">Hall A</span>
+              </div>
+
+              <div class="cs-shift">
+                <div class="cs-shift__left">
+                  <div class="cs-shift__name">Ryan Kim</div>
+                  <div class="cs-shift__time">10:00 AM – 6:00 PM</div>
+                </div>
+                <span class="cs-shift__zone">Hall C</span>
+              </div>
+
+              <div class="cs-shift" style="opacity:0.5;">
+                <div class="cs-shift__left">
+                  <div class="cs-shift__name">Nina Patel</div>
+                  <div class="cs-shift__time">2:00 PM – 10:00 PM</div>
+                </div>
+                <span class="cs-shift__zone" style="background:rgba(107,93,126,0.2);color:var(--text-muted);">Pending</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Tasks Widget (Moved from Vendor-Vendor) -->
+          <div class="ch-tasks">
+            <div class="ch-tasks__header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)">
+              <div>
+                <h4 style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);">Tasks</h4>
+                <div class="ch-tasks__sub" id="tasksTracker" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></div>
+              </div>
+              <button class="ch-add-task" id="btnAddTaskModal" style="background:var(--pink);color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;"><i data-lucide="plus" style="width:12px;height:12px"></i> Add Task</button>
+            </div>
+            <div class="ch-task-list" id="chTaskList" style="display:flex;flex-direction:column;gap:12px;padding:16px;max-height:400px;overflow-y:auto;">
+              <!-- Dynamic JS populated -->
+            </div>
+          </div>
+
+        </div><!-- /right -->
+      </div><!-- /grid -->
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- Assign Task Modal -->
+<div class="overlay" id="addTaskOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:999;align-items:center;justify-content:center;">
+  <div class="modal" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:440px;box-shadow:0 10px 30px rgba(0,0,0,0.4);border-top:3px solid var(--pink);">
+    <div style="padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+        <i data-lucide="check-square" style="color:var(--pink)"></i> Assign Task
+      </h3>
+      <button class="modal-close" id="btnCloseTaskModal" style="background:none;border:none;color:var(--text-muted);cursor:pointer;"><i data-lucide="x"></i></button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+      
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Task Description</label>
+        <input type="text" id="taskDescInput" placeholder="E.g. Confirm LED screen allocation" style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
+      </div>
+      
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Assign To Staff</label>
+        <select id="taskStaffSelect" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
+          <!-- Dynamically populated -->
+        </select>
+        <div style="margin-top:8px;font-size:12px;">
+          <span style="color:var(--text-muted);">Staff not listed?</span> 
+          <a href="manage-staff.html" style="color:var(--pink);text-decoration:none;font-weight:500;">Add New Staff</a>
+        </div>
+      </div>
+      
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Priority</label>
+        <select id="taskPrioritySelect" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+
+    </div>
+    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:rgba(255,255,255,0.01);">
+      <button id="btnCancelTask" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;">Cancel</button>
+      <button id="btnSaveTask" style="padding:8px 16px;background:var(--pink);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;">Save Task</button>
+    </div>
+  </div>
+</div>
+
+
+  <script data-cfa
+sync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/message-system.js"></script>
+  <script src="../../scripts/notification-system.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/coordination.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

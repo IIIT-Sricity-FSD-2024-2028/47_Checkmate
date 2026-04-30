@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Events — EventPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="../../styles/superuser_css/events.css">
+  </head>
+  <body>
+    <aside class="sb">
+      <div class="sb-brand">
+        <div class="sb-logo">📅</div>
+        <div>
+          <div class="sb-name">EventPro</div>
+          <div class="sb-badge">Superuser</div>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <a href="dashboard.html" class="nl">⊞ Dashboard</a>
+        <a href="events.html" class="nl active">🛡 All Events</a>
+        <a href="bookings.html" class="nl">📖 All Bookings</a>
+        <a href="resources.html" class="nl">📦 All Resources</a>
+        <a href="staff.html" class="nl">👤 All Staff</a>
+        <a href="users.html" class="nl">👥 Users Management</a>
+      </nav>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="sb-av">S</div>
+          <div>
+            <div class="sb-un">Super Admin</div>
+            <div class="sb-ue">superuser@demo.com</div>
+          </div>
+        </div>
+        <button class="sb-out">⇥ Logout</button>
+      </div>
+    </aside>
+
+    <main class="page">
+      <div class="ph">
+        <h1><span style="color: #ec4899">📅</span> All Events</h1>
+        <p>Complete system-wide event management</p>
+      </div>
+
+      <div class="top-row">
+        <div class="sw">
+          <span class="sw-ico">🔍</span>
+          <input
+            type="text"
+            id="q"
+            placeholder="Search events, clients, or vendors..."
+            oninput="render()"
+          />
+        </div>
+        <button class="btn btn-p" onclick="openM()">+ Add Event</button>
+      </div>
+
+      <div class="tw">
+        <div class="th">
+          <span style="color: #f59e0b">📅</span>
+          <span id="cnt">All Events</span>
+        </div>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Event ID</th>
+                <th>Event Name</th>
+                <th>Client</th>
+                <th>Vendor</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Guests</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" style="display: none">
+          <p>No events found</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="ov" id="modal">
+      <div class="modal">
+        <div class="mh">
+          <span class="mt" id="mt">Add Event</span
+          ><button class="mx" onclick="closeM()">✕</button>
+        </div>
+        <form id="mform" onsubmit="return false;">
+          <div class="fg2">
+            <div class="fg">
+              <label class="fl">Event Name *</label
+              ><input class="fc" id="f_nm" placeholder="e.g. Johnson Wedding" />
+              <div class="ferr" id="f_nm_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Venue *</label
+              ><input class="fc" id="f_ve" placeholder="e.g. Grand Ballroom" />
+              <div class="ferr" id="f_ve_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Client *</label
+              ><input class="fc" id="f_cl" placeholder="Client name" />
+              <div class="ferr" id="f_cl_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Vendor *</label>
+              <select class="fc" id="f_vn">
+                <option value="">Select vendor...</option>
+              </select>
+              <div class="ferr" id="f_vn_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Date *</label
+              ><input class="fc" type="date" id="f_dt" />
+              <div class="ferr" id="f_dt_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Type *</label>
+              <select class="fc" id="f_ty">
+                <option value="">Select...</option>
+                <option>Wedding</option>
+                <option>Birthday</option>
+                <option>Conference</option>
+                <option>Corporate</option>
+                <option>Other</option>
+              </select>
+              <div class="ferr" id="f_ty_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Guest Count *</label
+              ><input
+                class="fc"
+                type="number"
+                id="f_gs"
+                placeholder="e.g. 200"
+                min="1"
+              />
+              <div class="ferr" id="f_gs_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Status *</label>
+              <select class="fc" id="f_st">
+                <option value="">Select...</option>
+                <option>Confirmed</option>
+                <option>Pending</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+                <option>Cancelled</option>
+              </select>
+              <div class="ferr" id="f_st_e"></div>
+            </div>
+          </div>
+          <div class="mf">
+            <button class="btn btn-s" onclick="closeM()">Cancel</button>
+            <button class="btn btn-p" onclick="save()">Save Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- View Modal -->
+    <div class="ov" id="vmodal">
+      <div class="modal">
+        <div class="mh">
+          <span class="mt">Event Details</span
+          ><button class="mx" onclick="closeV()">✕</button>
+        </div>
+        <div id="vbody"></div>
+        <div class="mf">
+          <button class="btn btn-s" onclick="closeV()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../scripts/superuser_js/store.js"></script>
+    <script>
+      let eid = null;
+      const typeMap = {
+        Wedding: "b-wedding",
+        Birthday: "b-birthday",
+        Conference: "b-conf",
+        Corporate: "b-corp",
+        Other: "b-other",
+      };
+      const statMap = {
+        Confirmed: "b-confirmed",
+        Completed: "b-completed",
+        Pending: "b-pending",
+        "In Progress": "b-inprogress",
+        Cancelled: "b-cancelled",
+      };
+      function typeBadge(t) {
+        return `<span class="badge ${typeMap[t] || "b-other"}">${t}</span>`;
+      }
+      function statBadge(s) {
+        return `<span class="badge ${statMap[s] || "b-pending"}">${s}</span>`;
+      }
+
+      function render() {
+        const q = document.getElementById("q").value.toLowerCase();
+        let data = EP.events;
+        if (q)
+          data = data.filter(
+            (e) =>
+              e.name.toLowerCase().includes(q) ||
+              e.client.toLowerCase().includes(q) ||
+              e.vendor.toLowerCase().includes(q) ||
+              e.id.toLowerCase().includes(q),
+          );
+        document.getElementById("cnt").textContent =
+          `All Events (${data.length})`;
+        document.getElementById("empty").style.display = data.length
+          ? "none"
+          : "block";
+        document.getElementById("tbody").innerHTML = data
+          .map(
+            (e) => `
+    <tr>
+      <td class="tid">${e.id}</td>
+      <td><div class="tname">${e.name}</div><div class="tsub">${e.venue}</div></td>
+      <td>${e.client}</td>
+      <td>${e.vendor}</td>
+      <td>${e.date}</td>
+      <td>${typeBadge(e.type)}</td>
+      <td>${e.guests}</td>
+      <td>${statBadge(e.status)}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="ib ib-v" onclick="viewE('${e.id}')" title="View">👁</button>
+        <button class="ib ib-e" onclick="editE('${e.id}')" title="Edit">✏</button>
+        <button class="ib ib-d" onclick="delE('${e.id}')" title="Delete">🗑</button>
+      </div></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      function openM(id = null) {
+        eid = id;
+        UI.clearV("mform");
+        document.getElementById("f_vn").innerHTML =
+          '<option value="">Select vendor...</option>' + UI.vopts();
+        if (id) {
+          const e = EP.events.find((x) => x.id === id);
+          document.getElementById("mt").textContent = "Edit Event";
+          document.getElementById("f_nm").value = e.name;
+          document.getElementById("f_ve").value = e.venue;
+          document.getElementById("f_cl").value = e.client;
+          document.getElementById("f_vn").value = e.vendor;
+          document.getElementById("f_ty").value = e.type;
+          document.getElementById("f_gs").value = e.guests;
+          document.getElementById("f_st").value = e.status;
+          document.getElementById("f_dt").value = "";
+        } else {
+          document.getElementById("mt").textContent = "Add Event";
+          document.getElementById("mform").reset();
+        }
+        document.getElementById("modal").classList.add("open");
+      }
+      function closeM() {
+        document.getElementById("modal").classList.remove("open");
+        eid = null;
+      }
+      function editE(id) {
+        openM(id);
+      }
+
+      function save() {
+        if (
+          !UI.validate({
+            f_nm: [{ req: "Event name required" }],
+            f_ve: [{ req: "Venue required" }],
+            f_cl: [{ req: "Client required" }],
+            f_vn: [{ req: "Select vendor" }],
+            f_ty: [{ req: "Select type" }],
+            f_gs: [
+              { req: "Guest count required" },
+              { num: "Number only" },
+              { min: 1 },
+            ],
+            f_st: [{ req: "Select status" }],
+          })
+        )
+          return;
+        const p = {
+          name: document.getElementById("f_nm").value.trim(),
+          venue: document.getElementById("f_ve").value.trim(),
+          client: document.getElementById("f_cl").value.trim(),
+          vendor: document.getElementById("f_vn").value,
+          date:
+            document.getElementById("f_dt").value ||
+            new Date().toLocaleDateString(),
+          type: document.getElementById("f_ty").value,
+          guests: parseInt(document.getElementById("f_gs").value),
+          status: document.getElementById("f_st").value,
+        };
+        if (eid) {
+          EP.updateEvent(eid, p);
+          UI.toast("Event updated!");
+        } else {
+          EP.addEvent(p);
+          UI.toast("Event created!");
+        }
+        closeM();
+        render();
+      }
+
+      function delE(id) {
+        const e = EP.events.find((x) => x.id === id);
+        UI.confirm("Delete Event", `Delete "${e.name}"?`, () => {
+          EP.deleteEvent(id);
+          UI.toast("Event deleted.", "info");
+          render();
+        });
+      }
+
+      function viewE(id) {
+        const e = EP.events.find((x) => x.id === id);
+        document.getElementById("vbody").innerHTML = UI.viewDetail([
+          ["Event ID", e.id],
+          ["Name", e.name],
+          ["Venue", e.venue],
+          ["Client", e.client],
+          ["Vendor", e.vendor],
+          ["Date", e.date],
+          ["Type", typeBadge(e.type)],
+          ["Guests", e.guests],
+          ["Status", statBadge(e.status)],
+        ]);
+        document.getElementById("vmodal").classList.add("open");
+      }
+      function closeV() {
+        document.getElementById("vmodal").classList.remove("open");
+      }
+
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeM();
+      });
+      document.getElementById("vmodal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeV();
+      });
+      render();
+    </script>
+  </body>
+</html>

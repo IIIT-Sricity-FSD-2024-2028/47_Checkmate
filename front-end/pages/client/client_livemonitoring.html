@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Event Monitoring - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item active"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar" style="justify-content:flex-start; gap:16px;">
+                <a href="client_myevents.html" class="back-btn"><i class="ph ph-arrow-left"></i></a>
+                <div>
+                    <div style="display:flex; align-items:center;">
+                        <h1 class="page-title">Live Event Monitoring</h1>
+                        <span class="live-badge"><div class="live-dot"></div> LIVE</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:4px;">Corporate Gala • Convention Center</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="live-grid">
+                    <!-- Left: Timeline (Tasks) -->
+                    <div class="card">
+                        <div class="card-title"><i class="ph ph-clock"></i> Live Task Progress</div>
+                        <div id="tpProgressWrap" style="margin-bottom:20px; padding:12px; background:rgba(0,0,0,0.1); border-radius:10px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
+                                <span>Overall Completion</span>
+                                <span id="tpProgressPct" style="color:var(--pink); font-weight:700;">0%</span>
+                            </div>
+                            <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;">
+                                <div id="tpProgressFill" style="height:100%; width:0%; background:var(--pink); border-radius:3px; transition:width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                        <div id="tpTimeline" class="timeline-list pb-2">
+                            <!-- Tasks injected by client_livemonitoring.js -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Resource Status -->
+                    <div id="tpResourceListWrap" class="card">
+                        <div class="card-title"><i class="ph ph-cube"></i> Resource Status</div>
+                        <div id="tpResourceList" style="display:flex; flex-direction:column; gap:12px;">
+                            <!-- Resources injected by client_livemonitoring.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Status -->
+                <div class="card mb-6">
+                    <div class="card-title"><i class="ph ph-users"></i> Assigned Staff Status</div>
+                    <div id="tpStaffList" class="staff-row">
+                        <!-- Staff injected by client_livemonitoring.js -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-title"><i class="ph ph-lightning"></i> Quick Actions</div>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button class="btn btn-primary"><i class="ph ph-headset"></i> Request Support</button>
+                        <button class="btn btn-ghost" onclick="window.location.href='client_coordination.html'"><i class="ph ph-chat-circle"></i> Contact Coordinator</button>
+                        <a href="client_myevents.html" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Back to My Events</a>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/client_js/client_livemonitoring.js"></script>
+    <script src="../../scripts/client_js/client_utils.js"></script>
+</body>
+</html>

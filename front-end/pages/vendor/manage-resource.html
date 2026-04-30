@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Manage Resource</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <style>
+    /* ── Toolbar ── */
+    .mr-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mr-search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      transition: border-color 0.18s;
+    }
+    .mr-search:focus-within { border-color: rgba(233,30,140,0.4); }
+    .mr-search svg { width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0; }
+    .mr-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      width: 100%;
+    }
+    .mr-search input::placeholder { color: var(--text-muted); }
+
+    .mr-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .mr-filter-btn svg { width: 15px; height: 15px; }
+    .mr-filter-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    .mr-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px var(--pink-glow);
+      transition: background 0.18s;
+    }
+    .mr-add-btn svg { width: 15px; height: 15px; }
+    .mr-add-btn:hover { background: var(--pink-light); }
+
+    /* ── Table ── */
+    .mr-table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .mr-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .mr-table thead tr {
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .mr-table th {
+      padding: 13px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .mr-table th:first-child,
+    .mr-table td:first-child { padding-left: 24px; }
+    .mr-table th:last-child,
+    .mr-table td:last-child  { padding-right: 24px; }
+
+    .mr-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .mr-table tbody tr:last-child { border-bottom: none; }
+    .mr-table tbody tr:hover { background: var(--bg-hover); }
+
+    .mr-table td {
+      padding: 16px 16px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .col-name {
+      font-weight: 600;
+      color: var(--text-primary) !important;
+    }
+
+    /* Category badge */
+    .badge--equipment {
+      background: rgba(168,85,247,0.15);
+      color: #d8b4fe;
+      border: 1px solid rgba(168,85,247,0.25);
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 11px;
+      border-radius: 20px;
+    }
+
+    .badge--furniture {
+      background: rgba(249,115,22,0.15);
+      color: #fdba74;
+      border: 1px solid rgba(249,115,22,0.25);
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 11px;
+      border-radius: 20px;
+    }
+
+    .badge--decor {
+      background: rgba(59,130,246,0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59,130,246,0.25);
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 11px;
+      border-radius: 20px;
+    }
+
+    /* Availability */
+    .avail-badge {
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .avail-badge.available {
+      background: rgba(34,197,94,0.12);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .avail-badge.unavailable {
+      background: rgba(239,68,68,0.12);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+
+    /* Action buttons */
+    .mr-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mr-action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.18s, transform 0.18s;
+    }
+    .mr-action-btn svg { width: 14px; height: 14px; }
+    .mr-action-btn:hover { opacity: 0.8; transform: scale(1.1); }
+
+    .mr-action-btn.allocate { background: rgba(126,34,206,0.15); color: #d8b4fe; }
+    .mr-action-btn.edit     { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .mr-action-btn.delete   { background: rgba(239,68,68,0.15);  color: var(--red); }
+
+    /* ── Pagination ── */
+    .mr-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .mr-showing { font-size: 13px; color: var(--text-muted); }
+
+    .mr-pagination {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mr-page-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .mr-page-btn svg { width: 14px; height: 14px; }
+    .mr-page-btn:hover { border-color: var(--pink); color: var(--pink); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="event-request.html" class="nav-item">
+          <i data-lucide="clipboard-list"></i>
+          <span>Event Request</span>
+        </a>
+        <a href="manage-resource.html" class="nav-item active">
+          <i data-lucide="package"></i>
+          <span>Manage Resource</span>
+        </a>
+        <a href="manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Manage Staff</span>
+        </a>
+        <a href="preset-package.html" class="nav-item">
+          <i data-lucide="box"></i>
+          <span>Preset Package</span>
+        </a>
+        <a href="report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i>
+          <span>Report Issue</span>
+        </a>
+        <a href="coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i>
+          <span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <h1 class="page-title">Manage Resource</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Toolbar -->
+        <div class="mr-toolbar">
+          <div class="mr-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Search resources..." />
+          </div>
+          <button class="mr-filter-btn">
+            <i data-lucide="sliders-horizontal"></i>
+            More Filters
+          </button>
+          <button class="mr-add-btn">
+            <i data-lucide="plus"></i>
+            Add Resource
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="mr-table-wrap">
+          <table class="mr-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Availability</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <tr>
+                <td class="col-name">Audio System Premium</td>
+                <td><span class="badge--equipment">Equipment</span></td>
+                <td>12</td>
+                <td>$500/day</td>
+                <td><span class="avail-badge available">available</span></td>
+                <td>
+                  <div class="mr-actions">
+                    <button class="mr-action-btn view"   title="View">  <i data-lucide="clipboard-list"></i></button>
+                    <button class="mr-action-btn edit"   title="Edit">  <i data-lucide="pencil"></i></button>
+                    <button class="mr-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-name">LED Screen 4K</td>
+                <td><span class="badge--equipment">Equipment</span></td>
+                <td>8</td>
+                <td>$300/day</td>
+                <td><span class="avail-badge available">available</span></td>
+                <td>
+                  <div class="mr-actions">
+                    <button class="mr-action-btn view"   title="View">  <i data-lucide="clipboard-list"></i></button>
+                    <button class="mr-action-btn edit"   title="Edit">  <i data-lucide="pencil"></i></button>
+                    <button class="mr-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-name">Round Banquet Tables</td>
+                <td><span class="badge--furniture">Furniture</span></td>
+                <td>40</td>
+                <td>$25/day</td>
+                <td><span class="avail-badge available">available</span></td>
+                <td>
+                  <div class="mr-actions">
+                    <button class="mr-action-btn view"   title="View">  <i data-lucide="clipboard-list"></i></button>
+                    <button class="mr-action-btn edit"   title="Edit">  <i data-lucide="pencil"></i></button>
+                    <button class="mr-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-name">Stage Lighting Rig</td>
+                <td><span class="badge--equipment">Equipment</span></td>
+                <td>5</td>
+                <td>$800/day</td>
+                <td><span class="avail-badge unavailable">unavailable</span></td>
+                <td>
+                  <div class="mr-actions">
+                    <button class="mr-action-btn view"   title="View">  <i data-lucide="clipboard-list"></i></button>
+                    <button class="mr-action-btn edit"   title="Edit">  <i data-lucide="pencil"></i></button>
+                    <button class="mr-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-name">Floral Centrepieces</td>
+                <td><span class="badge--decor">Decor</span></td>
+                <td>60</td>
+                <td>$15/day</td>
+                <td><span class="avail-badge available">available</span></td>
+                <td>
+                  <div class="mr-actions">
+                    <button class="mr-action-btn view"   title="View">  <i data-lucide="clipboard-list"></i></button>
+                    <button class="mr-action-btn edit"   title="Edit">  <i data-lucide="pencil"></i></button>
+                    <button class="mr-action-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="mr-footer">
+          <span class="mr-showing">Showing 5 Resources</span>
+          <div class="mr-pagination">
+            <button class="mr-page-btn" title="Previous"><i data-lucide="chevron-left"></i></button>
+            <button class="mr-page-btn" title="Next"><i data-lucide="chevron-right"></i></button>
+          </div>
+
+      </div><!-- /.content -->
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/resource.js"></script>
+</body>
+</html>

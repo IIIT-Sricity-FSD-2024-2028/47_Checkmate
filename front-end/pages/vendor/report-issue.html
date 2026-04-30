@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Report Issue</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <style>
+    /* ══════════════════════
+       REPORT ISSUE PAGE
+    ══════════════════════ */
+    .ri-wrapper {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 10px 0 30px;
+    }
+
+    .ri-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 680px;
+      overflow: hidden;
+    }
+
+    /* Header strip */
+    .ri-card__header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ri-header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(233,30,140,0.12);
+      border: 1px solid rgba(233,30,140,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--pink);
+      flex-shrink: 0;
+    }
+
+    .ri-header-text h3 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .ri-header-text p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Form body */
+    .ri-body {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .ri-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .ri-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .ri-input,
+    .ri-textarea,
+    .ri-select {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.18s;
+    }
+    .ri-input:focus,
+    .ri-textarea:focus,
+    .ri-select:focus { border-color: rgba(233,30,140,0.5); }
+    .ri-input::placeholder,
+    .ri-textarea::placeholder { color: var(--text-muted); }
+    .ri-textarea { min-height: 110px; resize: vertical; }
+
+    /* Custom select wrapper */
+    .ri-select-wrap {
+      position: relative;
+    }
+    .ri-select {
+      appearance: none;
+      cursor: pointer;
+      padding-right: 36px;
+    }
+    .ri-select option { background: #2e1c40; }
+    .ri-select-wrap i {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--text-muted);
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Two-col row */
+    .ri-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 560px) { .ri-row { grid-template-columns: 1fr; } }
+
+    /* Reporter info box */
+    .ri-reporter {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ri-reporter__title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .ri-reporter__row {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .ri-reporter__field {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .ri-reporter__field span {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Footer buttons */
+    .ri-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 28px 28px;
+    }
+
+    .ri-submit {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 18px var(--pink-glow);
+      transition: background 0.18s;
+    }
+    .ri-submit:hover { background: var(--pink-light); }
+
+    .ri-cancel {
+      padding: 12px 22px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .ri-cancel:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+    /* Success toast */
+    .ri-toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #15803d;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 999;
+    }
+    .ri-toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
+      <div>
+        <div class="brand-name">EventPro</div>
+        <div class="brand-role">Event Coordinator</div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html"       class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a href="event-request.html"   class="nav-item"><i data-lucide="clipboard-list"></i><span>Event Request</span></a>
+      <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
+      <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
+      <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
+      <a href="report-issue.html"    class="nav-item active"><i data-lucide="flag"></i><span>Report Issue</span></a>
+      <a href="coordination.html"    class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="user-avatar">S</div>
+        <div>
+          <div class="user-name">Sarah</div>
+          <div class="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d4e5c4f5c557d5a505c5451135e5250">[email&#160;protected]</a></div>
+        </div>
+      </div>
+      <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <header class="topbar">
+      <h1 class="page-title">Report Issue</h1>
+      <div class="topbar__right">
+        <button class="notif-btn">
+          <i data-lucide="bell"></i>
+          <span class="notif-badge">1</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="ri-wrapper">
+        <div class="ri-card">
+
+          <!-- Header -->
+          <div class="ri-card__header">
+            <div class="ri-header-icon">
+              <i data-lucide="alert-circle"></i>
+            </div>
+            <div class="ri-header-text">
+              <h3>Report an Issue</h3>
+              <p>Help us resolve issues quickly by providing detailed information</p>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="ri-body">
+
+            <!-- Issue Title -->
+            <div class="ri-form-group">
+              <label class="ri-label">Issue Title</label>
+              <input class="ri-input" type="text" placeholder="Brief description of the issue" />
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="ri-form-group">
+              <label class="ri-label">Detailed Description</label>
+              <textarea class="ri-textarea" placeholder="Provide as much detail as possible about the issue"></textarea>
+            </div>
+
+            <!-- Priority + Category -->
+            <div class="ri-row">
+              <div class="ri-form-group">
+                <label class="ri-label">Priority Level</label>
+                <div class="ri-select-wrap">
+                  <select class="ri-select">
+                    <option value="" disabled selected>Select Priority</option>
+                    <option>🔴 Critical</option>
+                    <option>🟠 High</option>
+                    <option>🟡 Medium</option>
+                    <option>🟢 Low</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+              <div class="ri-form-group">
+                <label class="ri-label">Issue Category</label>
+                <div class="ri-select-wrap">
+                  <select class="ri-select">
+                    <option value="" disabled selected>Select Category</option>
+                    <option>Resource Shortage</option>
+                    <option>Staff Conflict</option>
+                    <option>Equipment Failure</option>
+                    <option>Venue Issue</option>
+                    <option>Logistics</option>
+                    <option>Other</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Related Event -->
+            <div class="ri-form-group">
+              <label class="ri-label">Related Event *</label>
+              <div class="ri-select-wrap">
+                <select class="ri-select">
+                  <option value="" disabled selected>Select related event</option>
+                  <option>Tech Summit 2026</option>
+                  <option>Wedding – Sarah &amp; Mike</option>
+                  <option>Corporate Gala</option>
+                  <option>Music Festival</option>
+                </select>
+                <i data-lucide="chevron-down"></i>
+              </div>
+            </div>
+
+            <!-- Reporter Info -->
+            <div class="ri-reporter">
+              <div class="ri-reporter__title">Reporter Information</div>
+              <div class="ri-reporter__row">
+                <div class="ri-reporter__field">Name: <span>Sarah</span></div>
+                <div class="ri-reporter__field">Role: <span>Vendor</span></div>
+              </div>
+              <div class="ri-reporter__field">Email: <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="15667467747d557278747c793b767a78">[email&#160;protected]</a></span></div>
+            </div>
+
+          </div><!-- /ri-body -->
+
+          <!-- Footer -->
+          <div class="ri-footer">
+            <button class="ri-submit" id="submitBtn">
+              <i data-lucide="alert-circle"></i>
+              Submit Issue Report
+            </button>
+            <button class="ri-cancel">Cancel</button>
+          </div>
+
+        </div><!-- /ri-card -->
+      </div>
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="ri-toast" id="toast">
+  <i data-lucide="check-circle"></i> Issue submitte
+d successfully!
+</div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/report.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

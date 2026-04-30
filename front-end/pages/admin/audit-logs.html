@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – System Logs</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item active">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">System Audit Logs</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Monitor critical actions taken across the platform</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="data-table-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 class="table-header-title" style="margin-bottom: 0;">System Security Audit Log</h3>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <select id="logFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer;">
+                        <option value="all">All Events</option>
+                        <option value="security">Security</option>
+                        <option value="moderation">Moderation</option>
+                        <option value="financial">Financial</option>
+                    </select>
+                    <div class="search-box">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" id="logSearch" placeholder="Search logs..." />
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .log-item { animation: fadeInUp 0.4s ease forwards; }
+            </style>
+            <div class="approval-list" id="logListContainer" style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
+                <div class="approval-item log-item" data-category="security" style="border-left: 3px solid #3b82f6;">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i data-lucide="log-in"></i></div>
+                        <div>
+                            <h4 class="log-title">Admin Login Detected</h4>
+                            <p class="log-desc">IP: 192.168.1.5</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 31 19:42:01</span>
+                </div>
+                <div class="approval-item log-item" data-category="moderation" style="border-left: 3px solid var(--pink);">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" style="background: rgba(233, 30, 140, 0.1); color: var(--pink);"><i data-lucide="shield"></i></div>
+                        <div>
+                            <h4 class="log-title">Service Package Approved</h4>
+                            <p class="log-desc">Admin approved "Elite Wedding Bundle" for Dream Events Ltd.</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 31 16:15:33</span>
+                </div>
+                <div class="approval-item log-item" data-category="moderation" style="border-left: 3px solid #ef4444;">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i data-lucide="trash-2"></i></div>
+                        <div>
+                            <h4 class="log-title">Vendor Account Rejected</h4>
+                            <p class="log-desc">Admin rejected registration - document verification failed.</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 30 11:22:00</span>
+                </div>
+                <div class="approval-item log-item" data-category="financial" style="border-left: 3px solid #22c55e;">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;"><i data-lucide="dollar-sign"></i></div>
+                        <div>
+                            <h4 class="log-title">Batch Payout Released</h4>
+                            <p class="log-desc">Admin released $18,450.00 total to 2 vendors.</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 29 09:00:00</span>
+                </div>
+            </div>
+            <div class="pagination-controls">
+                <button id="loadMoreBtn" class="export-btn" style="background: var(--bg-hover); color: var(--text-primary); margin-top: 16px; transition: all 0.3s ease;">
+                    <span id="loadMoreText">Load Older Logs</span> 
+                    <i id="loadMoreIcon" data-lucide="arrow-down" style="margin-left: 6px;"></i>
+                </button>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('logSearch');
+        const filterSelect = document.getElementById('logFilter');
+        const listContainer = document.getElementById('logListContainer');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadMoreText = document.getElementById('loadMoreText');
+        const loadMoreIcon = document.getElementById('loadMoreIcon');
+
+        // Filtering Logic
+        const filterLogs = () => {
+            const query = searchInput.value.toLowerCase();
+            const category = filterSelect.value;
+            const items = listContainer.querySelectorAll('.log-item');
+
+            items.forEach(item => {
+                const title = item.querySelector('.log-title').textContent.toLowerCase();
+                const desc = item.querySelector('.log-desc').textContent.toLowerCase();
+                const itemCat = item.getAttribute('data-category');
+
+                const matchesQuery = title.includes(query) || desc.includes(query);
+                const matchesCategory = category === 'all' || itemCat === category;
+
+                if (matchesQuery && matchesCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        };
+
+        if (searchInput) searchInput.addEventListener('input', filterLogs);
+        if (filterSelect) filterSelect.addEventListener('change', filterLogs);
+
+        // Load More Logic with Fake Data Animation
+        const fakeLogs = [
+            { category: 'financial', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', icon: 'dollar-sign', title: 'Refund Processed', desc: 'Auto-refund issued to client #10292.', date: 'Mar 28 14:30:00' },
+            { category: 'security', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: 'alert-triangle', title: 'Failed Login Attempt', desc: '3 failed attempts for user admin@eventpro.com', date: 'Mar 28 09:12:44' },
+            { category: 'moderation', color: 'var(--pink)', bg: 'rgba(233, 30, 140, 0.1)', icon: 'shield', title: 'Vendor Account Flagged', desc: 'Multiple user reports on "Party Planners Inc".', date: 'Mar 27 18:05:10' }
+        ];
+
+        let loadClicks = 0;
+
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => {
+                if (loadClicks >= 2) {
+                    loadMoreText.textContent = "No older logs found";
+                    loadMoreIcon.style.display = 'none';
+                    loadMoreBtn.style.pointerEvents = 'none';
+                    return;
+                }
+
+                // Spinner Animation state
+                loadMoreIcon.setAttribute('data-lucide', 'loader-2');
+                const style = document.createElement('style');
+                style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+                loadMoreIcon.style.animation = 'spin 1s linear infinite';
+                lucide.createIcons();
+
+                setTimeout(() => {
+                    fakeLogs.forEach((log, index) => {
+                        const html = `
+                        <div class="approval-item log-item" data-category="${log.category}" style="border-left: 3px solid ${log.color}; opacity: 0; animation: fadeInUp 0.4s ease forwards; animation-delay: ${index * 0.1}s;">
+                            <div class="vendor-info">
+                                <div class="vendor-avatar" style="background: ${log.bg}; color: ${log.color};"><i data-lucide="${log.icon}"></i></div>
+                                <div>
+                                    <h4 class="log-title">${log.title}</h4>
+                                    <p class="log-desc">${log.desc}</p>
+                                </div>
+                            </div>
+                            <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">${log.date}</span>
+                        </div>
+                        `;
+                        listContainer.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    // Re-apply filters to newly added items
+                    filterLogs();
+                    lucide.createIcons();
+
+                    // Reset button state
+                    loadMoreIcon.style.animation = '';
+                    loadMoreIcon.setAttribute('data-lucide', 'arrow-down');
+                    lucide.createIcons();
+                    loadClicks++;
+
+                    // Auto-scroll to bottom
+                    listContainer.scrollTo({ top: listContainer.scrollHeight, behavior: 'smooth'});
+
+                }, 800); // Fake network delay
+            });
+        }
+    });
+  </script>
+</body>
+</html>

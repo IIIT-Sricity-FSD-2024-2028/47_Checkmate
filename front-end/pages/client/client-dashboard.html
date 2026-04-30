@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Client Portal</title>
+    <!-- Combined global and client specific styling -->
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Unified Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="page-title">Client Dashboard</div>
+                <div class="topbar__right">
+                    <!-- Global search inserted safely -->
+                    <div class="search-box">
+                        <i class="ph ph-magnifying-glass" class="search-icon"></i>
+                        <input type="text" placeholder="Search..." />
+                    </div>
+                    <!-- The bell is handled by client_utils.js dynamically -->
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- Welcome Banner mapped to Vendor style -->
+                <div class="welcome-banner mb-6">
+                    <h2>Welcome back, John 👋</h2>
+                    <p>Here's an overview of your upcoming events and insights for today.</p>
+                </div>
+
+                <!-- 4 Stat Cards precisely matching Vendor layout and insights! -->
+                <div class="stats-grid mb-6">
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--blue"><i class="ph ph-rocket-launch"></i></div>
+                            <span class="stat-trend up" id="dash-trend-active" style="color:#22c55e;"><i class="ph ph-trend-up"></i> Live</span>
+                        </div>
+                        <div class="stat-label">Active Events</div>
+                        <div class="stat-value" id="dash-active">—</div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Events currently live or approved</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--orange"><i class="ph ph-hourglass-high"></i></div>
+                            <span class="stat-trend" id="dash-trend-pending" style="color:var(--orange);">Awaiting</span>
+                        </div>
+                        <div class="stat-label">Pending Requests</div>
+                        <div class="stat-value" id="dash-pending">—</div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Awaiting vendor approval</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--purple"><i class="ph ph-calendar-check"></i></div>
+                            <span class="stat-trend up" id="dash-trend-total" style="color:#22c55e;"><i class="ph ph-trend-up"></i> All</span>
+                        </div>
+                        <div class="stat-label">Total Events</div>
+                        <div class="stat-value" id="dash-total">—</div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">All events you've submitted</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--green"><i class="ph ph-check-fat"></i></div>
+                            <span class="stat-trend up" id="dash-trend-completed" style="color:#22c55e;">Done</span>
+                        </div>
+                        <div class="stat-label">Completed Events</div>
+                        <div class="stat-value" id="dash-completed">—</div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Successfully finished events</div>
+                    </div>
+                </div>
+                <!-- trend chips updated by JS -->
+                <style>
+                  #dash-trend-active, #dash-trend-pending { display:inline-flex; align-items:center; gap:4px; }
+                </style>
+
+                <div class="bottom-grid">
+                    <div class="left-col">
+                        <div class="card">
+                            <div class="card__header">
+                                <h3>Next Event Progress</h3>
+                                <a href="client_myevents.html" class="view-all" id="dash-next-track-link">Full Tracking →</a>
+                            </div>
+                            <div id="dash-next-event-info" style="margin-top:10px; margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px;">
+                                <h4 style="font-size:16px; margin-bottom:6px; font-weight:600; color:var(--text-primary);"><i class="ph-fill ph-confetti" style="color:var(--pink);"></i> <span id="dash-next-name">—</span></h4>
+                                <p style="font-size:13px; color:var(--text-secondary);"><i class="ph ph-map-pin"></i> <span id="dash-next-venue">—</span> • <i class="ph ph-calendar"></i> <span id="dash-next-date">—</span></p>
+                            </div>
+                            
+                            <div class="timeline-list" id="dash-timeline">
+                                <!-- populated by client-dashboard.js -->
+                            </div>
+                            <div id="dash-no-events" style="display:none; text-align:center; padding:32px 16px;">
+                                <i class="ph ph-calendar-blank" style="font-size:42px; color:var(--text-muted); display:block; margin-bottom:12px;"></i>
+                                <div style="font-size:14px; color:var(--text-secondary); margin-bottom:14px;">No events yet. Create your first event!</div>
+                                <a href="create_event_client.html" class="btn btn-primary" style="font-size:13px;"><i class="ph ph-plus"></i> Create Event</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="right-col">
+                        
+                        <!-- Client Quick Actions identical to Vendor format -->
+                        <div class="card mb-6">
+                          <div class="card__header">
+                            <h3>Quick Actions</h3>
+                          </div>
+                          <div class="quick-actions">
+                            <button class="qa-btn" onclick="window.location.href='create_event_client.html'">
+                              <div class="qa-icon qa-icon--blue"><i class="ph ph-plus-circle"></i></div>
+                              <span>New Event</span>
+                            </button>
+                            <button class="qa-btn" onclick="window.location.href='client_billing.html'">
+                              <div class="qa-icon qa-icon--purple"><i class="ph ph-credit-card"></i></div>
+                              <span>Pay Invoices</span>
+                            </button>
+                            <button class="qa-btn" onclick="window.location.href='client_browsepackages.html'">
+                              <div class="qa-icon qa-icon--green"><i class="ph ph-tote"></i></div>
+                              <span>Packages</span>
+                            </button>
+                            <button class="qa-btn" onclick="window.location.href='client_coordination.html'">
+                              <div class="qa-icon qa-icon--orange"><i class="ph ph-chat-teardrop-dots"></i></div>
+                              <span>Message</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Client Recent Activity -->
+                        <div class="card">
+                            <div class="card__header">
+                                <h3>Account Activity</h3>
+                            </div>
+                            <div class="activity-list" id="dash-activity">
+                                <!-- populated by client-dashboard.js -->
+                            </div>
+                        </div>
+                        
+                    </div> <!-- end right-col -->
+                </div> <!-- end bottom-grid -->
+            </div> <!-- end content -->
+        </main>
+    </div>
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/client_js/client-dashboard.js"></script>
+    <script src="../../scripts/client_js/client_utils.js"></script>
+    <style>
+        .ph-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</body>
+</html>

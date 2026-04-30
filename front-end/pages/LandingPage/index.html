@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Manager | Anti-Gravity</title>
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for matching UI -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <span>Event Manager</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+            </ul>
+            <div class="nav-auth">
+                <a href="../Login/signin.html" class="btn-text">Sign In</a>
+                <a href="../Login/signup-step1.html" class="btn-primary">Create Account</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero fade-in">
+        <div class="hero-bg">
+            <div class="overlay"></div>
+            <div class="glow"></div>
+        </div>
+        <div class="container hero-content">
+            <div class="hero-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+            <h1>Manage Events With<br><span class="highlight">Precision</span></h1>
+            <p>A smart platform that connects clients, vendors, and staff to organize events efficiently</p>
+            <div class="hero-buttons">
+                <a href="../Login/signup-step1.html" class="btn-primary">Get Started <i class="ph ph-arrow-right"></i></a>
+                <a href="../Login/signin.html" class="btn-outline">Sign In <i class="ph ph-caret-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features fade-in">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need to manage successful events from start to finish</p>
+            </div>
+            <div class="features-grid">
+                <div class="card feature-card">
+                    <div class="card-icon"><i class="ph ph-calendar-blank"></i></div>
+                    <h3>Event Planning</h3>
+                    <p>Create and manage events easily with smart scheduling.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="card-icon"><i class="ph ph-cube"></i></div>
+                    <h3>Vendor Management</h3>
+                    <p>Connect vendors, allocate resources, and manage services.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="card-icon"><i class="ph ph-users"></i></div>
+                    <h3>Staff Coordination</h3>
+                    <p>Assign staff tasks and track progress in real time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works fade-in">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>A simple 4-step process to bring your events to life</p>
+            </div>
+            <div class="steps-timeline">
+                <div class="timeline-line"></div>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <h3>Client creates an event request</h3>
+                    <p>Submit event details and requirements</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <h3>Vendor reviews and approves the request</h3>
+                    <p>Vendors evaluate and accept events</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <h3>Resources and staff are assigned</h3>
+                    <p>Allocate necessary resources and team</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <h3>Event progress is tracked until completion</h3>
+                    <p>Monitor every step to success</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stats" class="stats fade-in">
+        <div class="container">
+            <h2>Trusted By Thousands</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>12,500+</h3>
+                    <p>Events Managed</p>
+                </div>
+                <div class="stat-item">
+                    <h3>98.5%</h3>
+                    <p>Completion Rate</p>
+                </div>
+                <div class="stat-item">
+                    <h3>850+</h3>
+                    <p>Active Vendors</p>
+                </div>
+                <div class="stat-item">
+                    <h3>45,000+</h3>
+                    <p>Satisfied Clients</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="events" class="events fade-in">
+        <div class="container">
+            <div class="section-header">
+                <h2>Events We Manage</h2>
+                <p>From weddings to conferences, we handle it all</p>
+            </div>
+            <div class="events-grid">
+                <div class="event-card">
+                    <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=600&h=400" alt="Weddings">
+                    <div class="event-card-content">
+                        <h3>Weddings</h3>
+                        <p>Elegant ceremonies and celebrations</p>
+                    </div>
+                </div>
+                <div class="event-card">
+                    <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=600&h=400" alt="Corporate Events">
+                    <div class="event-card-content">
+                        <h3>Corporate Events</h3>
+                        <p>Professional conferences and meetings</p>
+                    </div>
+                </div>
+                <div class="event-card">
+                    <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=400" alt="Special Events">
+                    <div class="event-card-content">
+                        <h3>Special Events</h3>
+                        <p>Birthdays, parties, and celebrations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta" class="cta fade-in">
+        <div class="container">
+            <div class="cta-card">
+                <i class="ph ph-star cta-icon"></i>
+                <h2>Start Managing Events Smarter Today</h2>
+                <p>Join thousands of event professionals who trust Event Manager to bring their visions to life</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn-primary">Create Account <i class="ph ph-arrow-right"></i></a>
+                    <a href="#" class="btn-outline-dark">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="final-hero" class="final-hero fade-in">
+        <div class="final-hero-bg">
+            <div class="overlay"></div>
+        </div>
+        <div class="container final-hero-content">
+            <div class="final-icon"><i class="ph ph-sparkle"></i></div>
+            <h2>Ready to Plan Your<br><span class="highlight">Next Event?</span></h2>
+            <p>Transform your event vision into reality with our comprehensive management platform</p>
+            <div class="final-buttons">
+                <a href="../Login/signup-step1.html" class="btn-primary">Get Started <i class="ph ph-arrow-right"></i></a>
+                <a href="#" class="btn-outline">Contact Us <i class="ph ph-caret-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-logo">
+                <div class="logo">
+                    <div class="logo-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                    <span>Event Manager</span>
+                </div>
+                <p>The ultimate platform for seamless event management and coordination.</p>
+            </div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#">Login</a></li>
+                        <li><a href="#">Register</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#">Client Portal</a></li>
+                        <li><a href="#">Vendor Dashboard</a></li>
+                        <li><a href="#">Staff Management</a></li>
+                        <li><a href="#">Admin Console</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Event Manager. All rights reserved. Built with precision for event excellence.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

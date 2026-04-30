@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Coordination Hub (Vendor–Client)</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <link rel="stylesheet" href="../../styles/message-animations.css">
+  <style>
+    .content { gap: 16px; overflow-y: auto; }
+
+    /* ── Section switcher tabs ── */
+    .ch-section-tabs { display: flex; gap: 8px; }
+    .ch-section-tab {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+      color: var(--text-secondary); font-family: var(--font-body);
+      font-size: 13.5px; font-weight: 500; text-decoration: none; transition: all 0.18s;
+    }
+    .ch-section-tab i { width: 15px; height: 15px; }
+    .ch-section-tab:hover { border-color: var(--pink); color: var(--pink); background: rgba(233,30,140,0.06); }
+    .ch-section-tab.active {
+      background: var(--pink); border-color: var(--pink); color: #fff;
+      box-shadow: 0 3px 14px var(--pink-glow);
+    }
+
+    /* ── Participants strip ── */
+    .ch-participants {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+    }
+    .ch-participants h4 {
+      font-family: var(--font-display); font-size: 14px; font-weight: 600;
+      color: var(--text-primary); margin-bottom: 14px;
+    }
+    .ch-participant-list { display: flex; gap: 10px; flex-wrap: wrap; }
+    .ch-participant {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+    }
+    .ch-participant.active-user { border-color: rgba(233,30,140,0.4); background: rgba(233,30,140,0.06); }
+    .ch-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 13px;
+      color: #fff; flex-shrink: 0; position: relative;
+    }
+    .ch-avatar--sw { background: var(--pink); }
+    .ch-avatar--mb { background: #1d4ed8; }
+    .ch-avatar--ts { background: #0e7490; }
+    .ch-avatar--ap { background: #7e22ce; }
+    .ch-online-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green); border: 2px solid var(--bg-card);
+      position: absolute; bottom: 0; right: 0;
+    }
+    .ch-participant-info { line-height: 1.3; }
+    .ch-participant-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ch-participant-role { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .role-badge-client {
+      display: inline-block;
+      background: rgba(168,85,247,0.15); color: #d8b4fe;
+      font-size: 9.5px; font-weight: 700; padding: 1px 6px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px;
+    }
+    .role-badge-vendor {
+      display: inline-block;
+      background: rgba(233,30,140,0.15); color: var(--pink);
+      font-size: 9.5px; font-weight: 700; padding: 1px 6px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px;
+    }
+
+    /* ── Grid ── */
+    .ch-grid {
+      display: grid; grid-template-columns: 1fr 340px;
+      gap: 16px; align-items: stretch;
+    }
+    @media (max-width: 1000px) { .ch-grid { grid-template-columns: 1fr; } }
+
+    /* ── Chat panel ── */
+    .ch-chat {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); display: flex; flex-direction: column;
+      min-height: 560px; height: 100%;
+    }
+    .ch-chat__header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+    .ch-chat__header h4 {
+      font-family: var(--font-display); font-size: 15px; font-weight: 700;
+      color: var(--text-primary); margin-bottom: 2px;
+    }
+    .ch-chat__sub { font-size: 12px; color: var(--text-muted); }
+
+    .ch-channel-tabs {
+      display: flex; gap: 6px; padding: 10px 18px;
+      border-bottom: 1px solid var(--border); overflow-x: auto;
+    }
+    .ch-channel-tabs::-webkit-scrollbar { height: 0; }
+    .ch-tab {
+      padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary);
+      font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
+      cursor: pointer; white-space: nowrap; transition: all 0.18s;
+    }
+    .ch-tab:hover { border-color: var(--pink); color: var(--pink); }
+    .ch-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; box-shadow: 0 2px 10px var(--pink-glow); }
+
+    .ch-messages {
+      flex: 1; overflow-y: auto; padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .ch-sys-msg {
+      text-align: center; font-size: 12px; color: var(--text-muted);
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .ch-sys-msg.info    { color: #93c5fd; border-color: rgba(59,130,246,0.25); background: rgba(59,130,246,0.06); }
+    .ch-sys-msg.success { color: #86efac; border-color: rgba(34,197,94,0.25);  background: rgba(34,197,94,0.06); }
+    .ch-sys-msg.update  { color: #d8b4fe; border-color: rgba(168,85,247,0.25); background: rgba(168,85,247,0.06); }
+    .sys-time { color: var(--text-muted); margin-left: 6px; font-size: 11px; }
+
+    /* client bubble — right aligned */
+    .ch-msg { display: flex; align-items: flex-start; gap: 10px; }
+    .ch-msg.client-msg { flex-direction: row-reverse; }
+
+    .ch-msg__avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 11px;
+      color: #fff; flex-shrink: 0;
+    }
+    .ch-msg__body { flex: 1; }
+    .ch-msg.client-msg .ch-msg__body { display: flex; flex-direction: column; align-items: flex-end; }
+
+    .ch-msg__meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .ch-msg__name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .ch-msg__role-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-muted);
+    }
+    .ch-msg__time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+    .ch-msg.client-msg .ch-msg__time { margin-left: 0; margin-right: auto; }
+
+    .ch-msg__bubble {
+      display: inline-block; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+      padding: 9px 13px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;
+    }
+    .ch-msg.client-msg .ch-msg__bubble {
+      background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.25); color: var(--text-primary);
+      border-radius: var(--radius-sm) 0 var(--radius-sm) var(--radius-sm);
+    }
+
+    /* Input bar */
+    .ch-input-bar {
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ch-input-icon-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+    }
+    .ch-input-icon-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .ch-input {
+      flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text-primary);
+      font-family: var(--font-body); font-size: 13.5px; outline: none; transition: border-color 0.18s;
+    }
+    .ch-input:focus { border-color: rgba(233,30,140,0.4); }
+    .ch-input::placeholder { color: var(--text-muted); }
+    .ch-send-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: var(--pink); display: flex; align-items: center; justify-content: center;
+      color: #fff; cursor: pointer; flex-shrink: 0;
+      box-shadow: 0 3px 12px var(--pink-glow); transition: background 0.18s;
+    }
+    .ch-send-btn:hover { background: var(--pink-light); }
+
+    /* ── Right column ── */
+    .ch-right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Client Details card */
+    .cc-client-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .cc-client-card__header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    }
+    .cc-client-card__header i { color: var(--purple); width: 15px; height: 15px; }
+    .cc-client-card__header h4 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+
+    .cc-client-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .cc-client-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      transition: background 0.15s; cursor: pointer;
+    }
+    .cc-client-item:hover { background: var(--bg-hover); }
+    .cc-client-item.active-chat { border-color: rgba(233,30,140,0.4); background: rgba(233,30,140,0.05); }
+    .cc-client-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 13px;
+      color: #fff; flex-shrink: 0;
+    }
+    .cc-client-info { flex: 1; }
+    .cc-client-name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .cc-client-event { font-size: 12px; color: var(--text-muted); }
+    .cc-unread {
+      min-width: 20px; height: 20px; border-radius: 99px;
+      background: var(--pink); color: #fff; font-size: 10.5px;
+      font-weight: 700; display: flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+    }
+
+    /* Approval Requests card */
+    .cc-approvals {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .cc-approvals__header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    }
+    .cc-approvals__header i { color: var(--yellow); width: 15px; height: 15px; }
+    .cc-approvals__header h4 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .cc-approval-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .cc-approval-item {
+      padding: 12px 14px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cc-approval-item__title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .cc-approval-item__sub   { font-size: 11.5px; color: var(--text-muted); }
+    .cc-approval-item__actions { display: flex; gap: 8px; }
+    .cc-approve-btn {
+      flex: 1; padding: 7px; border: none; border-radius: var(--radius-xs);
+      background: rgba(34,197,94,0.12); color: var(--green);
+      font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background 0.18s;
+    }
+    .cc-approve-btn:hover { background: rgba(34,197,94,0.22); }
+    .cc-decline-btn {
+      flex: 1; padding: 7px; border: none; border-radius: var(--radius-xs);
+      background: rgba(239,68,68,0.10); color: var(--red);
+      font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background 0.18s;
+    }
+    .cc-decline-btn:hover { background: rgba(239,68,68,0.20); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
+      <div>
+        <div class="brand-name">EventPro</div>
+        <div class="brand-role">Event Coordinator</div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html"       class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a href="event-request.html"   class="nav-item"><i data-lucide="clipboard-list"></i><span>Event Request</span></a>
+      <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
+      <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
+      <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
+      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
+      <a href="coordination.html"    class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="user-avatar">S</div>
+        <div>
+          <div class="user-name">Sarah</div>
+          <div class="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9ae9fbe8fbf2dafdf7fbf3f6b4f9f5f7">[email&#160;protected]</a></div>
+        </div>
+      </div>
+      <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <header class="topbar">
+      <h1 class="page-title">Coordination Hub</h1>
+      <div class="topbar__right">
+        <button class="notif-btn">
+          <i data-lucide="bell"></i>
+          <span class="notif-badge">3</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Intro -->
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary);">Coordination Hub</h2>
+        <p style="font-size:13px;color:var(--text-secondary);">Tech Summit 2026 – Real-time collaboration</p>
+      </div>
+
+      <!-- Section switcher -->
+      <div class="ch-section-tabs">
+        <a href="coordination.html"        class="ch-section-tab">
+          <i data-lucide="store"></i>
+          Vendor – Vendor
+        </a>
+        <a href="coordination-staff.html"  class="ch-section-tab">
+          <i data-lucide="hard-hat"></i>
+          Vendor – Staff
+        </a>
+        <a href="coordination-client.html" class="ch-section-tab active">
+          <i data-lucide="user-round"></i>
+          Vendor – Client
+        </a>
+      </div>
+
+      <!-- Participants -->
+      <div class="ch-participants">
+        <h4>Clients &amp; Vendors</h4>
+        <div class="ch-participant-list">
+
+          <div class="ch-participant active-user">
+            <div class="ch-avatar ch-avatar--sw">SW<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Sarah Williams</div>
+              <div class="ch-participant-role"><span class="role-badge-vendor">Vendor</span> Audio Vendor</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--mb">MB<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Mark Bennett</div>
+              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Tech Summit Organiser</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--ts">TS<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Tara Singh</div>
+              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Wedding – Sarah &amp; Mike</div>
+            </div>
+          </div>
+
+          <div class="ch-participant">
+            <div class="ch-avatar ch-avatar--ap">AP<span class="ch-online-dot"></span></div>
+            <div class="ch-participant-info">
+              <div class="ch-participant-name">Alan Park</div>
+              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Corporate Gala</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="ch-grid">
+
+        <!-- ── Chat ── -->
+        <div class="ch-chat">
+          <div class="ch-chat__header">
+            <h4>Client Chat — Mark Bennett</h4>
+            <span class="ch-chat__sub">Tech Summit 2026 · Vendor ↔ Client</span>
+          </div>
+
+          <div class="ch-channel-tabs">
+            <button class="ch-tab active">All</button>
+            <button class="ch-tab">Requests</button>
+            <button class="ch-tab">Approvals</button>
+            <button class="ch-tab">Updates</button>
+          </div>
+
+          <div class="ch-messages" id="messagesArea">
+            <!-- Populated by coordination.js -->
+          </div><!-- /messages -->
+
+          <div class="ch-input-bar">
+            <button class="ch-input-icon-btn" title="Attach"><i data-lucide="paperclip" style="width:16px;height:16px;display:block"></i></button>
+            <button class="ch-input-icon-btn" title="Emoji"><i data-lucide="smile" style="width:16px;height:16px;display:block"></i></button>
+            <input class="ch-input" id="msgInput" type="text" placeholder="Type a message to client..." />
+            <button class="ch-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block"></i></button>
+          </div>
+        </div><!-- /chat -->
+
+        <!-- ── Right ── -->
+        <div class="ch-right">
+
+          <!-- Client list -->
+          <div class="cc-client-card">
+            <div class="cc-client-card__header">
+              <i data-lucide="users"></i>
+              <h4>Active Clients</h4>
+            </div>
+            <div class="cc-client-list">
+
+              <div class="cc-client-item active-chat">
+                <div class="cc-client-avatar ch-avatar--mb">MB</div>
+                <div class="cc-client-info">
+                  <div class="cc-client-name">Mark Bennett</div>
+                  <div class="cc-client-event">Tech Summit 2026</div>
+                </div>
+                <span class="cc-unread">3</span>
+              </div>
+
+              <div class="cc-client-item">
+                <div class="cc-client-avatar ch-avatar--ts">TS</div>
+                <div class="cc-client-info">
+                  <div class="cc-client-name">Tara Singh</div>
+                  <div class="cc-client-event">Wedding – Sarah &amp; Mike</div>
+                </div>
+              </div>
+
+              <div class="cc-client-item">
+                <div class="cc-client-avatar ch-avatar--ap">AP</div>
+                <div class="cc-client-info">
+                  <div class="cc-client-name">Alan Park</div>
+                  <div class="cc-client-event">Corporate Gala</div>
+                </div>
+                <span class="cc-unread">1</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Approval requests have been migrated to the Live Monitor panel -->
+
+        </div><!-- /right -->
+      </div><!-- /grid -->
+    </div><!-- /content -->
+  </main>
+</div>
+
+
+  <script data-cfa
+sync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/message-system.js"></script>
+  <script src="../../scripts/notification-system.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/coordination.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

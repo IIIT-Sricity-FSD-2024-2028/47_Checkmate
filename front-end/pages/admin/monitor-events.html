@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Monitor Events</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item active">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Monitor Events</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Track and manage ongoing events across the platform</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+        <div class="table-container" style="margin-bottom: 24px;">
+            <div class="data-table-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
+                    <div class="table-header-title" style="margin-bottom: 0;">Event Registry</div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <select id="eventStatusFilter" style="padding: 10px 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
+                            <option value="all">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Staff Assigned">Staff Assigned</option>
+                            <option value="Resources Allocated">Resources Allocated</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Approved">Approved</option>
+                        </select>
+                        <div style="position: relative; width: 250px;">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-secondary);"></i>
+                            <input type="text" id="eventSearchInput" placeholder="Search events, organizers..." style="width: 100%; padding: 10px 12px 10px 36px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Event Name</th>
+                            <th>Client (ID)</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody">
+                        <!-- Populated by admin.js -->
+                    </tbody>
+                </table>
+                <div id="eventPagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <div style="font-size: 13px; color: var(--text-muted);" id="eventPaginationInfo">Showing 1 to 10 of 40</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="eventPrevPageBtn" class="action-btn action-btn-clean" style="padding: 6px 12px;">Previous</button>
+                        <button id="eventNextPageBtn" class="action-btn action-btn-clean" style="padding: 6px 12px;">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Event Statistics grid -->
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Pending</h4>
+                <div id="statEvtPending" style="font-size: 24px; font-weight: 700; color: var(--warning, #f59e0b);">0</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Staff Assigned</h4>
+                <div id="statEvtStaff" style="font-size: 24px; font-weight: 700; color: #3b82f6;">0</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Resources Alloc.</h4>
+                <div id="statEvtRes" style="font-size: 24px; font-weight: 700; color: #8b5cf6;">0</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Completed</h4>
+                <div id="statEvtCompleted" style="font-size: 24px; font-weight: 700; color: #00e676;">0</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Approved</h4>
+                <div id="statEvtApproved" style="font-size: 24px; font-weight: 700; color: #fff;">0</div>
+            </div>
+        </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event View Modal -->
+  <div id="eventViewModal" class="notif-modal-overlay">
+    <div class="notif-window" style="max-width: 600px;">
+      <div class="notif-header">
+        <h3>Event Details</h3>
+        <button class="notif-close-btn" data-close="eventViewModal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body" style="padding: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Event Name</label>
+                <div id="viewEventName" style="color: #fff; font-size: 15px; font-weight: 500;">-</div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Client</label>
+                <div id="viewEventClient" style="color: #fff; font-size: 14px;">-</div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Date</label>
+                <div id="viewEventDate" style="color: #fff; font-size: 14px;">-</div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Total Price</label>
+                <div id="viewEventPrice" style="color: #00e676; font-size: 15px; font-weight: 500;">-</div>
+            </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Involved Vendors</label>
+            <div id="viewEventVendors" style="display: flex; flex-direction: column; gap: 8px; background: var(--bg-hover); padding: 12px; border: 1px solid var(--border); border-radius: 6px; max-height: 150px; overflow-y: auto;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+      </div>
+      <div class="notif-footer" style="display: flex; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--border);">
+        <button class="action-btn action-btn-clean" data-close="eventViewModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script src="../../scripts/admin_js/admin.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

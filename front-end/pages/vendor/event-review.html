@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Event Review</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <style>
+
+    /* ══ EVENT HEADER ══ */
+    .ev-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .ev-header__left h2 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .ev-header__left p { font-size: 13px; color: var(--text-muted); }
+
+    .ev-status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      background: rgba(234,179,8,0.15);
+      color: var(--yellow);
+      border: 1px solid rgba(234,179,8,0.3);
+    }
+
+    /* ══ META ROW ══ */
+    .ev-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .ev-meta-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ev-meta-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ev-meta-icon svg { width: 18px; height: 18px; color: #fff; }
+    .ev-meta-icon--blue   { background: #1d4ed8; }
+    .ev-meta-icon--purple { background: #7e22ce; }
+    .ev-meta-icon--green  { background: #15803d; }
+    .ev-meta-icon--orange { background: #c2410c; }
+    .ev-meta-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; }
+    .ev-meta-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+
+    /* ══ CLIENT REQUIREMENTS ══ */
+    .client-req-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+    .client-req-card__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .client-req-card__header svg { width: 18px; height: 18px; color: var(--pink); flex-shrink: 0; }
+    .client-req-card__title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .client-req-card__meta {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .client-req-card__meta svg { width: 12px; height: 12px; }
+
+    .client-req-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .client-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(233,30,140,0.08);
+      color: #f472b6;
+      border: 1px solid rgba(233,30,140,0.2);
+    }
+    .client-tag svg { width: 12px; height: 12px; }
+
+    .client-req-message {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--pink);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .client-req-extras {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .client-extra-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .client-extra-item svg { width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; }
+    .client-extra-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .client-extra-value { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+
+    /* ══ CONFLICTS ══ */
+    .conflicts-box {
+      background: rgba(180,30,30,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .conflicts-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 16px;
+    }
+    .conflicts-title svg { width: 18px; height: 18px; }
+
+    .conflict-item {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(239,68,68,0.15);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .conflict-item:last-child { margin-bottom: 0; }
+    .conflict-type { font-size: 11.5px; font-weight: 600; color: var(--red); margin-bottom: 5px; opacity: 0.85; }
+    .conflict-desc { font-size: 13.5px; color: var(--text-secondary); }
+    .conflict-severity {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .conflict-severity.high { background: rgba(239,68,68,0.2); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .conflict-severity.medium { background: rgba(234,179,8,0.2); color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
+
+    /* ══ SECTION TITLE ══ */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    /* ══ REQUIREMENTS TABLE ══ */
+    .req-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .req-table { width: 100%; border-collapse: collapse; }
+    .req-table thead tr { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+    .req-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .req-table th:first-child, .req-table td:first-child { padding-left: 24px; }
+    .req-table th:last-child,  .req-table td:last-child  { padding-right: 24px; text-align: right; }
+    .req-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .req-table tbody tr:last-child { border-bottom: none; }
+    .req-table tbody tr:hover { background: var(--bg-hover); }
+    .req-table td { padding: 14px 16px; font-size: 13.5px; color: var(--text-secondary); }
+    .req-table td:first-child { font-weight: 600; color: var(--text-primary); }
+    .req-table td.col-num { text-align: center; }
+
+    .buffer-val { font-weight: 700; font-size: 13.5px; text-align: right; }
+    .buffer-val.pos  { color: var(--green); }
+    .buffer-val.zero { color: var(--text-muted); }
+    .buffer-val.neg  { color: var(--red); }
+
+    .row-status { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .row-status.safe     { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+    .row-status.risk     { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.25); }
+    .row-status.critical { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .row-status.ready    { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+
+    /* ══ BOTTOM TWO-COL ══ */
+    .bottom-two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+    /* Buffer Planning */
+    .buffer-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .buffer-card__title { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 18px; }
+    .buffer-card__title svg { width: 16px; height: 16px; color: var(--blue); }
+
+    .buffer-row { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .buffer-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .buffer-row__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .buffer-row__name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .buffer-row__bottom { display: flex; align-items: center; justify-content: space-between; }
+    .buffer-row__rec { font-size: 12px; color: var(--text-muted); }
+    .buffer-row__cur { font-size: 12px; color: var(--text-secondary); }
+
+    /* Risk Summary */
+    .risk-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+    .risk-card__title { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .risk-card__title svg { width: 16px; height: 16px; color: var(--yellow); }
+
+    .risk-level-box { background: rgba(180,120,0,0.12); border: 1px solid rgba(234,179,8,0.25); border-radius: var(--radius-sm); padding: 14px 16px; }
+    .risk-level-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 4px; }
+    .risk-level-sub { font-size: 12.5px; color: var(--text-muted); }
+
+    .risk-bars { display: flex; flex-direction: column; gap: 14px; }
+    .risk-bar-header { display: flex; justify-content: space-between; margin-bottom: 7px; }
+    .risk-bar-label { font-size: 13px; color: var(--text-secondary); }
+    .risk-bar-pct   { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .risk-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 99px; }
+    .risk-bar-fill--yellow { background: var(--yellow); }
+    .risk-bar-fill--red    { background: var(--red); }
+    .risk-bar-fill--green  { background: var(--green); }
+
+    /* Contingency */
+    .cont-table { width: 100%; border-collapse: collapse; }
+    .cont-table thead tr { border-bottom: 1px solid var(--border); }
+    .cont-table th { padding: 10px 0; text-align: left; font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.4px; text-transform: uppercase; }
+    .cont-table th:last-child, .cont-table td:last-child { text-align: right; }
+    .cont-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .cont-table tbody tr:last-child { border-bottom: none; }
+    .cont-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .cont-table td { padding: 14px 0; font-size: 13.5px; color: var(--text-secondary); }
+    .cont-table td:first-child { font-weight: 600; color: var(--text-primary); padding-right: 24px; }
+    .cont-table td:nth-child(2) { padding-right: 24px; }
+    .cont-table td:nth-child(3) { padding-right: 24px; }
+
+    /* ══ ACTION BAR ══ */
+    .action-bar { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px; align-items: center; padding: 4px 0; }
+
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 22px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary); font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.18s; white-space: nowrap;
+    }
+    .btn-back:hover { border-color: var(--pink); color: var(--text-primary); }
+
+    .btn-approve {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; background: var(--green); border: none;
+      border-radius: var(--radius-sm); color: #fff;
+      font-family: var(--font-body); font-size: 14px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(34,197,94,0.3); transition: opacity 0.18s;
+    }
+    .btn-approve:hover { opacity: 0.88; }
+    .btn-approve svg { width: 17px; height: 17px; }
+
+    .btn-reject {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; background: var(--red); border: none;
+      border-radius: var(--radius-sm); color: #fff;
+      font-family: var(--font-body); font-size: 14px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(239,68,68,0.3); transition: opacity 0.18s;
+    }
+    .btn-reject:hover { opacity: 0.88; }
+    .btn-reject svg { width: 17px; height: 17px; }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="event-request.html" class="nav-item active">
+          <i data-lucide="clipboard-list"></i><span>Event Request</span>
+        </a>
+        <a href="manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i><span>Manage Resource</span>
+        </a>
+        <a href="manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Staff</span>
+        </a>
+        <a href="preset-package.html" class="nav-item">
+          <i data-lucide="box"></i><span>Preset Package</span>
+        </a>
+        <a href="report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i><span>Report Issue</span>
+        </a>
+        <a href="coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i><span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <header class="topbar">
+        <h1 class="page-title">Event Review</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- 1. Event Header -->
+        <div class="ev-header">
+          <div class="ev-header__left">
+            <h2>Tech Summit 2026</h2>
+            <p>Event ID: EVT001</p>
+          </div>
+          <span class="ev-status-badge">Under Review</span>
+        </div>
+
+        <!-- 2. Meta Cards -->
+        <div class="ev-meta">
+          <div class="ev-meta-item">
+            <div class="ev-meta-icon ev-meta-icon--blue"><i data-lucide="calendar"></i></div>
+            <div><div class="ev-meta-label">Date</div><div class="ev-meta-value">Mar 28, 2026</div></div>
+          </div>
+          <div class="ev-meta-item">
+            <div class="ev-meta-icon ev-meta-icon--purple"><i data-lucide="clock"></i></div>
+            <div><div class="ev-meta-label">Time</div><div class="ev-meta-value">9:00 AM – 6:00 PM</div></div>
+          </div>
+          <div class="ev-meta-item">
+            <div class="ev-meta-icon ev-meta-icon--green"><i data-lucide="map-pin"></i></div>
+            <div><div class="ev-meta-label">Venue</div><div class="ev-meta-value">Convention Center</div></div>
+          </div>
+          <div class="ev-meta-item">
+            <div class="ev-meta-icon ev-meta-icon--orange"><i data-lucide="users"></i></div>
+            <div><div class="ev-meta-label">Expected Attendees</div><div class="ev-meta-value">500 people</div></div>
+          </div>
+        </div>
+
+        <!-- 3. CLIENT REQUIREMENTS -->
+        <div class="client-req-card">
+          <div class="client-req-card__header">
+            <i data-lucide="message-circle"></i>
+            <span class="client-req-card__title">Client Requirements</span>
+            <div class="client-req-card__meta">
+              <i data-lucide="user"></i>&nbsp;Submitted by John Carter
+              &nbsp;·&nbsp;
+              <i data-lucide="clock"></i>&nbsp;Mar 20, 2026 at 10:45 AM
+            </div>
+          </div>
+
+          <!-- Tags the client picked -->
+          <div class="client-req-tags">
+            <span class="client-tag"><i data-lucide="music"></i> Live Band</span>
+            <span class="client-tag"><i data-lucide="utensils"></i> Catering – Vegetarian Menu</span>
+            <span class="client-tag"><i data-lucide="camera"></i> Photography &amp; Videography</span>
+            <span class="client-tag"><i data-lucide="wifi"></i> High-Speed Wi-Fi</span>
+            <span class="client-tag"><i data-lucide="accessibility"></i> Wheelchair Accessible</span>
+          </div>
+
+          <!-- Free-text message -->
+          <div class="client-req-message">We are expecting around 500 attendees including senior executives, investors, and tech enthusiasts. The venue must have a dedicated registration area at the entrance and a green room for speakers.
+
+We would like the stage setup to include a large LED backdrop displaying the Tech Summit 2026 branding. All presentation equipment (projectors, clickers, mics) should be tested and ready by 7:30 AM.
+
+Please ensure the catering team sets up two separate buffet stations on either side of the hall to avoid congestion. We have a strict no-alcohol policy for this event.
+
+Parking arrangements for at least 200 vehicles must be confirmed in advance. A point of contact from the vendor team should be available on-site throughout the event.</div>
+
+          <!-- Structured fields -->
+          <div class="client-req-extras">
+            <div class="client-extra-item">
+              <i data-lucide="dollar-sign"></i>
+              <div>
+                <div class="client-extra-label">Budget Range</div>
+                <div class="client-extra-value">$40,000 – $55,000</div>
+              </div>
+            </div>
+            <div class="client-extra-item">
+              <i data-lucide="clock"></i>
+              <div>
+                <div class="client-extra-label">Setup Time Required</div>
+                <div class="client-extra-value">By 7:30 AM (1.5 hrs before)</div>
+              </div>
+            </div>
+            <div class="client-extra-item">
+              <i data-lucide="shield-alert"></i>
+              <div>
+                <div class="client-extra-label">Special Instructions</div>
+                <div class="client-extra-value">Strict no-alcohol policy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Conflicts -->
+        <div class="conflicts-box">
+          <div class="conflicts-title">
+            <i data-lucide="triangle-alert"></i> Conflicts Detected
+          </div>
+          <div class="conflict-item">
+            <div>
+              <div class="conflict-type">Resource Conflict</div>
+              <div class="conflict-desc">LED Screens double-booked with Corporate Gala on Apr 2</div>
+            </div>
+            <span class="conflict-severity high">high</span>
+          </div>
+          <div class="conflict-item">
+            <div>
+              <div class="conflict-type">Staff Conflict</div>
+              <div class="conflict-desc">2 Event Coordinators assigned to overlapping events</div>
+            </div>
+            <span class="conflict-severity high">high</span>
+          </div>
+          <div class="conflict-item">
+            <div>
+              <div class="conflict-type">Venue Conflict</div>
+              <div class="conflict-desc">Setup time conflicts with previous event</div>
+            </div>
+            <span class="conflict-severity medium">medium</span>
+          </div>
+        </div>
+
+        <!-- 5. Resource Requirements -->
+        <div>
+          <div class="section-title">Resource Requirements</div>
+          <div class="req-wrap">
+            <table class="req-table">
+              <thead>
+                <tr>
+                  <th>Resource Name</th>
+                  <th>Category</th>
+                  <th style="text-align:center">Required</th>
+                  <th style="text-align:center">Available</th>
+                  <th style="text-align:right">Buffer</th>
+                  <th style="text-align:right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Audio System</td><td>Equipment</td><td class="col-num">10</td><td class="col-num">12</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>LED Screens</td><td>Equipment</td><td class="col-num">4</td><td class="col-num">4</td><td class="buffer-val zero">+0</td><td style="text-align:right"><span class="row-status risk">risk</span></td></tr>
+                <tr><td>Chairs</td><td>Furniture</td><td class="col-num">500</td><td class="col-num">550</td><td class="buffer-val pos">+50</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>Tables</td><td>Furniture</td><td class="col-num">50</td><td class="col-num">48</td><td class="buffer-val neg">-2</td><td style="text-align:right"><span class="row-status critical">critical</span></td></tr>
+                <tr><td>Projectors</td><td>Equipment</td><td class="col-num">6</td><td class="col-num">8</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. Staff Requirements -->
+        <div>
+          <div class="section-title">Staff Requirements</div>
+          <div class="req-wrap">
+            <table class="req-table">
+              <thead>
+                <tr>
+                  <th>Staff Role</th>
+                  <th>Department</th>
+                  <th style="text-align:center">Required</th>
+                  <th style="text-align:center">Available</th>
+                  <th style="text-align:right">Buffer</th>
+                  <th style="text-align:right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Event Coordinators</td><td>Management</td><td class="col-num">3</td><td class="col-num">4</td><td class="buffer-val pos">+1</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>Technical Staff</td><td>Technical</td><td class="col-num">8</td><td class="col-num">8</td><td class="buffer-val zero">+0</td><td style="text-align:right"><span class="row-status risk">risk</span></td></tr>
+                <tr><td>Security Personnel</td><td>Security</td><td class="col-num">12</td><td class="col-num">10</td><td class="buffer-val neg">-2</td><td style="text-align:right"><span class="row-status critical">critical</span></td></tr>
+                <tr><td>Catering Staff</td><td>Service</td><td class="col-num">15</td><td class="col-num">18</td><td class="buffer-val pos">+3</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>Cleaning Crew</td><td>Service</td><td class="col-num">6</td><td class="col-num">7</td><td class="buffer-val pos">+1</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 7. Buffer Planning + Risk Summary -->
+        <div class="bottom-two">
+          <div class="buffer-card">
+            <div class="buffer-card__title"><i data-lucide="shield-check"></i> Buffer Planning</div>
+            <div class="buffer-row">
+              <div class="buffer-row__top"><span class="buffer-row__name">Resources</span><span class="row-status risk">risk</span></div>
+              <div class="buffer-row__bottom"><span class="buffer-row__rec">Recommended: 15%</span><span class="buffer-row__cur">Current: 8%</span></div>
+            </div>
+            <div class="buffer-row">
+              <div class="buffer-row__top"><span class="buffer-row__name">Staff</span><span class="row-status risk">risk</span></div>
+              <div class="buffer-row__bottom"><span class="buffer-row__rec">Recommended: 20%</span><span class="buffer-row__cur">Current: 12%</span></div>
+            </div>
+            <div class="buffer-row">
+              <div class="buffer-row__top"><span class="buffer-row__name">Time</span><span class="row-status critical">critical</span></div>
+              <div class="buffer-row__bottom"><span class="buffer-row__rec">Recommended: 30 min setup buffer</span><span class="buffer-row__cur">Current: 15 min</span></div>
+            </div>
+            <div class="buffer-row">
+              <div class="buffer-row__top"><span class="buffer-row__name">Budget</span><span class="row-status safe">safe</span></div>
+              <div class="buffer-row__bottom"><span class="buffer-row__rec">Recommended: 10%</span><span class="buffer-row__cur">Current: 12%</span></div>
+            </div>
+          </div>
+
+          <div class="risk-card">
+            <div class="risk-card__title"><i data-lucide="zap"></i> Risk &amp; Feasibility Summary</div>
+            <div class="risk-level-box">
+              <div class="risk-level-label">⚠ Medium Risk Level</div>
+              <div class="risk-level-sub">3 critical items require immediate attention</div>
+            </div>
+            <div class="risk-bars">
+              <div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Resource Availability</span><span class="risk-bar-pct">80%</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--yellow" style="width:80%"></div></div>
+              </div>
+              <div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Staff Availability</span><span class="risk-bar-pct">75%</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--red" style="width:75%"></div></div>
+              </div>
+              <div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Contingency Readiness</span><span class="risk-bar-pct">100%</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--green" style="width:100%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. Contingency Planning -->
+        <div>
+          <div class="section-title">Contingency Planning</div>
+          <div class="req-wrap" style="padding: 0 24px;">
+            <table class="cont-table">
+              <thead>
+                <tr><th>Problem</th><th>Trigger Condition</th><th>Solution</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Equipment Failure</td><td>Audio system malfunction</td><td>Backup audio from vendor B</td><td><span class="row-status ready">ready</span></td></tr>
+                <tr><td>Staff Shortage</td><td>&lt; 80% staff attendance</td><td>On-call staff pool activated</td><td><span class="row-status ready">ready</span></td></tr>
+                <tr><td>Weather Issue</td><td>Rain forecast &gt; 70%</td><td>Indoor backup venue secured</td><td><span class="row-status ready">ready</span></td></tr>
+                <tr><td>Power Outage</td><td>Main power failure</td><td>Generator backup (2 units)</td><td><span class="row-status ready">ready</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 9. Action Bar -->
+        <div class="action-bar">
+          <a href="event-request.html" class="btn-back">Back to Requests</a>
+          <button class="btn-approve"><i data-lucide="check-circle"></i> Approve Event</button>
+          <button class="btn-reject"><i data-lucide="x-circle"></i> Reject Event</button>
+        </div>
+
+      </div><!-- /.content -->
+    </main>
+  </div>
+
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/event-review.js"></script>
+</body>
+</html>

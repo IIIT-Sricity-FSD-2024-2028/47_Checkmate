@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Reports & Analytics</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item active">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Reports & Analytics</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">View insights about events, resources and staff usage</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Generate Report Filters -->
+        <div class="data-table-wrapper" style="padding-bottom: 24px;">
+            <div class="table-header-title">Generate Report</div>
+            <div class="filter-grid">
+                <div class="input-group">
+                    <label>Report Type</label>
+                    <select class="form-control">
+                        <option>Select report type</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Start Date</label>
+                    <input type="date" class="form-control" />
+                </div>
+                <div class="input-group">
+                    <label>End Date</label>
+                    <input type="date" class="form-control" />
+                </div>
+                <div class="input-group">
+                    <label>Event</label>
+                    <select class="form-control">
+                        <option>Select Event</option>
+                    </select>
+                </div>
+            </div>
+            <button class="export-btn" style="display:inline-flex;">Generate Report</button>
+        </div>
+
+        <!-- Stats Grid -->
+        <section class="stats-grid" style="margin-top: -8px;">
+            <div class="stat-card">
+                <p class="stat-label">Total Events</p>
+                <h2 class="stat-value stat-value-pink">12</h2>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Completed Events</p>
+                <h2 class="stat-value stat-value-pink">9</h2>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Total Revenue</p>
+                <h2 class="stat-value stat-value-pink">$25,000</h2>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Resources Used</p>
+                <h2 class="stat-value stat-value-pink">45</h2>
+            </div>
+        </section>
+
+        <!-- Event Summary Report -->
+        <div class="table-container" style="margin-bottom: 24px;">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Event Summary Report</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Event Type</th>
+                            <th>Date</th>
+                            <th>Guests</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>EVT003</td><td>Conference</td><td>10 May 2026</td><td>500</td><td>Completed</td></tr>
+                        <tr><td>EVT004</td><td>Wedding</td><td>12 May 2026</td><td>300</td><td>Confirmed</td></tr>
+                        <tr><td>EVT005</td><td>Corporate</td><td>15 May 2026</td><td>150</td><td>Confirmed</td></tr>
+                    </tbody>
+                </table>
+                <div class="pagination-controls">
+                    <button class="page-btn"><i data-lucide="chevron-left"></i></button>
+                    <button class="page-btn"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Usage Report -->
+        <div class="table-container" style="margin-bottom: 24px;">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Resource Usage Report</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Resource Name</th>
+                            <th>Event ID</th>
+                            <th>Quantity Used</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Sound System</td><td>EVT003</td><td>2</td><td>Used</td></tr>
+                        <tr><td>Lighting Setup</td><td>EVT003</td><td>5</td><td>Used</td></tr>
+                        <tr><td>Chairs</td><td>EVT004</td><td>300</td><td>Reserved</td></tr>
+                        <tr><td>Projectors</td><td>EVT003</td><td>3</td><td>Used</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Staff Allocation Report -->
+        <div class="table-container" style="margin-bottom: 24px;">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Staff Allocation Report</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Staff Name</th>
+                            <th>Role</th>
+                            <th>Event</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Mike Staff</td><td>Event Coordinator</td><td>EVT003</td><td>Completed</td></tr>
+                        <tr><td>Emily Johnson</td><td>Photographer</td><td>EVT003</td><td>Completed</td></tr>
+                        <tr><td>Tom Wilson</td><td>Audio Technician</td><td>EVT004</td><td>Assigned</td></tr>
+                        <tr><td>Anna Martinez</td><td>Event Assistant</td><td>EVT005</td><td>Assigned</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Revenue Report -->
+        <div class="table-container" style="margin-bottom: 24px;">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Revenue Report</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Event ID</th>
+                            <th>Client</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>BK101</td><td>EVT003</td><td>John</td><td>$5,000</td><td>Completed</td></tr>
+                        <tr><td>BK102</td><td>EVT004</td><td>Alice</td><td>$3,000</td><td>Confirmed</td></tr>
+                        <tr><td>BK103</td><td>EVT005</td><td>Robert</td><td>$1,500</td><td>Confirmed</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Export -->
+        <div class="data-table-wrapper">
+            <div class="table-header-title" style="margin-bottom: 12px;">Export Report</div>
+            <div class="export-btn-group">
+                <button class="export-btn"><i data-lucide="download"></i> Download PDF</button>
+                <button class="export-btn"><i data-lucide="file-spreadsheet"></i> Export CSV</button>
+                <button class="export-btn"><i data-lucide="printer"></i> Print Report</button>
+            </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

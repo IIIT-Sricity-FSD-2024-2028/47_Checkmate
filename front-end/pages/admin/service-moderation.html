@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Service Moderation</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item active">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Service Moderation</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Review and moderate vendor packages before they go live</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="table-container">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Pending Package Reviews</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Package Name</th>
+                            <th>Vendor</th>
+                            <th>Price</th>
+                            <th>Features Count</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="moderationTableBody">
+                        <tr data-pkg="1">
+                            <td class="vendor-name-col">Elite Wedding Bundle</td>
+                            <td>Dream Events Ltd.</td>
+                            <td>$12,000</td>
+                            <td>14 inclusions</td>
+                            <td class="status-cell"><span class="status-badge pending">Pending</span></td>
+                            <td class="actions-cell">
+                                <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
+                                <button class="action-btn approve-btn approve-pkg-btn"><i data-lucide="check"></i> Approve</button>
+                                <button class="action-btn reject-btn reject-pkg-btn"><i data-lucide="x"></i> Reject</button>
+                            </td>
+                        </tr>
+                        <tr data-pkg="2">
+                            <td class="vendor-name-col">Corporate Gala Audio Setup</td>
+                            <td>Melody Music</td>
+                            <td>$3,500</td>
+                            <td>6 items</td>
+                            <td class="status-cell"><span class="status-badge pending">Pending</span></td>
+                            <td class="actions-cell">
+                                <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
+                                <button class="action-btn approve-btn approve-pkg-btn"><i data-lucide="check"></i> Approve</button>
+                                <button class="action-btn reject-btn reject-pkg-btn"><i data-lucide="x"></i> Reject</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <!-- Real-time Package Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px;">
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Pending Review</h4>
+                <div id="statPending" style="font-size: 24px; font-weight: 700; color: #f59e0b;">2</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Approved</h4>
+                <div id="statApproved" style="font-size: 24px; font-weight: 700; color: #00e676;">0</div>
+            </div>
+            <div class="card" style="padding: 16px;">
+                <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Rejected</h4>
+                <div id="statRejected" style="font-size: 24px; font-weight: 700; color: #ef4444;">0</div>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+  
+  <!-- Package Review Modal -->
+  <div id="packageReviewModal" class="notif-modal-overlay">
+    <div class="notif-window" style="max-width: 600px; width: 90%;">
+      <div class="notif-header">
+        <h3 id="reviewPkgName">Package Details</h3>
+        <button class="notif-close-btn" data-close="reviewModal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body" style="padding: 24px; text-align: left;">
+         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div>
+               <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Vendor</label>
+               <div id="reviewPkgVendor" style="font-weight: 600; margin-top: 4px;"></div>
+            </div>
+            <div>
+               <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Category</label>
+               <div id="reviewPkgCategory" style="font-weight: 600; margin-top: 4px;">Event Package</div>
+            </div>
+            <div>
+               <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Price</label>
+               <div id="reviewPkgPrice" style="font-weight: 700; color: var(--pink); margin-top: 4px;"></div>
+            </div>
+            <div>
+               <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Capacity / Duration</label>
+               <div id="reviewPkgCapacity" style="font-weight: 600; margin-top: 4px;"></div>
+            </div>
+         </div>
+         <div style="margin-bottom: 20px;">
+             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Description</label>
+             <p id="reviewPkgDesc" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px;"></p>
+         </div>
+         <div style="margin-bottom: 20px;">
+             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Included Resources</label>
+             <div id="reviewPkgResources" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;"></div>
+         </div>
+         <div>
+             <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Required Staff</label>
+             <div id="reviewPkgStaff" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;"></div>
+         </div>
+      </div>
+      <div class="notif-footer" style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+         <button class="action-btn action-btn-clean" data-close="reviewModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let pendingCount = 2;
+        let approvedCount = 0;
+        let rejectedCount = 0;
+        
+        const updateStats = () => {
+            const elP = document.getElementById('statPending');
+            const elA = document.getElementById('statApproved');
+            const elR = document.getElementById('statRejected');
+            if(elP) elP.textContent = pendingCount;
+            if(elA) elA.textContent = approvedCount;
+            if(elR) elR.textContent = rejectedCount;
+        };
+
+        const mockPackages = {
+            "1": {
+                name: "Elite Wedding Bundle",
+                vendor: "Dream Events Ltd.",
+                price: "$12,000",
+                category: "Wedding",
+                capacity: "100-300 Guests, Up to 8 hrs",
+                desc: "Complete wedding package with premium decorations, catering, and full day event support. Ideal for medium to large sized weddings.",
+                resources: ["Banquet Chairs (250)", "Round Tables (30)", "Floral Arrangements", "Lighting Rig", "Dance Floor"],
+                staff: ["Event Coordinator", "Photographer", "Servers (8)"]
+            },
+            "2": {
+                name: "Corporate Gala Audio Setup",
+                vendor: "Melody Music",
+                price: "$3,500",
+                category: "Conference / Corporate",
+                capacity: "Up to 500 Guests, Up to 12 hrs",
+                desc: "Full comprehensive audio-visual setup for large scale corporate galas, including mixing, mics, and dynamic stage lighting.",
+                resources: ["Microphones (4)", "Mixer Console", "Line Array Speakers", "Spotlights (4)", "Cables & Rigging"],
+                staff: ["Audio Engineer", "Lighting Tech", "Stagehand"]
+            }
+        };
+
+        const modal = document.getElementById('packageReviewModal');
+        const mkTag = (text) => `<span style="font-size: 11.5px; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-secondary);">${text}</span>`;
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        modal.querySelectorAll('[data-close="reviewModal"]').forEach(btn => {
+            btn.addEventListener('click', closeModal);
+        });
+
+        const tbody = document.getElementById('moderationTableBody');
+        if(tbody) {
+            tbody.addEventListener('click', (e) => {
+                const tr = e.target.closest('tr');
+                if(!tr) return;
+                
+                const pkgId = tr.getAttribute('data-pkg');
+                const pkg = mockPackages[pkgId];
+                
+                // Review BTN
+                if (e.target.closest('.review-pkg-btn')) {
+                    if (pkg) {
+                        document.getElementById('reviewPkgName').textContent = pkg.name;
+                        document.getElementById('reviewPkgVendor').textContent = pkg.vendor;
+                        document.getElementById('reviewPkgCategory').textContent = pkg.category;
+                        document.getElementById('reviewPkgPrice').textContent = pkg.price;
+                        document.getElementById('reviewPkgCapacity').textContent = pkg.capacity;
+                        document.getElementById('reviewPkgDesc').textContent = pkg.desc;
+                        document.getElementById('reviewPkgResources').innerHTML = pkg.resources.map(mkTag).join('');
+                        document.getElementById('reviewPkgStaff').innerHTML = pkg.staff.map(mkTag).join('');
+                        
+                        modal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+                
+                // Approve BTN
+                if (e.target.closest('.approve-pkg-btn')) {
+                    if(!tr.classList.contains('handled')) {
+                        tr.classList.add('handled');
+                        tr.querySelector('.status-cell').innerHTML = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Approved</span>`;
+                        tr.querySelector('.actions-cell').innerHTML = `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="check-circle-2" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Approved</span>`;
+                        pendingCount--;
+                        approvedCount++;
+                        updateStats();
+                        if(window.lucide) lucide.createIcons();
+                    }
+                }
+
+                // Reject BTN
+                if (e.target.closest('.reject-pkg-btn')) {
+                    if(!tr.classList.contains('handled')) {
+                        tr.classList.add('handled');
+                        tr.querySelector('.status-cell').innerHTML = `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">Rejected</span>`;
+                        tr.querySelector('.actions-cell').innerHTML = `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="x-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Rejected</span>`;
+                        pendingCount--;
+                        rejectedCount++;
+                        updateStats();
+                        if(window.lucide) lucide.createIcons();
+                    }
+                }
+            });
+        }
+    });
+  </script>
+</body>
+</html>

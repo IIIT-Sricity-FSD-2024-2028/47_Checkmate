@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Event Request</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <style>
+    /* Fix anchor action buttons to look same as button */
+    .er-action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform 0.18s, opacity 0.18s;
+    }
+    .er-action-btn svg { width: 18px; height: 18px; }
+    .er-action-btn:hover { transform: scale(1.2); opacity: 0.75; }
+    .er-action-btn.view    { color: var(--blue); }
+    .er-action-btn.approve { color: var(--green); }
+    .er-action-btn.reject  { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="event-request.html" class="nav-item active">
+          <i data-lucide="clipboard-list"></i>
+          <span>Event Request</span>
+        </a>
+        <a href="manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i>
+          <span>Manage Resource</span>
+        </a>
+        <a href="manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Manage Staff</span>
+        </a>
+        <a href="preset-package.html" class="nav-item">
+          <i data-lucide="box"></i>
+          <span>Preset Package</span>
+        </a>
+        <a href="report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i>
+          <span>Report Issue</span>
+        </a>
+        <a href="coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i>
+          <span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <h1 class="page-title">Event Request</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Toolbar -->
+        <div class="er-toolbar">
+          <div class="er-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Search by name or ID..." />
+          </div>
+          <button class="er-filter-btn">
+            <i data-lucide="sliders-horizontal"></i>
+            More Filters
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="er-table-wrap">
+          <table class="er-table">
+            <thead>
+              <tr>
+                <th style="width:44px"><input type="checkbox" /></th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Venue</th>
+                <th>People</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Resources</th>
+                <th>Staff</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <tr>
+                <td><input type="checkbox" /></td>
+                <td class="col-id">EVT001</td>
+                <td class="col-name">Tech Summit 2026</td>
+                <td><span class="badge badge--conference">Conference</span></td>
+                <td>Mar 28, 2026</td>
+                <td>Convention Center</td>
+                <td>500</td>
+                <td>9:00 AM</td>
+                <td><span class="status-badge pending">pending</span></td>
+                <td>
+                  <div class="er-actions">
+                    <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
+                    <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
+                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td><input type="checkbox" /></td>
+                <td class="col-id">EVT002</td>
+                <td class="col-name">Wedding – Sarah &amp; Mike</td>
+                <td><span class="badge badge--wedding">Wedding</span></td>
+                <td>Mar 30, 2026</td>
+                <td>Grand Hotel</td>
+                <td>150</td>
+                <td>6:00 PM</td>
+                <td><span class="status-badge pending">pending</span></td>
+                <td>
+                  <div class="er-actions">
+                    <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
+                    <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
+                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td><input type="checkbox" /></td>
+                <td class="col-id">EVT003</td>
+                <td class="col-name">Annual Corporate Gala</td>
+                <td><span class="badge badge--corporate">Corporate</span></td>
+                <td>Apr 05, 2026</td>
+                <td>Skyline Ballroom</td>
+                <td>320</td>
+                <td>7:30 PM</td>
+                <td><span class="status-badge confirmed">confirmed</span></td>
+                <td>
+                  <div class="er-actions">
+                    <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
+                    <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
+                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="er-footer">
+          <span class="er-showing">Showing 3 Request</span>
+          <div class="er-pagination">
+            <button class="page-btn">Previous</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">Next</button>
+          </div>
+        </div>
+
+      </div><!-- /.content -->
+    </main>
+
+  </div>
+
+  <!-- Lucide — MUST be at bottom so DOM is ready -->
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/event-request.js"></script>
+</body>
+</html>

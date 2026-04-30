@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EventPro – Assigned Events</title>
+<link rel="stylesheet" href="../../styles/staff_css/staff.css"/>
+<link rel="stylesheet" href="../../styles/staff_css/animations.css"/>
+<style>
+/* ── Page layout ── */
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.page-sub{font-size:12.5px;color:var(--text2);margin-top:2px;margin-bottom:20px}
+
+/* ── Stats ── */
+.ae-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+
+/* ── Filter bar ── */
+.ae-filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.ae-filter-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.ae-filter-btn.active,.ae-filter-btn:hover{background:var(--pink-dim);color:var(--pink);border-color:rgba(233,30,140,.35)}
+
+/* ── Event Cards Grid ── */
+.ae-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+
+/* ── Event Card ── */
+.ae-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.ae-card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.35)}
+
+.ae-card__img{height:130px;position:relative;overflow:hidden}
+.ae-card__img-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(42,10,58,.55),rgba(61,26,80,.55))}
+.ae-card__badge{position:absolute;top:10px;left:12px;z-index:2}
+.ae-card__title{position:absolute;bottom:10px;left:12px;z-index:2;font-size:16px;font-weight:700;color:#fff}
+
+.ae-card__body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+
+.ae-meta-list{display:flex;flex-direction:column;gap:6px}
+.ae-meta-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.ae-meta-item svg{width:13px;height:13px;flex-shrink:0;color:var(--pink)}
+
+.ae-task-box{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
+.ae-task-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ae-task-text{font-size:12.5px;color:var(--text)}
+
+.priority-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.pri-high{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.pri-medium{background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.25)}
+.pri-low{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+
+.ae-actions{display:flex;gap:8px}
+.ae-btn{flex:1;padding:9px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .12s;display:flex;align-items:center;justify-content:center;gap:6px}
+.ae-btn:hover{opacity:.88;transform:translateY(-1px)}
+.ae-btn--accept{background:rgba(34,197,94,.2);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.ae-btn--reject{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.ae-btn--tasks{background:var(--pink-dim);color:var(--pink);border:1px solid rgba(233,30,140,.3)}
+.ae-btn--msg{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+
+.ae-status-row{display:flex;align-items:center;justify-content:space-between}
+.ae-status-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.pill-pending{background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.25)}
+.pill-accepted{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.pill-rejected{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+
+/* ── Empty state ── */
+.ae-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.ae-empty-icon{font-size:48px;margin-bottom:12px}
+.ae-empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">🗓</div>
+    <div><div class="sb-name">EventPro</div><div class="sb-badge">Staff</div></div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sb-link" onclick="location.href='staff.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+    <button class="sb-link active" onclick="location.href='AssignedEvents.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Assigned Events</button>
+    <button class="sb-link" onclick="location.href='TaskBoard.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>Task Board</button>
+    <button class="sb-link" onclick="location.href='Schedule.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Schedule</button>
+    <button class="sb-link" onclick="location.href='Performance.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Performance</button>
+    <button class="sb-link" onclick="location.href='Report.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>Report Issue</button>
+    <button class="sb-link" onclick="location.href='Messages.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</button>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-uname">Mike Staff</div>
+    <div class="sb-uemail">staff@demo.com</div>
+    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')">Light Mode</button>
+    <a href="../LandingPage/index.html" class="sb-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="page-title">Assigned Events</div>
+  <div class="page-sub">Events assigned to you by the vendor — accept or reject below</div>
+
+  <!-- Stats -->
+  <div class="ae-stats">
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Assigned</span><div class="stat-ico ico-pink">📋</div></div><div class="stat-val c-pink" id="statTotal">0</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Pending</span><div class="stat-ico ico-orange">⏳</div></div><div class="stat-val c-orange" id="statPending">0</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Accepted</span><div class="stat-ico ico-green">✓</div></div><div class="stat-val c-green" id="statAccepted">0</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Rejected</span><div class="stat-ico ico-red" style="background:rgba(239,68,68,.15);color:#f87171">✕</div></div><div class="stat-val" style="color:#f87171" id="statRejected">0</div></div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="ae-filter-bar">
+    <button class="ae-filter-btn active" data-filter="all">All</button>
+    <button class="ae-filter-btn" data-filter="pending">Pending</button>
+    <button class="ae-filter-btn" data-filter="accepted">Accepted</button>
+    <button class="ae-filter-btn" data-filter="rejected">Rejected</button>
+  </div>
+
+  <!-- Cards -->
+  <div class="ae-grid" id="aeGrid"></div>
+</main>
+</div>
+
+<!-- Gradient palettes for card headers -->
+<script>
+const GRAD = [
+  'linear-gradient(135deg,rgba(233,30,140,.7),rgba(168,85,247,.6))',
+  'linear-gradient(135deg,rgba(59,130,246,.7),rgba(6,182,212,.6))',
+  'linear-gradient(135deg,rgba(249,115,22,.7),rgba(239,68,68,.6))',
+  'linear-gradient(135deg,rgba(34,197,94,.7),rgba(6,182,212,.6))',
+  'linear-gradient(135deg,rgba(139,92,246,.7),rgba(236,72,153,.6))',
+];
+
+// ── Shared localStorage persistence (mirrors vendor's data.js key) ──
+const STORE_KEY = 'eventpro_staffAssignments';
+
+function loadAssignments() {
+  // If data.js DB is present, use it. Otherwise, use localStorage.
+  if (typeof DB !== 'undefined') return DB.getAll('staffAssignments') || [];
+  return JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+}
+
+function saveAssignments(arr) {
+  if (typeof DB !== 'undefined') {
+    DB.save('staffAssignments', arr);
+  } else {
+    localStorage.setItem(STORE_KEY, JSON.stringify(arr));
+  }
+}
+
+/* ── Current staff ID (hardcoded for demo — S001=Alex etc) ── */
+const MY_STAFF_ID = 'S001'; // In real app this would come from session
+
+let currentFilter = 'all';
+
+function renderCards() {
+  const all = loadAssignments();
+  // Show only assignments for this staff member
+  const mine = all.filter(a => a.staffId === MY_STAFF_ID || a.staffName === 'Alex Johnson');
+  const filtered = currentFilter === 'all' ? mine : mine.filter(a => a.status === currentFilter);
+
+  // Stats
+  document.getElementById('statTotal').textContent    = mine.length;
+  document.getElementById('statPending').textContent  = mine.filter(a=>a.status==='pending').length;
+  document.getElementById('statAccepted').textContent = mine.filter(a=>a.status==='accepted').length;
+  document.getElementById('statRejected').textContent = mine.filter(a=>a.status==='rejected').length;
+
+  const grid = document.getElementById('aeGrid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="ae-empty" style="grid-column:1/-1">
+      <div class="ae-empty-icon">📭</div>
+      <div class="ae-empty-title">${currentFilter==='all' ? 'No assignments yet' : 'No '+currentFilter+' assignments'}</div>
+      <div style="font-size:12.5px;margin-top:4px">The vendor will assign you to events from Manage Staff.</div>
+    </div>`;
+    return;
+  }
+
+  const priorityClass = {High:'pri-high',Medium:'pri-medium',Low:'pri-low'};
+  const statusPill    = {pending:'pill-pending',accepted:'pill-accepted',rejected:'pill-rejected'};
+
+  grid.innerHTML = filtered.map((a, i) => {
+    const grad = GRAD[i % GRAD.length];
+    const priCls = priorityClass[a.priority] || 'pri-medium';
+    const sCls   = statusPill[a.status] || 'pill-pending';
+    const dateStr = a.eventDate ? new Date(a.eventDate+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : '—';
+
+    const actionBtns = a.status === 'pending'
+      ? `<button class="ae-btn ae-btn--accept" onclick="respond('${a.id}','accepted')">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Accept
+         </button>
+         <button class="ae-btn ae-btn--reject" onclick="respond('${a.id}','rejected')">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject
+         </button>`
+      : a.status === 'accepted'
+      ? `<button class="ae-btn ae-btn--tasks" onclick="location.href='TaskBoard.html'">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg> View Tasks
+         </button>
+         <button class="ae-btn ae-btn--msg" onclick="location.href='Messages.html'">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message
+         </button>`
+      : `<div style="font-size:12px;color:var(--text3);padding:6px 0;">Assignment declined. No action needed.</div>`;
+
+    return `<div class="ae-card" id="card_${a.id}">
+      <div class="ae-card__img" style="background:${grad}">
+        <div class="ae-card__img-overlay"></div>
+        <div class="ae-card__badge">
+          <span class="ae-status-pill ${sCls}">${a.status.charAt(0).toUpperCase()+a.status.slice(1)}</span>
+        </div>
+        <div class="ae-card__title">${a.eventName}</div>
+      </div>
+      <div class="ae-card__body">
+        <div class="ae-meta-list">
+          <div class="ae-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            ${dateStr}
+          </div>
+          ${a.eventVenue ? `<div class="ae-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${a.eventVenue}
+          </div>` : ''}
+          ${a.eventPeople ? `<div class="ae-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            ${a.eventPeople} Guests
+          </div>` : ''}
+        </div>
+        <div class="ae-task-box">
+          <div class="ae-task-label">Assigned Task</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span class="ae-task-text">${a.taskDesc}</span>
+            <span class="priority-badge ${priCls}">${a.priority}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:5px;">Assigned by Vendor · ${new Date(a.assignedAt).toLocaleDateString()}</div>
+        </div>
+        <div class="ae-actions">${actionBtns}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function respond(id, decision) {
+  const all = loadAssignments();
+  const idx = all.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  all[idx].status = decision;
+  if (decision === 'accepted') all[idx].respondedAt = new Date().toISOString();
+  saveAssignments(all);
+  showToast(decision === 'accepted' ? '✓ Assignment accepted! Check your Task Board.' : '✕ Assignment rejected.', decision === 'accepted' ? 'success' : 'warn');
+  renderCards();
+}
+
+// ── Filter buttons ──
+document.querySelectorAll('.ae-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ae-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderCards();
+  });
+});
+
+// ── Toast ──
+function showToast(msg, type='success') {
+  let t = document.getElementById('_ae_toast');
+  if (!t) { t = document.createElement('div'); t.id = '_ae_toast'; t.style.cssText='position:fixed;bottom:26px;right:26px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:all .3s;opacity:0;transform:translateY(10px)'; document.body.appendChild(t); }
+  t.style.background = type==='success'?'#15803d':type==='warn'?'#b45309':'#b91c1c';
+  t.style.color = '#fff';
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translateY(0)';
+  clearTimeout(t._tmr);
+  t._tmr = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(10px)'; }, 3000);
+}
+
+// Clean up: Ensure we are pulling fresh on load
+document.addEventListener('DOMContentLoaded', () => {
+    renderCards();
+});
+</script>
+</body>
+</html>

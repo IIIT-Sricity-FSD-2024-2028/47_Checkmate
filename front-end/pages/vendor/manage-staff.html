@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Manage Staff</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <style>
+    /* ── Toolbar ── */
+    .ms-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ms-search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      transition: border-color 0.18s;
+    }
+    .ms-search:focus-within { border-color: rgba(233,30,140,0.4); }
+    .ms-search svg { width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0; }
+    .ms-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      width: 100%;
+    }
+    .ms-search input::placeholder { color: var(--text-muted); }
+
+    .ms-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .ms-filter-btn svg { width: 15px; height: 15px; }
+    .ms-filter-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    .ms-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px var(--pink-glow);
+      transition: background 0.18s;
+    }
+    .ms-add-btn svg { width: 15px; height: 15px; }
+    .ms-add-btn:hover { background: var(--pink-light); }
+
+    /* ── Staff Grid ── */
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* ── Staff Card ── */
+    .staff-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .staff-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+    }
+
+    /* Card header */
+    .staff-card__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .staff-card__info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .staff-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .avatar--pink   { background: linear-gradient(135deg, #e91e8c, #a855f7); }
+    .avatar--teal   { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .avatar--purple { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .avatar--green  { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .avatar--orange { background: linear-gradient(135deg, #f97316, #ef4444); }
+
+    .staff-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .staff-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Status badge */
+    .staff-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .staff-status.available {
+      background: rgba(34,197,94,0.12);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .staff-status.busy {
+      background: rgba(239,68,68,0.12);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .staff-status.off {
+      background: rgba(107,93,126,0.2);
+      color: var(--text-muted);
+      border: 1px solid rgba(107,93,126,0.3);
+    }
+
+    /* Contact info */
+    .staff-card__contact {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .contact-row svg { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+
+    /* Workload bar */
+    .staff-card__workload {}
+
+    .workload-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .workload-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+    .workload-label svg { width: 13px; height: 13px; }
+
+    .workload-pct {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .workload-pct.low    { color: var(--green); }
+    .workload-pct.medium { color: var(--yellow); }
+    .workload-pct.high   { color: var(--red); }
+
+    .workload-bar-bg {
+      width: 100%;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .workload-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+    .workload-bar-fill.low    { background: var(--green); }
+    .workload-bar-fill.medium { background: var(--yellow); }
+    .workload-bar-fill.high   { background: linear-gradient(90deg, var(--orange), var(--red)); }
+
+    /* Card actions — 3 columns now */
+    .staff-card__actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .staff-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 0;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.18s, transform 0.15s;
+    }
+    .staff-btn svg { width: 14px; height: 14px; }
+    .staff-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .staff-btn--schedule {
+      background: rgba(59,130,246,0.15);
+      color: var(--blue);
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .staff-btn--edit {
+      background: rgba(34,197,94,0.15);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .staff-btn--delete {
+      background: rgba(239,68,68,0.15);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .staff-btn--assign {
+      background: rgba(233,30,140,0.15);
+      color: var(--pink);
+      border: 1px solid rgba(233,30,140,0.2);
+    }
+    /* 4-column actions grid */
+    .staff-card__actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* ── Pagination ── */
+    .ms-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .ms-page-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .ms-page-btn svg { width: 14px; height: 14px; }
+    .ms-page-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    /* Responsive */
+    @media (max-width: 1100px) { .staff-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 680px)  { .staff-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="event-request.html" class="nav-item">
+          <i data-lucide="clipboard-list"></i>
+          <span>Event Request</span>
+        </a>
+        <a href="manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i>
+          <span>Manage Resource</span>
+        </a>
+        <a href="manage-staff.html" class="nav-item active">
+          <i data-lucide="users"></i>
+          <span>Manage Staff</span>
+        </a>
+        <a href="preset-package.html" class="nav-item">
+          <i data-lucide="box"></i>
+          <span>Preset Package</span>
+        </a>
+        <a href="report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i>
+          <span>Report Issue</span>
+        </a>
+        <a href="coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i>
+          <span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <h1 class="page-title">Manage Staff</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Toolbar -->
+        <div class="ms-toolbar">
+          <div class="ms-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Search staff by name or email..." />
+          </div>
+          <button class="ms-filter-btn">
+            <i data-lucide="sliders-horizontal"></i>
+            More Filters
+          </button>
+          <button class="ms-add-btn">
+            <i data-lucide="plus"></i>
+            Add Staff
+          </button>
+        </div>
+
+        <!-- Staff Cards Grid -->
+        <div class="staff-grid">
+
+          <!-- Card 1 — Alex Johnson -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--pink">AJ</div>
+                <div>
+                  <div class="staff-name">Alex Johnson</div>
+                  <div class="staff-role">Event Coordinator</div>
+                </div>
+              </div>
+              <span class="staff-status available">available</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8901
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                alex@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct medium">75%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill medium" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S001" data-staff-name="Alex Johnson" data-staff-role="Event Coordinator">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2 — Sarah Williams -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--teal">SW</div>
+                <div>
+                  <div class="staff-name">Sarah Williams</div>
+                  <div class="staff-role">Technical Lead</div>
+                </div>
+              </div>
+              <span class="staff-status available">available</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8902
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                sarah@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct medium">60%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill medium" style="width: 60%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S002" data-staff-name="Sarah Williams" data-staff-role="Technical Lead">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 3 — Michael Brown -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--purple">MB</div>
+                <div>
+                  <div class="staff-name">Michael Brown</div>
+                  <div class="staff-role">Security Chief</div>
+                </div>
+              </div>
+              <span class="staff-status busy">busy</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8903
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                michael@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct high">90%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill high" style="width: 90%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S003" data-staff-name="Michael Brown" data-staff-role="Security Chief">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 4 — Lisa Chen -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--green">LC</div>
+                <div>
+                  <div class="staff-name">Lisa Chen</div>
+                  <div class="staff-role">Catering Manager</div>
+                </div>
+              </div>
+              <span class="staff-status available">available</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8904
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                lisa@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct low">40%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill low" style="width: 40%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S004" data-staff-name="Lisa Chen" data-staff-role="Catering Manager">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 5 — James Rivera -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--orange">JR</div>
+                <div>
+                  <div class="staff-name">James Rivera</div>
+                  <div class="staff-role">AV Technician</div>
+                </div>
+              </div>
+              <span class="staff-status busy">busy</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8905
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                james@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct high">85%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill high" style="width: 85%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S005" data-staff-name="James Rivera" data-staff-role="AV Technician">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 6 — Nina Patel -->
+          <div class="staff-card">
+            <div class="staff-card__header">
+              <div class="staff-card__info">
+                <div class="staff-avatar avatar--teal">NP</div>
+                <div>
+                  <div class="staff-name">Nina Patel</div>
+                  <div class="staff-role">Logistics Officer</div>
+                </div>
+              </div>
+              <span class="staff-status off">off duty</span>
+            </div>
+
+            <div class="staff-card__contact">
+              <div class="contact-row">
+                <i data-lucide="phone"></i>
+                +1 234-567-8906
+              </div>
+              <div class="contact-row">
+                <i data-lucide="mail"></i>
+                nina@eventpro.com
+              </div>
+            </div>
+
+            <div class="staff-card__workload">
+              <div class="workload-header">
+                <span class="workload-label">
+                  <i data-lucide="activity"></i> Workload
+                </span>
+                <span class="workload-pct low">20%</span>
+              </div>
+              <div class="workload-bar-bg">
+                <div class="workload-bar-fill low" style="width: 20%"></div>
+              </div>
+            </div>
+
+            <div class="staff-card__actions">
+              <button class="staff-btn staff-btn--schedule">
+                <i data-lucide="calendar"></i> Schedule
+              </button>
+              <button class="staff-btn staff-btn--edit">
+                <i data-lucide="pencil"></i> Edit
+              </button>
+              <button class="staff-btn staff-btn--delete">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S006" data-staff-name="Nina Patel" data-staff-role="Logistics Officer">
+                <i data-lucide="user-plus"></i> Assign
+              </button>
+            </div>
+          </div><!-- /card Nina Patel -->
+
+      </div><!-- /.content -->
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/staff.js"></script>
+</body>
+</html>

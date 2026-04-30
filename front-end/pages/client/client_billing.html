@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Invoices - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .invoice-table th { background:rgba(255,255,255,0.02); }
+        .invoice-table td { vertical-align:middle; }
+        
+        .toast-payment {
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: rgba(6,10,20,0.85); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            padding: 16px 24px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px;
+            color: #fff; font-size: 14px; font-weight: 500; z-index: 9999;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity:0;
+        }
+        .toast-payment.show { transform: translateX(-50%) translateY(0); opacity:1; }
+        .spinner { animation: spin 1s linear infinite; font-size:18px; color:var(--pink); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item active"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title">Billing & Invoices</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Manage your event payments and billing history</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="stats-grid mb-6">
+                    <div class="stat-card" style="background:rgba(233,30,140,0.05); border-color:rgba(233,30,140,0.2);">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--purple" style="background:var(--pink);"><i class="ph ph-currency-dollar"></i></div>
+                        </div>
+                        <div class="stat-label">Outstanding Balance</div>
+                        <div class="stat-value" style="color:var(--text-primary);">$4,500<span style="font-size:20px;">.00</span></div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--pink);margin-top:4px;font-weight:600;">Due April 10, 2026</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--green"><i class="ph ph-check-circle"></i></div>
+                        </div>
+                        <div class="stat-label">Total Paid</div>
+                        <div class="stat-value">$18,200<span style="font-size:20px;color:var(--text-muted);">.00</span></div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Across 4 total events</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__top">
+                            <div class="stat-icon stat-icon--blue"><i class="ph ph-receipt"></i></div>
+                        </div>
+                        <div class="stat-label">Active Invoices</div>
+                        <div class="stat-value">2</div>
+                        <div class="stat-desc" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Awaiting partial payment</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                        <div class="card-title" style="margin:0;"><i class="ph ph-file-text"></i> Billing History</div>
+                        <div class="search-box" style="width:280px; background:rgba(0,0,0,0.2);">
+                            <i class="ph ph-magnifying-glass"></i>
+                            <input type="text" id="searchInvoices" placeholder="Search Invoice # or Event...">
+                        </div>
+                    </div>
+                    
+                    <div class="er-table-wrap">
+                        <table class="er-table invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Event</th>
+                                    <th>Issue Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="col-id">INV-2026-081</td>
+                                    <td class="col-name" style="font-size:13.5px;">Corporate Gala</td>
+                                    <td>Mar 28, 2026</td>
+                                    <td style="font-weight:600;">$4,500.00</td>
+                                    <td><span class="status-badge pending">Pending Payment</span></td>
+                                    <td style="text-align:right;">
+                                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                                            <button class="btn btn-ghost" style="padding:4px 10px; font-size:12px;"><i class="ph ph-download-simple"></i></button>
+                                            <button class="btn btn-primary btn-pay" style="padding:4px 14px; font-size:12px;"><i class="ph ph-credit-card"></i> Pay Now</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-id">INV-2026-042</td>
+                                    <td class="col-name" style="font-size:13.5px;">Wedding Package (Deposit)</td>
+                                    <td>Jan 15, 2026</td>
+                                    <td style="font-weight:600;">$8,000.00</td>
+                                    <td><span class="status-badge approved" style="color:#22c55e;">Paid in Full</span></td>
+                                    <td style="text-align:right;">
+                                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                                            <button class="btn btn-ghost" style="padding:4px 10px; font-size:12px;"><i class="ph ph-download-simple"></i> PDF</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-id">INV-2026-018</td>
+                                    <td class="col-name" style="font-size:13.5px;">Tech Conference (Final)</td>
+                                    <td>Dec 20, 2025</td>
+                                    <td style="font-weight:600;">$6,200.00</td>
+                                    <td><span class="status-badge approved" style="color:#22c55e;">Paid in Full</span></td>
+                                    <td style="text-align:right;">
+                                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                                            <button class="btn btn-ghost" style="padding:4px 10px; font-size:12px;"><i class="ph ph-download-simple"></i> PDF</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-id">INV-2025-199</td>
+                                    <td class="col-name" style="font-size:13.5px;">Birthday Party</td>
+                                    <td>Oct 05, 2025</td>
+                                    <td style="font-weight:600;">$4,000.00</td>
+                                    <td><span class="status-badge approved" style="color:#22c55e;">Paid in Full</span></td>
+                                    <td style="text-align:right;">
+                                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                                            <button class="btn btn-ghost" style="padding:4px 10px; font-size:12px;"><i class="ph ph-download-simple"></i> PDF</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="paymentToast" class="toast-payment">
+        <i class="ph ph-spinner spinner" id="toastIcon"></i>
+        <span id="toastMsg">Initializing secure payment gateway...</span>
+    </div>
+
+    <script>
+        document.querySelectorAll('.btn-pay').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const toast = document.getElementById('paymentToast');
+                const icon = document.getElementById('toastIcon');
+                const msg = document.getElementById('toastMsg');
+                
+                toast.classList.add('show');
+                icon.className = 'ph ph-spinner spinner';
+                msg.textContent = 'Processing Payment of $4,500.00...';
+                
+                setTimeout(() => {
+                    icon.className = 'ph ph-check-circle';
+                    icon.style.color = '#22c55e';
+                    icon.style.animation = 'none';
+                    msg.innerHTML = 'Payment Successful! <span style="font-weight:bold;color:#22c55e;">Thank you.</span>';
+                    
+                    // Update UI to reflect Paid
+                    this.closest('tr').querySelector('.status-badge').className = 'status-badge approved';
+                    this.closest('tr').querySelector('.status-badge').textContent = 'Paid in Full';
+                    this.remove();
+                    
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3500);
+                }, 2000);
+            });
+        });
+
+        document.getElementById('searchInvoices').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('.invoice-table tbody tr');
+            rows.forEach(row => {
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    </script>
+    
+    <script src="../../scripts/client_js/client_utils.js"></script>
+</body>
+</html>

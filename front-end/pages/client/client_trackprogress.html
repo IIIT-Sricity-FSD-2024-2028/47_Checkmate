@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Progress - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item active"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning-circle"></i> Report Issue</a>
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <div class="topbar" style="justify-content:flex-start; gap:16px;">
+                <a href="client_myevents.html" class="back-btn"><i class="ph ph-arrow-left"></i></a>
+                <div>
+                    <div class="page-title">Track Progress</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Monitor your event preparation status</div>
+                </div>
+            </div>
+            
+            <div class="content">
+            <div class="content">
+                <!-- Data sync main view -->
+                <div id="trackMain" style="display:none;">
+                    <div class="card tp-hero">
+                        <div class="tp-hero-top">
+                            <div class="tp-hero-info">
+                                <h3 id="tpEventName">Event Name</h3>
+                                <div class="tp-hero-meta">
+                                    <span><i class="ph ph-calendar-blank"></i> <span id="tpDate">Date</span></span>
+                                    <span><i class="ph ph-map-pin"></i> <span id="tpVenue">Venue</span></span>
+                                    <span><i class="ph ph-users"></i> <span id="tpPeople">Guests</span></span>
+                                </div>
+                            </div>
+                            <div id="tpStatusBadge" class="tag tag-blue" style="font-size:12px; padding:6px 14px;">In Progress</div>
+                        </div>
+                        
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-labels">
+                                <span>Overall Progress</span>
+                                <span id="tpProgressPct" style="color:var(--pink); font-weight:600;">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="tpProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tp-grid">
+                        <div class="card">
+                            <div class="card-title"><i class="ph ph-clock"></i> Progress Timeline</div>
+                            
+                            <div class="timeline-list">
+                                <div id="tlSubmit" class="tl-item completed">
+                                    <div class="tl-icon-col">
+                                        <div class="tl-icon"><i class="ph ph-check"></i></div>
+                                        <div class="tl-line active"></div>
+                                    </div>
+                                    <div class="tl-content">
+                                        <div class="tl-title">Request Submitted</div>
+                                        <div class="tl-desc">Your event request has been received and is under review</div>
+                                        <div id="tpSubmitDate" class="tag tag-green">Submitted on ...</div>
+                                    </div>
+                                </div>
+                                
+                                <div id="tlApproved" class="tl-item upcoming">
+                                    <div class="tl-icon-col">
+                                        <div id="tlApprovedIcon" class="tl-icon">2</div>
+                                        <div id="tlApprovedLine" class="tl-line"></div>
+                                    </div>
+                                    <div class="tl-content">
+                                        <div class="tl-title">Request Approved</div>
+                                        <div class="tl-desc">Vendor coordinator review and approval</div>
+                                        <div id="tlApprovedTag" class="tag tag-blue">Awaiting review</div>
+                                    </div>
+                                </div>
+                                
+                                <div id="tlResources" class="tl-item upcoming">
+                                    <div class="tl-icon-col">
+                                        <div id="tlResourcesIcon" class="tl-icon">3</div>
+                                        <div id="tlResourcesLine" class="tl-line"></div>
+                                    </div>
+                                    <div class="tl-content">
+                                        <div class="tl-title">Resources Allocated</div>
+                                        <div class="tl-desc">Equipment, catering, and venue arrangements</div>
+                                        <div id="tlResourcesTag" class="tag tag-blue">Vendor allocating...</div>
+                                        <div id="tlResourcesList" style="margin-top:12px; display:none; flex-direction:column; gap:8px;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="tlStaff" class="tl-item upcoming">
+                                    <div class="tl-icon-col">
+                                        <div id="tlStaffIcon" class="tl-icon">4</div>
+                                        <div id="tlStaffLine" class="tl-line"></div>
+                                    </div>
+                                    <div class="tl-content">
+                                        <div class="tl-title">Staff Assigned</div>
+                                        <div class="tl-desc">Event team and coordinator assignment</div>
+                                        <div id="tlStaffTag" class="tag tag-blue">Assigning team...</div>
+                                        <div id="tlStaffList" style="margin-top:12px; display:none; flex-direction:column; gap:8px;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="tlLive" class="tl-item upcoming">
+                                    <div class="tl-icon-col">
+                                        <div id="tlLiveIcon" class="tl-icon">5</div>
+                                    </div>
+                                    <div class="tl-content">
+                                        <div class="tl-title">Event Execution</div>
+                                        <div class="tl-desc">Event is live and being monitored</div>
+                                        <div id="tlLiveTag" class="tag tag-blue">Estimated: <span id="tpExecDate">...</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; flex-direction:column; gap:24px;">
+                            <div class="card">
+                                <div class="card-title"><i class="ph ph-check-circle"></i> Service Status</div>
+                                <div style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+                                    <div id="statusApproval" style="display:flex; align-items:center; gap:12px;">
+                                        <i class="ph ph-clock" style="font-size:20px; color:var(--text-muted);"></i>
+                                        <span id="statusApprovalText" style="font-size:14px; color:var(--text-muted);">Awaiting Approval</span>
+                                    </div>
+                                    <div id="statusResources" style="display:flex; align-items:center; gap:12px;">
+                                        <i class="ph ph-clock" style="font-size:20px; color:var(--text-muted);"></i>
+                                        <span id="statusResourcesText" style="font-size:14px; color:var(--text-muted);">Resources Pending</span>
+                                    </div>
+                                    <div id="statusStaff" style="display:flex; align-items:center; gap:12px;">
+                                        <i class="ph ph-clock" style="font-size:20px; color:var(--text-muted);"></i>
+                                        <span id="statusStaffText" style="font-size:14px; color:var(--text-muted);">Staff Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-title"><i class="ph ph-lightning"></i> Quick Actions</div>
+                                <div class="action-stack">
+                                    <button class="btn btn-primary" style="justify-content:center;"><i class="ph ph-chat-circle"></i> Contact Coordinator</button>
+                                    <a href="client_myevents.html" class="btn btn-ghost" style="justify-content:center;"><i class="ph ph-arrow-left"></i> Back to Events</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error / Not Found View -->
+                <div id="notFoundCard" class="card" style="display:none; text-align:center; padding:64px 24px;">
+                    <i class="ph ph-warning-circle" style="font-size:64px; color:var(--red); display:block; margin-bottom:16px; opacity:0.5;"></i>
+                    <h3>Event Not Found</h3>
+                    <p style="color:var(--text-secondary); margin:8px 0 24px;">The event request you are trying to track doesn't exist or you don't have access.</p>
+                    <a href="client_myevents.html" class="btn btn-primary">Back to My Events</a>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/client_js/client_trackprogress.js"></script>
+    <script src="../../scripts/client_utils.js"></script>
+</body>
+</html>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/client_utils.js"></script>
+</body>
+</html>
+

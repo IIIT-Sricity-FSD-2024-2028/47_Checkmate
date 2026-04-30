@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - EventPro</title>
+  <link rel="stylesheet" href="login_css/style.css">
+</head>
+<body>
+  <div class="main-wrapper">
+    <div class="container">
+      <div class="left-panel">
+        <div class="left-panel-content">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="brand-info">
+              <span class="brand-main">EventPro</span>
+            </div>
+          </div>
+          
+          <div class="tag">EVENT MANAGEMENT PLATFORM</div>
+          
+          <h1 class="heading">
+            Creating events<br>
+            with <span class="highlight">precision</span><br>
+            <span class="highlight">& care.</span>
+          </h1>
+          
+          <p class="description">
+            Your request will be matched with top vendors, staff allocated automatically, and resources confirmed before your event day.
+          </p>
+          
+          <div class="footer-text">
+            &copy; 2026 EventPro. All rights reserved.
+          </div>
+        </div>
+      </div>
+      
+      <div class="right-panel">
+        <div class="form-wrapper">
+          <div class="form-card">
+            <div class="form-header">
+              <h2 class="form-title">Sign in</h2>
+            </div>
+            
+            <form id="signin-form">
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="user@example.com" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+              </div>
+              
+              <div class="btn-group">
+                <button id="loginBtn" type="submit" class="btn btn-primary" style="width: 100%;">Sign in &rarr;</button>
+              </div>
+              
+              <div class="bottom-text">
+                No account? <a href="signup-step1.html">Create one</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="login_js/script.js"></script>
+  <script src="login_js/validation.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Dashboard</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <!-- Lucide Icons -->
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="#" class="nav-item active">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="./event-request.html" class="nav-item">
+          <i data-lucide="clipboard-list"></i>
+          <span>Event Request</span>
+        </a>
+        <a href="./manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i>
+          <span>Manage Resource</span>
+        </a>
+        <a href="./manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Manage Staff</span>
+        </a>
+        <a href="./preset-package.html" class="nav-item">
+          <i data-lucide="box"></i>
+          <span>Preset Package</span>
+        </a>
+        <a href="./report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i>
+          <span>Report Issue</span>
+        </a>
+        <a href="./coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i>
+          <span>Coordination Hub</span>
+        </a>
+        <a href="./monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i>
+          <span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item">
+          <i data-lucide="shield-check"></i>
+          <span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="topbar__right">
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">1</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+          <h2>Welcome back, John! 👋</h2>
+          <p>Here's what's happening with your events today.</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__top">
+              <div class="stat-icon stat-icon--blue">
+                <i data-lucide="calendar"></i>
+              </div>
+              <span class="stat-trend up">↗ +12%</span>
+            </div>
+            <div class="stat-label">Pending Requests</div>
+            <div class="stat-value">12</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__top">
+              <div class="stat-icon stat-icon--green">
+                <i data-lucide="trending-up"></i>
+              </div>
+              <span class="stat-trend up">↗ +12%</span>
+            </div>
+            <div class="stat-label">Active Events</div>
+            <div class="stat-value">8</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__top">
+              <div class="stat-icon stat-icon--purple">
+                <i data-lucide="gift"></i>
+              </div>
+              <span class="stat-trend up">↗ +12%</span>
+            </div>
+            <div class="stat-label">Available Resources</div>
+            <div class="stat-value">156</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__top">
+              <div class="stat-icon stat-icon--orange">
+                <i data-lucide="user-check"></i>
+              </div>
+              <span class="stat-trend up">↗ +12%</span>
+            </div>
+            <div class="stat-label">Available Staff</div>
+            <div class="stat-value">24</div>
+          </div>
+        </div>
+
+        <!-- Bottom Grid -->
+        <div class="bottom-grid">
+
+          <!-- Left Column -->
+          <div class="left-col">
+
+            <!-- Upcoming Events -->
+            <div class="card">
+              <div class="card__header">
+                <h3>Upcoming Events</h3>
+                <a href="#" class="view-all">View All →</a>
+              </div>
+              <div class="event-list">
+                <div class="event-item">
+                  <div class="event-info">
+                    <div class="event-name">Tech Summit 2026</div>
+                    <div class="event-meta">
+                      <i data-lucide="calendar" class="meta-icon"></i>
+                      Mar 28, 2026 &nbsp; Convention Center
+                    </div>
+                  </div>
+                  <span class="badge badge--confirmed">confirmed</span>
+                </div>
+                <div class="event-item">
+                  <div class="event-info">
+                    <div class="event-name">Wedding – Sarah &amp; Mike</div>
+                    <div class="event-meta">
+                      <i data-lucide="calendar" class="meta-icon"></i>
+                      Mar 30, 2026 &nbsp; Grand Hotel
+                    </div>
+                  </div>
+                  <span class="badge badge--confirmed">confirmed</span>
+                </div>
+                <div class="event-item">
+                  <div class="event-info">
+                    <div class="event-name">Corporate Gala</div>
+                    <div class="event-meta">
+                      <i data-lucide="calendar" class="meta-icon"></i>
+                      Apr 2, 2026 &nbsp; Skyview Ballroom
+                    </div>
+                  </div>
+                  <span class="badge badge--pending">pending</span>
+                </div>
+                <div class="event-item">
+                  <div class="event-info">
+                    <div class="event-name">Music Festival</div>
+                    <div class="event-meta">
+                      <i data-lucide="calendar" class="meta-icon"></i>
+                      Apr 5, 2026 &nbsp; City Park
+                    </div>
+                  </div>
+                  <span class="badge badge--confirmed">confirmed</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+              <div class="card__header">
+                <h3>Recent Activity</h3>
+              </div>
+              <div class="activity-list">
+                <div class="activity-item">
+                  <span class="activity-dot"></span>
+                  <div class="activity-body">
+                    <div class="activity-title">Event request approved</div>
+                    <div class="activity-sub">Wedding – Sarah &amp; Mike</div>
+                  </div>
+                  <div class="activity-time">30 mins ago</div>
+                </div>
+                <div class="activity-item">
+                  <span class="activity-dot"></span>
+                  <div class="activity-body">
+                    <div class="activity-title">Resource allocated</div>
+                    <div class="activity-sub">Tech Summit 2026</div>
+                  </div>
+                  <div class="activity-time">2 hours ago</div>
+                </div>
+                <div class="activity-item">
+                  <span class="activity-dot"></span>
+                  <div class="activity-body">
+                    <div class="activity-title">Staff assigned</div>
+                    <div class="activity-sub">Corporate Gala</div>
+                  </div>
+                  <div class="activity-time">4 hours ago</div>
+                </div>
+                <div class="activity-item">
+                  <span class="activity-dot"></span>
+                  <div class="activity-body">
+                    <div class="activity-title">New event request</div>
+                    <div class="activity-sub">Birthday Party</div>
+                  </div>
+                  <div class="activity-time">6 hours ago</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /left-col -->
+
+          <!-- Right Column -->
+          <div class="right-col">
+
+            <!-- Critical Alerts -->
+            <div class="card">
+              <div class="card__header alerts-header">
+                <span class="alert-icon">⚠</span>
+                <h3>Critical Alerts</h3>
+              </div>
+              <div class="alert-list">
+                <div class="alert-item alert-item--yellow">
+                  <div class="alert-msg">Low stock: Audio equipment for Tech Summit</div>
+                  <div class="alert-time"><i data-lucide="clock" class="meta-icon"></i> 2 hours ago</div>
+                </div>
+                <div class="alert-item alert-item--orange">
+                  <div class="alert-msg">Staff conflict: 2 events on Apr 2</div>
+                  <div class="alert-time"><i data-lucide="clock" class="meta-icon"></i> 5 hours ago</div>
+                </div>
+                <div class="alert-item alert-item--blue">
+                  <div class="alert-msg">Resource allocation needed for Music Festival</div>
+                  <div class="alert-time"><i data-lucide="clock" class="meta-icon"></i> 1 day ago</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+              <div class="card__header">
+                <h3>Quick Actions</h3>
+              </div>
+              <div class="quick-actions">
+                <button class="qa-btn">
+                  <div class="qa-icon qa-icon--blue">
+                    <i data-lucide="file-text"></i>
+                  </div>
+                  <span>Review Event</span>
+                </button>
+                <button class="qa-btn">
+                  <div class="qa-icon qa-icon--purple">
+                    <i data-lucide="package"></i>
+                  </div>
+                  <span>Manage Resources</span>
+                </button>
+                <button class="qa-btn">
+                  <div class="qa-icon qa-icon--green">
+                    <i data-lucide="user-plus"></i>
+                  </div>
+                  <span>Assign Staff</span>
+                </button>
+                <button class="qa-btn">
+                  <div class="qa-icon qa-icon--orange">
+                    <i data-lucide="trending-up"></i>
+                  </div>
+                  <span>Add Package</span>
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /right-col -->
+
+        </div><!-- /bottom-grid -->
+
+      </div><!-- /content -->
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script src="../../scripts/vendor_js/dashboard.js"></script>
+</body>
+</html>

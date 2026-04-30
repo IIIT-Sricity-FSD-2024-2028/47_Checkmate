@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Resources — EventPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="../../styles/superuser_css/resources.css">
+  </head>
+  <body>
+    <aside class="sb">
+      <div class="sb-brand">
+        <div class="sb-logo">📅</div>
+        <div>
+          <div class="sb-name">EventPro</div>
+          <div class="sb-badge">Superuser</div>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <a href="dashboard.html" class="nl">⊞ Dashboard</a>
+        <a href="events.html" class="nl">🛡 All Events</a>
+        <a href="bookings.html" class="nl">📖 All Bookings</a>
+        <a href="resources.html" class="nl active">📦 All Resources</a>
+        <a href="staff.html" class="nl">👤 All Staff</a>
+        <a href="users.html" class="nl">👥 Users Management</a>
+      </nav>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="sb-av">S</div>
+          <div>
+            <div class="sb-un">Super Admin</div>
+            <div class="sb-ue">superuser@demo.com</div>
+          </div>
+        </div>
+        <button class="sb-out">⇥ Logout</button>
+      </div>
+    </aside>
+
+    <main class="page">
+      <div class="ph">
+        <h1><span style="color: #ec4899">📦</span> All Resources</h1>
+        <p>System-wide resource inventory management</p>
+      </div>
+
+      <div class="stats">
+        <div class="sc" style="border-color: rgba(34, 211, 238, 0.25)">
+          <div class="sc-lb">
+            Total Resources <span style="color: #22d3ee">📦</span>
+          </div>
+          <div class="sc-val teal" id="r-total"></div>
+          <div class="sc-sub">All items</div>
+        </div>
+        <div class="sc" style="border-color: rgba(16, 185, 129, 0.25)">
+          <div class="sc-lb">
+            Available <span style="color: #10b981">✓</span>
+          </div>
+          <div class="sc-val green" id="r-avail"></div>
+          <div class="sc-sub">Ready to use</div>
+        </div>
+        <div class="sc" style="border-color: rgba(167, 139, 250, 0.25)">
+          <div class="sc-lb">
+            Resource Types <span style="color: #a78bfa">★</span>
+          </div>
+          <div class="sc-val purple" id="r-types"></div>
+          <div class="sc-sub">Different items</div>
+        </div>
+      </div>
+
+      <div class="top-row">
+        <button class="btn btn-p" onclick="openM()">+ Add Resource</button>
+      </div>
+
+      <div class="sw">
+        <span class="sw-ico">🔍</span>
+        <input
+          type="text"
+          id="q"
+          placeholder="Search resources..."
+          oninput="render()"
+        />
+      </div>
+
+      <div class="tw">
+        <div class="th">
+          <span style="color: #f59e0b">📦</span>
+          <span id="cnt">All Resources</span>
+        </div>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Resource ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Vendor</th>
+                <th>Availability</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" style="display: none">
+          <p>No resources found</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="ov" id="modal">
+      <div class="modal">
+        <div class="mh">
+          <span class="mt" id="mt">Add Resource</span
+          ><button class="mx" onclick="closeM()">✕</button>
+        </div>
+        <form id="mform" onsubmit="return false;">
+          <div class="fg2">
+            <div class="fg">
+              <label class="fl">Resource Name *</label
+              ><input class="fc" id="f_nm" placeholder="e.g. Banquet Chairs" />
+              <div class="ferr" id="f_nm_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Category *</label>
+              <select class="fc" id="f_ca">
+                <option value="">Select...</option>
+                <option>Furniture</option>
+                <option>Audio</option>
+                <option>Visual</option>
+                <option>Infrastructure</option>
+                <option>Decoration</option>
+                <option>Food & Beverage</option>
+                <option>Media</option>
+              </select>
+              <div class="ferr" id="f_ca_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Vendor *</label>
+              <select class="fc" id="f_vn">
+                <option value="">Select vendor...</option>
+              </select>
+              <div class="ferr" id="f_vn_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Total Units *</label
+              ><input
+                class="fc"
+                type="number"
+                id="f_tt"
+                placeholder="e.g. 500"
+                min="1"
+              />
+              <div class="ferr" id="f_tt_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Available Units *</label
+              ><input
+                class="fc"
+                type="number"
+                id="f_av"
+                placeholder="e.g. 450"
+                min="0"
+              />
+              <div class="ferr" id="f_av_e"></div>
+            </div>
+            <div class="fg">
+              <label class="fl">Price per Unit ($) *</label
+              ><input
+                class="fc"
+                type="number"
+                id="f_pr"
+                placeholder="e.g. 5"
+                min="0"
+              />
+              <div class="ferr" id="f_pr_e"></div>
+            </div>
+          </div>
+          <div class="mf">
+            <button class="btn btn-s" onclick="closeM()">Cancel</button>
+            <button class="btn btn-p" onclick="save()">Save Resource</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="../../scripts/superuser_js/store.js"></script>
+    <script>
+      let eid = null;
+      const catMap = {
+        Furniture: "b-furn",
+        Audio: "b-audio",
+        Visual: "b-visual",
+        Infrastructure: "b-infra",
+        Decoration: "b-deco",
+        "Food & Beverage": "b-food",
+        Media: "b-media",
+      };
+      function catBadge(c) {
+        return `<span class="badge ${catMap[c] || "b-furn"}">${c}</span>`;
+      }
+
+      function renderStats() {
+        const all = EP.resources;
+        document.getElementById("r-total").textContent = all
+          .reduce((a, r) => a + r.total, 0)
+          .toLocaleString();
+        document.getElementById("r-avail").textContent = all
+          .reduce((a, r) => a + r.avail, 0)
+          .toLocaleString();
+        document.getElementById("r-types").textContent = [
+          ...new Set(all.map((r) => r.cat)),
+        ].length;
+      }
+
+      function render() {
+        const q = document.getElementById("q").value.toLowerCase();
+        let data = EP.resources;
+        if (q)
+          data = data.filter(
+            (r) =>
+              r.name.toLowerCase().includes(q) ||
+              r.cat.toLowerCase().includes(q) ||
+              r.vendor.toLowerCase().includes(q) ||
+              r.id.toLowerCase().includes(q),
+          );
+        document.getElementById("cnt").textContent =
+          `All Resources (${data.length})`;
+        document.getElementById("empty").style.display = data.length
+          ? "none"
+          : "block";
+        document.getElementById("tbody").innerHTML = data
+          .map(
+            (r) => `
+    <tr>
+      <td class="tid">${r.id}</td>
+      <td class="tname">${r.name}</td>
+      <td>${catBadge(r.cat)}</td>
+      <td>${r.vendor}</td>
+      <td>${UI.prog(r.avail, r.total)}</td>
+      <td style="font-weight:600;color:#f1f5f9">$ ${r.price}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="ib ib-e" onclick="editR('${r.id}')" title="Edit">✏</button>
+        <button class="ib ib-d" onclick="delR('${r.id}')" title="Delete">🗑</button>
+      </div></td>
+    </tr>`,
+          )
+          .join("");
+      }
+
+      function openM(id = null) {
+        eid = id;
+        UI.clearV("mform");
+        document.getElementById("f_vn").innerHTML =
+          '<option value="">Select vendor...</option>' + UI.vopts();
+        if (id) {
+          const r = EP.resources.find((x) => x.id === id);
+          document.getElementById("mt").textContent = "Edit Resource";
+          document.getElementById("f_nm").value = r.name;
+          document.getElementById("f_ca").value = r.cat;
+          document.getElementById("f_vn").value = r.vendor;
+          document.getElementById("f_tt").value = r.total;
+          document.getElementById("f_av").value = r.avail;
+          document.getElementById("f_pr").value = r.price;
+        } else {
+          document.getElementById("mt").textContent = "Add Resource";
+          document.getElementById("mform").reset();
+        }
+        document.getElementById("modal").classList.add("open");
+      }
+      function closeM() {
+        document.getElementById("modal").classList.remove("open");
+        eid = null;
+      }
+      function editR(id) {
+        openM(id);
+      }
+
+      function save() {
+        if (
+          !UI.validate({
+            f_nm: [{ req: "Name required" }],
+            f_ca: [{ req: "Select category" }],
+            f_vn: [{ req: "Select vendor" }],
+            f_tt: [
+              { req: "Total required" },
+              { num: "Number only" },
+              { min: 1 },
+            ],
+            f_av: [
+              { req: "Available required" },
+              { num: "Number only" },
+              { min: 0 },
+            ],
+            f_pr: [
+              { req: "Price required" },
+              { num: "Number only" },
+              { min: 0 },
+            ],
+          })
+        )
+          return;
+        const tt = parseInt(document.getElementById("f_tt").value);
+        const av = parseInt(document.getElementById("f_av").value);
+        if (av > tt) {
+          UI.toast("Available cannot exceed total!", "err");
+          return;
+        }
+        const p = {
+          name: document.getElementById("f_nm").value.trim(),
+          cat: document.getElementById("f_ca").value,
+          vendor: document.getElementById("f_vn").value,
+          total: tt,
+          avail: av,
+          price: parseInt(document.getElementById("f_pr").value),
+        };
+        if (eid) {
+          EP.updateResource(eid, p);
+          UI.toast("Resource updated!");
+        } else {
+          EP.addResource(p);
+          UI.toast("Resource added!");
+        }
+        closeM();
+        renderStats();
+        render();
+      }
+
+      function delR(id) {
+        const r = EP.resources.find((x) => x.id === id);
+        UI.confirm("Delete Resource", `Delete "${r.name}"?`, () => {
+          EP.deleteResource(id);
+          UI.toast("Resource deleted.", "info");
+          renderStats();
+          render();
+        });
+      }
+
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeM();
+      });
+      renderStats();
+      render();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro Admin – Financial Payouts</title>
+  <link rel="stylesheet" href="../../styles/global.css">
+  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Admin</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="admin.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="vendor-approvals.html" class="nav-item">
+          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
+        </a>
+        <a href="manage-users.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Users</span>
+        </a>
+        <a href="monitor-events.html" class="nav-item">
+          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
+        </a>
+        <a href="report-analytics.html" class="nav-item">
+          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+        </a>
+        <a href="issue-tracking.html" class="nav-item">
+          <i data-lucide="bug"></i><span>Issue Tracking</span>
+        </a>
+        <a href="service-moderation.html" class="nav-item">
+          <i data-lucide="shield"></i><span>Service Moderation</span>
+        </a>
+        <a href="admin-payouts.html" class="nav-item active">
+          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
+        </a>
+        <a href="admin-coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="audit-logs.html" class="nav-item">
+          <i data-lucide="activity"></i><span>System Logs</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i data-lucide="settings"></i><span>Global Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">A</div>
+          <div><div class="user-name">Admin User</div><div class="user-email">admin@eventpro.com</div></div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Financial Payouts</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Track and release vendor balances</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">3</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--blue"><i data-lucide="dollar-sign"></i></div>
+                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+12% vs yesterday</span>
+                </div>
+                <div class="stat-label">Platform Revenue (YTD)</div>
+                <div class="stat-value">$145,200.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
+                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px;">-5% vs yesterday</span>
+                </div>
+                <div class="stat-label">Pending Payouts Check</div>
+                <div class="stat-value" style="color: var(--pink);">$18,450.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__top">
+                    <div class="stat-icon stat-icon--green"><i data-lucide="check-circle"></i></div>
+                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+8% vs yesterday</span>
+                </div>
+                <div class="stat-label">Total Paid to Vendors</div>
+                <div class="stat-value">$890,000.00</div>
+            </div>
+        </section>
+        <div class="table-container" style="margin-bottom: 32px;">
+            <div class="data-table-wrapper">
+                <div class="table-header-title">Vendor Balances Pending Payout</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Completed Events</th>
+                            <th>Total Earned</th>
+                            <th>Platform Fee (10%)</th>
+                            <th>Net Payout</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingPayoutsBody">
+                        <tr style="transition: opacity 0.3s;">
+                            <td class="vendor-name-col">Dream Events Ltd.</td>
+                            <td>4</td>
+                            <td class="earned-col">$15,000.00</td>
+                            <td class="fee-col"><span style="color: #ef4444;">-$1,500.00</span></td>
+                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$13,500.00</td>
+                            <td class="actions-cell">
+                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
+                            </td>
+                        </tr>
+                        <tr style="transition: opacity 0.3s;">
+                            <td class="vendor-name-col">Melody Music</td>
+                            <td>12</td>
+                            <td class="earned-col">$5,500.00</td>
+                            <td class="fee-col"><span style="color: #ef4444;">-$550.00</span></td>
+                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$4,950.00</td>
+                            <td class="actions-cell">
+                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Completed Payouts Section -->
+        <div class="table-container">
+            <div class="data-table-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="table-header-title" style="margin-bottom: 0;">Completed Payouts</div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="position: relative;">
+                            <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted);"></i>
+                            <input type="text" id="completedSearch" placeholder="Search vendors..." style="padding: 8px 12px 8px 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
+                        </div>
+                        <select id="completedSort" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer;">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="amt-desc">Highest Payout</option>
+                            <option value="amt-asc">Lowest Payout</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Events Count</th>
+                            <th>Total Earned</th>
+                            <th>Platform Fee (10%)</th>
+                            <th>Payout Amount</th>
+                            <th>Payout Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="completedPayoutsBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="globalNotifModal" class="notif-modal-overlay">
+    <div class="notif-window">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button class="notif-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="notif-body">
+        <div class="notif-item notif-item--blue">
+          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Vendor Approval</div>
+            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
+            <span class="notif-item-time">10 mins ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--pink">
+          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">New Message</div>
+            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
+            <span class="notif-item-time">1 hour ago</span>
+          </div>
+        </div>
+        <div class="notif-item notif-item--orange">
+          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">Issue Reported</div>
+            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
+            <span class="notif-item-time">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script>lucide.createIcons();</script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+      const completedBody = document.getElementById('completedPayoutsBody');
+      const searchInput = document.getElementById('completedSearch');
+      const sortSelect = document.getElementById('completedSort');
+      
+      const generateFakePayouts = () => {
+          const vendors = ['Starlight Events', 'Audio AllStars', 'Classic Catering', 'Floral Fantasies', 'DJ Beats', 'Party Planners Inc', 'SecureGuard', 'Elegant Edibles', 'Photo Memories', 'LightShow Pro'];
+          const payouts = [];
+          
+          let date = new Date();
+          for(let i=0; i<10; i++) {
+              const events = Math.floor(Math.random() * 15) + 1;
+              const earned = Math.floor(Math.random() * 20000) + 1000;
+              const fee = earned * 0.1;
+              date.setDate(date.getDate() - Math.floor(Math.random() * 3));
+              
+              payouts.push({
+                  vendor: vendors[i],
+                  events: events,
+                  earned: earned,
+                  fee: fee,
+                  net: earned - fee,
+                  timestamp: new Date(date),
+                  dateStr: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+              });
+          }
+          return payouts;
+      };
+
+      let completedData = generateFakePayouts();
+
+      const formatMoney = (amt) => {
+          return '$' + amt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      };
+
+      const renderCompletedTable = () => {
+          const query = searchInput.value.toLowerCase();
+          const sortVal = sortSelect.value;
+          
+          let filtered = completedData.filter(p => p.vendor.toLowerCase().includes(query));
+          
+          filtered.sort((a, b) => {
+              if(sortVal === 'date-desc') return b.timestamp - a.timestamp;
+              if(sortVal === 'date-asc') return a.timestamp - b.timestamp;
+              if(sortVal === 'amt-desc') return b.net - a.net;
+              if(sortVal === 'amt-asc') return a.net - b.net;
+              return 0;
+          });
+
+          completedBody.innerHTML = filtered.map(p => `
+              <tr>
+                  <td class="vendor-name-col">${p.vendor}</td>
+                  <td>${p.events}</td>
+                  <td>${formatMoney(p.earned)}</td>
+                  <td><span style="color: #ef4444;">-${formatMoney(p.fee)}</span></td>
+                  <td style="font-weight: 700; color: #22c55e;">${formatMoney(p.net)}</td>
+                  <td><span style="color: var(--text-muted); font-size: 13px;">${p.dateStr}</span></td>
+                  <td><span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;"><i data-lucide="check-circle-2" style="width:12px; margin-right:4px;"></i>Paid</span></td>
+              </tr>
+          `).join('');
+          lucide.createIcons();
+      };
+
+      renderCompletedTable();
+
+      searchInput.addEventListener('input', renderCompletedTable);
+      sortSelect.addEventListener('change', renderCompletedTable);
+
+      const pendingBody = document.getElementById('pendingPayoutsBody');
+      if (pendingBody) {
+          pendingBody.addEventListener('click', (e) => {
+              const btn = e.target.closest('.release-funds-btn');
+              if (btn) {
+                  const tr = btn.closest('tr');
+                  const vendorName = tr.querySelector('.vendor-name-col').textContent;
+                  const events = parseInt(tr.cells[1].textContent);
+                  
+                  const parseMoney = (str) => parseFloat(str.replace(/[^0-9.-]+/g,""));
+                  const earned = parseMoney(tr.querySelector('.earned-col').textContent);
+                  const fee = parseMoney(tr.querySelector('.fee-col').textContent);
+                  const net = parseMoney(tr.querySelector('.net-col').textContent);
+
+                  completedData.unshift({
+                      vendor: vendorName,
+                      events: events,
+                      earned: earned,
+                      fee: Math.abs(fee),
+                      net: net,
+                      timestamp: new Date(),
+                      dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  });
+
+                  tr.style.opacity = '0';
+                  setTimeout(() => {
+                      tr.remove();
+                      renderCompletedTable();
+                      // We don't strictly need to alert, visual removal is enough feedback.
+                  }, 300);
+              }
+          });
+      }
+  });
+  </script>
+</body>
+</html>

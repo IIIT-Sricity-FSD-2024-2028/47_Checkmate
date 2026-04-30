@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Verify Documents</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon">
+          <i data-lucide="calendar-check" class="icon-white"></i>
+        </div>
+        <div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Event Coordinator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="./dashboard.html" class="nav-item">
+          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="./event-request.html" class="nav-item">
+          <i data-lucide="clipboard-list"></i><span>Event Request</span>
+        </a>
+        <a href="./manage-resource.html" class="nav-item">
+          <i data-lucide="package"></i><span>Manage Resource</span>
+        </a>
+        <a href="./manage-staff.html" class="nav-item">
+          <i data-lucide="users"></i><span>Manage Staff</span>
+        </a>
+        <a href="./preset-package.html" class="nav-item">
+          <i data-lucide="box"></i><span>Preset Package</span>
+        </a>
+        <a href="./report-issue.html" class="nav-item">
+          <i data-lucide="flag"></i><span>Report Issue</span>
+        </a>
+        <a href="./coordination.html" class="nav-item">
+          <i data-lucide="message-square"></i><span>Coordination Hub</span>
+        </a>
+        <a href="./monitoring.html" class="nav-item">
+          <i data-lucide="radio"></i><span>Monitor Live Events</span>
+        </a>
+        <a href="./verify-docs.html" class="nav-item active">
+          <i data-lucide="shield-check"></i><span>Verify Documents</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Sarah</div>
+            <div class="user-email">sarah@gmail.com</div>
+          </div>
+        </div>
+        <a href="../LandingPage/index.html" class="logout-btn">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Verify Documents</h1>
+          <p style="color:var(--text-secondary);font-size:13px;margin-top:4px;">
+            Submit your business documents for admin verification
+          </p>
+        </div>
+        <div class="topbar__right">
+          <div id="verifyStatusBadge" style="display:none;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;"></div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- Status Banner -->
+        <div id="statusBanner" style="display:none;padding:16px 20px;border-radius:10px;border:1px solid;margin-bottom:24px;display:flex;align-items:center;gap:12px;"></div>
+
+        <!-- Profile Card -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card__header">
+            <h3>Business Profile</h3>
+            <span style="font-size:12px;color:var(--text-muted);">This info will appear in the Admin review panel</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:0 0 4px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Vendor / Contact Name</label>
+              <input type="text" id="vendorNameInput" placeholder="e.g. Sarah Williams"
+                style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13.5px;outline:none;transition:border-color .18s;"
+                onfocus="this.style.borderColor='rgba(233,30,140,.5)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Business Name</label>
+              <input type="text" id="businessNameInput" placeholder="e.g. Elite Events Co."
+                style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13.5px;outline:none;transition:border-color .18s;"
+                onfocus="this.style.borderColor='rgba(233,30,140,.5)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Email Address</label>
+              <input type="email" id="vendorEmail" placeholder="vendor@example.com"
+                style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13.5px;outline:none;transition:border-color .18s;"
+                onfocus="this.style.borderColor='rgba(233,30,140,.5)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Phone Number</label>
+              <input type="tel" id="vendorPhone" placeholder="+1 555-0100"
+                style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13.5px;outline:none;transition:border-color .18s;"
+                onfocus="this.style.borderColor='rgba(233,30,140,.5)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Service Category</label>
+              <select id="vendorCategory"
+                style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13.5px;outline:none;cursor:pointer;">
+                <option value="Event Planning">Event Planning</option>
+                <option value="Catering">Catering</option>
+                <option value="AV / Technical">AV / Technical</option>
+                <option value="Decoration">Decoration</option>
+                <option value="Photography">Photography</option>
+                <option value="Security">Security</option>
+                <option value="Transportation">Transportation</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Upload Card -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card__header">
+            <h3>Upload Documents</h3>
+            <span style="font-size:12px;color:var(--text-muted);">PDF, JPG, PNG · Max 5MB per file</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- Business License -->
+            <div class="doc-upload-row" id="row_license">
+              <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:10px;padding:16px 20px;transition:border-color .2s;" id="dropzone_license">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(233,30,140,0.12);display:flex;align-items:center;justify-content:center;">
+                    <i data-lucide="file-text" style="color:var(--pink);width:18px;height:18px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Business License</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="label_license">No file chosen</div>
+                  </div>
+                </div>
+                <label style="cursor:pointer;">
+                  <input type="file" id="file_license" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(this,'license')">
+                  <span style="padding:8px 16px;background:rgba(233,30,140,0.15);color:var(--pink);border:1px solid rgba(233,30,140,0.3);border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                    Choose File
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Tax ID -->
+            <div class="doc-upload-row" id="row_taxid">
+              <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:10px;padding:16px 20px;transition:border-color .2s;" id="dropzone_taxid">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(59,130,246,0.12);display:flex;align-items:center;justify-content:center;">
+                    <i data-lucide="badge" style="color:var(--blue,#3b82f6);width:18px;height:18px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Tax ID / GST Certificate</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="label_taxid">No file chosen</div>
+                  </div>
+                </div>
+                <label style="cursor:pointer;">
+                  <input type="file" id="file_taxid" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(this,'taxid')">
+                  <span style="padding:8px 16px;background:rgba(59,130,246,0.15);color:var(--blue,#3b82f6);border:1px solid rgba(59,130,246,0.3);border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                    Choose File
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Insurance Certificate -->
+            <div class="doc-upload-row" id="row_insurance">
+              <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:10px;padding:16px 20px;transition:border-color .2s;" id="dropzone_insurance">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,0.12);display:flex;align-items:center;justify-content:center;">
+                    <i data-lucide="shield" style="color:var(--green,#10b981);width:18px;height:18px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Insurance Certificate <span style="font-size:11px;color:var(--text-muted);font-weight:400;">(optional)</span></div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="label_insurance">No file chosen</div>
+                  </div>
+                </div>
+                <label style="cursor:pointer;">
+                  <input type="file" id="file_insurance" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(this,'insurance')">
+                  <span style="padding:8px 16px;background:rgba(16,185,129,0.15);color:var(--green,#10b981);border:1px solid rgba(16,185,129,0.3);border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                    Choose File
+                  </span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex;justify-content:flex-end;gap:12px;">
+          <button onclick="resetForm()" style="padding:12px 24px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--border-hover)';this.style.color='var(--text-primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+            Reset
+          </button>
+          <button id="submitDocsBtn" onclick="submitDocs()" style="padding:12px 28px;background:var(--pink);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 18px var(--pink-glow,rgba(233,30,140,.3));display:flex;align-items:center;gap:8px;transition:opacity .15s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+            <i data-lucide="send" style="width:15px;height:15px;"></i>
+            Submit for Verification
+          </button>
+        </div>
+
+      </div><!-- /content -->
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/vendor_js/vendor.js"></script>
+  <script>
+    // ── File preview ─────────────────────────────────
+    const fileData = { license: null, taxid: null, insurance: null };
+
+    function handleFile(input, key) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('File too large. Max 5MB.'); input.value = ''; return; }
+      const label = document.getElementById('label_' + key);
+      const dz    = document.getElementById('dropzone_' + key);
+      label.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+      label.style.color = 'var(--text-primary)';
+      dz.style.borderColor = 'rgba(233,30,140,.45)';
+      dz.style.borderStyle = 'solid';
+      fileData[key] = file.name; // store filename as reference (localStorage can't hold blobs)
+    }
+
+    // ── Pre-fill from session ─────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      const s = DB.getSession();
+      document.getElementById('vendorNameInput').value = s.user || '';
+      document.getElementById('vendorEmail').value     = s.email || '';
+
+      // Show previous submission status if any
+      const prev = DB.get('vendorDocSubmission');
+      if (prev) showStatus(prev);
+    });
+
+    // ── Submit ────────────────────────────────────────
+    function submitDocs() {
+      const name     = document.getElementById('vendorNameInput').value.trim();
+      const business = document.getElementById('businessNameInput').value.trim();
+      const email    = document.getElementById('vendorEmail').value.trim();
+      const phone    = document.getElementById('vendorPhone').value.trim();
+      const category = document.getElementById('vendorCategory').value;
+
+      if (!name || !business || !email || !phone) {
+        alert('Please fill in all required business profile fields.'); return;
+      }
+      if (!fileData.license || !fileData.taxid) {
+        alert('Please upload at least Business License and Tax ID documents.'); return;
+      }
+
+      const submission = {
+        id:           'VA_' + Date.now(),
+        vendorName:   name,
+        businessName: business,
+        email:        email,
+        phone:        phone,
+        category:     category,
+        categoryClass:'active',
+        documents:    [
+          fileData.license   ? { name: fileData.license,   type: 'license'   } : null,
+          fileData.taxid     ? { name: fileData.taxid,     type: 'taxid'     } : null,
+          fileData.insurance ? { name: fileData.insurance, type: 'insurance' } : null,
+        ].filter(Boolean),
+        status:      'pending',
+        submittedAt: new Date().toISOString(),
+      };
+
+      // Save to shared DB (accessed by admin.js)
+      DB.set('vendorDocSubmission', submission);
+
+      // Also push to vendorApplicationsList used by admin
+      let apps = DB.get('vendorApplicationsList') || [];
+      // Remove old submission from same vendor if re-submitting
+      apps = apps.filter(a => a.email !== email);
+      apps.unshift(submission);
+      DB.set('vendorApplicationsList', apps);
+
+      showStatus(submission);
+
+      // Disable submit button  
+      document.getElementById('submitDocsBtn').disabled = true;
+      document.getElementById('submitDocsBtn').style.opacity = '.5';
+      document.getElementById('submitDocsBtn').style.cursor  = 'not-allowed';
+    }
+
+    function showStatus(sub) {
+      const banner = document.getElementById('statusBanner');
+      const badge  = document.getElementById('verifyStatusBadge');
+      
+      const configs = {
+        pending:  { bg:'rgba(234,179,8,.08)',  border:'rgba(234,179,8,.3)',  color:'#fbbf24', icon:'clock',        text:'Submitted — Awaiting admin review' },
+        approved: { bg:'rgba(16,185,129,.08)', border:'rgba(16,185,129,.3)', color:'#34d399', icon:'check-circle', text:'Approved! Your account is verified.' },
+        rejected: { bg:'rgba(239,68,68,.08)',  border:'rgba(239,68,68,.3)',  color:'#f87171', icon:'x-circle',     text:'Rejected — Please re-submit updated documents.' },
+      };
+      const cfg = configs[sub.status] || configs.pending;
+
+      banner.style.cssText = `display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:10px;background:${cfg.bg};border:1px solid ${cfg.border};margin-bottom:24px;`;
+      banner.innerHTML = `
+        <i data-lucide="${cfg.icon}" style="width:20px;height:20px;color:${cfg.color};flex-shrink:0;"></i>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:${cfg.color};">${cfg.text}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Submitted on ${new Date(sub.submittedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>`;
+
+      badge.style.display = 'flex';
+      badge.style.background = cfg.bg;
+      badge.style.color = cfg.color;
+      badge.style.border = '1px solid ' + cfg.border;
+      badge.textContent = sub.status.charAt(0).toUpperCase() + sub.status.slice(1);
+
+      lucide.createIcons();
+    }
+
+    function resetForm() {
+      ['license','taxid','insurance'].forEach(k => {
+        fileData[k] = null;
+        document.getElementById('label_' + k).textContent = 'No file chosen';
+        document.getElementById('label_' + k).style.color = '';
+        document.getElementById('dropzone_' + k).style.borderColor = '';
+        document.getElementById('dropzone_' + k).style.borderStyle = 'dashed';
+        document.getElementById('file_' + k).value = '';
+      });
+      document.getElementById('submitDocsBtn').disabled = false;
+      document.getElementById('submitDocsBtn').style.opacity = '1';
+      document.getElementById('submitDocsBtn').style.cursor  = 'pointer';
+    }
+  </script>
+</body>
+</html>
