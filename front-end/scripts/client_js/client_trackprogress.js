@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasResources = evAllocs.length > 0;
 
     // Staff assignment (Check real eventpro_staffAssignments)
-    const assignments   = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
+    const assignments   = DB.getAll('staffAssignments');
     const assignedStaff = assignments.filter(a => a.eventId === eventId && a.status === 'accepted');
     const hasStaff      = assignedStaff.length > 0;
 

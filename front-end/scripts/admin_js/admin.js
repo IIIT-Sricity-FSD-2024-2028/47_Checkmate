@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+    const api = (method, path, body) => {
+        const session = JSON.parse(localStorage.getItem('checkmate_session') || 'null');
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, `${API_BASE}/${path}`, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('x-role', session?.role || 'admin');
+        try {
+            xhr.send(body === undefined ? null : JSON.stringify(body));
+        } catch (error) {
+            console.error('Admin API request failed. Start the NestJS backend on port 3000.', error);
+            return null;
+        }
+        if (xhr.status >= 400) {
+            console.error(`API ${method} ${path} failed`, xhr.status, xhr.responseText);
+            return null;
+        }
+        return xhr.responseText ? JSON.parse(xhr.responseText) : null;
+    };
+    const titleStatus = (s = 'pending') => String(s).split(' ').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join(' ');
+    const apiStatus = (s = 'Pending') => String(s).toLowerCase();
 
     /* ========================================================
        SECTION 1: VENDOR APPROVALS LOGIC
@@ -6,34 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const vendorTbody = document.getElementById('vendorTableBody');
     if (vendorTbody) {
 
-        // ── Seed dummy data ──────────────────────────────────
-        let vendorData = Array.from({ length: 25 }, (_, i) => {
-            const id = i + 1;
-            const names = ["Jane Vendor", "John Caterer", "Alice Planner", "Bob DJ", "Sarah Florist"];
-            const businesses = ["Dream Events Ltd.", "Tasteful Catering", "Perfect Moments", "Beats Audio", "Blooms & Co."];
-            const categories = ["Event Planning", "Catering", "Event Planning", "Entertainment", "Decor"];
-            const tags = ["active", "blue", "active", "purple", "pink"];
-            const baseIndex = i % 5;
-            return {
-                id: `v-${id}`,
-                vendorName: `${names[baseIndex]} ${id}`,
-                businessName: businesses[baseIndex] + (id > 5 ? ` Part ${id}` : ""),
-                email: `vendor${id}@demo.com`,
-                phone: `555-01${id.toString().padStart(2, '0')}`,
-                category: categories[baseIndex],
-                categoryClass: tags[baseIndex],
-                documents: [], // dummy has no docs
-                status: 'pending'
-            };
-        });
-
-        // ── Merge REAL submissions from localStorage (prepend) ─
-        const realApps = JSON.parse(localStorage.getItem('eventpro_vendorApplicationsList') || '[]');
-        realApps.forEach(real => {
-            // Avoid duplicates by email
-            vendorData = vendorData.filter(v => v.email !== real.email);
-            vendorData.unshift(real); // real data goes to top
-        });
+        let vendorData = api('GET', 'vendor-applications') || [];
 
         const sortVendorData = () => {
             vendorData.sort((a, b) => {
@@ -196,20 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderVendorTable();
     }
 
-    // ── Persist admin decision back to localStorage ──────────
     function persistDecision(vendor) {
-        // Update the vendorApplicationsList
-        let apps = JSON.parse(localStorage.getItem('eventpro_vendorApplicationsList') || '[]');
-        const appIdx = apps.findIndex(a => a.id === vendor.id);
-        if (appIdx > -1) {
-            apps[appIdx].status = vendor.status;
-            localStorage.setItem('eventpro_vendorApplicationsList', JSON.stringify(apps));
-        }
-        // Also update the single vendorDocSubmission if it matches
-        const single = JSON.parse(localStorage.getItem('eventpro_vendorDocSubmission') || 'null');
-        if (single && single.id === vendor.id) {
-            single.status = vendor.status;
-            localStorage.setItem('eventpro_vendorDocSubmission', JSON.stringify(single));
+        const updated = api('PATCH', `vendor-applications/${vendor.id}/decision`, { status: vendor.status });
+        if (updated) {
+            const idx = vendorData.findIndex(v => v.id === vendor.id);
+            if (idx > -1) vendorData[idx] = updated;
         }
     }
 
@@ -219,25 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================================== */
     const userTbody = document.getElementById('userTableBody');
     if (userTbody) {
-        const roles = ["Client", "Vendor", "Staff", "Admin"];
-        const statuses = ["active", "pending", "inactive"];
-        const names = ["Michael Scott", "Jim Halpert", "Pam Beesly", "Dwight Schrute", "Angela Martin", "Oscar Martinez"];
-
-        let userData = Array.from({ length: 42 }, (_, i) => {
-            const id = i + 101;
-            const role = roles[i % 4];
-            let status = 'active';
-            if (i % 7 === 0) status = 'inactive';
-            else if (i % 5 === 0) status = 'pending';
-
-            return {
-                id: `#${id}`,
-                name: `${names[i % 6]} ${i+1}`,
-                email: `user${id}@eventpro.com`.toLowerCase(),
-                role: role,
-                status: status
-            };
-        });
+        let userData = (api('GET', 'users') || []).map(u => ({ ...u, status: String(u.status).toLowerCase() }));
 
         let filteredUsers = [...userData];
         let uCurPage = 1;
@@ -337,7 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const uid = dBtn.getAttribute('data-uid');
                 const idx = userData.findIndex(u => u.id === uid);
                 if (idx > -1) {
-                    userData[idx].status = 'inactive';
+                    const updated = api('PATCH', `users/${uid}`, { status: 'inactive' });
+                    userData[idx] = { ...(updated || userData[idx]), status: 'inactive' };
                     updateUserStats();
                     applyUserFilters();
                 }
@@ -375,9 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (activeEditUserId) {
                     const idx = userData.findIndex(u => u.id === activeEditUserId);
                     if (idx > -1) {
-                        userData[idx].name = document.getElementById('editUserName').value;
-                        userData[idx].email = document.getElementById('editUserEmail').value;
+                        const patch = {
+                            name: document.getElementById('editUserName').value,
+                            email: document.getElementById('editUserEmail').value,
+                            role: document.getElementById('editUserRole').value,
+                        };
                         const newRole = document.getElementById('editUserRole').value;
+                        userData[idx] = { ...(api('PATCH', `users/${activeEditUserId}`, patch) || userData[idx]), status: userData[idx].status };
                         userData[idx].role = newRole;
                         updateUserStats();
                         applyUserFilters();
@@ -396,44 +368,22 @@ document.addEventListener('DOMContentLoaded', () => {
        ======================================================== */
     const eventTbody = document.getElementById('eventTableBody');
     if (eventTbody) {
-        const eventStatuses = ["Pending", "Staff Assigned", "Resources Allocated", "Completed", "Approved"];
-        const clients = ["Michael Scott", "Jim Halpert", "Pam Beesly", "Dwight Schrute", "Angela Martin"];
-        const demoVendors = ["Dream Events Ltd.", "Tasteful Catering", "Perfect Moments", "Beats Audio", "Blooms & Co."];
-        const evtNames = ["Summer Music Fest", "Tech Conference 2026", "Annual Gala", "Leadership Summit", "Product Launch"];
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-        let eventData = Array.from({ length: 45 }, (_, i) => {
-            const id = i + 301;
-            const rStat = eventStatuses[Math.floor(Math.random() * eventStatuses.length)];
-            const rClient = clients[i % 5];
-            const rClientId = `C-${1000 + (i % 5)}`;
-            const rName = evtNames[i % 5];
-            const rDate = `${months[i % 12]} ${Math.floor(Math.random() * 28) + 1}, 2026`;
-            const rPrice = "$" + (Math.floor(Math.random() * 50) + 10) * 100;
-            
-            const vCount = Math.floor(Math.random() * 3) + 1;
-            const vList = [];
-            for (let j=0; j<vCount; j++) {
-                vList.push(demoVendors[(i + j) % demoVendors.length]);
-            }
-
-            return {
-                id: `EVT-${id}`,
-                name: `${rName} ${id}`,
-                clientName: rClient,
-                clientId: rClientId,
-                date: rDate,
-                status: rStat,
-                price: rPrice,
-                vendors: vList
-            };
-        });
+        let eventData = (api('GET', 'events') || []).map(ev => ({
+            id: ev.id,
+            name: ev.name,
+            clientName: ev.client || ev.createdBy || 'Client',
+            clientId: ev.createdBy || 'client',
+            date: ev.date,
+            status: titleStatus(ev.status),
+            price: '$' + Number(ev.budget || 0).toLocaleString(),
+            vendors: ev.vendor ? [ev.vendor] : [],
+        }));
 
         const sortEventData = () => {
             eventData.sort((a,b) => {
                 if (a.status === 'Pending' && b.status !== 'Pending') return -1;
                 if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-                return parseInt(a.id.replace('EVT-', '')) - parseInt(b.id.replace('EVT-', ''));
+                return parseInt(a.id.replace(/\D/g, '')) - parseInt(b.id.replace(/\D/g, ''));
             });
         };
         sortEventData();
@@ -529,14 +479,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ePrev) ePrev.addEventListener('click', () => { if (eCurPage > 1) { eCurPage--; renderEventTable(); } });
         if (eNext) eNext.addEventListener('click', () => { if (eCurPage < Math.ceil(filteredEvts.length / eRowsPage)) { eCurPage++; renderEventTable(); } });
 
-        // Add dummy logic for 'Approve' to progress status
         eventTbody.addEventListener('click', (e) => {
             const aprBtn = e.target.closest('.edit-event-btn');
             if (aprBtn) {
                 const eid = aprBtn.getAttribute('data-eid');
                 const idx = eventData.findIndex(ev => ev.id === eid);
                 if (idx > -1) {
-                    eventData[idx].status = 'Approved';
+                    const updated = api('PATCH', `events/${eid}/status`, { status: 'approved' });
+                    eventData[idx].status = titleStatus(updated?.status || 'approved');
                     sortEventData();
                     updateEventStats();
                     applyEventFilters();
@@ -548,7 +498,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const eid = refBtn.getAttribute('data-eid');
                 const idx = eventData.findIndex(ev => ev.id === eid);
                 if (idx > -1) {
-                    eventData[idx].status = 'Refunded';
+                    const updated = api('PATCH', `events/${eid}/status`, { status: 'cancelled' });
+                    eventData[idx].status = updated ? 'Refunded' : eventData[idx].status;
                     sortEventData();
                     updateEventStats();
                     applyEventFilters();

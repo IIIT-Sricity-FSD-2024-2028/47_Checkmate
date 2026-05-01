@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (venueEl) venueEl.textContent = `${ev.type} • ${ev.venue}`;
 
         // 2. Calculate Progress from Tasks
-        const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
+        const assignments = DB.getAll('staffAssignments');
         const eventAssignments = assignments.filter(a => a.eventId === eventId && a.status === 'accepted');
         
         let totalTasks = 0;

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev": "npm --prefix back-end run start:dev",
+    "start": "npm --prefix back-end run start",
+    "build": "npm --prefix back-end run build",
+    "test": "npm --prefix back-end run test"
+  }
+}

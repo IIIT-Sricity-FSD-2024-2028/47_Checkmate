@@ -1,38 +1,81 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+  const SIGNUP_KEY = 'checkmate_signup_draft';
 
-  // --- Premium Animations & Interactions ---
+  const redirectByRole = {
+    admin: '../admin/admin.html',
+    superuser: '../superuser/dashboard.html',
+    vendor: '../vendor/dashboard.html',
+    client: '../client/client-dashboard.html',
+    staff: '../staff/staff.html',
+  };
 
-  // 1. Glowing Cursor Effect
+  const roleHeader = {
+    Admin: 'admin',
+    Superuser: 'superuser',
+    Vendor: 'vendor',
+    Client: 'client',
+    Staff: 'staff',
+  };
+
+  function api(method, path, body) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, `${API_BASE}/${path}`, false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    try {
+      xhr.send(body === undefined ? null : JSON.stringify(body));
+    } catch (error) {
+      throw new Error('Cannot reach the backend. Start NestJS on http://localhost:3000.');
+    }
+    const data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+    if (xhr.status >= 400) {
+      throw new Error(data?.message || 'Request failed.');
+    }
+    return data;
+  }
+
+  function draft() {
+    try { return JSON.parse(localStorage.getItem(SIGNUP_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function saveDraft(patch) {
+    localStorage.setItem(SIGNUP_KEY, JSON.stringify({ ...draft(), ...patch }));
+  }
+
+  function setSession(payload) {
+    const user = payload.user;
+    const role = payload.role || roleHeader[user.role] || 'client';
+    localStorage.setItem('checkmate_session', JSON.stringify({ token: payload.token, user, role }));
+    localStorage.setItem('accountType', user.role);
+  }
+
+  function showError(message) {
+    alert(message);
+  }
+
   const cursorGlow = document.createElement('div');
   cursorGlow.classList.add('cursor-glow');
   document.body.appendChild(cursorGlow);
-
   document.addEventListener('mousemove', (e) => {
     cursorGlow.style.left = e.clientX + 'px';
     cursorGlow.style.top = e.clientY + 'px';
   });
 
-  // 2. Parallax effect on the form card
   const formCard = document.querySelector('.form-card');
   const rightPanel = document.querySelector('.right-panel');
-  
   if (rightPanel && formCard) {
     rightPanel.addEventListener('mousemove', (e) => {
       const rect = rightPanel.getBoundingClientRect();
       const x = e.clientX - rect.left - rect.width / 2;
       const y = e.clientY - rect.top - rect.height / 2;
-      
       formCard.style.transform = `perspective(1000px) rotateY(${x * 0.02}deg) rotateX(${-y * 0.02}deg) translateY(-5px)`;
     });
-    
     rightPanel.addEventListener('mouseleave', () => {
-      formCard.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0)`;
+      formCard.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0)';
     });
   }
 
-  // 3. Floating Particles Background
-  const createParticles = () => {
-    if(!rightPanel) return;
+  if (rightPanel) {
     for (let i = 0; i < 15; i++) {
       const particle = document.createElement('div');
       particle.classList.add('particle');
@@ -42,75 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
       particle.style.animationDelay = `${Math.random() * 2}s`;
       rightPanel.appendChild(particle);
     }
-  };
-  createParticles();
+  }
 
-  // --- Core Functional Logic ---
-
-  // Input validation and smooth page transitions
-  const continueBtns = document.querySelectorAll('.btn-continue');
-  
-  continueBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const form = btn.closest('form');
-      if (!form) return;
-
-      const isSubmitType = btn.getAttribute('type') === 'submit';
-      let isValid = true;
-      const inputs = form.querySelectorAll('input[required]');
-      
-      inputs.forEach(input => {
-        if (!input.value.trim()) {
-          isValid = false;
-          input.style.borderColor = '#ff2e88';
-          input.classList.add('shake');
-          setTimeout(() => {
-            input.classList.remove('shake');
-            input.style.borderColor = '';
-          }, 800);
-        }
-      });
-
-      // Password Validation (Step 2)
-      const password = form.querySelector('#password');
-      const confirmPwd = form.querySelector('#confirm-password');
-      if (password && confirmPwd && password.value !== confirmPwd.value) {
-        isValid = false;
-        confirmPwd.style.borderColor = '#ff2e88';
-        confirmPwd.classList.add('shake');
-        setTimeout(() => confirmPwd.classList.remove('shake'), 800);
-      }
-      
-      // If valid, save data and transition
-      if (isValid) {
-        e.preventDefault();
-
-        // Save form data specifically avoiding passwords to localStorage (for demo)
-        const formData = new FormData(form);
-        for (let [key, value] of formData.entries()) {
-          if(!key.toLowerCase().includes('password')) {
-            localStorage.setItem(key, value);
-          }
-        }
-        
-        let targetUrl = btn.getAttribute('href');
-        if(!targetUrl) targetUrl = form.getAttribute('action');
-
-        if (targetUrl && targetUrl !== '#') {
-          // Play exit animation
-          document.querySelector('.container').classList.add('page-exit');
-          setTimeout(() => {
-            window.location.href = targetUrl;
-          }, 450); // Matches animation duration
-        }
-      } else if (!isSubmitType) {
-        e.preventDefault();
-      }
-    });
-  });
-
-  // Basic shake animation dynamically added if not in CSS
-  if(!document.getElementById('shake-style')) {
+  if (!document.getElementById('shake-style')) {
     const style = document.createElement('style');
     style.id = 'shake-style';
     style.innerHTML = `
@@ -124,142 +101,139 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(style);
   }
 
-  // Account Type Selection Logic for Step 3
-  const typeCards = document.querySelectorAll('.type-card');
-  if (typeCards.length > 0) {
-    typeCards.forEach(card => {
-      card.addEventListener('click', () => {
-        typeCards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        const type = card.dataset.type;
-        localStorage.setItem('accountType', type);
-      });
+  function validateRequired(form) {
+    let ok = true;
+    form.querySelectorAll('input[required]').forEach((input) => {
+      if (!input.value.trim()) {
+        ok = false;
+        input.style.borderColor = '#ff2e88';
+        input.classList.add('shake');
+        setTimeout(() => {
+          input.classList.remove('shake');
+          input.style.borderColor = '';
+        }, 800);
+      }
     });
-    
-    // Set first card default
-    if (!document.querySelector('.type-card.selected')) {
-      typeCards[0].classList.add('selected');
-      localStorage.setItem('accountType', typeCards[0].dataset.type);
-    }
+    return ok;
   }
 
-  // Password Strength meter for Step 2
+  document.querySelectorAll('input:not([type="password"])').forEach((input) => {
+    const value = draft()[input.name];
+    if (value) input.value = value;
+  });
+
+  const step1 = document.getElementById('signup-form-1');
+  if (step1) {
+    step1.querySelector('.btn-continue')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!validateRequired(step1)) return;
+      saveDraft({
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+      });
+      document.querySelector('.container').classList.add('page-exit');
+      setTimeout(() => { window.location.href = 'signup-step2.html'; }, 450);
+    });
+  }
+
+  const step2 = document.getElementById('signup-form-2');
+  if (step2) {
+    step2.querySelector('.btn-continue')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!validateRequired(step2)) return;
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      if (password.length < 8 || password !== confirm) {
+        showError(password.length < 8 ? 'Password must be at least 8 characters.' : 'Passwords do not match.');
+        return;
+      }
+      saveDraft({ password });
+      document.querySelector('.container').classList.add('page-exit');
+      setTimeout(() => { window.location.href = 'signup-step3.html'; }, 450);
+    });
+  }
+
+  const typeCards = document.querySelectorAll('.type-card');
+  typeCards.forEach((card) => {
+    card.addEventListener('click', () => {
+      typeCards.forEach((item) => item.classList.remove('selected'));
+      card.classList.add('selected');
+      saveDraft({ role: card.dataset.type });
+    });
+  });
+  if (typeCards.length > 0 && !document.querySelector('.type-card.selected')) {
+    typeCards[0].classList.add('selected');
+    saveDraft({ role: typeCards[0].dataset.type });
+  }
+
   const pwdInput = document.getElementById('password');
   if (pwdInput) {
     const strengthContainer = document.createElement('div');
     strengthContainer.className = 'password-strength-container';
     strengthContainer.innerHTML = '<div class="strength-bar"></div>';
     pwdInput.parentNode.appendChild(strengthContainer);
-    
     const strengthBar = strengthContainer.querySelector('.strength-bar');
-
     pwdInput.addEventListener('input', (e) => {
       const val = e.target.value;
-      if (val.length > 0) {
-        strengthContainer.classList.add('active');
-        let strength = 0;
-        if (val.length >= 8) strength += 33;
-        if (/[A-Z]/.test(val) && /[a-z]/.test(val)) strength += 33;
-        if (/[0-9!@#$%^&*]/.test(val)) strength += 34;
-
-        strengthBar.style.width = strength + '%';
-        
-        if (strength < 40) strengthBar.style.backgroundColor = '#ff4b4b';
-        else if (strength < 80) strengthBar.style.backgroundColor = '#fca130';
-        else strengthBar.style.backgroundColor = '#2ecc71';
-      } else {
-        strengthContainer.classList.remove('active');
-      }
+      strengthContainer.classList.toggle('active', val.length > 0);
+      let strength = 0;
+      if (val.length >= 8) strength += 33;
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) strength += 33;
+      if (/[0-9!@#$%^&*]/.test(val)) strength += 34;
+      strengthBar.style.width = strength + '%';
+      strengthBar.style.backgroundColor = strength < 40 ? '#ff4b4b' : strength < 80 ? '#fca130' : '#2ecc71';
     });
   }
 
-  // Pre-fill inputs from localStorage
-  const inputs = document.querySelectorAll('input:not([type="password"])');
-  inputs.forEach(input => {
-    if (input.name) {
-      const savedValue = localStorage.getItem(input.name);
-      if (savedValue) {
-        input.value = savedValue;
-      }
+  document.querySelector('.btn-submit')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const selectedTypeCard = document.querySelector('.type-card.selected');
+    const data = { ...draft(), role: selectedTypeCard ? selectedTypeCard.dataset.type : draft().role || 'Vendor' };
+    const submitBtn = e.currentTarget;
+    submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
+    try {
+      const payload = api('POST', 'auth/register', {
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: data.role,
+      });
+      setSession(payload);
+      localStorage.removeItem(SIGNUP_KEY);
+      document.querySelector('.container').classList.add('page-exit');
+      setTimeout(() => { window.location.href = redirectByRole[payload.role]; }, 450);
+    } catch (error) {
+      submitBtn.innerHTML = 'Finish &rarr;';
+      showError(error.message);
     }
   });
 
-  // Final submission on step 3
-  const submitBtn = document.querySelector('.btn-submit');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      const btnText = submitBtn.innerHTML;
-      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Processing...</span>';
-      
-      setTimeout(() => {
-        document.querySelector('.container').classList.add('page-exit');
-        setTimeout(() => {
-          const selectedTypeCard = document.querySelector('.type-card.selected');
-          const type = selectedTypeCard ? selectedTypeCard.dataset.type : 'Vendor';
-          
-          let redirectUrl = '../vendor/dashboard.html';
-          if (type === 'Client') {
-            redirectUrl = '../client/client-dashboard.html';
-          } else if (type === 'Staff') {
-            redirectUrl = '../staff/staff.html';
-          }
-          
-          window.location.href = redirectUrl;
-        }, 450);
-      }, 1500);
-    });
-  }
-
-  // Handle back buttons smoothly
-  const backBtns = document.querySelectorAll('.btn-secondary');
-  backBtns.forEach(btn => {
+  document.querySelectorAll('.btn-secondary').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const targetUrl = btn.getAttribute('href');
       document.querySelector('.container').classList.add('page-exit');
-      setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 450);
+      setTimeout(() => { window.location.href = targetUrl; }, 450);
     });
   });
-  const loginBtn = document.getElementById("loginBtn");
 
-if (loginBtn) {
-  loginBtn.addEventListener("click", (e) => {
-    e.preventDefault(); // ✅ STOP form reload
-
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if(password == '1234')
-      {
-        switch (email) {
-  case 'admin@demo.com':
-    window.location.href = "../admin/admin.html";
-    break;
-  case 'client@demo.com':
-    window.location.href = "../client/client-dashboard.html";
-    break;
-  case 'vendor@demo.com':
-    window.location.href = "../vendor/dashboard.html";
-    break;
-  case 'staff@demo.com':
-    window.location.href = "../staff/staff.html";
-    break;
-  case 'superuser@demo.com':
-    window.location.href = "../superuser/dashboard.html";
-    break;
-  default:
-    alert("Invalid email or password");
-}
-}
-      else{alert("Invalid email or password");}
-
+  document.getElementById('loginBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) {
+      showError('Enter your email and password.');
+      return;
+    }
+    try {
+      const payload = api('POST', 'auth/login', { email, password });
+      setSession(payload);
+      window.location.href = redirectByRole[payload.role] || '../LandingPage/index.html';
+    } catch (error) {
+      showError(error.message);
+    }
   });
-}
-
 });
-
-

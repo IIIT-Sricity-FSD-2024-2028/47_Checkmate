@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasResource = (allocs[nextEvent.id] || []).length > 0;
             
             // Check real staff assignments from eventpro_staffAssignments
-            const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
+            const assignments = DB.getAll('staffAssignments');
             const hasStaffAssigned = assignments.some(a => a.eventId === nextEvent.id && a.status === 'accepted');
             
             const isApproved = ['confirmed', 'live', 'approved', 'completed'].includes(nextEvent.status);
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasResources = (allocs[ev.id] || []).length > 0;
         
         const allStaff = DB.getAll('staff');
-        const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
+        const assignments = DB.getAll('staffAssignments');
         const hasStaff = assignments.some(a => a.eventId === ev.id && a.status === 'accepted');
 
         let execDesc = 'Live Monitoring';

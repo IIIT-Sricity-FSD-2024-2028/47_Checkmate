@@ -1,5 +1,35 @@
 # Event Management System
 
+## Running the Full-Stack App
+
+Backend:
+
+```bash
+cd back-end
+npm install
+npm run start
+```
+
+API base URL: `http://localhost:3000/api`
+
+Swagger UI: `http://localhost:3000/api/docs`
+
+Generated Swagger JSON: `back-end/docs/swagger.json`
+
+Frontend:
+
+Open the HTML pages under `front-end/pages/` in a browser while the backend is running. The shared frontend stores call the NestJS APIs with an `x-role` header and no authentication.
+
+Seed login accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `aarav.admin@checkmate.com` | `Aarav@2026` |
+| Superuser | `nina.ops@checkmate.com` | `Nina@2026` |
+| Vendor | `sarah@eliteevents.com` | `Sarah@2026` |
+| Client | `emily.client@example.com` | `Emily@2026` |
+| Staff | `mike.staff@eliteevents.com` | `Mike@2026` |
+
 ## Problem Statement
 
 **Venue, Resources and Staff Allocation System**

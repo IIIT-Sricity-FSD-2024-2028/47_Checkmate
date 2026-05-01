@@ -1,0 +1,3087 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CreateUserDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "operationId": "UsersController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required role: admin or superuser",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/events": {
+      "get": {
+        "operationId": "EventsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      },
+      "post": {
+        "operationId": "EventsController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/events/{id}": {
+      "get": {
+        "operationId": "EventsController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      },
+      "put": {
+        "operationId": "EventsController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      },
+      "patch": {
+        "operationId": "EventsController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      },
+      "delete": {
+        "operationId": "EventsController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/events/{id}/status": {
+      "patch": {
+        "operationId": "EventsController_status",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Use client for event requests; vendor/admin/superuser for approvals and management; staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/resources": {
+      "get": {
+        "operationId": "ResourcesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      },
+      "post": {
+        "operationId": "ResourcesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      }
+    },
+    "/api/resources/{id}": {
+      "get": {
+        "operationId": "ResourcesController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      },
+      "put": {
+        "operationId": "ResourcesController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateResourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      },
+      "patch": {
+        "operationId": "ResourcesController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateResourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      },
+      "delete": {
+        "operationId": "ResourcesController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Required for RBAC. Vendors manage inventory; admins/superusers have full access; clients/staff may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "resources"
+        ]
+      }
+    },
+    "/api/staff": {
+      "get": {
+        "operationId": "StaffController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "StaffController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStaffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/{id}": {
+      "get": {
+        "operationId": "StaffController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "put": {
+        "operationId": "StaffController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "patch": {
+        "operationId": "StaffController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "delete": {
+        "operationId": "StaffController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff-assignments": {
+      "get": {
+        "operationId": "StaffController_assignments",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "StaffController_createAssignment",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStaffAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff-assignments/{id}": {
+      "patch": {
+        "operationId": "StaffController_updateAssignment",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "put": {
+        "operationId": "StaffController_updateAssignmentPut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      },
+      "delete": {
+        "operationId": "StaffController_removeAssignment",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/packages": {
+      "get": {
+        "operationId": "PackagesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      },
+      "post": {
+        "operationId": "PackagesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/packages/{id}": {
+      "get": {
+        "operationId": "PackagesController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      },
+      "put": {
+        "operationId": "PackagesController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      },
+      "patch": {
+        "operationId": "PackagesController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      },
+      "delete": {
+        "operationId": "PackagesController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      }
+    },
+    "/api/issues": {
+      "get": {
+        "operationId": "IssuesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      },
+      "post": {
+        "operationId": "IssuesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      }
+    },
+    "/api/issues/{id}": {
+      "get": {
+        "operationId": "IssuesController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      },
+      "put": {
+        "operationId": "IssuesController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      },
+      "patch": {
+        "operationId": "IssuesController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      },
+      "delete": {
+        "operationId": "IssuesController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "All roles may report/read issues; admin/superuser/vendor may update/delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "issues"
+        ]
+      }
+    },
+    "/api/messages": {
+      "get": {
+        "operationId": "MessagesController_threads",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Operational roles may read/send coordination messages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "messages"
+        ]
+      },
+      "post": {
+        "operationId": "MessagesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Operational roles may read/send coordination messages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "messages"
+        ]
+      }
+    },
+    "/api/messages/{threadId}": {
+      "get": {
+        "operationId": "MessagesController_thread",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Operational roles may read/send coordination messages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "messages"
+        ]
+      }
+    },
+    "/api/vendors": {
+      "get": {
+        "operationId": "VendorsController_vendors",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "post": {
+        "operationId": "VendorsController_createVendor",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/vendors/{id}": {
+      "get": {
+        "operationId": "VendorsController_findVendor",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "put": {
+        "operationId": "VendorsController_updateVendorPut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "patch": {
+        "operationId": "VendorsController_updateVendor",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "delete": {
+        "operationId": "VendorsController_removeVendor",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/vendor-applications": {
+      "get": {
+        "operationId": "VendorsController_applications",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "post": {
+        "operationId": "VendorsController_createApplication",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/vendor-applications/{id}": {
+      "get": {
+        "operationId": "VendorsController_findApplication",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "put": {
+        "operationId": "VendorsController_updateApplicationPut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "patch": {
+        "operationId": "VendorsController_updateApplication",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      },
+      "delete": {
+        "operationId": "VendorsController_removeApplication",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/vendor-applications/{id}/decision": {
+      "patch": {
+        "operationId": "VendorsController_decideApplication",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/bookings": {
+      "get": {
+        "operationId": "BookingsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "post": {
+        "operationId": "BookingsController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/api/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_findOne",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "put": {
+        "operationId": "BookingsController_updatePut",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "patch": {
+        "operationId": "BookingsController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      },
+      "delete": {
+        "operationId": "BookingsController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/api/analytics/summary": {
+      "get": {
+        "operationId": "AnalyticsController_summary",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/snapshot": {
+      "get": {
+        "operationId": "AnalyticsController_snapshot",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/state/{key}": {
+      "get": {
+        "operationId": "AnalyticsController_stateKey",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      },
+      "put": {
+        "operationId": "AnalyticsController_setStateKey",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StateValueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Checkmate Event Management API",
+    "description": "REST APIs for event requests, vendors, resources, staff allocation, issues, messaging, bookings, and superuser management. Pass the active user role in the x-role header.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "role": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-role",
+        "description": "Role used for RBAC. Supported values: admin, superuser, vendor, client, staff."
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "sarah@eliteevents.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Sarah@2026"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Jordan Lee"
+          },
+          "email": {
+            "type": "string",
+            "example": "jordan.client@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 555-1099"
+          },
+          "password": {
+            "type": "string",
+            "example": "Jordan@2026"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "Vendor",
+              "Client",
+              "Staff"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Emily Carter"
+          },
+          "email": {
+            "type": "string",
+            "example": "emily.client@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 555-1004"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "Admin",
+              "Superuser",
+              "Vendor",
+              "Staff",
+              "Client"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Inactive",
+              "Pending",
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          "created": {
+            "type": "string",
+            "example": "2026-05-01"
+          },
+          "password": {
+            "type": "string",
+            "example": "Emily@2026"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "role",
+          "status",
+          "created"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "EVT005"
+          },
+          "name": {
+            "type": "string",
+            "example": "Investor Meetup"
+          },
+          "type": {
+            "type": "string",
+            "example": "Corporate"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-06-12"
+          },
+          "time": {
+            "type": "string",
+            "example": "18:00"
+          },
+          "venue": {
+            "type": "string",
+            "example": "Skyline Ballroom"
+          },
+          "people": {
+            "type": "number",
+            "example": 200
+          },
+          "guests": {
+            "type": "number",
+            "example": 200
+          },
+          "status": {
+            "type": "string",
+            "example": "pending"
+          },
+          "client": {
+            "type": "string",
+            "example": "Acme Inc."
+          },
+          "vendor": {
+            "type": "string",
+            "example": "Elite Events Co."
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "client"
+          },
+          "packageId": {
+            "type": "string",
+            "example": "P004"
+          },
+          "budget": {
+            "type": "number",
+            "example": 12000
+          },
+          "notes": {
+            "type": "string",
+            "example": "Vegetarian catering required."
+          },
+          "submittedAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          },
+          "presetPackageId": {
+            "type": "string",
+            "example": "P001"
+          },
+          "approvedAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          },
+          "startedAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          },
+          "endedAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "date",
+          "venue"
+        ]
+      },
+      "UpdateEventDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "StatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "approved"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateResourceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "R006"
+          },
+          "name": {
+            "type": "string",
+            "example": "LED Screen 4K"
+          },
+          "category": {
+            "type": "string",
+            "example": "Equipment"
+          },
+          "cat": {
+            "type": "string",
+            "example": "Visual"
+          },
+          "vendor": {
+            "type": "string",
+            "example": "Elite Events Co."
+          },
+          "quantity": {
+            "type": "number",
+            "example": 8
+          },
+          "total": {
+            "type": "number",
+            "example": 8
+          },
+          "avail": {
+            "type": "number",
+            "example": 8
+          },
+          "price": {
+            "type": "number",
+            "example": 300
+          },
+          "unit": {
+            "type": "string",
+            "example": "day"
+          },
+          "available": {
+            "type": "boolean",
+            "example": true
+          },
+          "condition": {
+            "type": "string",
+            "example": "Ready"
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "quantity",
+          "price",
+          "available"
+        ]
+      },
+      "UpdateResourceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateStaffDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "S005"
+          },
+          "name": {
+            "type": "string",
+            "example": "Alex Johnson"
+          },
+          "initials": {
+            "type": "string",
+            "example": "AJ"
+          },
+          "role": {
+            "type": "string",
+            "example": "Event Coordinator"
+          },
+          "vendor": {
+            "type": "string",
+            "example": "Elite Events Co."
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 234-567-8901"
+          },
+          "email": {
+            "type": "string",
+            "example": "alex@eliteevents.com"
+          },
+          "workload": {
+            "type": "number",
+            "example": 60
+          },
+          "status": {
+            "type": "string",
+            "example": "available"
+          },
+          "avail": {
+            "type": "string",
+            "example": "Available"
+          },
+          "events": {
+            "type": "number",
+            "example": 2
+          },
+          "avatar": {
+            "type": "string",
+            "example": "pink"
+          },
+          "assignedEvents": {
+            "example": [
+              "EVT001"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "role",
+          "phone",
+          "status"
+        ]
+      },
+      "UpdateStaffDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateStaffAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "A001"
+          },
+          "staffId": {
+            "type": "string",
+            "example": "S001"
+          },
+          "staffName": {
+            "type": "string",
+            "example": "Alex Johnson"
+          },
+          "eventId": {
+            "type": "string",
+            "example": "EVT001"
+          },
+          "eventName": {
+            "type": "string",
+            "example": "Tech Summit 2026"
+          },
+          "role": {
+            "type": "string",
+            "example": "Event Coordinator"
+          },
+          "status": {
+            "type": "string",
+            "example": "assigned"
+          }
+        },
+        "required": [
+          "staffId",
+          "staffName",
+          "eventId",
+          "eventName",
+          "role"
+        ]
+      },
+      "UpdateStaffAssignmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "P005"
+          },
+          "name": {
+            "type": "string",
+            "example": "Executive Launch Package"
+          },
+          "category": {
+            "type": "string",
+            "example": "Corporate"
+          },
+          "price": {
+            "type": "number",
+            "example": 6200
+          },
+          "duration": {
+            "type": "number",
+            "example": 12
+          },
+          "capacity": {
+            "type": "string",
+            "example": "100-300"
+          },
+          "desc": {
+            "type": "string",
+            "example": "Premium launch event package."
+          },
+          "resources": {
+            "example": [
+              "Stage",
+              "Lighting Rig"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "staff": {
+            "example": [
+              "Event Director",
+              "Security"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "price",
+          "duration",
+          "capacity",
+          "desc",
+          "resources",
+          "staff"
+        ]
+      },
+      "UpdatePackageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateIssueDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ISS001"
+          },
+          "event": {
+            "type": "string",
+            "example": "EVT003"
+          },
+          "eventId": {
+            "type": "string",
+            "example": "EVT003"
+          },
+          "title": {
+            "type": "string",
+            "example": "Lighting rig power fluctuation"
+          },
+          "category": {
+            "type": "string",
+            "example": "Equipment"
+          },
+          "priority": {
+            "type": "string",
+            "example": "High"
+          },
+          "description": {
+            "type": "string",
+            "example": "Main stage lights flicker when the LED wall is active."
+          },
+          "reporter": {
+            "type": "string",
+            "example": "Sarah Williams"
+          },
+          "email": {
+            "type": "string",
+            "example": "sarah@eliteevents.com"
+          },
+          "role": {
+            "type": "string",
+            "example": "Vendor"
+          },
+          "status": {
+            "type": "string",
+            "example": "open"
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "priority",
+          "description",
+          "reporter"
+        ]
+      },
+      "UpdateIssueDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateMessageDto": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "example": "vendor-client"
+          },
+          "sender": {
+            "type": "string",
+            "example": "Sarah Williams"
+          },
+          "initials": {
+            "type": "string",
+            "example": "SW"
+          },
+          "self": {
+            "type": "boolean",
+            "example": false
+          },
+          "text": {
+            "type": "string",
+            "example": "Can we confirm the revised seating plan?"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "teal"
+          }
+        },
+        "required": [
+          "threadId",
+          "sender",
+          "initials",
+          "self",
+          "text"
+        ]
+      },
+      "CreateVendorDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Elite Events Co."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Approved",
+              "Pending",
+              "Rejected"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "status"
+        ]
+      },
+      "UpdateVendorDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateVendorApplicationDto": {
+        "type": "object",
+        "properties": {
+          "vendorName": {
+            "type": "string",
+            "example": "Priya Nair"
+          },
+          "businessName": {
+            "type": "string",
+            "example": "Aurora Event Studio"
+          },
+          "email": {
+            "type": "string",
+            "example": "priya@auroraevents.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 555-0101"
+          },
+          "category": {
+            "type": "string",
+            "example": "Event Planning"
+          },
+          "categoryClass": {
+            "type": "string",
+            "example": "active"
+          },
+          "documents": {
+            "example": [
+              {
+                "name": "license.pdf",
+                "type": "license"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          }
+        },
+        "required": [
+          "vendorName",
+          "businessName",
+          "email",
+          "phone",
+          "category",
+          "documents"
+        ]
+      },
+      "UpdateVendorApplicationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DecisionDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "rejected"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "example": "Documents verified and vendor category matches services."
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "eventName": {
+            "type": "string",
+            "example": "Tech Summit 2026"
+          },
+          "client": {
+            "type": "string",
+            "example": "Tech Corp"
+          },
+          "vendor": {
+            "type": "string",
+            "example": "Dream Events Ltd."
+          },
+          "status": {
+            "type": "string",
+            "example": "Pending"
+          },
+          "cost": {
+            "type": "number",
+            "example": 45000
+          },
+          "created": {
+            "type": "string",
+            "example": "2026-04-01"
+          }
+        },
+        "required": [
+          "eventName",
+          "client",
+          "vendor",
+          "status",
+          "cost",
+          "created"
+        ]
+      },
+      "UpdateBookingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "StateValueDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object",
+            "description": "Replacement value for a shared in-memory application state key."
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+    }
+  }
+}

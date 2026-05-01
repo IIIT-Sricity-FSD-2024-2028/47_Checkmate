@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!selectedEventId) return;
 
     // 1. Get real assignment data
-    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
+    const assignments = DB.getAll('staffAssignments');
     const eventAssignments = assignments.filter(a => a.eventId === selectedEventId && a.status === 'accepted');
     
     let totalTasks = 0;
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]').filter(a => a.eventId === selectedEventId);
+    const assignments = DB.getAll('staffAssignments').filter(a => a.eventId === selectedEventId);
     const issues = (DB.getAll('issues') || []).filter(i => i.eventId === selectedEventId || !i.eventId).slice(-3).reverse();
     
     let html = '';
