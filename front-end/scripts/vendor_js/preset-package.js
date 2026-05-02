@@ -58,17 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
               <textarea id="pkgDesc" class="ri-input" rows="3" placeholder="Describe what this package includes…" style="resize:vertical;min-height:80px"></textarea>
               <span id="pkgDescErr" style="font-size:11.5px;color:var(--red);display:none">Description is required.</span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
-              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Included Resources</label>
-              <div id="resTagWrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;min-height:44px">
-                <input id="resTagInput" style="background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:13px;flex:1;min-width:140px" placeholder="Add resource & press Enter" />
-              </div>
+            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Included Resources <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(available only)</span></label>
+              <div id="resButtonGrid" style="display:flex;flex-wrap:wrap;gap:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;min-height:52px"></div>
+              <div id="resTagWrap" style="display:none"></div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
-              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Required Staff</label>
-              <div id="staffTagWrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;min-height:44px">
-                <input id="staffTagInput" style="background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:13px;flex:1;min-width:140px" placeholder="Add staff role & press Enter" />
-              </div>
+            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Required Staff <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(available only)</span></label>
+              <div id="staffButtonGrid" style="display:flex;flex-wrap:wrap;gap:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;min-height:52px"></div>
+              <div id="staffTagWrap" style="display:none"></div>
             </div>
           </div>
         </div>
@@ -103,42 +101,137 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('pkgModalOverlay');
   wireModalClose(overlay, document.getElementById('pkgModalClose'), document.getElementById('pkgCancelBtn'));
 
-  /* ── Tag input helper ───────────────── */
-  function setupTagInput(inputId, wrapId) {
-    const input = document.getElementById(inputId);
-    const wrap  = document.getElementById(wrapId);
-    if (!input || !wrap) return;
-    input.addEventListener('keydown', e => {
-      if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
-        e.preventDefault();
-        addChip(wrap, input, input.value.trim());
-        input.value = '';
-      }
-    });
-  }
-
-  function addChip(wrap, input, text) {
-    const chip = document.createElement('span');
-    chip.className = 'tag-chip';
-    chip.innerHTML = `${text} <button type="button" onclick="this.parentElement.remove()">×</button>`;
-    wrap.insertBefore(chip, input);
-  }
 
   function getChips(wrapId) {
     return [...document.querySelectorAll(`#${wrapId} .tag-chip`)]
-      .map(c => c.textContent.replace('×', '').trim());
+      .map(c => c.dataset.label || c.textContent.replace('×', '').trim());
   }
 
-  function setChips(wrapId, inputId, items) {
-    const wrap  = document.getElementById(wrapId);
-    const input = document.getElementById(inputId);
-    if (!wrap || !input) return;
+  function setChips(wrapId, inputId, items, color) {
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
     wrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
-    items.forEach(item => addChip(wrap, input, item));
+    const isRes  = wrapId === 'resTagWrap';
+    const dbItems = isRes ? DB.getAll('resources') : DB.getAll('staff');
+    items.forEach(item => {
+      const match = isRes
+        ? dbItems.find(r => r.name === item || r.id === item)
+        : dbItems.find(s => s.name === item || (s.name + ' – ' + s.role) === item || s.id === item);
+      if (match) {
+        const label = isRes ? match.name : (match.name + ' – ' + match.role);
+        addPickerChip(wrapId, match.id, label, color || (isRes ? 'blue' : 'green'));
+      } else {
+        // Legacy fallback — store raw string as chip in hidden wrap
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.dataset.id = item;
+        chip.dataset.label = item;
+        wrap.appendChild(chip);
+      }
+    });
+    refreshButtonGrid();
   }
 
-  setupTagInput('resTagInput',   'resTagWrap');
-  setupTagInput('staffTagInput', 'staffTagWrap');
+  /* ── Button-grid Picker ─────────────── */
+
+  function getAvailableResources() {
+    return (DB.getAll('resources') || []).filter(r => r.available === true);
+  }
+
+  function getAvailableStaff() {
+    return (DB.getAll('staff') || []).filter(s => s.status === 'available');
+  }
+
+  function getSelectedIds(wrapId) {
+    return [...document.querySelectorAll(`#${wrapId} .tag-chip`)].map(c => c.dataset.id);
+  }
+
+  /* ── Unified toggle grid ──────────────
+     Each item renders as:
+       • "+ Label"  button  → unselected (click to select)
+       • "Label ×"  chip    → selected   (click × to deselect)
+     Both live inside the same visible grid div.
+  ── */
+
+  // Hidden tagWraps are used only for getChips() / setChips() data bookkeeping
+  function addPickerChip(wrapId, id, label, color) {
+    // Write into the hidden wrap for data reading by getChips()
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+    if (getSelectedIds(wrapId).includes(String(id))) return;
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.dataset.id = String(id);
+    chip.dataset.label = label;
+    wrap.appendChild(chip);
+  }
+
+  function refreshButtonGrid() {
+    renderUnifiedGrid('resButtonGrid',   'resTagWrap',   getAvailableResources(),
+      r => ({ id: r.id, label: r.name,                    meta: r.category }),
+      'blue');
+    renderUnifiedGrid('staffButtonGrid', 'staffTagWrap', getAvailableStaff(),
+      s => ({ id: s.id, label: s.name + ' – ' + s.role,   meta: 'Workload ' + s.workload + '%' }),
+      'green');
+  }
+
+  function renderUnifiedGrid(gridId, wrapId, items, mapper, color) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+
+    const selectedIds = getSelectedIds(wrapId);
+
+    if (!items.length) {
+      grid.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No available entries found.</span>';
+      return;
+    }
+
+    grid.innerHTML = '';
+
+    items.forEach(item => {
+      const mapped    = mapper(item);
+      const isSelected = selectedIds.includes(String(mapped.id));
+
+      const el = document.createElement('button');
+      el.type  = 'button';
+      el.title = mapped.meta || '';
+
+      if (isSelected) {
+        // ── Selected chip style ──
+        el.style.cssText = color === 'blue'
+          ? 'display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid rgba(59,130,246,0.6);background:rgba(59,130,246,0.25);color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body)'
+          : 'display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid rgba(34,197,94,0.6);background:rgba(34,197,94,0.22);color:#22c55e;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body)';
+        el.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          + mapped.label +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        el.addEventListener('click', () => {
+          // Deselect: remove from hidden wrap
+          const wrap = document.getElementById(wrapId);
+          const chip = wrap ? wrap.querySelector(`.tag-chip[data-id="${mapped.id}"]`) : null;
+          if (chip) chip.remove();
+          refreshButtonGrid();
+        });
+      } else {
+        // ── Unselected button style ──
+        el.style.cssText = color === 'blue'
+          ? 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.07);color:#93c5fd;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-body)'
+          : 'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid rgba(34,197,94,0.25);background:rgba(34,197,94,0.06);color:#22c55e;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-body)';
+        el.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>'
+          + mapped.label;
+        el.addEventListener('click', () => {
+          addPickerChip(wrapId, mapped.id, mapped.label, color);
+          refreshButtonGrid();
+        });
+      }
+
+      grid.appendChild(el);
+    });
+  }
+
+  /* Initial render — called after modal opens */
+  function initButtonGrids() { refreshButtonGrid(); }
 
   /* ── Error helpers ──────────────────── */
   function showErr(id, show) {
@@ -275,10 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pkgDuration').value = p.duration;
     document.getElementById('pkgCapacity').value = p.capacity;
     document.getElementById('pkgDesc').value     = p.desc;
-    setChips('resTagWrap',   'resTagInput',   p.resources || []);
-    setChips('staffTagWrap', 'staffTagInput', p.staff     || []);
+    setChips('resTagWrap',   null, p.resources || []);
+    setChips('staffTagWrap', null, p.staff     || []);
     clearErrors();
     openModal(overlay);
+    setTimeout(initButtonGrids, 0);
   }
 
   async function deletePackage(id) {
@@ -326,10 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pkgModalTitle').textContent = 'Add Package';
     ['pkgName','pkgPrice','pkgDuration','pkgCapacity','pkgDesc'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('pkgCategory').value = '';
-    setChips('resTagWrap',   'resTagInput',   []);
-    setChips('staffTagWrap', 'staffTagInput', []);
+    setChips('resTagWrap',   null, []);
+    setChips('staffTagWrap', null, []);
     clearErrors();
     openModal(overlay);
+    setTimeout(initButtonGrids, 0);
   });
 
   /* Close existing modal button wiring for old HTML modal */

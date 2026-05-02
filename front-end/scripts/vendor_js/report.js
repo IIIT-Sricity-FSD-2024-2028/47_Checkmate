@@ -111,13 +111,19 @@ document.addEventListener('DOMContentLoaded', () => {
     DB.add('issues', issue);
 
     /* Broadcast to Coordination Hub */
+    const allMsgs = DB.get('messages') || {};
+    if (!allMsgs['vendor-vendor']) allMsgs['vendor-vendor'] = [];
     const evName = DB.find('events', issue.event)?.name || issue.event;
-    
-    if (window.MsgService) {
-        window.MsgService.sendMessage('System', 'System Alert', 'Vendor', 'Vendors', 
-            `[SYSTEM] 🚨 New Issue Reported: "${issue.title}" for event "${evName}". Priority: ${issue.priority.toUpperCase()}.\nReason: ${issue.desc}`, 
-            'Vendor-Vendor');
-    }
+    allMsgs['vendor-vendor'].push({
+      id:       uid('MSG'),
+      sender:   'System Alert',
+      initials: '!',
+      self:     false,
+      text:     `🚨 New Issue Reported: "${issue.title}" for event "${evName}". Priority: ${issue.priority.toUpperCase()}.\nReason: ${issue.desc}`,
+      time:     new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }),
+      avatar:   'orange',
+    });
+    DB.set('messages', allMsgs);
 
     /* Built-in HTML toast */
     const builtIn = document.getElementById('toast');

@@ -531,5 +531,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initTopbarSearch(q => { searchQuery = q; render(); });
 
+  // Real-time: re-render if resources change from another tab (e.g. staff request approved)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'eventpro_resources' || e.key === 'eventpro_resourcesUpdated' || e.key === 'eventpro_resourceAllocations') {
+      render();
+    }
+  });
+  // Also poll for same-tab updates (e.g. monitoring page is same window)
+  setInterval(render, 3000);
+
   render();
 });

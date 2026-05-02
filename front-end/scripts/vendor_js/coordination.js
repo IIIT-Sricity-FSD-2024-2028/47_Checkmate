@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let mObj = {
             isSystem: m.message && m.message.startsWith('[SYSTEM]'),
-            text: m.message ? m.message.replace('[SYSTEM]', '').trim() : '',
+            text: m.message,
             time: window.MsgService.formatTime(m.timestamp),
             sender: m.senderName || m.senderRole,
             avatar: isSelf ? 'pink' : 'teal',
@@ -102,9 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (mObj.isSystem) {
             mObj.sysClass = 'info';
-            if (mObj.text.includes('CRITICAL') || mObj.text.includes('🚨') || mObj.text.includes('ALERT')) {
-                mObj.sysClass = 'alert';
-            }
         }
 
         return isSelf ? renderSelf(mObj) : renderOther(mObj);
@@ -250,23 +247,57 @@ document.addEventListener('DOMContentLoaded', () => {
     trgBtn.addEventListener('click', () => {
       Confirm.ask({
         title: 'Trigger Contingency',
-        msg: 'Are you sure you want to trigger a contingency plan? This alerts all participants across all channels.',
-        okLabel: 'Trigger',
+        msg:   'This will broadcast a CRITICAL alert to all staff and clients across all channels.',
+        okLabel: 'Trigger Now',
         okColor: '#ef4444'
       }).then(confirmed => {
         if (!confirmed) return;
-        
-        ['Vendor-Vendor', 'Vendor-Staff', 'Vendor-Client'].forEach(ch => {
+
+        // Get active/live event to associate alert with
+        const liveEvent = DB.getAll('events').find(e => e.status === 'live' || e.status === 'confirmed');
+        const eventId   = liveEvent ? liveEvent.id : null;
+
+        if (window._broadcastContingency) {
+          // Use shared function from monitoring.js (if loaded on same page, else use local impl)
+          window._broadcastContingency(eventId);
+        } else {
+          // Local fallback implementation
+          const now = new Date().toISOString();
+          const ts  = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+          const evName = liveEvent ? liveEvent.name : '';
+
+          // 1. Write to liveEvents
+          const liveEvts = JSON.parse(localStorage.getItem('eventpro_liveEvents') || '[]');
+          liveEvts.push({ id:'le_'+Date.now(), eventId: eventId||'all', type:'contingency', note:'Contingency plan triggered.', createdAt: now });
+          localStorage.setItem('eventpro_liveEvents', JSON.stringify(liveEvts));
+
+          // 2. Write to issues
+          const issues = DB.getAll('issues');
+          issues.push({ id:'iss_'+Date.now(), eventId: eventId||null, type:'contingency', title:'⚡ Contingency plan triggered by coordinator', createdAt: now, severity:'high', priority:'high' });
+          DB.save('issues', issues);
+
+          // 3. Broadcast via MsgService to all channels
+          const broadcastText = `[SYSTEM] ⚡ CRITICAL CONTINGENCY TRIGGERED${evName?' for '+evName:''}: Immediate action required. ${ts}`;
           if (window.MsgService) {
-            window.MsgService.sendMessage('System', 'System Alert', 'All', 'All', '[SYSTEM] CRITICAL CONTINGENCY TRIGGERED: Immediate action required across all channels.', ch);
+            ['Vendor-Staff','Vendor-Client','Vendor-Vendor'].forEach(ch => {
+              window.MsgService.sendMessage('Vendor','System (Coordinator)','All','All Participants', broadcastText, ch);
+            });
           }
-        });
-        
-        renderMessages();
-        Toast.show('Contingency broadcast sent globally', 'error');
+
+          // 4. Write contingency alert key for client/staff pages
+          const contKey = JSON.parse(localStorage.getItem('eventpro_contingencyAlerts') || '[]');
+          contKey.push({ id:'cnt_'+Date.now(), eventId: eventId||'all', message: broadcastText, createdAt: now, readBy:[] });
+          localStorage.setItem('eventpro_contingencyAlerts', JSON.stringify(contKey));
+
+          Toast.show('⚡ Contingency broadcast sent to all staff & clients!', 'error', 4500);
+          renderMessages();
+        }
       });
     });
   }
+
+  /* ── Real-time polling (refresh messages every 2s) ── */
+  setInterval(renderMessages, 2000);
 
   /* ── Task Management (Vendor-Staff) ── */
   const btnAddTaskModal = document.getElementById('btnAddTaskModal');

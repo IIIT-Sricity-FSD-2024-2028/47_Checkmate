@@ -12,7 +12,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
   let currentPage = 1;
-  const PAGE_SIZE = 5;
+  let PAGE_SIZE = 5; // default fallback
+
+  /* ── Dynamic page-size: fill available space ── */
+  function calcPageSize() {
+    const ROW_HEIGHT = 52;          // approx height of one table row (padding + content)
+    const SAFETY_MARGIN = 20;       // breathing room at bottom
+
+    const vh = window.innerHeight;
+    const topbar   = document.querySelector('.topbar');
+    const toolbar  = document.querySelector('.er-toolbar');
+    const thead    = document.querySelector('.er-table thead');
+    const footer   = document.querySelector('.er-footer');
+    const content  = document.querySelector('.content');
+
+    const topbarH  = topbar  ? topbar.offsetHeight  : 60;
+    const toolbarH = toolbar ? toolbar.offsetHeight : 56;
+    const theadH   = thead   ? thead.offsetHeight   : 44;
+    const footerH  = footer  ? footer.offsetHeight  : 50;
+    const contentPad = content
+      ? parseFloat(getComputedStyle(content).paddingTop) +
+        parseFloat(getComputedStyle(content).paddingBottom)
+      : 48;
+    const gapSpace = 40; // content gap between toolbar, table, footer
+
+    const usedHeight = topbarH + toolbarH + theadH + footerH + contentPad + gapSpace + SAFETY_MARGIN;
+    const available  = vh - usedHeight;
+    const rows = Math.floor(available / ROW_HEIGHT);
+    return Math.max(3, rows);       // always show at least 3 rows
+  }
+
+  /* Recalculate on load & resize */
+  PAGE_SIZE = calcPageSize();
+  window.addEventListener('resize', () => {
+    const newSize = calcPageSize();
+    if (newSize !== PAGE_SIZE) {
+      PAGE_SIZE = newSize;
+      render();
+    }
+  });
 
   const TYPE_CLASS = {
     Conference:'badge--conference',

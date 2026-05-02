@@ -284,6 +284,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Table */

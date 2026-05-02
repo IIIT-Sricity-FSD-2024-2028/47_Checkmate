@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const events     = DB.getAll('events');
     const resources  = DB.getAll('resources');
     const staff      = DB.getAll('staff');
-    const assignments = DB.getAll('staffAssignments');
+    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
 
     const pending    = events.filter(e => e.status === 'pending').length;
     const active     = events.filter(e => e.status === 'confirmed').length;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const events = DB.getAll('events');
     const issues = DB.getAll('issues');
-    const assignments = DB.getAll('staffAssignments');
+    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments') || '[]');
 
     const items = [];
     

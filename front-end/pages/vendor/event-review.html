@@ -289,6 +289,50 @@
     .cont-table td:nth-child(2) { padding-right: 24px; }
     .cont-table td:nth-child(3) { padding-right: 24px; }
 
+    /* Contingency — editable */
+    .cont-del-btn {
+      width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(239,68,68,0.2);
+      background: rgba(239,68,68,0.08); color: var(--red); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.18s; font-size: 14px; line-height: 1;
+    }
+    .cont-del-btn:hover { background: rgba(239,68,68,0.25); transform: scale(1.15); }
+    .cont-del-btn svg { width: 14px; height: 14px; }
+
+    .cont-add-row { display: flex; gap: 10px; margin-top: 16px; align-items: flex-end; flex-wrap: wrap; }
+    .cont-add-row .cont-input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
+    .cont-add-row label {
+      font-size: 10.5px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.4px; margin-bottom: 5px; font-weight: 500;
+    }
+    .cont-add-row input {
+      padding: 9px 12px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--text-primary); font-size: 13px;
+      font-family: 'Inter','Segoe UI',Roboto,sans-serif; outline: none;
+      transition: border-color 0.18s;
+    }
+    .cont-add-row input:focus { border-color: rgba(233,30,140,0.4); }
+    .cont-add-row input::placeholder { color: var(--text-muted); }
+
+    .cont-add-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: var(--radius-sm); border: none;
+      background: linear-gradient(135deg, var(--pink), #a855f7);
+      color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 14px var(--pink-glow); transition: opacity 0.18s;
+      white-space: nowrap;
+    }
+    .cont-add-btn:hover { opacity: 0.88; }
+    .cont-add-btn svg { width: 14px; height: 14px; }
+
+    .cont-status-triggered {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      background: rgba(249,115,22,0.18); color: var(--orange);
+      border: 1px solid rgba(249,115,22,0.3);
+    }
+
     /* ══ ACTION BAR ══ */
     .action-bar { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px; align-items: center; padding: 4px 0; }
 
@@ -614,21 +658,11 @@ Parking arrangements for at least 200 vehicles must be confirmed in advance. A p
           </div>
         </div>
 
-        <!-- 8. Contingency Planning -->
+        <!-- 8. Contingency Planning (Dynamic) -->
         <div>
           <div class="section-title">Contingency Planning</div>
-          <div class="req-wrap" style="padding: 0 24px;">
-            <table class="cont-table">
-              <thead>
-                <tr><th>Problem</th><th>Trigger Condition</th><th>Solution</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Equipment Failure</td><td>Audio system malfunction</td><td>Backup audio from vendor B</td><td><span class="row-status ready">ready</span></td></tr>
-                <tr><td>Staff Shortage</td><td>&lt; 80% staff attendance</td><td>On-call staff pool activated</td><td><span class="row-status ready">ready</span></td></tr>
-                <tr><td>Weather Issue</td><td>Rain forecast &gt; 70%</td><td>Indoor backup venue secured</td><td><span class="row-status ready">ready</span></td></tr>
-                <tr><td>Power Outage</td><td>Main power failure</td><td>Generator backup (2 units)</td><td><span class="row-status ready">ready</span></td></tr>
-              </tbody>
-            </table>
+          <div id="contingencySection" class="req-wrap" style="padding: 0 24px 20px;">
+            <!-- Rendered dynamically by event-review.js -->
           </div>
         </div>
 
