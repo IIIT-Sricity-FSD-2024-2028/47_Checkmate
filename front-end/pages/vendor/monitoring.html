@@ -439,6 +439,91 @@
     .mon-alert-item__body { display: flex; flex-direction: column; }
     .mon-alert-item__text { font-size: 13.5px; color: var(--text-primary); margin-bottom: 3px; }
     .mon-alert-item__time { font-size: 11.5px; color: var(--text-muted); }
+
+    /* ── Modal overlay (for dynamic modals created by monitoring.js) ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      transform: translateY(16px);
+      transition: transform 0.22s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    /* ── Form elements used inside modals ── */
+    .ri-input,
+    .ri-textarea,
+    .ri-select {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.18s;
+    }
+    .ri-input:focus,
+    .ri-textarea:focus,
+    .ri-select:focus { border-color: rgba(233,30,140,0.5); }
+    .ri-input::placeholder,
+    .ri-textarea::placeholder { color: var(--text-muted); }
+    .ri-textarea { min-height: 110px; resize: vertical; }
+    .ri-select { appearance: none; cursor: pointer; }
+    .ri-select option { background: #2e1c40; }
+
+    .ri-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 18px var(--pink-glow);
+      transition: background 0.18s;
+    }
+    .ri-submit:hover { background: var(--pink-light); }
+
+    .ri-cancel {
+      padding: 12px 22px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .ri-cancel:hover { border-color: var(--border-hover); color: var(--text-primary); }
   </style>
 </head>
 <body>
@@ -459,8 +544,20 @@
       <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
       <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
       <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
-      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
-      <a href="coordination.html"    class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+      <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+      <div class="nav-sub">
+        <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+        <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+      </div>
+      </div>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+        <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
       <a href="monitoring.html"      class="nav-item active"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
         <a href="./verify-docs.html" class="nav-item">
           <i data-lucide="shield-check"></i>
@@ -531,11 +628,11 @@
         </button>
         <button class="mon-action-btn mon-action-btn--allocate">
           <i data-lucide="package"></i>
-          Allocate Resources
+          Allocate Additional Resources
         </button>
         <button class="mon-action-btn mon-action-btn--staff">
           <i data-lucide="user-check"></i>
-          Assign Staff
+          Allocate Additional Staff
         </button>
         <button class="mon-action-btn mon-action-btn--end">
           <i data-lucide="zap"></i>

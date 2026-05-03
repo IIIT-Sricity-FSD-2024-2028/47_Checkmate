@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventPro – Admin Coordination</title>
+  <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+  <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
+  <style>
+    .content { gap: 16px; overflow-y: auto; }
+
+    .ac-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 900px) { .ac-grid { grid-template-columns: 1fr; } }
+
+    /* Chat panel */
+    .ac-chat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+    }
+    .ac-chat__header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ac-chat__header .ac-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--pink);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .ac-chat__header h4 {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700; color: var(--text-primary);
+    }
+    .ac-chat__header p {
+      font-size: 12px; color: var(--green);
+    }
+    .ac-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ac-msg {
+      max-width: 75%;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .ac-msg--self {
+      align-self: flex-end;
+      background: var(--pink);
+      color: #fff;
+      border-radius: 14px 14px 0 14px;
+    }
+    .ac-msg--other {
+      align-self: flex-start;
+      background: var(--bg-hover);
+      border-radius: 14px 14px 14px 0;
+    }
+    .ac-msg--system {
+      align-self: center;
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: var(--orange);
+      border-radius: 8px;
+      font-size: 12.5px;
+      max-width: 90%;
+      text-align: center;
+    }
+    .ac-msg__time {
+      display: block;
+      font-size: 10.5px;
+      margin-top: 5px;
+      opacity: 0.6;
+    }
+    .ac-input-bar {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .ac-input-bar input {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-size: 13.5px;
+      outline: none;
+      font-family: var(--font-body);
+    }
+    .ac-input-bar input:focus { border-color: rgba(233,30,140,0.5); }
+    .ac-input-bar input::placeholder { color: var(--text-muted); }
+    .ac-send-btn {
+      width: 40px; height: 40px;
+      background: var(--pink);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 12px var(--pink-glow);
+    }
+    .ac-send-btn:hover { background: var(--pink-light); }
+
+    /* Right sidebar — recent issues */
+    .ac-issues {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      overflow-y: auto;
+      max-height: 540px;
+    }
+    .ac-issues h4 {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ac-issues h4 i { color: var(--red); width: 16px; height: 16px; }
+    .ac-issue-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .ac-issue-card__title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .ac-issue-card__meta {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .ac-issue-card__badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-top: 6px;
+    }
+    .ac-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 40px 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
+      <div>
+        <div class="brand-name">EventPro</div>
+        <div class="brand-role">Event Coordinator</div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="dashboard.html"       class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a href="event-request.html"   class="nav-item"><i data-lucide="clipboard-list"></i><span>Event Request</span></a>
+      <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
+      <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
+      <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+        <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+          <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+        </div>
+      </div>
+      <div class="nav-group open" onclick="this.classList.toggle('open')">
+        <div class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item active"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
+      <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
+      <a href="verify-docs.html"     class="nav-item"><i data-lucide="shield-check"></i><span>Verify Documents</span></a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="user-avatar">V</div>
+        <div><div class="user-name">Vendor</div><div class="user-email">vendor@eventpro.com</div></div>
+      </div>
+      <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Admin Coordination</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">Chat directly with EventPro Admin</p>
+      </div>
+      <div class="topbar__right">
+        <button class="notif-btn"><i data-lucide="bell"></i><span class="notif-badge">0</span></button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="ac-grid">
+        <!-- Chat -->
+        <div class="ac-chat">
+          <div class="ac-chat__header">
+            <div class="ac-avatar">A</div>
+            <div>
+              <h4>Admin Support</h4>
+              <p><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>Online</p>
+            </div>
+          </div>
+          <div class="ac-messages" id="chatMessages">
+            <div class="ac-empty" id="emptyChat">No messages yet. Start the conversation!</div>
+          </div>
+          <div class="ac-input-bar">
+            <input type="text" id="chatInput" placeholder="Type a message to Admin..." />
+            <button class="ac-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block;"></i></button>
+          </div>
+        </div>
+
+        <!-- Right: Issues -->
+        <div class="ac-issues">
+          <h4><i data-lucide="alert-triangle"></i> Recent Admin Issues</h4>
+          <div id="issuesList">
+            <div class="ac-empty">No issues reported yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../scripts/vendor_js/data.js"></script>
+<script src="../../scripts/vendor_js/vendor.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Session
+  var session = null;
+  try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch(e) {}
+  var myName = 'Vendor User';
+  var myRole = 'Vendor';
+  var myEmail = 'vendor@example.com';
+  if (session) {
+    if (typeof session.user === 'string') myName = session.user;
+    else if (session.user && session.user.name) myName = session.user.name;
+    else if (session.name) myName = session.name;
+    myRole = session.role || 'Vendor';
+    myEmail = session.email || (session.user && session.user.email) || 'vendor@example.com';
+  }
+
+  // Update sidebar footer
+  var avatarEl = document.querySelector('.user-avatar');
+  var nameEl = document.querySelector('.user-name');
+  var emailEl = document.querySelector('.user-email');
+  if (avatarEl) avatarEl.textContent = (myName || 'V')[0].toUpperCase();
+  if (nameEl) nameEl.textContent = myName;
+  if (emailEl) emailEl.textContent = myEmail;
+
+  var chatMessages = document.getElementById('chatMessages');
+  var chatInput = document.getElementById('chatInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var issuesList = document.getElementById('issuesList');
+  var emptyChat = document.getElementById('emptyChat');
+
+  function timeStr(iso) {
+    try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+    catch(e) { return ''; }
+  }
+
+  function getMessages() {
+    return DB.get('adminChatMessages') || [];
+  }
+
+  function getMyMessages() {
+    var all = getMessages();
+    // Vendor sees messages involving their email
+    return all.filter(function(m) {
+      return m.senderEmail === myEmail || m.recipientEmail === myEmail || m.senderRole === 'admin' || m.senderRole === 'Admin';
+    });
+  }
+
+  function renderMessages() {
+    var msgs = getMyMessages();
+    if (msgs.length === 0) {
+      if (emptyChat) emptyChat.style.display = '';
+      return;
+    }
+    if (emptyChat) emptyChat.style.display = 'none';
+
+    // Sort by timestamp
+    msgs.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
+
+    var html = '';
+    msgs.forEach(function(m) {
+      var isMe = m.senderEmail === myEmail;
+      var isSystem = m.type === 'issue-report';
+
+      if (isSystem) {
+        html += '<div class="ac-msg ac-msg--system">' +
+          '<div>' + m.text + '</div>' +
+          '<span class="ac-msg__time">' + timeStr(m.timestamp) + '</span>' +
+          '</div>';
+      } else if (isMe) {
+        html += '<div class="ac-msg ac-msg--self">' +
+          '<div>' + m.text + '</div>' +
+          '<span class="ac-msg__time">' + timeStr(m.timestamp) + '</span>' +
+          '</div>';
+      } else {
+        html += '<div class="ac-msg ac-msg--other">' +
+          '<div style="font-size:11px;font-weight:600;color:var(--pink);margin-bottom:4px;">' + (m.sender || 'Admin') + '</div>' +
+          '<div>' + m.text + '</div>' +
+          '<span class="ac-msg__time">' + timeStr(m.timestamp) + '</span>' +
+          '</div>';
+      }
+    });
+    chatMessages.innerHTML = html;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function sendMessage() {
+    var text = chatInput.value.trim();
+    if (!text) return;
+
+    var all = getMessages();
+    all.push({
+      id: 'msg_' + Date.now(),
+      sender: myName,
+      senderRole: myRole,
+      senderEmail: myEmail,
+      text: text,
+      timestamp: new Date().toISOString(),
+      type: 'message'
+    });
+    DB.set('adminChatMessages', all);
+    chatInput.value = '';
+    renderMessages();
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Render issues sidebar
+  function renderIssues() {
+    var issues = DB.getAll('issues') || [];
+    var adminIssues = issues.filter(function(i) { return i.target === 'admin'; });
+    adminIssues.sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
+
+    if (adminIssues.length === 0) {
+      issuesList.innerHTML = '<div class="ac-empty">No issues reported yet.</div>';
+      return;
+    }
+
+    var html = '';
+    adminIssues.slice(0, 10).forEach(function(iss) {
+      var status = (iss.status || 'Open').toLowerCase();
+      var badgeColor = status === 'open' ? 'background:rgba(239,68,68,0.15);color:#ef4444;' :
+                       status === 'investigating' ? 'background:rgba(59,130,246,0.15);color:#3b82f6;' :
+                       'background:rgba(34,197,94,0.15);color:#22c55e;';
+      html += '<div class="ac-issue-card">' +
+        '<div class="ac-issue-card__title">' + iss.title + '</div>' +
+        '<div class="ac-issue-card__meta">' + (iss.category || '') + ' · ' + (iss.priority || '') + '</div>' +
+        '<span class="ac-issue-card__badge" style="' + badgeColor + '">' + (iss.status || 'Open') + '</span>' +
+        '</div>';
+    });
+    issuesList.innerHTML = html;
+  }
+
+  // Initial render
+  renderMessages();
+  renderIssues();
+
+  // Poll every 3s
+  setInterval(function() {
+    renderMessages();
+    renderIssues();
+  }, 3000);
+
+  if (window.lucide) lucide.createIcons();
+});
+</script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

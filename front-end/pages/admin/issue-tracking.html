@@ -94,28 +94,7 @@
                         </tr>
                     </thead>
                     <tbody id="issueTableBody">
-                        <tr>
-                            <td>TKT-108</td>
-                            <td class="vendor-name-col">Payment gateway error</td>
-                            <td>john.doe@email.com</td>
-                            <td><span style="color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="arrow-up" style="width: 14px;"></i> High</span></td>
-                            <td class="status-cell"><span class="status-badge open">Open</span></td>
-                            <td class="actions-cell">
-                                <button class="action-btn action-btn-clean" onclick="window.location.href='admin-coordination.html?user=john.doe@email.com'"><i data-lucide="reply"></i> Reply</button>
-                                <button class="action-btn approve-btn resolve-issue-btn" data-state="open"><i data-lucide="check-circle-2"></i> Resolve</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>TKT-109</td>
-                            <td class="vendor-name-col">Can't upload profile picture</td>
-                            <td>jane.smith@email.com</td>
-                            <td><span style="color: #a855f7; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="minus" style="width: 14px;"></i> Medium</span></td>
-                            <td class="status-cell"><span class="status-badge investigating">Investigating</span></td>
-                            <td class="actions-cell">
-                                <button class="action-btn action-btn-clean" onclick="window.location.href='admin-coordination.html?user=jane.smith@email.com'"><i data-lucide="reply"></i> Reply</button>
-                                <button class="action-btn approve-btn resolve-issue-btn" data-state="investigating" style="background-color: var(--blue); border-color: var(--blue); color: #fff;"><i data-lucide="wrench"></i> Fix</button>
-                            </td>
-                        </tr>
+                        <!-- Populated dynamically -->
                     </tbody>
                 </table>
             </div>
@@ -176,17 +155,104 @@
   <script>lucide.createIcons();</script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-        let openCount = 1;
-        let investigatingCount = 1;
-        let resolvedCount = 0;
+        const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+        const session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
         
-        const updateStats = () => {
+        const api = (method, path, body) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, `${API_BASE}/${path}`, false);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('x-role', session?.role || 'admin');
+            try { xhr.send(body ? JSON.stringify(body) : null); } catch { return null; }
+            if (xhr.status >= 400) return null;
+            return xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        };
+
+        const updateIssueStatus = (id, newStatus) => {
+            api('PATCH', `issues/${id}`, { status: newStatus });
+            fetchAndRender();
+        };
+
+        const fetchAndRender = () => {
+            let issues = api('GET', 'issues') || [];
+            // Filter for admin-targeted issues only
+            issues = issues.filter(i => i.target === 'admin');
+            
+            // Sort: Open first, then Investigating, then Resolved
+            issues.sort((a,b) => {
+                const sA = (a.status||'').toLowerCase();
+                const sB = (b.status||'').toLowerCase();
+                if (sA === 'open' && sB !== 'open') return -1;
+                if (sA !== 'open' && sB === 'open') return 1;
+                if (sA === 'investigating' && sB !== 'investigating') return -1;
+                if (sA !== 'investigating' && sB === 'investigating') return 1;
+                return new Date(b.createdAt||0) - new Date(a.createdAt||0);
+            });
+
+            const tbody = document.getElementById('issueTableBody');
+            if(!tbody) return;
+            
+            let openCount = 0, investigatingCount = 0, resolvedCount = 0;
+            
+            tbody.innerHTML = '';
+            
+            issues.forEach(iss => {
+                const s = (iss.status || 'open').toLowerCase();
+                if (s === 'open') openCount++;
+                else if (s === 'investigating') investigatingCount++;
+                else if (s === 'resolved') resolvedCount++;
+                
+                let badge = '', actionBtn = '';
+                
+                if (s === 'open') {
+                    badge = `<span class="status-badge open">Open</span>`;
+                    actionBtn = `<button class="action-btn approve-btn resolve-issue-btn" data-id="${iss.id}" data-action="investigating"><i data-lucide="check-circle-2"></i> Resolve</button>`;
+                } else if (s === 'investigating') {
+                    badge = `<span class="status-badge investigating">Investigating</span>`;
+                    actionBtn = `<button class="action-btn approve-btn resolve-issue-btn" data-id="${iss.id}" data-action="resolved" style="background-color: var(--blue); border-color: var(--blue); color: #fff;"><i data-lucide="wrench"></i> Fix</button>`;
+                } else {
+                    badge = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Resolved</span>`;
+                    actionBtn = `<button class="action-btn" style="opacity: 0.5; pointer-events: none; background-color: #00e676; border-color: #00e676; color: #fff;"><i data-lucide="check-circle-2"></i> Fixed</button>`;
+                }
+                
+                // Priority color
+                let prioHtml = '';
+                const p = (iss.priority || '').toLowerCase();
+                if (p === 'critical' || p === 'high') {
+                    prioHtml = `<span style="color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="arrow-up" style="width: 14px;"></i> ${iss.priority}</span>`;
+                } else if (p === 'medium') {
+                    prioHtml = `<span style="color: #a855f7; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="minus" style="width: 14px;"></i> ${iss.priority}</span>`;
+                } else {
+                    prioHtml = `<span style="color: #22c55e; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="arrow-down" style="width: 14px;"></i> ${iss.priority}</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${iss.id}</td>
+                    <td class="vendor-name-col">${iss.title} <div style="font-size:11px;color:var(--text-muted);font-weight:400;margin-top:2px;">${iss.category || 'Issue'}</div></td>
+                    <td>${iss.email || iss.reporter || 'Unknown'}</td>
+                    <td>${prioHtml}</td>
+                    <td class="status-cell">${badge}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn action-btn-clean" onclick="window.location.href='admin-coordination.html?user=${encodeURIComponent(iss.email || '')}'"><i data-lucide="reply"></i> Reply</button>
+                        ${actionBtn}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            if (issues.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No open admin issues found.</td></tr>';
+            }
+            
             const elOpen = document.getElementById('statOpen');
             const elInv = document.getElementById('statInvestigating');
             const elRes = document.getElementById('statResolved');
             if(elOpen) elOpen.textContent = openCount;
             if(elInv) elInv.textContent = investigatingCount;
             if(elRes) elRes.textContent = resolvedCount;
+            
+            if (window.lucide) lucide.createIcons();
         };
 
         const tbody = document.getElementById('issueTableBody');
@@ -194,51 +260,20 @@
             tbody.addEventListener('click', (e) => {
                 const resolveBtn = e.target.closest('.resolve-issue-btn');
                 if(resolveBtn) {
-                    const tr = resolveBtn.closest('tr');
-                    const statusTd = tr.querySelector('.status-cell');
-                    const currentState = resolveBtn.getAttribute('data-state');
-
-                    if (currentState === 'open') {
-                        if(statusTd) {
-                            statusTd.innerHTML = '<span class="status-badge investigating">Investigating</span>';
-                        }
-                        resolveBtn.setAttribute('data-state', 'investigating');
-                        
-                        resolveBtn.style.backgroundColor = 'var(--blue)';
-                        resolveBtn.style.borderColor = 'var(--blue)';
-                        resolveBtn.style.color = '#fff';
-                        resolveBtn.innerHTML = '<i data-lucide="wrench"></i> Fix';
-                        if (window.lucide) lucide.createIcons();
-                        
-                        if (openCount > 0) {
-                            openCount--;
-                            investigatingCount++;
-                            updateStats();
-                        }
-                    } 
-                    else if (currentState === 'investigating') {
-                        if(statusTd) {
-                            statusTd.innerHTML = '<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Resolved</span>';
-                        }
-                        
-                        resolveBtn.setAttribute('data-state', 'resolved');
-                        resolveBtn.style.opacity = '0.5';
-                        resolveBtn.style.pointerEvents = 'none';
-                        resolveBtn.style.backgroundColor = '#00e676';
-                        resolveBtn.style.borderColor = '#00e676';
-                        resolveBtn.style.color = '#fff';
-                        resolveBtn.innerHTML = '<i data-lucide="check-circle-2"></i> Fixed';
-                        if (window.lucide) lucide.createIcons();
-                        
-                        if (investigatingCount > 0) {
-                            investigatingCount--;
-                            resolvedCount++;
-                            updateStats();
-                        }
+                    const id = resolveBtn.getAttribute('data-id');
+                    const nextAction = resolveBtn.getAttribute('data-action');
+                    if (id && nextAction) {
+                        updateIssueStatus(id, nextAction);
                     }
                 }
             });
         }
+        
+        // Initial fetch
+        fetchAndRender();
+        
+        // Poll every 5s
+        setInterval(fetchAndRender, 5000);
     });
   </script>
 </body>

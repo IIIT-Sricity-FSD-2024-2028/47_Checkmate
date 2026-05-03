@@ -2929,6 +2929,10 @@
           "severity": {
             "type": "string",
             "example": "high"
+          },
+          "target": {
+            "type": "string",
+            "example": "admin"
           }
         },
         "required": [

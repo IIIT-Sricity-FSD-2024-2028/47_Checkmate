@@ -7,53 +7,163 @@
   <link rel="stylesheet" href="../../styles/global.css">
   <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    .bipartite-section {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      height: 620px;
+    }
+    @media (max-width: 900px) { .bipartite-section { grid-template-columns: 1fr; height: auto; } }
+
+    .conv-list { display: flex; flex-direction: column; gap: 6px; }
+    .conv-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s;
+    }
+    .conv-item:hover { background: rgba(255,255,255,0.04); }
+    .conv-item.active {
+      background: rgba(233,30,140,0.1);
+      border-color: var(--pink);
+    }
+    .conv-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff;
+      flex-shrink: 0;
+    }
+    .conv-info h4 { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+    .conv-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+    .conv-badge {
+      margin-left: auto;
+      min-width: 20px; height: 20px;
+      background: var(--pink);
+      border-radius: 50%;
+      font-size: 10px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .chat-panel {
+      display: flex; flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .chat-header h4 { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .chat-header p { font-size: 12px; color: var(--green); }
+    .view-report-btn {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 8px;
+      color: #60a5fa;
+      font-size: 12.5px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+    .view-report-btn:hover { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .view-report-btn i { width: 14px; height: 14px; }
+    .chat-body {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .chat-msg {
+      max-width: 70%;
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .chat-msg--admin {
+      align-self: flex-end;
+      background: var(--pink);
+      color: #fff;
+      border-radius: 12px 12px 0 12px;
+    }
+    .chat-msg--vendor {
+      align-self: flex-start;
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-radius: 12px 12px 12px 0;
+    }
+    .chat-msg--system {
+      align-self: center;
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: var(--orange);
+      border-radius: 8px;
+      font-size: 12.5px;
+      max-width: 85%;
+      text-align: center;
+    }
+    .chat-msg__time {
+      display: block; font-size: 11px; margin-top: 5px; opacity: 0.6;
+    }
+    .chat-input-bar {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-size: 13.5px;
+      outline: none;
+    }
+    .chat-input-bar input:focus { border-color: rgba(233,30,140,0.5); }
+    .chat-input-bar input::placeholder { color: var(--text-muted); }
+    .chat-send-btn {
+      width: 42px; height: 42px;
+      background: var(--pink);
+      border: none; border-radius: 50%;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .chat-send-btn:hover { background: var(--pink-light); }
+    .chat-empty {
+      text-align: center; color: var(--text-muted); font-size: 13px; padding: 60px 20px;
+    }
+  </style>
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
       <div class="sidebar__brand">
-        <div class="brand-icon">
-          <i data-lucide="calendar-check" class="icon-white"></i>
-        </div>
-        <div>
-          <div class="brand-name">EventPro</div>
-          <div class="brand-role">Admin</div>
-        </div>
+        <div class="brand-icon"><i data-lucide="calendar-check" class="icon-white"></i></div>
+        <div><div class="brand-name">EventPro</div><div class="brand-role">Admin</div></div>
       </div>
       <nav class="sidebar__nav">
-        <a href="admin.html" class="nav-item">
-          <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-        </a>
-        <a href="vendor-approvals.html" class="nav-item">
-          <i data-lucide="clipboard-check"></i><span>Vendor Approvals</span>
-        </a>
-        <a href="manage-users.html" class="nav-item">
-          <i data-lucide="users"></i><span>Manage Users</span>
-        </a>
-        <a href="monitor-events.html" class="nav-item">
-          <i data-lucide="calendar-check"></i><span>Monitor Events</span>
-        </a>
-        <a href="report-analytics.html" class="nav-item">
-          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
-        </a>
-        <a href="issue-tracking.html" class="nav-item">
-          <i data-lucide="bug"></i><span>Issue Tracking</span>
-        </a>
-        <a href="service-moderation.html" class="nav-item">
-          <i data-lucide="shield"></i><span>Service Moderation</span>
-        </a>
-        <a href="admin-payouts.html" class="nav-item">
-          <i data-lucide="dollar-sign"></i><span>Financial Payouts</span>
-        </a>
-        <a href="admin-coordination.html" class="nav-item active">
-          <i data-lucide="message-square"></i><span>Coordination Hub</span>
-        </a>
-        <a href="audit-logs.html" class="nav-item">
-          <i data-lucide="activity"></i><span>System Logs</span>
-        </a>
-        <a href="admin-settings.html" class="nav-item">
-          <i data-lucide="settings"></i><span>Global Settings</span>
-        </a>
+        <a href="admin.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+        <a href="vendor-approvals.html" class="nav-item"><i data-lucide="clipboard-check"></i><span>Vendor Approvals</span></a>
+        <a href="manage-users.html" class="nav-item"><i data-lucide="users"></i><span>Manage Users</span></a>
+        <a href="monitor-events.html" class="nav-item"><i data-lucide="calendar-check"></i><span>Monitor Events</span></a>
+        <a href="report-analytics.html" class="nav-item"><i data-lucide="pie-chart"></i><span>Report & Analytics</span></a>
+        <a href="issue-tracking.html" class="nav-item"><i data-lucide="bug"></i><span>Issue Tracking</span></a>
+        <a href="service-moderation.html" class="nav-item"><i data-lucide="shield"></i><span>Service Moderation</span></a>
+        <a href="admin-payouts.html" class="nav-item"><i data-lucide="dollar-sign"></i><span>Financial Payouts</span></a>
+        <a href="admin-coordination.html" class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+        <a href="audit-logs.html" class="nav-item"><i data-lucide="activity"></i><span>System Logs</span></a>
+        <a href="admin-settings.html" class="nav-item"><i data-lucide="settings"></i><span>Global Settings</span></a>
       </nav>
       <div class="sidebar__footer">
         <div class="user-info">
@@ -68,308 +178,277 @@
       <header class="topbar">
         <div>
           <h1 class="page-title">Coordination Hub</h1>
-          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors and Staff</p>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors</p>
         </div>
         <div class="topbar__right">
-          <button class="notif-btn">
-            <i data-lucide="bell"></i>
-            <span class="notif-badge">3</span>
-          </button>
+          <button class="notif-btn"><i data-lucide="bell"></i><span class="notif-badge" id="notifCount">0</span></button>
         </div>
       </header>
 
       <div class="content">
-        <div class="bipartite-section" style="grid-template-columns: 1fr 2fr; height: 600px;">
-            <div class="data-table-wrapper" style="overflow-y: auto;">
-                <h3 class="table-header-title">Active Conversations</h3>
-                <div class="search-box" style="width: 100%; margin-bottom: 20px;">
-                    <i data-lucide="search" class="search-icon"></i>
-                    <input type="text" id="userSearchInput" placeholder="Search users..." />
-                </div>
-                <div class="approval-list" id="chatListContainer">
-                    <div class="approval-item chat-item" style="cursor: pointer; background: rgba(233, 30, 140, 0.1); border-color: var(--pink);">
-                        <div class="vendor-info">
-                            <div class="vendor-avatar">S</div>
-                            <div>
-                                <h4>Starlight Events</h4>
-                                <p style="color: var(--text-primary); font-weight: 500;">Yes, we updated our insurance policy.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="approval-item chat-item" style="cursor: pointer;">
-                        <div class="vendor-info">
-                            <div class="vendor-avatar" style="background: var(--blue);">M</div>
-                            <div>
-                                <h4>Melody Music</h4>
-                                <p>Can you explain the commission cut?</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Broadcast Button -->
-                <button class="export-btn" id="openBroadcastBtn" style="width: 100%; margin-top: 24px; justify-content: center;"><i data-lucide="radio"></i> Broadcast Message</button>
+        <div class="bipartite-section">
+          <!-- Left: Conversation list -->
+          <div class="data-table-wrapper" style="overflow-y: auto;">
+            <h3 class="table-header-title">Vendor Conversations</h3>
+            <div class="search-box" style="width: 100%; margin-bottom: 16px;">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="searchInput" placeholder="Search vendors..." />
             </div>
-            
-            <div class="data-table-wrapper" style="display: flex; flex-direction: column;">
-                <!-- Chat Header -->
-                <div style="padding-bottom: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
-                    <div class="vendor-info">
-                        <div class="vendor-avatar" id="activeChatAvatar">S</div>
-                        <div>
-                            <h4 id="activeChatName">Starlight Events</h4>
-                            <p style="color: #22c55e;"><span style="display:inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; margin-right: 4px;"></span>Online</p>
-                        </div>
-                    </div>
-                    <button class="action-btn action-btn-clean" id="deleteChatBtn" title="Delete Chat"><i data-lucide="trash-2"></i></button>
-                </div>
-                <!-- Chat History -->
-                <div id="chatHistory" style="flex: 1; padding: 20px 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
-                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
-                        <p style="font-size: 14px; color: var(--text-primary);">Hello Admin, I have submitted the requested liability insurance document. Can you please review my profile?</p>
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:24 AM</span>
-                    </div>
-                    <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px;">
-                        <p style="font-size: 14px; color: #fff;">Hello! Thank you for the update. Our team will review the document and reinstate your account shortly.</p>
-                        <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">10:45 AM</span>
-                    </div>
-                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
-                        <p style="font-size: 14px; color: var(--text-primary);">Perfect, thank you! I will await your confirmation.</p>
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:47 AM</span>
-                    </div>
-                </div>
-                <!-- Message Input -->
-                <div style="padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center;">
-                    <input type="text" id="chatInput" class="form-control" placeholder="Type a message to Starlight Events..." />
-                    <button id="sendMsgBtn" class="export-btn" style="border-radius: 50%; padding: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><i data-lucide="send"></i></button>
-                </div>
+            <div class="conv-list" id="convList">
+              <div class="chat-empty">No conversations yet.</div>
             </div>
+          </div>
+
+          <!-- Right: Chat panel -->
+          <div class="chat-panel" id="chatPanel">
+            <div class="chat-header" id="chatHeader" style="display:none;">
+              <div class="conv-avatar" id="chatAvatar" style="background:var(--pink);">?</div>
+              <div>
+                <h4 id="chatName">Select a conversation</h4>
+                <p id="chatStatus"></p>
+              </div>
+              <a class="view-report-btn" id="viewReportBtn" href="issue-tracking.html" style="display:none;"><i data-lucide="file-text"></i> View Report</a>
+            </div>
+            <div class="chat-body" id="chatBody">
+              <div class="chat-empty">Select a vendor conversation to begin</div>
+            </div>
+            <div class="chat-input-bar" id="chatInputBar" style="display:none;">
+              <input type="text" id="chatInput" placeholder="Type a message..." />
+              <button class="chat-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block;"></i></button>
+            </div>
+          </div>
         </div>
       </div>
     </main>
-  </div>
-  <div id="globalNotifModal" class="notif-modal-overlay">
-    <div class="notif-window">
-      <div class="notif-header">
-        <h3>Notifications</h3>
-        <button class="notif-close-btn"><i data-lucide="x"></i></button>
-      </div>
-      <div class="notif-body">
-        <div class="notif-item notif-item--blue">
-          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">New Vendor Approval</div>
-            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
-            <span class="notif-item-time">10 mins ago</span>
-          </div>
-        </div>
-        <div class="notif-item notif-item--pink">
-          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">New Message</div>
-            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
-            <span class="notif-item-time">1 hour ago</span>
-          </div>
-        </div>
-        <div class="notif-item notif-item--orange">
-          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">Issue Reported</div>
-            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
-            <span class="notif-item-time">2 hours ago</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- Broadcast Modal -->
-  <div id="broadcastModal" class="notif-modal-overlay">
-    <div class="notif-window" style="max-width: 500px; width: 90%;">
-      <div class="notif-header">
-        <h3>Broadcast Message</h3>
-        <button class="notif-close-btn" data-close="broadcast"><i data-lucide="x"></i></button>
-      </div>
-      <div class="notif-body" style="padding: 24px;">
-         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Select Recipients</label>
-         <div style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                 <input type="checkbox" checked style="accent-color: var(--pink); width: 16px; height: 16px;">
-                 <span style="font-size: 13.5px; color: var(--text-primary);">Starlight Events</span>
-             </label>
-             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                 <input type="checkbox" checked style="accent-color: var(--pink); width: 16px; height: 16px;">
-                 <span style="font-size: 13.5px; color: var(--text-primary);">Melody Music</span>
-             </label>
-             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                 <input type="checkbox" style="accent-color: var(--pink); width: 16px; height: 16px;">
-                 <span style="font-size: 13.5px; color: var(--text-primary);">All Vendors</span>
-             </label>
-             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                 <input type="checkbox" style="accent-color: var(--pink); width: 16px; height: 16px;">
-                 <span style="font-size: 13.5px; color: var(--text-primary);">All Staff</span>
-             </label>
-         </div>
-         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Message</label>
-         <textarea id="broadcastInput" style="width: 100%; min-height: 100px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; color: var(--text-primary); font-family: var(--font-body); resize: vertical; outline: none;" placeholder="Type your broadcast message..."></textarea>
-      </div>
-      <div class="notif-footer" style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
-         <button class="btn btn-ghost" data-close="broadcast" style="padding: 8px 16px; border-radius: 6px; background: transparent; color: var(--text-secondary); border: 1px solid transparent; cursor: pointer;">Cancel</button>
-         <button id="sendBroadcastBtn" style="padding: 8px 16px; border-radius: 6px; background: var(--pink); color: #fff; border: none; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;"><i data-lucide="send" style="width: 14px;"></i> Send Broadcast</button>
-      </div>
-    </div>
   </div>
 
   <script src="../../scripts/admin_js/admin-alerts.js"></script>
   <script>lucide.createIcons();</script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- 1. User Search Filtering ---
-        const searchInput = document.getElementById('userSearchInput');
-        const approvalItems = document.querySelectorAll('.approval-list .approval-item');
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                approvalItems.forEach(item => {
-                    const name = item.querySelector('h4').textContent.toLowerCase();
-                    if(name.includes(term)) {
-                        item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+      var API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+      var session = null;
+      try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch(e) {}
 
-        // --- 1.5 Chat Switching ---
-        const chatItems = document.querySelectorAll('.chat-item');
-        const activeChatAvatar = document.getElementById('activeChatAvatar');
-        const activeChatName = document.getElementById('activeChatName');
-        const chatInputPlaceholder = document.getElementById('chatInput');
-        const chatHistoryNode = document.getElementById('chatHistory');
+      function api(method, path, body) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, API_BASE + '/' + path, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('x-role', (session && session.role) || 'admin');
+        try { xhr.send(body ? JSON.stringify(body) : null); } catch(e) { return null; }
+        if (xhr.status >= 400) return null;
+        return xhr.responseText ? JSON.parse(xhr.responseText) : null;
+      }
 
-        chatItems.forEach(item => {
-            item.addEventListener('click', () => {
-                chatItems.forEach(i => {
-                    i.style.background = 'transparent';
-                    i.style.borderColor = 'transparent';
-                });
-                
-                item.style.background = 'rgba(233, 30, 140, 0.1)';
-                item.style.borderColor = 'var(--pink)';
-                
-                const vendorName = item.querySelector('h4').textContent;
-                const avatarNode = item.querySelector('.vendor-avatar');
-                const avatarLetter = avatarNode.textContent;
-                const avatarBg = avatarNode.style.background;
-                
-                activeChatName.textContent = vendorName;
-                activeChatAvatar.textContent = avatarLetter;
-                activeChatAvatar.style.background = vendorName === 'Melody Music' ? 'var(--blue)' : ''; 
-                
-                chatInputPlaceholder.placeholder = `Type a message to ${vendorName}...`;
-                
-                if (vendorName === 'Melody Music') {
-                    chatHistoryNode.innerHTML = `
-                        <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
-                            <p style="font-size: 14px; color: var(--text-primary);">Hello Admin! Can you explain the commission cut from last invoice?</p>
-                            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">09:15 AM</span>
-                        </div>
-                    `;
-                } else {
-                    chatHistoryNode.innerHTML = `
-                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
-                        <p style="font-size: 14px; color: var(--text-primary);">Hello Admin, I have submitted the requested liability insurance document. Can you please review my profile?</p>
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:24 AM</span>
-                    </div>
-                    <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px;">
-                        <p style="font-size: 14px; color: #fff;">Hello! Thank you for the update. Our team will review the document and reinstate your account shortly.</p>
-                        <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">10:45 AM</span>
-                    </div>
-                    <div style="align-self: flex-start; max-width: 70%; background: var(--bg-hover); padding: 12px 16px; border-radius: 12px 12px 12px 0;">
-                        <p style="font-size: 14px; color: var(--text-primary);">Perfect, thank you! I will await your confirmation.</p>
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">10:47 AM</span>
-                    </div>
-                    `;
-                }
-            });
+      function timeStr(iso) {
+        try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+        catch(e) { return ''; }
+      }
+
+      var AVATAR_COLORS = ['#e91e8c','#1d4ed8','#0e7490','#7e22ce','#c2410c','#15803d'];
+
+      function getMessages() {
+        var result = api('GET', 'state/adminChatMessages');
+        if (Array.isArray(result)) return result;
+        return [];
+      }
+
+      function saveMessages(msgs) {
+        api('PUT', 'state/adminChatMessages', { value: msgs });
+      }
+
+      var activeVendorEmail = null;
+      var convListEl = document.getElementById('convList');
+      var chatBody = document.getElementById('chatBody');
+      var chatHeader = document.getElementById('chatHeader');
+      var chatInputBar = document.getElementById('chatInputBar');
+      var chatInput = document.getElementById('chatInput');
+      var chatAvatar = document.getElementById('chatAvatar');
+      var chatName = document.getElementById('chatName');
+      var chatStatus = document.getElementById('chatStatus');
+      var sendBtn = document.getElementById('sendBtn');
+      var searchInput = document.getElementById('searchInput');
+
+      function buildConversations(messages) {
+        // Group by vendor email
+        var vendors = {};
+        messages.forEach(function(m) {
+          var email = m.senderRole === 'Admin' || m.senderRole === 'admin' ? m.recipientEmail : m.senderEmail;
+          if (!email) return;
+          if (!vendors[email]) {
+            vendors[email] = {
+              email: email,
+              name: m.senderRole === 'Admin' || m.senderRole === 'admin' ? (m.recipientName || email) : (m.sender || email),
+              lastMsg: m.text,
+              lastTime: m.timestamp,
+              unread: 0
+            };
+          }
+          if (new Date(m.timestamp) > new Date(vendors[email].lastTime)) {
+            vendors[email].lastMsg = m.text;
+            vendors[email].lastTime = m.timestamp;
+          }
+          // Count unread (messages from vendor, not admin)
+          if (m.senderRole !== 'Admin' && m.senderRole !== 'admin') {
+            vendors[email].unread++;
+          }
         });
-
-        // --- 2. Chat Deletion (Trash Can) ---
-        const deleteChatBtn = document.getElementById('deleteChatBtn');
-        const chatHistory = document.getElementById('chatHistory');
-        
-        if (deleteChatBtn && chatHistory) {
-            deleteChatBtn.addEventListener('click', () => {
-                const confirmed = confirm("Are you sure you want to clear this conversation?");
-                if (confirmed) {
-                    chatHistory.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted); font-size: 13px;">Chat history cleared.</div>';
-                }
-            });
-        }
-
-        // --- 3. Sending Individual Messages ---
-        const chatInput = document.getElementById('chatInput');
-        const sendMsgBtn = document.getElementById('sendMsgBtn');
-        
-        const appendMessage = (text) => {
-            if (!text.trim()) return;
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const msgHtml = `
-                <div style="align-self: flex-end; max-width: 70%; background: var(--pink); padding: 12px 16px; border-radius: 12px 12px 0 12px; margin-top: 16px; animation: fadeIn 0.3s ease;">
-                    <p style="font-size: 14px; color: #fff;">${text}</p>
-                    <span style="font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-top: 6px;">${timeStr}</span>
-                </div>
-            `;
-            chatHistory.insertAdjacentHTML('beforeend', msgHtml);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-            chatInput.value = '';
-        };
-
-        if (sendMsgBtn && chatInput) {
-            sendMsgBtn.addEventListener('click', () => appendMessage(chatInput.value));
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') appendMessage(chatInput.value);
-            });
-        }
-
-        // --- 4. Broadcast Modal Logic ---
-        const broadcastModal = document.getElementById('broadcastModal');
-        const openBroadcastBtn = document.getElementById('openBroadcastBtn');
-        const sendBroadcastBtn = document.getElementById('sendBroadcastBtn');
-        const broadcastInput = document.getElementById('broadcastInput');
-
-        const closeBroadcast = () => {
-            broadcastModal.classList.remove('active');
-        };
-
-        if (openBroadcastBtn) {
-            openBroadcastBtn.addEventListener('click', () => {
-                broadcastInput.value = '';
-                broadcastModal.classList.add('active');
-            });
-        }
-
-        document.querySelectorAll('[data-close="broadcast"]').forEach(btn => {
-            btn.addEventListener('click', closeBroadcast);
+        return Object.values(vendors).sort(function(a, b) {
+          return new Date(b.lastTime) - new Date(a.lastTime);
         });
+      }
 
-        if (sendBroadcastBtn) {
-            sendBroadcastBtn.addEventListener('click', () => {
-                const msg = broadcastInput.value;
-                if (!msg.trim()) {
-                    alert('Please enter a message to broadcast.');
-                    return;
-                }
-                
-                // Simulate appending broadcast to current chat as well if it makes sense visually
-                appendMessage(msg);
-                
-                // alert('Broadcast message sent successfully!');
-                closeBroadcast();
-            });
+      function renderConvList() {
+        var messages = getMessages();
+        var convs = buildConversations(messages);
+        var q = searchInput ? searchInput.value.toLowerCase() : '';
+
+        if (convs.length === 0) {
+          convListEl.innerHTML = '<div class="chat-empty">No conversations yet.</div>';
+          return;
         }
+
+        var html = '';
+        convs.forEach(function(c, i) {
+          if (q && c.name.toLowerCase().indexOf(q) === -1 && c.email.toLowerCase().indexOf(q) === -1) return;
+          var isActive = c.email === activeVendorEmail;
+          var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+          var initial = (c.name || '?')[0].toUpperCase();
+          var preview = c.lastMsg || '';
+          if (preview.length > 50) preview = preview.substring(0, 50) + '...';
+
+          html += '<div class="conv-item' + (isActive ? ' active' : '') + '" data-email="' + c.email + '" data-name="' + c.name + '" data-color="' + color + '">' +
+            '<div class="conv-avatar" style="background:' + color + ';">' + initial + '</div>' +
+            '<div class="conv-info"><h4>' + c.name + '</h4><p>' + preview + '</p></div>' +
+            '</div>';
+        });
+        convListEl.innerHTML = html || '<div class="chat-empty">No matches.</div>';
+
+        // Attach click handlers
+        convListEl.querySelectorAll('.conv-item').forEach(function(el) {
+          el.addEventListener('click', function() {
+            selectConversation(el.getAttribute('data-email'), el.getAttribute('data-name'), el.getAttribute('data-color'));
+          });
+        });
+      }
+
+      function selectConversation(email, name, color) {
+        activeVendorEmail = email;
+        chatHeader.style.display = '';
+        chatInputBar.style.display = '';
+        chatAvatar.textContent = (name || '?')[0].toUpperCase();
+        chatAvatar.style.background = color || 'var(--pink)';
+        chatName.textContent = name || email;
+        chatStatus.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>Online';
+        chatInput.placeholder = 'Type a message to ' + (name || email) + '...';
+
+        // Show View Report button
+        var viewReportBtn = document.getElementById('viewReportBtn');
+        if (viewReportBtn) {
+          viewReportBtn.style.display = '';
+          viewReportBtn.href = 'issue-tracking.html';
+        }
+        if (window.lucide) lucide.createIcons();
+
+        renderChat();
+        renderConvList(); // update active state
+      }
+
+      function renderChat() {
+        if (!activeVendorEmail) {
+          chatBody.innerHTML = '<div class="chat-empty">Select a vendor conversation to begin</div>';
+          return;
+        }
+
+        var messages = getMessages();
+        var filtered = messages.filter(function(m) {
+          return m.senderEmail === activeVendorEmail || m.recipientEmail === activeVendorEmail;
+        });
+        filtered.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
+
+        if (filtered.length === 0) {
+          chatBody.innerHTML = '<div class="chat-empty">No messages in this conversation.</div>';
+          return;
+        }
+
+        var html = '';
+        filtered.forEach(function(m) {
+          var isAdmin = m.senderRole === 'Admin' || m.senderRole === 'admin';
+          var isSystem = m.type === 'issue-report';
+
+          if (isSystem) {
+            html += '<div class="chat-msg chat-msg--system">' +
+              '<div>' + m.text + '</div>' +
+              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+          } else if (isAdmin) {
+            html += '<div class="chat-msg chat-msg--admin">' +
+              '<div>' + m.text + '</div>' +
+              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+          } else {
+            html += '<div class="chat-msg chat-msg--vendor">' +
+              '<div>' + m.text + '</div>' +
+              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+          }
+        });
+        chatBody.innerHTML = html;
+        chatBody.scrollTop = chatBody.scrollHeight;
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function sendMessage() {
+        var text = chatInput.value.trim();
+        if (!text || !activeVendorEmail) return;
+
+        var messages = getMessages();
+        messages.push({
+          id: 'msg_' + Date.now(),
+          sender: 'Admin',
+          senderRole: 'Admin',
+          senderEmail: 'admin@eventpro.com',
+          recipientEmail: activeVendorEmail,
+          recipientName: chatName.textContent,
+          text: text,
+          timestamp: new Date().toISOString(),
+          type: 'message'
+        });
+        saveMessages(messages);
+        chatInput.value = '';
+        renderChat();
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', renderConvList);
+      }
+
+      // Initial render
+      renderConvList();
+
+      // Auto-select from ?user= URL param
+      var urlParams = new URLSearchParams(window.location.search);
+      var userParam = urlParams.get('user');
+      if (userParam) {
+        // Find the vendor by email
+        var messages = getMessages();
+        var convs = buildConversations(messages);
+        var match = convs.find(function(c) { return c.email === userParam; });
+        if (match) {
+          selectConversation(match.email, match.name, AVATAR_COLORS[0]);
+        } else {
+          // Create a placeholder conversation
+          selectConversation(userParam, userParam.split('@')[0], AVATAR_COLORS[0]);
+        }
+      }
+
+      // Poll every 5s
+      setInterval(function() {
+        renderConvList();
+        if (activeVendorEmail) renderChat();
+      }, 5000);
     });
   </script>
 </body>

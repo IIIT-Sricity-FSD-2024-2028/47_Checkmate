@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Single-event constraint ──
     // Check if this staff already has assignments to an event
     const allAssignments = DB.getAll('staffAssignments') || [];
-    const staffAssignments = allAssignments.filter(a => a.staffId === s.id);
+    const staffAssignments = allAssignments.filter(a => a.staffId === s.id && (a.status === 'pending' || a.status === 'accepted'));
     const assignedEventIds = [...new Set(staffAssignments.map(a => a.eventId))];
     
     // Broaden filter to any actionable status

@@ -19,5 +19,6 @@ export class CreateIssueDto {
   @ApiPropertyOptional() @IsOptional() @IsString() createdAt?: string;
   @ApiPropertyOptional({ example: 'issue' }) @IsOptional() @IsString() type?: string;
   @ApiPropertyOptional({ example: 'high' }) @IsOptional() @IsString() severity?: string;
+  @ApiPropertyOptional({ example: 'admin' }) @IsOptional() @IsString() target?: string;
 }
 export class UpdateIssueDto extends PartialType(CreateIssueDto) {}
