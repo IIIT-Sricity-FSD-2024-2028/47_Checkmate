@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function setSession(payload) {
     const user = payload.user;
     const role = payload.role || roleHeader[user.role] || 'client';
-    localStorage.setItem('checkmate_session', JSON.stringify({ token: payload.token, user, role }));
-    localStorage.setItem('accountType', user.role);
+    sessionStorage.setItem('checkmate_session', JSON.stringify({ token: payload.token, user, role }));
+    sessionStorage.setItem('accountType', user.role);
   }
 
   function showError(message) {

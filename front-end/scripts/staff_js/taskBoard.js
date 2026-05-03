@@ -1,35 +1,6 @@
 import { showToast } from './main.js';
 
 export function initTaskBoard() {
-  // Restore state from localStorage if it exists
-  const boardState = localStorage.getItem('taskBoardState');
-  if (boardState) {
-    try {
-      const state = JSON.parse(boardState);
-      const cols = { assigned: 'col-assigned', progress: 'col-progress', done: 'col-done' };
-      Object.keys(cols).forEach(colKey => {
-         const colHTML = state[colKey];
-         if (colHTML) {
-            // Need to append back the task cards (skipping header)
-            const parent = document.getElementById(cols[colKey]);
-            const header = parent.querySelector('.col-header');
-            parent.innerHTML = '';
-            parent.appendChild(header);
-            
-            // To parse HTML safely
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(colHTML, 'text/html');
-            const cards = Array.from(doc.body.children);
-            cards.forEach(card => {
-               if (card.classList.contains('task-card')) {
-                   parent.appendChild(card);
-               }
-            });
-         }
-      });
-    } catch(e) { }
-  }
-
   // Setup cards
   enhanceCards();
   updateCounts();
@@ -286,7 +257,6 @@ function saveTaskEdits(e, card) {
   }
 
   updateCounts();
-  saveBoardState();
   showToast('Task Updated Successfully', 'success');
 }
 
@@ -370,7 +340,6 @@ window.drop = function(e, col) {
 
     targetCol.appendChild(dragged);
     updateCounts();
-    saveBoardState();
   }
 };
 
@@ -386,13 +355,4 @@ function updateCounts() {
     const colCount = col.querySelector('.col-count');
     if (colCount) colCount.textContent = count;
   });
-}
-
-function saveBoardState() {
-  const state = {
-    assigned: document.getElementById('col-assigned').innerHTML,
-    progress: document.getElementById('col-progress').innerHTML,
-    done: document.getElementById('col-done').innerHTML
-  };
-  localStorage.setItem('taskBoardState', JSON.stringify(state));
 }

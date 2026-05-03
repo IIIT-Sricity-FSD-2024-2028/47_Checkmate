@@ -26,13 +26,12 @@ export class AnalyticsService {
     return this.data.getValue(this.normalizeKey(key));
   }
   setStateKey(key: string, value: unknown) {
-    return this.data.setValue(this.normalizeKey(key), value as never);
+    return this.data.setValue(this.normalizeKey(key), value);
   }
-  private normalizeKey(key: string) {
-    const aliases: Record<string, keyof ReturnType<DataService['snapshot']>> = {
+  private normalizeKey(key: string): string {
+    const aliases: Record<string, string> = {
       vendorApplicationsList: 'vendorApplications',
     };
-    const normalized = aliases[key] || key;
-    return normalized as keyof ReturnType<DataService['snapshot']>;
+    return aliases[key] || key;
   }
 }

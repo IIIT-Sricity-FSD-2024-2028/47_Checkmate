@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
     const api = (method, path, body) => {
-        const session = JSON.parse(localStorage.getItem('checkmate_session') || 'null');
+        const session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
         const xhr = new XMLHttpRequest();
         xhr.open(method, `${API_BASE}/${path}`, false);
         xhr.setRequestHeader('Content-Type', 'application/json');

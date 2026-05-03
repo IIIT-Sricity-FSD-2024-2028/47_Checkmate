@@ -32,6 +32,27 @@ export class AuthService {
       created: new Date().toISOString().slice(0, 10),
       passwordHash: hashPassword(dto.password),
     });
+
+    // Auto-create a staff record so the vendor Manage Staff page sees them
+    if (dto.role === 'Staff') {
+      const initials = dto.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+      const avatars = ['pink', 'teal', 'purple', 'green', 'orange'];
+      const staffList = this.data.collection('staff');
+      this.data.create('staff', 'S', {
+        name: dto.name,
+        initials,
+        role: 'Staff Member',
+        phone: dto.phone || '',
+        email: dto.email,
+        workload: 0,
+        status: 'available',
+        avail: 'Available',
+        events: 0,
+        avatar: avatars[staffList.length % avatars.length],
+        assignedEvents: [],
+      });
+    }
+
     return this.session(user);
   }
 

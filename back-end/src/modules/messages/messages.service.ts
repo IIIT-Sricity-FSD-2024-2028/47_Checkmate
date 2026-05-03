@@ -7,12 +7,12 @@ export class MessagesService {
   constructor(private readonly data: DataService) {}
   threads() { return this.data.getValue('messages'); }
   thread(id: string) {
-    const messages = this.data.getValue('messages')[id];
+    const messages = (this.data.getValue('messages') as Record<string, any[]>)[id];
     if (!messages) throw new NotFoundException(`Message thread ${id} was not found.`);
     return messages;
   }
   create(dto: CreateMessageDto) {
-    const all = this.data.getValue('messages');
+    const all = this.data.getValue('messages') as Record<string, any[]>;
     all[dto.threadId] = all[dto.threadId] || [];
     const item = { ...dto, id: `MSG${String(all[dto.threadId].length + 1).padStart(3, '0')}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
     all[dto.threadId].push(item);

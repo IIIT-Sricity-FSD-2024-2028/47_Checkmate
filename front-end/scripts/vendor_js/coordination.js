@@ -267,9 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const evName = liveEvent ? liveEvent.name : '';
 
           // 1. Write to liveEvents
-          const liveEvts = JSON.parse(localStorage.getItem('eventpro_liveEvents') || '[]');
+          const liveEvts = DB.get('liveEvents') || [];
           liveEvts.push({ id:'le_'+Date.now(), eventId: eventId||'all', type:'contingency', note:'Contingency plan triggered.', createdAt: now });
-          localStorage.setItem('eventpro_liveEvents', JSON.stringify(liveEvts));
+          DB.set('liveEvents', liveEvts);
 
           // 2. Write to issues
           const issues = DB.getAll('issues');

@@ -10,6 +10,31 @@ type CollectionName = {
 export class DataService {
   private readonly data: AppData = structuredClone(seedData);
 
+  constructor() {
+    // Auto-create staff records for seed users with role 'Staff'
+    const avatars = ['pink', 'teal', 'purple', 'green', 'orange'];
+    const staffUsers = this.data.users.filter(
+      (u) => u.role === 'Staff' && !this.data.staff.some((s) => s.email?.toLowerCase() === u.email.toLowerCase()),
+    );
+    staffUsers.forEach((u) => {
+      const initials = u.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+      (this.data.staff as Array<any>).push({
+        id: this.nextId(this.data.staff as Array<{ id: string }>, 'S'),
+        name: u.name,
+        initials,
+        role: 'Staff Member',
+        phone: u.phone || '',
+        email: u.email,
+        workload: 0,
+        status: 'available',
+        avail: 'Available',
+        events: 0,
+        avatar: avatars[this.data.staff.length % avatars.length],
+        assignedEvents: [],
+      });
+    });
+  }
+
   snapshot(): AppData {
     return structuredClone(this.data);
   }
@@ -47,13 +72,13 @@ export class DataService {
     return { id, deleted: true };
   }
 
-  getValue<K extends keyof AppData>(name: K): AppData[K] {
-    return this.data[name];
+  getValue(name: string): unknown {
+    return (this.data as any)[name];
   }
 
-  setValue<K extends keyof AppData>(name: K, value: AppData[K]): AppData[K] {
-    this.data[name] = value;
-    return this.data[name];
+  setValue(name: string, value: unknown): unknown {
+    (this.data as any)[name] = value;
+    return (this.data as any)[name];
   }
 
   nextId(list: Array<{ id: string }>, prefix: string): string {

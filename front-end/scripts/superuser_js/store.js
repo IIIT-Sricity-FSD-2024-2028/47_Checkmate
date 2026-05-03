@@ -5,7 +5,7 @@ window.EP = (() => {
   let d = {};
 
   const req = (method, path, body) => {
-    const session = JSON.parse(localStorage.getItem('checkmate_session') || 'null');
+    const session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
     const xhr = new XMLHttpRequest();
     xhr.open(method, `${API_BASE}/${path}`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');

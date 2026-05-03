@@ -2732,6 +2732,10 @@
             "type": "string",
             "example": "Alex Johnson"
           },
+          "staffRole": {
+            "type": "string",
+            "example": "Event Coordinator"
+          },
           "eventId": {
             "type": "string",
             "example": "EVT001"
@@ -2744,9 +2748,41 @@
             "type": "string",
             "example": "Event Coordinator"
           },
+          "eventDate": {
+            "type": "string",
+            "example": "2026-05-10"
+          },
+          "eventVenue": {
+            "type": "string",
+            "example": "Convention Center"
+          },
+          "eventPeople": {
+            "type": "number",
+            "example": 500
+          },
+          "taskDesc": {
+            "type": "string",
+            "example": "Assigned as Event Coordinator"
+          },
+          "priority": {
+            "type": "string",
+            "example": "Medium"
+          },
           "status": {
             "type": "string",
             "example": "assigned"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignedAt": {
+            "type": "string"
+          },
+          "respondedAt": {
+            "type": "string"
           }
         },
         "required": [

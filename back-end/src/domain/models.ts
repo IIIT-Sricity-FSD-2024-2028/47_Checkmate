@@ -95,12 +95,19 @@ export interface StaffAssignment {
   id: string;
   staffId: string;
   staffName: string;
+  staffRole?: string;
   eventId: string;
   eventName: string;
+  eventDate?: string;
+  eventVenue?: string;
+  eventPeople?: number;
   role: string;
+  taskDesc?: string;
+  priority?: string;
   status: string;
   assignedAt: string;
-  tasks?: Array<{ title: string; done: boolean }>;
+  respondedAt?: string;
+  tasks?: Array<{ id?: string; title?: string; desc?: string; status?: string; done?: boolean; priority?: string; eventName?: string }>;
 }
 
 export interface VendorApplication {
@@ -162,4 +169,6 @@ export interface AppData {
   staffTasks: Array<Record<string, unknown>>;
   vendorDocSubmission: VendorApplication | null;
   session: { user: string; email: string; role: string };
+  liveEvents: Array<Record<string, unknown>>;
+  contingencyPlans: Record<string, Array<Record<string, unknown>>>;
 }

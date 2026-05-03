@@ -208,12 +208,34 @@
 </div>
 <script src="../../scripts/vendor_js/data.js"></script>
 <script>
-const STORE_KEY = 'eventpro_staffAssignments';
-const MY_STAFF_ID = 'S001';
+const STORE_KEY = 'staffAssignments';
 
 function updateDashboard() {
-  const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-  const mine = all.filter(a => a.staffId === MY_STAFF_ID || a.staffName === 'Alex Johnson');
+  const s = DB.getSession();
+  const MY_NAME = s.user || 'Staff Member';
+  const MY_EMAIL = (s.email || '').toLowerCase();
+  
+  // Try matching by name first, then by email
+  const staffList = DB.getAll('staff');
+  let me = staffList.find(st => st.name === MY_NAME);
+  if (!me && MY_EMAIL) {
+    me = staffList.find(st => (st.email || '').toLowerCase() === MY_EMAIL);
+  }
+  const MY_STAFF_ID = me ? me.id : null;
+
+  // Update UI names
+  document.querySelectorAll('.sb-uname').forEach(el => el.textContent = MY_NAME);
+  document.querySelectorAll('.sb-uemail').forEach(el => el.textContent = s.email || 'staff@demo.com');
+  const topbarTitle = document.querySelector('.topbar-left h1');
+  if (topbarTitle) topbarTitle.innerHTML = `Welcome back, ${MY_NAME.split(' ')[0]} 👋`;
+
+  const all = DB.getAll('staffAssignments') || [];
+  const safeName = (MY_NAME || '').trim().toLowerCase();
+  const mine = all.filter(a => {
+    if (MY_STAFF_ID && a.staffId === MY_STAFF_ID) return true;
+    if (a.staffName && a.staffName.trim().toLowerCase() === safeName) return true;
+    return false;
+  });
   
   // Stats
   const pendingCount = mine.filter(a => a.status === 'pending').length;
@@ -285,6 +307,9 @@ function updateDashboard() {
   updateClock();
   setInterval(updateClock, 1000);
 }
+
+// Check for updates every 5 seconds to sync with backend polling
+setInterval(updateDashboard, 5000);
 
 function showDashboardToast(msg, type='success') {
   const t = document.createElement('div');

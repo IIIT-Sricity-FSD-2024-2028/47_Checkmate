@@ -1,123 +1,255 @@
 /* ═══════════════════════════════════════════
-   data.js  —  EventPro Mock Database
-   Initialises localStorage with seed data
-   on first load. All pages read/write here.
+   data.js  —  EventPro API-Backed Data Layer
+   Connects to the NestJS backend on :3000.
+   Provides the same DB.get/set/add/update/remove
+   interface so all existing vendor JS files work
+   without modification.
 ═══════════════════════════════════════════ */
 
-window.DB = {
-  _seeds: {
-    events: [
-      { id:'EVT001', name:'Tech Summit 2026',       type:'Conference', date:'2026-03-28', time:'09:00', venue:'Convention Center', people:500, status:'pending', createdBy: 'client' },
-      { id:'EVT002', name:'Wedding – Sarah & Mike',  type:'Wedding',    date:'2026-03-30', time:'18:00', venue:'Grand Hotel',       people:150, status:'pending', createdBy: 'client' },
-      { id:'EVT003', name:'Annual Corporate Gala',   type:'Corporate',  date:'2026-04-05', time:'19:30', venue:'Skyline Ballroom',  people:320, status:'live', createdBy: 'client' },
-      { id:'EVT004', name:'Music Festival',          type:'Conference', date:'2026-04-05', time:'12:00', venue:'City Park',         people:800, status:'confirmed' },
-    ],
-    resources: [
-      { id:'R001', name:'Audio System Premium', category:'Equipment', quantity:12, price:500, unit:'day', available:true  },
-      { id:'R002', name:'LED Screen 4K',         category:'Equipment', quantity:8,  price:300, unit:'day', available:true  },
-      { id:'R003', name:'Round Banquet Tables',  category:'Furniture', quantity:40, price:25,  unit:'day', available:true  },
-      { id:'R004', name:'Stage Lighting Rig',    category:'Equipment', quantity:5,  price:800, unit:'day', available:false },
-      { id:'R005', name:'Floral Centrepieces',   category:'Decor',     quantity:60, price:15,  unit:'day', available:true  },
-    ],
-    staff: [
-      { id:'S001', name:'Alex Johnson',   initials:'AJ', role:'Event Coordinator', phone:'+1 234-567-8901', email:'alex@eventpro.com',    workload:75, status:'available', avatar:'pink'   },
-      { id:'S002', name:'Sarah Williams', initials:'SW', role:'Event Coordinator',     phone:'+1 234-567-8902', email:'sarah@eventpro.com',   workload:60, status:'available', avatar:'teal'   },
-      { id:'S003', name:'Michael Brown',  initials:'MB', role:'Security Chief',     phone:'+1 234-567-8903', email:'michael@eventpro.com', workload:90, status:'busy',      avatar:'purple' },
-      { id:'S004', name:'Lisa Chen',      initials:'LC', role:'Catering Manager',   phone:'+1 234-567-8904', email:'lisa@eventpro.com',    workload:40, status:'available', avatar:'green'  },
-      { id:'S005', name:'James Rivera',   initials:'JR', role:'AV Technician',      phone:'+1 234-567-8905', email:'james@eventpro.com',   workload:85, status:'busy',      avatar:'orange' },
-      { id:'S006', name:'Nina Patel',     initials:'NP', role:'Logistics Officer',  phone:'+1 234-567-8906', email:'nina@eventpro.com',    workload:20, status:'off',       avatar:'teal'   },
-    ],
-    packages: [
-      { id:'P001', name:'Elegant Wedding Package',       category:'Wedding',    price:4500, duration:8,  capacity:'100–300', desc:'Complete wedding package with premium decorations, catering and full day event support. Ideal for 100–300 guests.',          resources:['Banquet Chairs (250)','Round Tables (30)','Floral Arrangements','Lighting Rig','Audio System','Catering Setup','Stage'], staff:['Event Coordinator','Photographer'] },
-      { id:'P002', name:'Birthday Celebration Special',  category:'Birthday',   price:1200, duration:5,  capacity:'30–80',   desc:'Fun and vibrant birthday party setup with decorations, catering, and amusements. Ideal for 30–80 guests.',                   resources:['Banquet Chairs (80)','Party Tables (10)','Balloon Decorations','Sound System'],                                       staff:['Event Coordinator','DJ','Photographer','Catering Staff'] },
-      { id:'P003', name:'Professional Conference Setup', category:'Conference', price:3800, duration:10, capacity:'100–500', desc:'Complete conference package with AV equipment, professional seating, and catering. Perfect for 100–500 delegates.',         resources:['Conference Chairs (500)','LED Screens (3)','Registration Desk','Projectors','Podium'],                                staff:['Event Manager','Audio/Visual Technicians (3)'] },
-      { id:'P004', name:'Corporate Gala Evening',        category:'Corporate',  price:6200, duration:12, capacity:'100–300', desc:'Premium corporate event package with elegant setup, gourmet catering, and entertainment. Perfect for 100–300 guests.',      resources:['Premium Seating (300)','Ambient Lighting','Executive Tables (40)','Stage'],                                         staff:['Event Director','Professional MC','Catering Staff','Security'] },
-    ],
-    issues: [],
-    resourceAllocations: {},
-    staffAssignments: [],
-    messages: {
-      'vendor-vendor': [
-        { id:'m1', sender:'Alex Johnson',   initials:'AJ', self:false, text:'Hey team! Tech Summit setup confirmed for tomorrow 7:30 AM.', time:'10:32 AM', avatar:'pink'   },
-        { id:'m2', sender:'Sarah Williams', initials:'SW', self:false, text:'Audio system tested. All good. ✅',                          time:'10:35 AM', avatar:'teal'   },
-        { id:'m3', sender:'You (Sarah)',    initials:'S',  self:true,  text:"Great! I'll confirm resource allocation now.",               time:'10:40 AM', avatar:'pink'   },
-        { id:'m4', sender:'Michael Brown',  initials:'MB', self:false, text:"Security team briefed. We'll have 12 on-site.",             time:'10:44 AM', avatar:'purple' },
-      ],
-      'vendor-staff': [
-        { id:'s1', sender:'You (Sarah)',  initials:'S',  self:true,  text:'Alex, can you confirm your availability for Tech Summit?', time:'9:15 AM', avatar:'pink' },
-        { id:'s2', sender:'Alex Johnson', initials:'AJ', self:false, text:"Yes, I'll be there by 7 AM for setup.",                    time:'9:18 AM', avatar:'pink' },
-        { id:'s3', sender:'You (Sarah)',  initials:'S',  self:true,  text:'Perfect. Please coordinate with the AV team on arrival.',  time:'9:20 AM', avatar:'pink' },
-      ],
-      'vendor-client': [
-        { id:'c1', sender:'John Carter (Client)', initials:'JC', self:false, text:'Hi! Just wanted to confirm the no-alcohol policy is in place.', time:'8:00 AM', avatar:'blue' },
-        { id:'c2', sender:'You (Sarah)',           initials:'S',  self:true,  text:'Confirmed! All staff have been briefed on the policy.',         time:'8:05 AM', avatar:'pink' },
-        { id:'c3', sender:'John Carter (Client)', initials:'JC', self:false, text:'Thanks! Also, can we add 2 more registration desks?',           time:'8:10 AM', avatar:'blue' },
-      ],
-    },
-    contingencyPlans: {
-      '_default': [
-        { id:'CP001', problem:'Equipment Failure', trigger:'Audio system malfunction', solution:'Backup audio from vendor B', status:'ready' },
-        { id:'CP002', problem:'Staff Shortage', trigger:'< 80% staff attendance', solution:'On-call staff pool activated', status:'ready' },
-        { id:'CP003', problem:'Weather Issue', trigger:'Rain forecast > 70%', solution:'Indoor backup venue secured', status:'ready' },
-        { id:'CP004', problem:'Power Outage', trigger:'Main power failure', solution:'Generator backup (2 units)', status:'ready' },
-      ],
-    },
-    monitorProgress: {
-      'EVT001': { setup:85, registration:65, event:40, breakdown:0  },
-      'EVT003': { setup:100, registration:100, event:90, breakdown:10 },
-    },
-    session: { user:'Sarah', email:'sarah@gmail.com', role:'Event Coordinator' },
-  },
+window.DB = (() => {
 
-  _key(name) { return `eventpro_${name}`; },
+  const API = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+  // Dynamically resolve role from session for proper RBAC
+  const _storedSession = (() => {
+    try { const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); return s; } catch { return null; }
+  })();
+  const ROLE = (_storedSession && _storedSession.role) ? _storedSession.role.toLowerCase() : 'vendor';
+  const POLL_MS = 5000;
 
-  init() {
-    Object.keys(this._seeds).forEach(k => {
-      // Force rewrite 'session' to ensure mock role reflects; all other keys
-      // are only seeded once (non-destructive) so live data (assignedEvents, etc.) persists
-      if (k === 'session' || !localStorage.getItem(this._key(k))) {
-        this.save(k, this._seeds[k]);
-      }
-    });
-    // Ensure resourceAllocations always exists (non-destructive)
-    if (!localStorage.getItem(this._key('resourceAllocations'))) {
-      this.set('resourceAllocations', {});
+  /* ── Collection → API endpoint mapping ─── */
+  const COLLECTION_ENDPOINTS = {
+    events:           'events',
+    resources:        'resources',
+    staff:            'staff',
+    packages:         'packages',
+    issues:           'issues',
+    staffAssignments: 'staff-assignments',
+    vendors:          'vendors',
+    bookings:         'bookings',
+    vendorApplications: 'vendor-applications',
+    users:            'users',
+  };
+
+  /* Keys stored via the state/:key endpoint */
+  const STATE_KEYS = new Set([
+    'messages', 'resourceAllocations', 'monitorProgress',
+    'staffRequests', 'staffTasks', 'contingencyPlans',
+    'vendorDocSubmission', 'session', 'liveEvents',
+  ]);
+
+  /* ── In-memory cache ──────────────────── */
+  let _cache = {};
+  let _ready = false;
+
+  /* ── Synchronous XHR helper ───────────── */
+  function xhr(method, path, body) {
+    const x = new XMLHttpRequest();
+    x.open(method, `${API}/${path}`, false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.setRequestHeader('x-role', ROLE);
+    try {
+      x.send(body === undefined ? null : JSON.stringify(body));
+    } catch (e) {
+      console.warn('[DB] XHR error:', e.message);
+      return null;
     }
-  },
+    if (x.status >= 400) {
+      console.warn(`[DB] ${method} ${path} → ${x.status}`, x.responseText);
+      return null;
+    }
+    try {
+      return x.responseText ? JSON.parse(x.responseText) : null;
+    } catch {
+      return null;
+    }
+  }
 
-  get(name)      { return JSON.parse(localStorage.getItem(this._key(name)) || 'null'); },
-  set(name, val) { localStorage.setItem(this._key(name), JSON.stringify(val)); },
+  /* ── Async XHR for background polling ─── */
+  function xhrAsync(method, path, callback) {
+    const x = new XMLHttpRequest();
+    x.open(method, `${API}/${path}`, true);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.setRequestHeader('x-role', ROLE);
+    x.onload = function () {
+      if (x.status < 400 && x.responseText) {
+        try { callback(JSON.parse(x.responseText)); } catch {}
+      }
+    };
+    x.onerror = function () {};
+    x.send(null);
+  }
 
-  getAll(name)    { return this.get(name) || []; },
-  save(name, arr) { this.set(name, arr); },
+  /* ── Fetch full snapshot ──────────────── */
+  function fetchSnapshot() {
+    const data = xhr('GET', 'snapshot');
+    if (data) {
+      _cache = data;
+      _ready = true;
+    }
+    return _ready;
+  }
 
-  add(name, item) {
-    const arr = this.getAll(name);
-    arr.push(item);
-    this.save(name, arr);
+  /* ── Async snapshot poll ──────────────── */
+  function pollSnapshot() {
+    xhrAsync('GET', 'snapshot', (data) => {
+      if (data) _cache = data;
+    });
+  }
+
+  /* ── Public API ──────────────────────── */
+
+  function init() {
+    fetchSnapshot();
+    // Start background polling
+    setInterval(pollSnapshot, POLL_MS);
+  }
+
+  function get(name) {
+    if (STATE_KEYS.has(name)) {
+      // Try from cache first, if not present fetch from state endpoint
+      if (_cache[name] !== undefined) return _cache[name];
+      const val = xhr('GET', `state/${name}`);
+      if (val !== null) _cache[name] = val;
+      return _cache[name] || null;
+    }
+    return _cache[name] || null;
+  }
+
+  function set(name, val) {
+    _cache[name] = val;
+    if (STATE_KEYS.has(name)) {
+      xhr('PUT', `state/${name}`, { value: val });
+    }
+  }
+
+  function getAll(name) {
+    const data = _cache[name];
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object') return data;
+    return [];
+  }
+
+  function save(name, arr) {
+    _cache[name] = arr;
+    if (STATE_KEYS.has(name)) {
+      xhr('PUT', `state/${name}`, { value: arr });
+    }
+  }
+
+  function find(name, id) {
+    const arr = _cache[name];
+    if (Array.isArray(arr)) return arr.find(i => i.id === id) || null;
+    return null;
+  }
+
+  function add(name, item) {
+    const endpoint = COLLECTION_ENDPOINTS[name];
+    if (endpoint) {
+      const result = xhr('POST', endpoint, item);
+      if (result) {
+        // Update cache
+        if (!Array.isArray(_cache[name])) _cache[name] = [];
+        _cache[name].push(result);
+        return result;
+      }
+    }
+    // Fallback: state key array or local-only
+    if (!Array.isArray(_cache[name])) _cache[name] = [];
+    _cache[name].push(item);
+    if (STATE_KEYS.has(name)) {
+      xhr('PUT', `state/${name}`, { value: _cache[name] });
+    }
     return item;
-  },
+  }
 
-  update(name, id, patch) {
-    const arr = this.getAll(name).map(i => i.id === id ? { ...i, ...patch } : i);
-    this.save(name, arr);
-  },
+  function update(name, id, patch) {
+    const endpoint = COLLECTION_ENDPOINTS[name];
+    if (endpoint) {
+      const result = xhr('PATCH', `${endpoint}/${id}`, patch);
+      if (result) {
+        // Update cache
+        const arr = _cache[name];
+        if (Array.isArray(arr)) {
+          const idx = arr.findIndex(i => i.id === id);
+          if (idx >= 0) arr[idx] = { ...arr[idx], ...result };
+        }
+        return result;
+      }
+    }
+    // Fallback: update in cache
+    const arr = _cache[name];
+    if (Array.isArray(arr)) {
+      const idx = arr.findIndex(i => i.id === id);
+      if (idx >= 0) {
+        arr[idx] = { ...arr[idx], ...patch };
+        if (STATE_KEYS.has(name)) {
+          xhr('PUT', `state/${name}`, { value: arr });
+        }
+        return arr[idx];
+      }
+    }
+    return null;
+  }
 
-  remove(name, id) {
-    this.save(name, this.getAll(name).filter(i => i.id !== id));
-  },
+  function remove(name, id) {
+    const endpoint = COLLECTION_ENDPOINTS[name];
+    if (endpoint) {
+      xhr('DELETE', `${endpoint}/${id}`);
+    }
+    // Remove from cache
+    const arr = _cache[name];
+    if (Array.isArray(arr)) {
+      _cache[name] = arr.filter(i => i.id !== id);
+    }
+    if (STATE_KEYS.has(name)) {
+      xhr('PUT', `state/${name}`, { value: _cache[name] });
+    }
+  }
 
-  find(name, id) {
-    return this.getAll(name).find(i => i.id === id) || null;
-  },
+  function getSession() {
+    // Read from login-set session (sessionStorage per-tab, fallback to localStorage)
+    try {
+      const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+      if (s && s.user) {
+        return {
+          user: s.user.name || s.user,
+          email: s.user.email || '',
+          role: s.user.role || s.role || 'Vendor',
+        };
+      }
+    } catch {}
+    // Fallback to backend session
+    const backendSession = _cache.session;
+    if (backendSession) return backendSession;
+    return { user: 'Sarah Williams', email: 'sarah@eliteevents.com', role: 'Event Coordinator' };
+  }
 
-  getSession()    { return this.get('session') || this._seeds.session; },
-  setSession(obj) { this.set('session', obj); },
+  function setSession(obj) {
+    _cache.session = obj;
+  }
 
-  reset() {
-    Object.keys(this._seeds).forEach(k => localStorage.removeItem(this._key(k)));
-    this.init();
-  },
-};
+  function reset() {
+    fetchSnapshot();
+  }
 
-window.DB.init();
+  /* ── Initialize on load ──────────────── */
+  init();
+
+  return {
+    get,
+    set,
+    getAll,
+    save,
+    add,
+    update,
+    remove,
+    find,
+    getSession,
+    setSession,
+    reset,
+    init,
+    // Expose _cache for debugging
+    get _cache() { return _cache; },
+  };
+
+})();

@@ -217,13 +217,17 @@ function avatarClass(idx) { return `avatar--${AVATAR_COLORS[idx % AVATAR_COLORS.
 /* ── Sidebar user from session (runs on every page) ── */
 document.addEventListener('DOMContentLoaded', () => {
   const s = DB.getSession();
-  document.querySelectorAll('.user-name').forEach(el  => el.textContent = s.user);
-  document.querySelectorAll('.user-email').forEach(el => el.textContent = s.email);
-  document.querySelectorAll('.user-avatar').forEach(el => el.textContent = s.user[0]);
-  document.querySelectorAll('.brand-role').forEach(el  => el.textContent = s.role);
+  const userName = s.user || 'Vendor';
+  const userEmail = s.email || '';
+  const userRole = s.role || 'Vendor';
+  document.querySelectorAll('.user-name').forEach(el  => el.textContent = userName);
+  document.querySelectorAll('.user-email').forEach(el => el.textContent = userEmail);
+  document.querySelectorAll('.user-avatar').forEach(el => el.textContent = userName[0] || 'V');
+  document.querySelectorAll('.brand-role').forEach(el  => el.textContent = userRole);
 
   /* Live notification badge = pending events count */
-  const pending = DB.getAll('events').filter(e => e.status === 'pending').length;
+  const events = DB.getAll('events');
+  const pending = Array.isArray(events) ? events.filter(e => e.status === 'pending').length : 0;
   document.querySelectorAll('.notif-badge').forEach(el => {
     el.textContent = pending || '';
     el.style.display = pending ? '' : 'none';
@@ -233,6 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.logout-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault();
+      sessionStorage.removeItem('checkmate_session');
+      sessionStorage.removeItem('accountType');
+      localStorage.removeItem('checkmate_session');
+      localStorage.removeItem('accountType');
       Toast.show('Logged out. Redirecting…', 'info', 1500);
       setTimeout(() => window.location.href = '../LandingPage/index.html', 1600);
     });

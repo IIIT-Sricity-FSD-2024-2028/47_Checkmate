@@ -22,12 +22,7 @@ export const seedData: AppData = {
     { id: 'R004', name: 'Stage Lighting Rig', category: 'Equipment', cat: 'Visual', vendor: 'Sound & Lighting Pro', quantity: 5, total: 5, avail: 0, price: 800, unit: 'day', available: false, condition: 'Maintenance' },
     { id: 'R005', name: 'Floral Centrepieces', category: 'Decor', cat: 'Decoration', vendor: 'Elite Events Co.', quantity: 60, total: 60, avail: 60, price: 15, unit: 'day', available: true, condition: 'Ready' },
   ],
-  staff: [
-    { id: 'S001', name: 'Alex Johnson', initials: 'AJ', role: 'Event Coordinator', vendor: 'Elite Events Co.', phone: '+1 234-567-8901', email: 'alex@eliteevents.com', workload: 75, status: 'available', avail: 'Available', events: 3, avatar: 'pink' },
-    { id: 'S002', name: 'Sarah Williams', initials: 'SW', role: 'Event Coordinator', vendor: 'Elite Events Co.', phone: '+1 234-567-8902', email: 'sarah@eliteevents.com', workload: 60, status: 'available', avail: 'Available', events: 2, avatar: 'teal' },
-    { id: 'S003', name: 'Michael Brown', initials: 'MB', role: 'Security Chief', vendor: 'Dream Events Ltd.', phone: '+1 234-567-8903', email: 'michael@dreamevents.com', workload: 90, status: 'busy', avail: 'Busy', events: 4, avatar: 'purple' },
-    { id: 'S004', name: 'Lisa Chen', initials: 'LC', role: 'Catering Manager', vendor: 'Elite Events Co.', phone: '+1 234-567-8904', email: 'lisa@eliteevents.com', workload: 40, status: 'available', avail: 'Available', events: 1, avatar: 'green' },
-  ],
+  staff: [],
   packages: [
     { id: 'P001', name: 'Elegant Wedding Package', category: 'Wedding', price: 4500, duration: 8, capacity: '100-300', desc: 'Complete wedding package with premium decorations, catering, and full day event support.', resources: ['Banquet Chairs (250)', 'Round Tables (30)', 'Floral Arrangements', 'Lighting Rig', 'Audio System'], staff: ['Event Coordinator', 'Photographer'] },
     { id: 'P002', name: 'Birthday Celebration Special', category: 'Birthday', price: 1200, duration: 5, capacity: '30-80', desc: 'Vibrant birthday party setup with decorations, catering, and sound support.', resources: ['Banquet Chairs (80)', 'Party Tables (10)', 'Balloon Decorations', 'Sound System'], staff: ['Event Coordinator', 'DJ'] },
@@ -70,4 +65,12 @@ export const seedData: AppData = {
   staffTasks: [],
   vendorDocSubmission: null,
   session: { user: 'Sarah Williams', email: 'sarah@eliteevents.com', role: 'Event Coordinator' },
+  liveEvents: [],
+  contingencyPlans: {
+    '_default': [
+      { id: 'CP_DEF_001', problem: 'Weather Emergency', trigger: 'Severe weather alert', solution: 'Move to indoor backup venue', status: 'ready' },
+      { id: 'CP_DEF_002', problem: 'Power Outage', trigger: 'Electrical failure', solution: 'Activate backup generators', status: 'ready' },
+      { id: 'CP_DEF_003', problem: 'Staff No-Show', trigger: 'Staff absence >30min', solution: 'Deploy backup staff from reserve pool', status: 'ready' },
+    ]
+  },
 };

@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateProgressDisplay() {
     if (!selectedEventId) return;
 
-    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments')||'[]');
+    const assignments = DB.getAll('staffAssignments') || [];
     const evAssign    = assignments.filter(a=>a.eventId===selectedEventId && a.status==='accepted');
 
     let total=0, done=0;
@@ -166,10 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('eventTimeline') || document.querySelector('.timeline');
     if (!container || !selectedEventId) return;
 
-    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments')||'[]')
+    const assignments = (DB.getAll('staffAssignments') || [])
       .filter(a=>a.eventId===selectedEventId);
     const issues   = (DB.getAll('issues')||[]).filter(i=>i.eventId===selectedEventId);
-    const liveEvts = (JSON.parse(localStorage.getItem('eventpro_liveEvents')||'[]'))
+    const liveEvts = (DB.get('liveEvents') || [])
       .filter(e=>e.eventId===selectedEventId);
     const ev       = DB.find('events', selectedEventId);
 
@@ -269,12 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const assignments = JSON.parse(localStorage.getItem('eventpro_staffAssignments')||'[]')
+    const assignments = (DB.getAll('staffAssignments') || [])
       .filter(a=>a.eventId===selectedEventId);
     const issues = (DB.getAll('issues')||[])
       .filter(i=>i.eventId===selectedEventId||!i.eventId)
       .slice(-6).reverse();
-    const liveEvts = (JSON.parse(localStorage.getItem('eventpro_liveEvents')||'[]'))
+    const liveEvts = (DB.get('liveEvents') || [])
       .filter(e=>e.eventId===selectedEventId)
       .slice(-5).reverse();
 
@@ -770,9 +770,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Persist update note → liveEvents
         if (note) {
-          const liveEvts = JSON.parse(localStorage.getItem('eventpro_liveEvents')||'[]');
+          const liveEvts = DB.get('liveEvents') || [];
           liveEvts.push({ id:'le_'+Date.now(), eventId: selectedEventId, type:'update', note, createdAt: now });
-          localStorage.setItem('eventpro_liveEvents', JSON.stringify(liveEvts));
+          DB.set('liveEvents', liveEvts);
 
           // Also write to issues so it shows up in risks/feed
           const issues = DB.getAll('issues');
@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!selectedEventId) { Toast.show('No event selected.','warn'); return; }
     Confirm.ask({
       title:'End Event?',
-      msg:'This will mark the event as completed and stop monitoring.',
+      msg:'This will mark the event as completed, reset staff workload and return allocated resources.',
       okLabel:'End Event',
       okColor:'#9f1239',
     }).then(ok=>{
@@ -815,10 +815,42 @@ document.addEventListener('DOMContentLoaded', () => {
       const now = new Date().toISOString();
       DB.update('events', selectedEventId, { status:'completed', endedAt: now });
 
+      // ── Reset staff workload for this event ──
+      const assignments = (DB.getAll('staffAssignments') || []).filter(a => a.eventId === selectedEventId);
+      assignments.forEach(a => {
+        const activeTasks = (a.tasks || []).filter(t => t.status !== 'done').length;
+        const doneTasks = (a.tasks || []).filter(t => t.status === 'done').length;
+        // Each task that was NOT done still counts against workload — release them
+        const tasksToRelease = activeTasks; // these were consuming workload
+        if (tasksToRelease > 0) {
+          const staffMember = DB.find('staff', a.staffId);
+          if (staffMember) {
+            const newWl = Math.max((staffMember.workload || 0) - (tasksToRelease * 20), 0);
+            DB.update('staff', a.staffId, { workload: newWl });
+          }
+        }
+      });
+
+      // ── Return allocated resources ──
+      const allocs = DB.get('resourceAllocations') || {};
+      const eventAllocs = allocs[selectedEventId] || [];
+      if (eventAllocs.length) {
+        eventAllocs.forEach(alloc => {
+          const res = DB.find('resources', alloc.resourceId);
+          if (res) {
+            const restored = (res.quantity || 0) + alloc.qty;
+            DB.update('resources', alloc.resourceId, { quantity: restored, available: true });
+          }
+        });
+        delete allocs[selectedEventId];
+        DB.set('resourceAllocations', allocs);
+        Toast.show('Resources returned to inventory.', 'info');
+      }
+
       // Write end event to liveEvents
-      const liveEvts = JSON.parse(localStorage.getItem('eventpro_liveEvents')||'[]');
+      const liveEvts = DB.get('liveEvents') || [];
       liveEvts.push({ id:'le_'+Date.now(), eventId: selectedEventId, type:'end', note:'Event ended by coordinator.', createdAt: now });
-      localStorage.setItem('eventpro_liveEvents', JSON.stringify(liveEvts));
+      DB.set('liveEvents', liveEvts);
 
       // Log to issues
       const issues = DB.getAll('issues');
@@ -826,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
       DB.save('issues', issues);
 
       selectedEventData = DB.find('events', selectedEventId);
-      Toast.show('Event ended. Monitoring stopped.','success');
+      Toast.show('Event ended. Staff workload reset & resources returned.','success');
       refreshAll();
       initEventCards();
     });
@@ -931,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ts  = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
     // 1. Write to liveEvents
-    const liveEvts = JSON.parse(localStorage.getItem('eventpro_liveEvents')||'[]');
+    const liveEvts = DB.get('liveEvents') || [];
     liveEvts.push({
       id: 'le_'+Date.now(),
       eventId: eventId||'all',
@@ -940,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
       planId: plan.id,
       createdAt: now,
     });
-    localStorage.setItem('eventpro_liveEvents', JSON.stringify(liveEvts));
+    DB.set('liveEvents', liveEvts);
 
     // 2. Write to issues
     const issues = DB.getAll('issues');
