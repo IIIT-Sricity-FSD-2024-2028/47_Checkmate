@@ -29,8 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const allPackages = DB.getAll('packages') || [];
         
         const filtered = allPackages.filter(p => {
+            // Only show approved or legacy (undefined status) packages
+            if (p.status === 'pending' || p.status === 'rejected') return false;
+            
             const catMatch = activeCat === 'all' || (p.category && p.category.toLowerCase() === activeCat.toLowerCase()) || activeCat === p.category;
-            const textMatch = p.name.toLowerCase().includes(searchTerm) || p.desc.toLowerCase().includes(searchTerm);
+            const pName = p.name ? p.name.toLowerCase() : '';
+            const pDesc = p.desc ? p.desc.toLowerCase() : '';
+            const textMatch = pName.includes(searchTerm) || pDesc.includes(searchTerm);
             return catMatch && textMatch;
         });
 
@@ -162,32 +167,77 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Generate an ID similar to how create_event_client.js does it
-            const newId = 'EVT-C' + Math.floor(1000 + Math.random() * 9000);
+            const existing = typeof DB !== 'undefined' ? DB.getAll('events') : [];
+            const maxNum = existing.reduce((max, ev) => {
+                const num = parseInt((ev.id || '').replace(/\D/g, ''), 10) || 0;
+                return Math.max(max, num);
+            }, 0);
+            const newId = `EVT${String(maxNum + 1).padStart(3, '0')}`;
+            
+            // Format time to display (e.g. 09:00 -> 9:00 AM)
+            function fmtTime(t) {
+                if (!t) return '09:00';
+                const [h, m] = t.split(':').map(Number);
+                const suffix = h >= 12 ? 'PM' : 'AM';
+                const hour = h % 12 || 12;
+                return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
+            }
             
             // Get full package info so we attach type correctly
             const pid = qcPackageId.value;
             const pkg = DB.find('packages', pid);
+            const session = DB.getSession();
             
             const newEvent = {
                 id: newId,
                 name: qcEventName.value,
                 type: pkg ? pkg.category : 'Package',
                 date: qcEventDate.value,
-                time: qcEventTime.value || '',
+                time: fmtTime(qcEventTime.value),
                 venue: qcVenue.value || 'TBD',
-                people: qcPeople.value || 'TBD',
+                people: parseInt(qcPeople.value, 10) || 0,
                 status: 'pending',
+                notes: `Quick created from package: ${pkg ? pkg.name : pid}`,
                 createdBy: 'client',
+                client: session.user,
+                vendor: pkg ? (pkg.vendorName || pkg.vendorId || '') : '',
                 presetPackageId: pid,
-                createdAt: new Date().toISOString()
+                submittedAt: new Date().toISOString()
             };
 
             // Save to DB
             DB.add('events', newEvent);
             
-            // Redirect to My Events
-            window.location.href = 'client_myevents.html?msg=PackageEventCreated';
+            // Show Loading State
+            const originalContent = qcSubmit.innerHTML;
+            qcSubmit.innerHTML = '<i class="ph ph-spinner-gap ph-spin"></i> Submitting...';
+            qcSubmit.style.opacity = '0.8';
+            qcSubmit.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                qcSubmit.innerHTML = '<i class="ph ph-check-circle"></i> Success!';
+                qcSubmit.style.background = 'var(--green-solid, #22c55e)';
+                
+                setTimeout(() => {
+                    // Redirect to My Events
+                    window.location.href = 'client_myevents.html';
+                }, 1000);
+            }, 1200);
         });
+    }
+
+    // Phosphor spin animation
+    if (!document.getElementById('ph-spin-style')) {
+        const style = document.createElement('style');
+        style.id = 'ph-spin-style';
+        style.innerHTML = `
+            @keyframes ph-spin {
+                0%   { transform: rotate(0deg); }
+                100% { transform: rotate(359deg); }
+            }
+            .ph-spin { animation: ph-spin 1s linear infinite; }
+        `;
+        document.head.appendChild(style);
     }
 
     // Initialize

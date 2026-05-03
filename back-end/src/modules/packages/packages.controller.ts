@@ -15,5 +15,8 @@ export class PackagesController {
   @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreatePackageDto) { return this.service.create(dto); }
   @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
   @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
+  @Patch(':id/decision') @Roles('admin', 'superuser') decide(@Param() { id }: IdParamDto, @Body() body: { status: 'pending' | 'approved' | 'rejected' }) {
+    return this.service.decidePackage(id, body);
+  }
   @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
 }

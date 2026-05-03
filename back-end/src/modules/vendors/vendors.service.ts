@@ -25,6 +25,19 @@ export class VendorsService {
     if (dto.status === 'approved') {
       const exists = this.data.collection('vendors').some((vendor) => vendor.name === app.businessName);
       if (!exists) this.data.create('vendors', 'V', { name: app.businessName, status: 'Approved' });
+      
+      const userExists = this.data.collection('users').some((user) => user.email === app.email);
+      if (!userExists) {
+        this.data.create('users', 'U', {
+          name: app.vendorName,
+          email: app.email,
+          phone: app.phone,
+          role: 'Vendor',
+          status: 'Active',
+          created: new Date().toISOString().slice(0, 10),
+          passwordHash: app.passwordHash || 'vendor123'
+        });
+      }
     }
     return app;
   }
