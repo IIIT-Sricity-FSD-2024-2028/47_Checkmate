@@ -1,305 +1,321 @@
 /* ═══════════════════════════════════════════
-   coordination.js  —  Coordination Hub
-   Works for:
-     coordination.html        (vendor–vendor)
-     coordination-staff.html  (vendor–staff)
-     coordination-client.html (vendor–client)
-   • Renders message history from DB
-   • Send new messages (persisted to DB)
-   • Typing indicator (simulated)
-   • Section tab navigation
-   • Real-time poll every 3s
+   coordination.js  —  Vendor Coordination Hub
+   Uses CoordHub shared module for event-wise
+   real-time messaging across all tabs.
 ═══════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.CoordHub) { console.error('CoordHub not loaded'); return; }
 
-  /* ── Load Participants (Staff & Coordinators) ── */
-  const session = DB.getSession();
-  const listWrapper = document.querySelector('.ch-participant-list');
-  if (listWrapper) {
-    const allStaff = DB.getAll('staff') || [];
-    
-    // Determine vendor specialty keyword for filtering
-    let vendorKeyword = '';
-    if (session.role.toLowerCase().includes('audio')) vendorKeyword = 'audio|av|sound';
-    else if (session.role.toLowerCase().includes('catering')) vendorKeyword = 'catering|food|kitchen';
-    else if (session.role.toLowerCase().includes('security')) vendorKeyword = 'security|guard';
+  const Hub = window.CoordHub;
+  const session = Hub.getSession();
 
-    const regex = vendorKeyword ? new RegExp(vendorKeyword, 'i') : null;
+  /* ── Detect which page we're on ──────── */
+  const path = window.location.href;
+  let pageChannel = 'all';
+  if (path.includes('coordination-staff'))  pageChannel = 'staff';
+  if (path.includes('coordination-client')) pageChannel = 'client';
 
-    // Filter staff according to user rule
-    const filteredStaff = allStaff.filter(s => {
-      if (session.role === 'Coordinator' || session.role === 'Event Coordinator') return true;
-      if (s.role.includes('Coordinator') || s.name === session.user || s.role === session.role) return true;
-      if (regex && regex.test(s.role)) return true;
-      return false;
+  /* ── DOM refs ────────────────────────── */
+  const chatBody    = document.getElementById('messagesArea') || document.querySelector('.ch-messages');
+  const input       = document.getElementById('msgInput')     || document.querySelector('.ch-input');
+  const sendBtn     = document.getElementById('sendBtn')      || document.querySelector('.ch-send-btn');
+  const introSub    = document.querySelector('.ch-intro p')   || document.querySelector('.ch-intro-sub');
+  const participantList = document.querySelector('.ch-participant-list');
+
+  /* ── Event selector ──────────────────── */
+  let selectedEventId = null;
+
+  function buildEventSelector() {
+    const events = Hub.getEventsForUser();
+    const introEl = document.querySelector('.ch-intro') || document.querySelector('.content > div:first-child');
+    if (!introEl) return;
+    const old = document.getElementById('coordEventSelector');
+    if (old) old.remove();
+
+    if (events.length === 0) {
+      if (introSub) introSub.textContent = 'No events available';
+      return;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.id = 'coordEventSelector';
+    wrap.style.cssText = 'display:flex;align-items:center;gap:12px;margin-top:8px;';
+    wrap.innerHTML = `
+      <label style="font-size:13px;color:var(--text-secondary);font-weight:500;">Event:</label>
+      <select id="coordEventSelect" style="background:#1e1b2e;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text-primary);font-family:var(--font-body);font-size:13px;outline:none;min-width:220px;cursor:pointer;appearance:none;-webkit-appearance:none;">
+        ${events.map(e => `<option value="${e.id}" style="background:#1e1b2e;color:#e2e8f0;">${e.name} (${e.status})</option>`).join('')}
+      </select>
+      <span style="margin-left:-28px;pointer-events:none;color:var(--text-muted);font-size:14px;">▾</span>`;
+    introEl.appendChild(wrap);
+
+    const sel = document.getElementById('coordEventSelect');
+    sel.addEventListener('change', () => {
+      selectedEventId = sel.value;
+      refreshAll();
     });
 
-    listWrapper.innerHTML = filteredStaff.map(s => {
-      const isCoordinator = s.role.toLowerCase().includes('coordinator');
-      const coordBadge = isCoordinator ? '<span class="role-badge-coord">Coordinator</span>' : '';
-      const dotClass = (s.status === 'available') ? '<span class="ch-online-dot"></span>' : '';
-      const isActive = (s.name === session.user || s.role === session.role) ? 'active-user' : '';
-      
+    selectedEventId = events[0].id;
+    refreshAll();
+  }
+
+  /* ── Render participants ─────────────── */
+  function renderParticipants() {
+    if (!participantList || !selectedEventId) return;
+
+    const parts = Hub.getParticipantsForEvent(selectedEventId);
+    if (parts.length === 0) {
+      participantList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No participants found for this event.</div>';
+      return;
+    }
+
+    participantList.innerHTML = parts.map(p => {
+      const isSelf = p.name.toLowerCase() === session.name.toLowerCase();
+      const activeClass = isSelf ? 'active-user' : '';
+      const bgColor = Hub.COLORS[p.color] || Hub.COLORS.teal;
+      const badge = p.type === 'vendor' ? '<span style="background:rgba(233,30,140,0.15);color:var(--pink);font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;margin-right:4px;">Vendor</span>'
+        : p.type === 'client' ? '<span style="background:rgba(168,85,247,0.15);color:#d8b4fe;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;margin-right:4px;">Client</span>'
+        : '<span style="background:rgba(59,130,246,0.15);color:#93c5fd;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;margin-right:4px;">Staff</span>';
+
       return `
-        <div class="ch-participant ${isActive}">
-          <div class="ch-avatar ch-avatar--${s.avatar || 'teal'}" style="background:var(--${s.avatar || 'teal'})">
-            ${s.initials}${dotClass}
+        <div class="ch-participant ${activeClass}">
+          <div style="width:34px;height:34px;border-radius:50%;background:${bgColor};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;position:relative;">
+            ${p.initials}<span class="ch-online-dot" style="width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card);position:absolute;bottom:0;right:0;"></span>
           </div>
           <div class="ch-participant-info">
-            <div class="ch-participant-name">${s.name}</div>
-            <div class="ch-participant-role">
-              ${coordBadge}
-              ${s.role}
-            </div>
+            <div class="ch-participant-name">${p.name}</div>
+            <div class="ch-participant-role">${badge}${p.role}</div>
           </div>
         </div>`;
     }).join('');
   }
 
-  /* ── Detect channel ─────────────────── */
-  const path = window.location.pathname + window.location.href;
-  let channel = 'Vendor-Vendor';
-  if (path.includes('coordination-staff'))  channel = 'Vendor-Staff';
-  if (path.includes('coordination-client')) channel = 'Vendor-Client';
-
-  /* ── DOM refs ───────────────────────── */
-  const chatBody = document.querySelector('.ch-chat__body, .ch-messages, [class*="ch-chat"] .ch-messages');
-  const input    = document.querySelector('.ch-input, .ch-chat__input input, .ch-compose input, input[placeholder*="message"], input[placeholder*="Message"]');
-  const sendBtn  = document.querySelector('.ch-send-btn, .ch-chat__send, [data-action="send"], button[class*="send"]');
-
-  /* ── Avatar color map ───────────────── */
-  const COLORS = {
-    pink:'#e91e8c', teal:'#0e7490', purple:'#7e22ce',
-    green:'#15803d', orange:'#c2410c', blue:'#1d4ed8',
-  };
-
-  function avatarStyle(color) {
-    const bg = COLORS[color] || COLORS.pink;
-    return `background:${bg};width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:#fff;flex-shrink:0`;
-  }
+  /* ── Render messages ─────────────────── */
+  let _lastMsgCount = -1;
 
   function renderMessages() {
-    if (!chatBody) return;
+    if (!chatBody || !selectedEventId) return;
 
-    if (!window.MsgService) return;
+    // Merge coordination messages + issue messages
+    let msgs = Hub.getMessagesForEvent(selectedEventId, pageChannel);
 
-    const msgs = window.MsgService.getMessagesByConversation(channel);
+    // Also inject issues as system messages if not already in coordination
+    const issues = Hub.getIssuesForEvent(selectedEventId);
+    issues.forEach(iss => {
+      const alreadyExists = msgs.some(m => m.id === 'ISS_' + iss.id);
+      if (!alreadyExists && iss.title) {
+        msgs.push({
+          id: 'ISS_' + iss.id,
+          eventId: selectedEventId,
+          channel: 'all',
+          sender: iss.reporter || 'System',
+          senderRole: 'System',
+          senderInitials: '⚠',
+          text: `${iss.title}${iss.desc ? ' — ' + iss.desc : ''}`,
+          type: 'issue',
+          createdAt: iss.createdAt || new Date().toISOString()
+        });
+      }
+    });
 
-    let html = msgs.map(m => {
-        // Vendor perspective: "Self" is if senderRole is Vendor
-        const isSelf = m.senderRole === 'Vendor';
-        
-        let mObj = {
-            isSystem: m.message && m.message.startsWith('[SYSTEM]'),
-            text: m.message,
-            time: window.MsgService.formatTime(m.timestamp),
-            sender: m.senderName || m.senderRole,
-            avatar: isSelf ? 'pink' : 'teal',
-            initials: m.senderName ? m.senderName[0] : m.senderRole[0],
-            statusTick: isSelf ? `<span style="font-size:10px;margin-left:5px;opacity:0.7">✓ ${m.status}</span>` : ''
-        };
+    // Sort by time
+    msgs.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-        if (mObj.isSystem) {
-            mObj.sysClass = 'info';
-        }
+    // Skip re-render if nothing changed
+    if (msgs.length === _lastMsgCount) return;
+    _lastMsgCount = msgs.length;
 
-        return isSelf ? renderSelf(mObj) : renderOther(mObj);
-    }).join('');
-
-    if (chatBody.innerHTML !== html) {
-        chatBody.innerHTML = html;
-        chatBody.scrollTop = chatBody.scrollHeight;
+    if (msgs.length === 0) {
+      chatBody.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:13px;"><i data-lucide="message-circle" style="width:40px;height:40px;margin-bottom:12px;opacity:0.3;display:block;margin:0 auto 12px;"></i>No messages yet. Start the conversation!</div>';
+      if (window.lucide) lucide.createIcons();
+      return;
     }
 
-    renderIssues();
-    
-    // Mark as read
-    window.MsgService.markConversationAsRead(channel, 'Vendor');
+    chatBody.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
+    chatBody.scrollTop = chatBody.scrollHeight;
+    if (window.lucide) lucide.createIcons();
   }
 
-  // Hook up event listeners for real-time reactivity
-  window.addEventListener('messageStorageUpdated', renderMessages);
-  window.addEventListener('newMessage', renderMessages);
-  window.addEventListener('messageStatusUpdated', renderMessages);
+  /* ── Render contingency plans ────────── */
+  function renderContingencyPanel() {
+    const listEl = document.querySelector('.ch-contingency__list');
+    const triggerBtn = document.querySelector('.ch-trigger-btn');
+    if (!listEl || !selectedEventId) return;
 
-  function renderIssues() {
+    const plans = Hub.getContingencyPlans(selectedEventId);
+    if (!plans.length) {
+      listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;text-align:center;">No contingency plans defined.</div>';
+      return;
+    }
+
+    listEl.innerHTML = plans.map(p => {
+      const isTriggered = p.status === 'triggered';
+      return `
+        <div class="ch-alert-item" data-plan-id="${p.id}" style="${isTriggered ? 'opacity:0.5;' : ''}">
+          <i data-lucide="${isTriggered ? 'check-circle' : 'alert-triangle'}"></i>
+          <div class="ch-alert-item__body">
+            <div class="ch-alert-item__title">${p.problem}${isTriggered ? ' ✓ Triggered' : ''}</div>
+            <div class="ch-alert-item__sub">→ ${p.solution}</div>
+          </div>
+          ${!isTriggered ? `<button class="ctg-trigger-single" data-plan-id="${p.id}" style="background:var(--orange);border:none;color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Trigger</button>` : ''}
+        </div>`;
+    }).join('');
+
+    // Individual trigger buttons
+    listEl.querySelectorAll('.ctg-trigger-single').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const planId = btn.dataset.planId;
+        const plan = plans.find(p => p.id === planId);
+        if (!plan) return;
+
+        if (window.Confirm) {
+          Confirm.ask({
+            title: 'Trigger Contingency?',
+            msg: `This will activate: "${plan.problem}" and broadcast to all participants.`,
+            okLabel: 'Trigger Now',
+            okColor: '#ef4444'
+          }).then(ok => {
+            if (!ok) return;
+            Hub.triggerContingency(selectedEventId, plan);
+            Toast.show('🚨 Contingency triggered and broadcast!', 'error', 4000);
+            _lastMsgCount = -1;
+            refreshAll();
+          });
+        } else {
+          Hub.triggerContingency(selectedEventId, plan);
+          _lastMsgCount = -1;
+          refreshAll();
+        }
+      });
+    });
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ── Render reported issues panel ───── */
+  function renderIssuesPanel() {
     const box = document.getElementById('coordIssuesBox');
     const list = document.getElementById('coordIssuesList');
-    if (!box || !list) return;
+    if (!box || !list || !selectedEventId) return;
 
-    const issues = DB.getAll('issues');
+    const issues = Hub.getIssuesForEvent(selectedEventId);
     if (!issues.length) {
       box.style.display = 'none';
       return;
     }
 
     box.style.display = 'block';
-    list.innerHTML = issues.map(iss => {
-      const isHigh = iss.priority.toLowerCase() === 'high' || iss.priority.toLowerCase() === 'critical';
+    list.innerHTML = issues.slice(-5).map(iss => {
+      const isHigh = (iss.priority || '').toLowerCase() === 'high' || (iss.priority || '').toLowerCase() === 'critical';
       const color = isHigh ? 'var(--red)' : 'var(--orange)';
       const bg = isHigh ? 'rgba(239,68,68,0.06)' : 'rgba(234,179,8,0.06)';
       const border = isHigh ? 'rgba(239,68,68,0.2)' : 'rgba(234,179,8,0.2)';
-      const evName = iss.event ? (DB.find('events', iss.event)?.name || iss.event) : 'General';
-      
       return `
         <div class="ch-alert-item" style="background:${bg};border:1px solid ${border}">
           <i data-lucide="alert-triangle" style="color:${color}"></i>
           <div class="ch-alert-item__body">
             <div class="ch-alert-item__title">${iss.title}</div>
-            <div class="ch-alert-item__sub">→ ${evName}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${iss.desc}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${iss.desc || ''}</div>
           </div>
         </div>`;
     }).join('');
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   }
 
-  function renderOther(m) {
-    if (m.isSystem) {
-      const icon = m.sysClass === 'alert' ? 'alert-triangle' : (m.sysClass === 'success' ? 'check-circle' : 'zap');
+  /* ── Render staff roster (staff page) ── */
+  function renderStaffRoster() {
+    const rosterList = document.querySelector('.cs-roster-list');
+    if (!rosterList || !selectedEventId) return;
+
+    const assignments = (DB.getAll('staffAssignments') || []).filter(a => a.eventId === selectedEventId);
+    const allStaff = DB.getAll('staff') || [];
+
+    if (assignments.length === 0) {
+      rosterList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:12px;text-align:center;">No staff assigned to this event.</div>';
+      return;
+    }
+
+    rosterList.innerHTML = assignments.map(a => {
+      const s = allStaff.find(st => st.id === a.staffId);
+      if (!s) return '';
+      const color = Hub.COLORS[s.avatar] || Hub.COLORS.teal;
       return `
-        <div class="ch-sys-msg ${m.sysClass || 'info'}">
-          <i data-lucide="${icon}" style="width:13px;height:13px"></i>
-          ${m.text}
-          <span class="sys-time">${m.time}</span>
+        <div class="cs-staff-item">
+          <div style="width:30px;height:30px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;position:relative;">
+            ${s.initials || Hub.initials(s.name)}<span class="online" style="width:8px;height:8px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card);position:absolute;bottom:0;right:0;"></span>
+          </div>
+          <div class="cs-staff-info">
+            <div class="cs-staff-name">${s.name}</div>
+            <div class="cs-staff-role">${s.role}</div>
+          </div>
+          <span class="cs-staff-status on-duty" style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(34,197,94,0.12);color:var(--green);">Active</span>
         </div>`;
+    }).join('');
+  }
+
+  /* ── Render client list (client page) ── */
+  function renderClientList() {
+    const clientList = document.querySelector('.cc-client-list');
+    if (!clientList || !selectedEventId) return;
+
+    const event = DB.find('events', selectedEventId);
+    if (!event || !event.client) {
+      clientList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:12px;text-align:center;">No client linked to this event.</div>';
+      return;
     }
-    return `
-      <div class="msg-enter-anim" style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px">
-        <div style="${avatarStyle(m.avatar || 'teal')}">${m.initials}</div>
-        <div>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:4px">${m.sender}</div>
-          <div style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px 12px 12px 4px;padding:12px 16px;max-width:380px;font-size:13.5px;color:var(--text-secondary);line-height:1.55">${m.text}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${m.time}</div>
+
+    const color = Hub.COLORS.purple;
+    clientList.innerHTML = `
+      <div class="cc-client-item active-chat">
+        <div style="width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;">${Hub.initials(event.client)}</div>
+        <div class="cc-client-info">
+          <div class="cc-client-name">${event.client}</div>
+          <div class="cc-client-event">${event.name}</div>
         </div>
       </div>`;
   }
 
-  function renderSelf(m) {
-    return `
-      <div class="msg-enter-anim" style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;justify-content:flex-end">
-        <div>
-          <div style="background:linear-gradient(135deg,var(--pink),#c2185b);border-radius:12px 12px 4px 12px;padding:12px 16px;max-width:380px;font-size:13.5px;color:#fff;line-height:1.55">${m.text}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">${m.time} ${m.statusTick || ''}</div>
-        </div>
-        <div style="${avatarStyle('pink')}">${m.initials || 'V'}</div>
-      </div>`;
-  }
+  /* ── Send handler ────────────────────── */
+  function handleSend() {
+    if (!input || !selectedEventId) return;
+    const text = input.value.trim();
+    if (!text) return;
 
-  /* ── Send message ───────────────────── */
-  function sendMessage() {
-    const text = input?.value.trim();
-    if (!text || !window.MsgService) return;
-
-    let receiverRole = 'Staff';
-    if (channel === 'Vendor-Vendor') receiverRole = 'Vendor';
-    if (channel === 'Vendor-Client') receiverRole = 'Client';
-
-    const session = DB.getSession();
-    window.MsgService.sendMessage('Vendor', session.user || 'Elite Events Co.', receiverRole, 'Recipient', text, channel);
-
-    if (input) input.value = '';
+    // Determine channel based on page
+    const channel = pageChannel === 'all' ? 'all' : pageChannel;
+    Hub.sendMsg(selectedEventId, text, channel);
+    input.value = '';
+    _lastMsgCount = -1;
     renderMessages();
-    showTypingIndicator();
   }
 
-  /* ── Typing indicator ───────────────── */
-  function showTypingIndicator() {
-    if (!chatBody) return;
-    const existing = document.getElementById('_typingIndicator');
-    if (existing) existing.remove();
-
-    const typing = document.createElement('div');
-    typing.id = '_typingIndicator';
-    typing.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:16px;opacity:0.7';
-    typing.innerHTML = `
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted)">…</div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px 12px 12px 4px;padding:12px 16px;font-size:13.5px;color:var(--text-muted)">
-        <span style="display:inline-flex;gap:4px">
-          <span style="animation:_blink 1s infinite 0s">●</span>
-          <span style="animation:_blink 1s infinite .3s">●</span>
-          <span style="animation:_blink 1s infinite .6s">●</span>
-        </span>
-      </div>`;
-
-    if (!document.getElementById('_blinkKF')) {
-      const s = document.createElement('style');
-      s.id = '_blinkKF';
-      s.textContent = '@keyframes _blink{0%,100%{opacity:1}50%{opacity:.2}}';
-      document.head.appendChild(s);
-    }
-
-    chatBody.appendChild(typing);
-    chatBody.scrollTop = chatBody.scrollHeight;
-    setTimeout(() => typing.remove(), 2200);
-  }
-
-  /* ── Wire send ──────────────────────── */
-  sendBtn?.addEventListener('click', sendMessage);
+  sendBtn?.addEventListener('click', handleSend);
   input?.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   });
 
-  /* ── Trigger contingency broadcast ── */
-  const trgBtn = document.querySelector('.ch-trigger-btn');
-  if (trgBtn) {
-    trgBtn.addEventListener('click', () => {
-      Confirm.ask({
-        title: 'Trigger Contingency',
-        msg:   'This will broadcast a CRITICAL alert to all staff and clients across all channels.',
-        okLabel: 'Trigger Now',
-        okColor: '#ef4444'
-      }).then(confirmed => {
-        if (!confirmed) return;
-
-        // Get active/live event to associate alert with
-        const liveEvent = DB.getAll('events').find(e => e.status === 'live' || e.status === 'confirmed');
-        const eventId   = liveEvent ? liveEvent.id : null;
-
-        if (window._broadcastContingency) {
-          // Use shared function from monitoring.js (if loaded on same page, else use local impl)
-          window._broadcastContingency(eventId);
-        } else {
-          // Local fallback implementation
-          const now = new Date().toISOString();
-          const ts  = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
-          const evName = liveEvent ? liveEvent.name : '';
-
-          // 1. Write to liveEvents
-          const liveEvts = DB.get('liveEvents') || [];
-          liveEvts.push({ id:'le_'+Date.now(), eventId: eventId||'all', type:'contingency', note:'Contingency plan triggered.', createdAt: now });
-          DB.set('liveEvents', liveEvts);
-
-          // 2. Write to issues
-          const issues = DB.getAll('issues');
-          issues.push({ id:'iss_'+Date.now(), eventId: eventId||null, type:'contingency', title:'⚡ Contingency plan triggered by coordinator', createdAt: now, severity:'high', priority:'high' });
-          DB.save('issues', issues);
-
-          // 3. Broadcast via MsgService to all channels
-          const broadcastText = `[SYSTEM] ⚡ CRITICAL CONTINGENCY TRIGGERED${evName?' for '+evName:''}: Immediate action required. ${ts}`;
-          if (window.MsgService) {
-            ['Vendor-Staff','Vendor-Client','Vendor-Vendor'].forEach(ch => {
-              window.MsgService.sendMessage('Vendor','System (Coordinator)','All','All Participants', broadcastText, ch);
-            });
-          }
-
-          // 4. Write contingency alert key for client/staff pages
-          const contKey = JSON.parse(localStorage.getItem('eventpro_contingencyAlerts') || '[]');
-          contKey.push({ id:'cnt_'+Date.now(), eventId: eventId||'all', message: broadcastText, createdAt: now, readBy:[] });
-          localStorage.setItem('eventpro_contingencyAlerts', JSON.stringify(contKey));
-
-          Toast.show('⚡ Contingency broadcast sent to all staff & clients!', 'error', 4500);
-          renderMessages();
-        }
-      });
+  /* ── Section tab navigation ─────────── */
+  document.querySelectorAll('.ch-section-tab').forEach(tab => {
+    tab.addEventListener('click', e => {
+      e.preventDefault();
+      const href = tab.getAttribute('href');
+      if (href && href !== '#') window.location.href = href;
     });
-  }
+  });
 
-  /* ── Real-time polling (refresh messages every 2s) ── */
-  setInterval(renderMessages, 2000);
+  /* ── Channel tabs (filter messages) ─── */
+  document.querySelectorAll('.ch-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const ch = tab.dataset.ch || tab.textContent.trim().toLowerCase();
+      pageChannel = ch === 'all' ? 'all' : ch;
+      _lastMsgCount = -1;
+      renderMessages();
+    });
+  });
 
-  /* ── Task Management (Vendor-Staff) ── */
+  /* ── Task management (staff page) ────── */
   const btnAddTaskModal = document.getElementById('btnAddTaskModal');
   const addTaskOverlay = document.getElementById('addTaskOverlay');
   const btnCloseTaskModal = document.getElementById('btnCloseTaskModal');
@@ -311,120 +327,97 @@ document.addEventListener('DOMContentLoaded', () => {
     const tracker = document.getElementById('tasksTracker');
     if (!list) return;
 
-    let tasks = DB.get('staffTasks');
-    if (!tasks) {
-      tasks = [
-        { id:'t1', title:'Complete catering menu finalization', assignee:'S004', priority:'medium', done:false, due:'Mar 28, 5:00 PM' },
-        { id:'t2', title:'Test all audio equipment', assignee:'S002', priority:'high', done:true, due:'Mar 27, 4:00 PM' }
-      ];
-      DB.set('staffTasks', tasks);
-    }
-    
+    let tasks = DB.get('staffTasks') || [];
     if (tasks.length === 0) {
       list.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">No tasks assigned yet.</div>';
-      if(tracker) tracker.textContent = '0 tasks';
+      if (tracker) tracker.textContent = '0 tasks';
       return;
     }
 
     const completed = tasks.filter(t => t.done).length;
-    if(tracker) tracker.textContent = `${completed} of ${tasks.length} completed`;
+    if (tracker) tracker.textContent = `${completed} of ${tasks.length} completed`;
 
     list.innerHTML = tasks.map(t => {
       const staff = DB.find('staff', t.assignee);
-      const staffName = staff ? staff.name : 'Unknown Staff';
+      const staffName = staff ? staff.name : 'Unknown';
       const checked = t.done ? 'done-check' : '';
-      const checkedIcon = t.done ? '<i data-lucide="check" style="width:10px;height:10px"></i>' : '';
       const pxColor = t.priority === 'high' ? 'var(--red)' : (t.priority === 'medium' ? 'var(--yellow)' : 'var(--blue)');
-
       return `
         <div class="ch-task ${t.done ? 'done' : ''}" style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:flex-start;gap:10px;">
-            <div class="ch-task__check ${checked}" data-id="${t.id}" style="width:16px;height:16px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">${checkedIcon}</div>
+            <div class="ch-task__check ${checked}" data-id="${t.id}" style="width:16px;height:16px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">${t.done ? '<i data-lucide="check" style="width:10px;height:10px"></i>' : ''}</div>
             <div style="font-size:13.5px;font-weight:600;color:${t.done ? 'var(--text-muted)' : 'var(--text-primary)'};text-decoration:${t.done ? 'line-through' : 'none'};">${t.title}</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding-left:26px;font-size:11px;">
-            <span style="color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><i data-lucide="user" style="width:11px;height:11px"></i> ${staffName}</span>
+            <span style="color:var(--text-secondary);"><i data-lucide="user" style="width:11px;height:11px"></i> ${staffName}</span>
             <span style="padding:2px 6px;border-radius:4px;background:${pxColor}20;color:${pxColor};font-weight:700;font-size:9.5px;text-transform:uppercase;">${t.priority}</span>
-            ${t.due ? `<span style="color:var(--text-muted);display:flex;align-items:center;gap:4px;"><i data-lucide="clock" style="width:11px;height:11px"></i> ${t.due}</span>` : ''}
           </div>
         </div>`;
     }).join('');
 
-    // Reattach listeners
     document.querySelectorAll('.ch-task__check').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.getAttribute('data-id');
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
         const allTasks = DB.get('staffTasks') || [];
         const task = allTasks.find(x => x.id === id);
-        if (task) {
-          task.done = !task.done;
-          DB.set('staffTasks', allTasks);
-          renderTasks();
-        }
+        if (task) { task.done = !task.done; DB.set('staffTasks', allTasks); renderTasks(); }
       });
     });
-
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   }
 
   function populateTaskDropdown() {
     const sel = document.getElementById('taskStaffSelect');
     if (!sel) return;
     const allStaff = DB.getAll('staff') || [];
-    if (allStaff.length === 0) {
-      sel.innerHTML = '<option value="">No staff available (Create one)</option>';
-      return;
-    }
-    sel.innerHTML = allStaff.map(s => `<option value="${s.id}">${s.name} (${s.role})</option>`).join('');
+    sel.innerHTML = allStaff.length === 0
+      ? '<option value="">No staff available</option>'
+      : allStaff.map(s => `<option value="${s.id}">${s.name} (${s.role})</option>`).join('');
   }
 
   if (btnAddTaskModal) {
-    btnAddTaskModal.addEventListener('click', () => {
-      populateTaskDropdown();
-      document.getElementById('taskDescInput').value = '';
-      addTaskOverlay.style.display = 'flex';
-    });
+    btnAddTaskModal.addEventListener('click', () => { populateTaskDropdown(); document.getElementById('taskDescInput').value = ''; addTaskOverlay.style.display = 'flex'; });
   }
   if (btnCloseTaskModal) btnCloseTaskModal.addEventListener('click', () => addTaskOverlay.style.display = 'none');
   if (btnCancelTask) btnCancelTask.addEventListener('click', () => addTaskOverlay.style.display = 'none');
-
   if (btnSaveTask) {
     btnSaveTask.addEventListener('click', () => {
       const desc = document.getElementById('taskDescInput').value.trim();
       const staffId = document.getElementById('taskStaffSelect').value;
       const priority = document.getElementById('taskPrioritySelect').value;
-      
-      if (!desc) return Toast.show('Please enter a task description', 'error');
-      if (!staffId) return Toast.show('Please assign the task to a staff member', 'error');
-
+      if (!desc) return Toast.show('Enter a task description', 'error');
+      if (!staffId) return Toast.show('Select a staff member', 'error');
       const allTasks = DB.get('staffTasks') || [];
-      allTasks.push({
-        id: 't' + Date.now(),
-        title: desc,
-        assignee: staffId,
-        priority: priority,
-        done: false,
-        due: 'Today'
-      });
+      allTasks.push({ id: 't' + Date.now(), title: desc, assignee: staffId, priority, done: false, due: 'Today' });
       DB.set('staffTasks', allTasks);
       addTaskOverlay.style.display = 'none';
       renderTasks();
-      Toast.show('Task assigned successfully!', 'success');
+      Toast.show('Task assigned!', 'success');
     });
   }
 
-  // Initial render calls
-  renderTasks();
+  /* ── Refresh all ─────────────────────── */
+  function refreshAll() {
+    const event = selectedEventId ? DB.find('events', selectedEventId) : null;
+    if (introSub && event) {
+      introSub.textContent = `${event.name} — Real-time collaboration`;
+    }
+    renderParticipants();
+    renderMessages();
+    renderContingencyPanel();
+    renderIssuesPanel();
+    renderStaffRoster();
+    renderClientList();
+    renderTasks();
+  }
 
-  /* ── Section tab navigation ─────────── */
-  document.querySelectorAll('.ch-section-tab').forEach(tab => {
-    tab.addEventListener('click', e => {
-      e.preventDefault();
-      const href = tab.getAttribute('href') || tab.dataset.href;
-      if (href && href !== '#') window.location.href = href;
-    });
-  });
+  /* ── Boot ─────────────────────────────── */
+  buildEventSelector();
 
-  /* ── Boot ───────────────────────────── */
-  renderMessages();
+  /* ── Real-time polling ─────────────── */
+  setInterval(() => {
+    _lastMsgCount = -1;
+    renderMessages();
+    renderIssuesPanel();
+  }, Hub.POLL_MS);
 });

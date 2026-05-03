@@ -35,6 +35,7 @@ window.DB = (() => {
     'messages', 'resourceAllocations', 'monitorProgress',
     'staffRequests', 'staffTasks', 'contingencyPlans',
     'vendorDocSubmission', 'session', 'liveEvents',
+    'coordinationMessages',
   ]);
 
   /* ── In-memory cache ──────────────────── */

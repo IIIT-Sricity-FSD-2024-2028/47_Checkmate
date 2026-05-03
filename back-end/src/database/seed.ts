@@ -12,7 +12,7 @@ export const seedData: AppData = {
   events: [
     { id: 'EVT001', name: 'Tech Summit 2026', type: 'Conference', date: '2026-05-10', time: '09:00', venue: 'Convention Center', people: 500, guests: 500, status: 'pending', client: 'Tech Corp', vendor: 'Dream Events Ltd.', createdBy: 'client', budget: 45000 },
     { id: 'EVT002', name: 'Sarah and Mike Wedding', type: 'Wedding', date: '2026-05-18', time: '18:00', venue: 'Grand Hotel', people: 150, guests: 150, status: 'confirmed', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', createdBy: 'client', budget: 25000 },
-    { id: 'EVT003', name: 'Annual Corporate Gala', type: 'Corporate', date: '2026-05-21', time: '19:30', venue: 'Skyline Ballroom', people: 320, guests: 320, status: 'live', client: 'Business Inc.', vendor: 'Elite Events Co.', createdBy: 'client', budget: 18000 },
+    { id: 'EVT003', name: 'Annual Corporate Gala', type: 'Corporate', date: '2026-05-21', time: '19:30', venue: 'Skyline Ballroom', people: 320, guests: 320, status: 'live', client: 'Emily Carter', vendor: 'Elite Events Co.', createdBy: 'client', budget: 18000 },
     { id: 'EVT004', name: 'Music Festival', type: 'Conference', date: '2026-06-05', time: '12:00', venue: 'City Park', people: 800, guests: 800, status: 'pending', client: 'City Arts Trust', vendor: 'Sound & Lighting Pro', createdBy: 'client', budget: 52000 },
   ],
   resources: [
@@ -43,7 +43,7 @@ export const seedData: AppData = {
   ],
   bookings: [
     { id: 'BK001', eventName: 'Sarah and Mike Wedding', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', status: 'Confirmed', cost: 25000, created: '2026-03-01' },
-    { id: 'BK002', eventName: 'Annual Corporate Gala', client: 'Business Inc.', vendor: 'Elite Events Co.', status: 'In Progress', cost: 18000, created: '2026-03-20' },
+    { id: 'BK002', eventName: 'Annual Corporate Gala', client: 'Emily Carter', vendor: 'Elite Events Co.', status: 'In Progress', cost: 18000, created: '2026-03-20' },
     { id: 'BK003', eventName: 'Tech Summit 2026', client: 'Tech Corp', vendor: 'Dream Events Ltd.', status: 'Pending', cost: 45000, created: '2026-04-01' },
   ],
   messages: {

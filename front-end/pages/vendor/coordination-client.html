@@ -311,62 +311,30 @@
       <!-- Intro -->
       <div style="display:flex;flex-direction:column;gap:2px;">
         <h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary);">Coordination Hub</h2>
-        <p style="font-size:13px;color:var(--text-secondary);">Tech Summit 2026 – Real-time collaboration</p>
+        <p class="ch-intro-sub" style="font-size:13px;color:var(--text-secondary);">Select an event — Client Channel</p>
       </div>
 
       <!-- Section switcher -->
       <div class="ch-section-tabs">
         <a href="coordination.html"        class="ch-section-tab">
-          <i data-lucide="store"></i>
-          Vendor – Vendor
+          <i data-lucide="message-square"></i>
+          All Channels
         </a>
         <a href="coordination-staff.html"  class="ch-section-tab">
           <i data-lucide="hard-hat"></i>
-          Vendor – Staff
+          Staff Channel
         </a>
         <a href="coordination-client.html" class="ch-section-tab active">
           <i data-lucide="user-round"></i>
-          Vendor – Client
+          Client Channel
         </a>
       </div>
 
-      <!-- Participants -->
+      <!-- Participants (dynamic) -->
       <div class="ch-participants">
         <h4>Clients &amp; Vendors</h4>
         <div class="ch-participant-list">
-
-          <div class="ch-participant active-user">
-            <div class="ch-avatar ch-avatar--sw">SW<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Sarah Williams</div>
-              <div class="ch-participant-role"><span class="role-badge-vendor">Vendor</span> Audio Vendor</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--mb">MB<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Mark Bennett</div>
-              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Tech Summit Organiser</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--ts">TS<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Tara Singh</div>
-              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Wedding – Sarah &amp; Mike</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--ap">AP<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Alan Park</div>
-              <div class="ch-participant-role"><span class="role-badge-client">Client</span> Corporate Gala</div>
-            </div>
-          </div>
-
+          <!-- Populated by coordination.js -->
         </div>
       </div>
 
@@ -376,24 +344,22 @@
         <!-- ── Chat ── -->
         <div class="ch-chat">
           <div class="ch-chat__header">
-            <h4>Client Chat — Mark Bennett</h4>
-            <span class="ch-chat__sub">Tech Summit 2026 · Vendor ↔ Client</span>
+            <h4>Client Chat</h4>
+            <span class="ch-chat__sub">Vendor ↔ Client coordination</span>
           </div>
 
           <div class="ch-channel-tabs">
-            <button class="ch-tab active">All</button>
-            <button class="ch-tab">Requests</button>
-            <button class="ch-tab">Approvals</button>
-            <button class="ch-tab">Updates</button>
+            <button class="ch-tab active" data-ch="client">Client</button>
+            <button class="ch-tab" data-ch="all">All</button>
+            <button class="ch-tab" data-ch="issues">Issues</button>
           </div>
 
           <div class="ch-messages" id="messagesArea">
             <!-- Populated by coordination.js -->
-          </div><!-- /messages -->
+          </div>
 
           <div class="ch-input-bar">
             <button class="ch-input-icon-btn" title="Attach"><i data-lucide="paperclip" style="width:16px;height:16px;display:block"></i></button>
-            <button class="ch-input-icon-btn" title="Emoji"><i data-lucide="smile" style="width:16px;height:16px;display:block"></i></button>
             <input class="ch-input" id="msgInput" type="text" placeholder="Type a message to client..." />
             <button class="ch-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block"></i></button>
           </div>
@@ -402,44 +368,16 @@
         <!-- ── Right ── -->
         <div class="ch-right">
 
-          <!-- Client list -->
+          <!-- Client list (dynamic) -->
           <div class="cc-client-card">
             <div class="cc-client-card__header">
               <i data-lucide="users"></i>
               <h4>Active Clients</h4>
             </div>
             <div class="cc-client-list">
-
-              <div class="cc-client-item active-chat">
-                <div class="cc-client-avatar ch-avatar--mb">MB</div>
-                <div class="cc-client-info">
-                  <div class="cc-client-name">Mark Bennett</div>
-                  <div class="cc-client-event">Tech Summit 2026</div>
-                </div>
-                <span class="cc-unread">3</span>
-              </div>
-
-              <div class="cc-client-item">
-                <div class="cc-client-avatar ch-avatar--ts">TS</div>
-                <div class="cc-client-info">
-                  <div class="cc-client-name">Tara Singh</div>
-                  <div class="cc-client-event">Wedding – Sarah &amp; Mike</div>
-                </div>
-              </div>
-
-              <div class="cc-client-item">
-                <div class="cc-client-avatar ch-avatar--ap">AP</div>
-                <div class="cc-client-info">
-                  <div class="cc-client-name">Alan Park</div>
-                  <div class="cc-client-event">Corporate Gala</div>
-                </div>
-                <span class="cc-unread">1</span>
-              </div>
-
+              <!-- Populated by coordination.js -->
             </div>
           </div>
-
-          <!-- Approval requests have been migrated to the Live Monitor panel -->
 
         </div><!-- /right -->
       </div><!-- /grid -->
@@ -447,11 +385,9 @@
   </main>
 </div>
 
-
-  <script data-cfa
-sync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/coordination-hub.js"></script>
   <script src="../../scripts/message-system.js"></script>
   <script src="../../scripts/notification-system.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
