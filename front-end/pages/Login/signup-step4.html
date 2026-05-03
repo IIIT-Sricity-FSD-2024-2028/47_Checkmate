@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account 4 of 4 - EventPro Premium</title>
+  <link rel="stylesheet" href="login_css/style.css">
+</head>
+<body>
+  <div class="main-wrapper">
+    <div class="container">
+      <div class="left-panel">
+        <div class="left-panel-content">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="brand-info">
+              <span class="brand-main">EventPro</span>
+            </div>
+          </div>
+          
+          <div class="tag">STEP 4 OF 4</div>
+          
+          <h1 class="heading">
+            Join as a<br>
+            <span class="highlight">Vendor Partner</span><br>
+          </h1>
+          
+          <p class="description">
+            Submit your business documents to get verified. Once approved by our admins, you can start managing events!
+          </p>
+          
+          <div class="footer-text">
+            &copy; 2026 EventPro. All rights reserved.
+          </div>
+        </div>
+      </div>
+      
+      <div class="right-panel">
+        <div class="form-wrapper" style="max-width: 500px;">
+          <div class="form-card">
+            <div class="form-header">
+              <div>
+                <h2 class="form-title">Business Details</h2>
+                <p class="form-subtitle">Almost there! We need some details.</p>
+              </div>
+              <div class="step-indicator">Step 4 of 4</div>
+            </div>
+            
+            <form action="#" id="signup-form-4">
+              <div class="form-group">
+                <label for="businessName">BUSINESS NAME*</label>
+                <input type="text" id="businessName" name="businessName" class="form-control" placeholder="Enter your business name" required>
+              </div>
+
+              <div class="form-group">
+                <label>BUSINESS DOCUMENTS</label>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Please select your documents. (UI Mock for now)</p>
+                <div style="display:flex; flex-direction:column; gap: 8px;">
+                  <div style="background: var(--input-bg); border: 1px dashed var(--border-color); padding: 12px; border-radius: 8px;">
+                     <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin:0;">
+                       <span style="font-size:0.9rem; color:var(--text-main); font-weight:normal;">Business License</span>
+                       <input type="file" style="font-size: 0.8rem;" accept=".pdf,.png,.jpg">
+                     </label>
+                  </div>
+                  <div style="background: var(--input-bg); border: 1px dashed var(--border-color); padding: 12px; border-radius: 8px;">
+                     <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin:0;">
+                       <span style="font-size:0.9rem; color:var(--text-main); font-weight:normal;">Tax ID / GST</span>
+                       <input type="file" style="font-size: 0.8rem;" accept=".pdf,.png,.jpg">
+                     </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="btn-group">
+                <a class="btn btn-secondary" href="signup-step3.html">&larr; Back</a>
+                <button type="submit" class="btn btn-primary btn-submit" style="border:none;">Submit Application &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="login_js/script.js"></script>
+  <script src="login_js/validation.js"></script>
+</body>
+</html>

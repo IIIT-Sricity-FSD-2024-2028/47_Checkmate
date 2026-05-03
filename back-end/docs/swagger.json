@@ -1283,6 +1283,39 @@
         ]
       }
     },
+    "/api/packages/{id}/decision": {
+      "patch": {
+        "operationId": "PackagesController_decide",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Clients may browse; vendors/admins/superusers manage packages.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "packages"
+        ]
+      }
+    },
     "/api/issues": {
       "get": {
         "operationId": "IssuesController_findAll",
@@ -2847,6 +2880,18 @@
             "items": {
               "type": "string"
             }
+          },
+          "status": {
+            "type": "string",
+            "example": "pending"
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "V123"
+          },
+          "vendorName": {
+            "type": "string",
+            "example": "Starlight Events"
           }
         },
         "required": [
@@ -3051,6 +3096,10 @@
               "approved",
               "rejected"
             ]
+          },
+          "passwordHash": {
+            "type": "string",
+            "example": "hashed_password"
           }
         },
         "required": [
@@ -3058,7 +3107,6 @@
           "businessName",
           "email",
           "phone",
-          "category",
           "documents"
         ]
       },

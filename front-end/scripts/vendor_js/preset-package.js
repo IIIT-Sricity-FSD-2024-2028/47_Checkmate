@@ -308,9 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="pkg-card" data-cat="${p.category}" data-id="${p.id}">
           <div class="pkg-img-placeholder pkg-img-placeholder--${p.category.toLowerCase()}" style="font-size:36px">${c.emoji}</div>
           <div class="pkg-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
               <div class="pkg-title">${p.name}</div>
-              <span style="background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:3px 12px;font-size:11.5px;font-weight:600;white-space:nowrap">${p.category}</span>
+              <div style="display:flex;gap:6px;">
+                  ${p.status ? statusBadge(p.status) : ''}
+                  <span style="background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:3px 12px;font-size:11.5px;font-weight:600;white-space:nowrap">${p.category}</span>
+              </div>
             </div>
             <p class="pkg-desc">${p.desc}</p>
             <div>
@@ -389,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('pkgSaveBtn').addEventListener('click', () => {
     if (!validate()) { Toast.show('Please fix the errors above.', 'warn'); return; }
 
+    const session = DB.getSession();
     const data = {
       name:      document.getElementById('pkgName').value.trim(),
       category:  document.getElementById('pkgCategory').value,
@@ -398,14 +402,17 @@ document.addEventListener('DOMContentLoaded', () => {
       desc:      document.getElementById('pkgDesc').value.trim(),
       resources: getChips('resTagWrap'),
       staff:     getChips('staffTagWrap'),
+      vendorName: session.user,
+      vendorId:   session.email, // using email as ID since that's what's available
+      status:     'pending'
     };
 
     if (editingId) {
       DB.update('packages', editingId, data);
-      Toast.show('Package updated!', 'success');
+      Toast.show('Package updated! Waiting for approval.', 'info');
     } else {
       DB.add('packages', { id: uid('P'), ...data });
-      Toast.show('Package added!', 'success');
+      Toast.show('Package submitted for approval!', 'success');
     }
 
     closeModal(overlay);

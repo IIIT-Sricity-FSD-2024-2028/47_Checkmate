@@ -187,29 +187,76 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.querySelector('.btn-submit')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const selectedTypeCard = document.querySelector('.type-card.selected');
-    const data = { ...draft(), role: selectedTypeCard ? selectedTypeCard.dataset.type : draft().role || 'Vendor' };
-    const submitBtn = e.currentTarget;
-    submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
-    try {
-      const payload = api('POST', 'auth/register', {
-        name: `${data.firstName} ${data.lastName}`.trim(),
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
-        role: data.role,
-      });
-      setSession(payload);
-      localStorage.removeItem(SIGNUP_KEY);
-      document.querySelector('.container').classList.add('page-exit');
-      setTimeout(() => { window.location.href = redirectByRole[payload.role]; }, 450);
-    } catch (error) {
-      submitBtn.innerHTML = 'Finish &rarr;';
-      showError(error.message);
-    }
-  });
+  const step3Btn = document.querySelector('#signup-form-3 .btn-submit');
+  if (step3Btn) {
+    step3Btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const selectedTypeCard = document.querySelector('.type-card.selected');
+      const data = { ...draft(), role: selectedTypeCard ? selectedTypeCard.dataset.type : draft().role || 'Vendor' };
+      
+      if (data.role === 'Vendor') {
+        saveDraft({ role: data.role });
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = 'signup-step4.html'; }, 450);
+        return;
+      }
+      
+      const submitBtn = e.currentTarget;
+      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
+      try {
+        const payload = api('POST', 'auth/register', {
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+          role: data.role,
+        });
+        setSession(payload);
+        localStorage.removeItem(SIGNUP_KEY);
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = redirectByRole[payload.role]; }, 450);
+      } catch (error) {
+        submitBtn.innerHTML = 'Finish &rarr;';
+        showError(error.message);
+      }
+    });
+  }
+
+  const step4Btn = document.querySelector('#signup-form-4 .btn-submit');
+  if (step4Btn) {
+    step4Btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const data = draft();
+      const businessName = document.getElementById('businessName').value.trim();
+      
+      if (!businessName) {
+        showError('Business Name is required.');
+        return;
+      }
+      
+      const submitBtn = e.currentTarget;
+      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Submitting...</span>';
+      try {
+        const payload = api('POST', 'vendor-applications', {
+          vendorName: `${data.firstName} ${data.lastName}`.trim(),
+          businessName: businessName,
+          email: data.email,
+          phone: data.phone || '',
+          category: 'General', // Fallback since category was removed
+          documents: [], // Handle document upload UI as needed, mocking for now
+          passwordHash: data.password // Passing password temporarily for when account is approved
+        });
+        localStorage.removeItem(SIGNUP_KEY);
+        // Alert user and redirect to landing page
+        alert('Application submitted successfully! Please wait for admin approval.');
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = '../LandingPage/index.html'; }, 450);
+      } catch (error) {
+        submitBtn.innerHTML = 'Submit Application &rarr;';
+        showError(error.message);
+      }
+    });
+  }
 
   document.querySelectorAll('.btn-secondary').forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -231,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const payload = api('POST', 'auth/login', { email, password });
       setSession(payload);
+      localStorage.removeItem('checkmate_admin_baseline');
       window.location.href = redirectByRole[payload.role] || '../LandingPage/index.html';
     } catch (error) {
       showError(error.message);

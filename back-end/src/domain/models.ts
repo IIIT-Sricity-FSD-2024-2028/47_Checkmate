@@ -74,6 +74,9 @@ export interface PackageRecord {
   desc: string;
   resources: string[];
   staff: string[];
+  status?: 'pending' | 'approved' | 'rejected';
+  vendorId?: string;
+  vendorName?: string;
 }
 
 export interface Issue {
@@ -116,12 +119,13 @@ export interface VendorApplication {
   businessName: string;
   email: string;
   phone: string;
-  category: string;
+  category?: string;
   categoryClass?: string;
   documents: Array<{ name: string; type: string }>;
   status: 'pending' | 'approved' | 'rejected';
   submittedAt: string;
   note?: string;
+  passwordHash?: string;
 }
 
 export interface Vendor {

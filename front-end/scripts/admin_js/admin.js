@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('modalPhone').textContent = vendor.phone;
                         const catElem = document.getElementById('modalCategory');
                         if (catElem) {
-                            catElem.textContent = vendor.category;
+                            catElem.textContent = vendor.category || 'General';
                             catElem.className = `status-badge ${vendor.categoryClass || 'active'}`;
                         }
 
@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const closeVendorModal = () => { vendorModalObj.classList.remove('active'); document.body.style.overflow = ''; activeVendorId = null; };
             closeModals.forEach(btn => btn.addEventListener('click', closeVendorModal));
+            vendorModalObj.addEventListener('click', (e) => { if (e.target === vendorModalObj) closeVendorModal(); });
 
             // ── Approve ───────────────────────────────────────────
             document.getElementById('modalApproveBtn')?.addEventListener('click', () => {
@@ -187,14 +188,94 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
+        function persistDecision(vendor) {
+            const updated = api('PATCH', `vendor-applications/${vendor.id}/decision`, { status: vendor.status });
+            if (updated) {
+                const idx = vendorData.findIndex(v => v.id === vendor.id);
+                if (idx > -1) vendorData[idx] = updated;
+            }
+        }
+        
         renderVendorTable();
     }
 
-    function persistDecision(vendor) {
-        const updated = api('PATCH', `vendor-applications/${vendor.id}/decision`, { status: vendor.status });
-        if (updated) {
-            const idx = vendorData.findIndex(v => v.id === vendor.id);
-            if (idx > -1) vendorData[idx] = updated;
+    // Dashboard Pending Approvals Widget
+    const dashboardApprovalList = document.querySelector('.approval-list');
+    if (dashboardApprovalList && !vendorTbody) {
+        const vendorData = api('GET', 'vendor-applications') || [];
+        const pending = vendorData.filter(v => v.status === 'pending');
+        if (pending.length === 0) {
+             dashboardApprovalList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">No pending vendor approvals.</div>';
+        } else {
+             const colors = ['var(--pink)', 'var(--blue)', 'var(--purple)'];
+             dashboardApprovalList.innerHTML = pending.slice(0, 5).map((v, i) => `
+                <div class="approval-item">
+                    <div class="vendor-info">
+                        <div class="vendor-avatar" style="background:${colors[i % colors.length]};">${v.businessName.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <h4>${v.businessName}</h4>
+                            <p>Submitted: ${new Date(v.submittedAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <button class="action-btn action-btn-clean" onclick="window.location.href='vendor-approvals.html?action=review'">Review</button>
+                </div>
+             `).join('');
+        }
+        
+        // Populate stats
+        const snapshot = api('GET', 'snapshot');
+        if (snapshot) {
+            const el = (id) => document.getElementById(id);
+            if (el('dashTotalUsers')) el('dashTotalUsers').textContent = snapshot.users.length;
+            if (el('dashTotalVendors')) el('dashTotalVendors').textContent = snapshot.vendors.length;
+            if (el('dashActiveEvents')) el('dashActiveEvents').textContent = snapshot.events.filter(e => e.status !== 'completed').length;
+            if (el('dashPendingApps')) el('dashPendingApps').textContent = pending.length;
+            
+            // User Distribution
+            const clientsCount = snapshot.users.filter(u => String(u.role).toLowerCase() === 'client').length;
+            const vendorsCount = snapshot.users.filter(u => String(u.role).toLowerCase() === 'vendor').length;
+            const staffCount = snapshot.users.filter(u => String(u.role).toLowerCase() === 'staff').length;
+            
+            if (el('distClients')) el('distClients').textContent = clientsCount;
+            if (el('distVendors')) el('distVendors').textContent = vendorsCount;
+            if (el('distStaff')) el('distStaff').textContent = staffCount;
+            
+            // Render Trends
+            const currentStats = {
+                users: snapshot.users.length,
+                vendors: snapshot.vendors.length,
+                events: snapshot.events.filter(e => e.status !== 'completed').length,
+                pendingApps: pending.length
+            };
+
+            let baseline = JSON.parse(localStorage.getItem('checkmate_admin_baseline'));
+            if (!baseline) {
+                baseline = currentStats;
+                localStorage.setItem('checkmate_admin_baseline', JSON.stringify(baseline));
+            }
+            
+            const renderTrend = (id, current, base) => {
+                const elNode = el(id);
+                if (!elNode) return;
+                const diff = current - base;
+                if (diff > 0) {
+                    elNode.style.color = '#22c55e';
+                    elNode.innerHTML = `<i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +${diff} since last login`;
+                } else if (diff < 0) {
+                    elNode.style.color = '#ef4444';
+                    elNode.innerHTML = `<i data-lucide="trending-down" style="width: 14px; height: 14px;"></i> ${diff} since last login`;
+                } else {
+                    elNode.style.color = 'var(--text-muted)';
+                    elNode.innerHTML = `<i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change`;
+                }
+            };
+            
+            renderTrend('dashUsersTrend', currentStats.users, baseline.users || currentStats.users);
+            renderTrend('dashVendorsTrend', currentStats.vendors, baseline.vendors || currentStats.vendors);
+            renderTrend('dashEventsTrend', currentStats.events, baseline.events || currentStats.events);
+            renderTrend('dashPendingTrend', currentStats.pendingApps, baseline.pendingApps || currentStats.pendingApps);
+            
+            if (window.lucide) lucide.createIcons();
         }
     }
 
@@ -543,5 +624,145 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateEventStats();
         renderEventTable();
+    }
+
+    /* ========================================================
+       SECTION 4: SERVICE MODERATION LOGIC
+       ======================================================== */
+    const moderationTbody = document.getElementById('moderationTableBody');
+    if (moderationTbody) {
+        let packagesData = api('GET', 'packages') || [];
+        
+        const renderModerationTable = () => {
+            const pendingCount = packagesData.filter(p => !p.status || p.status === 'pending').length;
+            const approvedCount = packagesData.filter(p => p.status === 'approved').length;
+            const rejectedCount = packagesData.filter(p => p.status === 'rejected').length;
+
+            const elP = document.getElementById('statPending');
+            const elA = document.getElementById('statApproved');
+            const elR = document.getElementById('statRejected');
+            if(elP) elP.textContent = pendingCount;
+            if(elA) elA.textContent = approvedCount;
+            if(elR) elR.textContent = rejectedCount;
+
+            if (packagesData.length === 0) {
+                moderationTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">No packages found.</td></tr>`;
+                return;
+            }
+
+            moderationTbody.innerHTML = packagesData.map(p => {
+                const status = p.status || 'pending';
+                let badge = '<span class="status-badge pending">Pending</span>';
+                let actions = `
+                    <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
+                    <button class="action-btn approve-btn approve-pkg-btn"><i data-lucide="check"></i> Approve</button>
+                    <button class="action-btn reject-btn reject-pkg-btn"><i data-lucide="x"></i> Reject</button>
+                `;
+                
+                if (status === 'approved') {
+                    badge = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Approved</span>`;
+                    actions = `
+                        <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
+                        <button class="action-btn reject-btn reject-pkg-btn"><i data-lucide="x"></i> Terminate</button>
+                    `;
+                } else if (status === 'rejected') {
+                    badge = `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">Rejected</span>`;
+                    actions = `
+                        <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
+                        <button class="action-btn approve-btn approve-pkg-btn"><i data-lucide="check"></i> Approve</button>
+                    `;
+                }
+
+                return `
+                <tr data-pkg="${p.id}">
+                    <td class="vendor-name-col">${p.name}</td>
+                    <td>${p.vendorName || p.vendorId || 'Unknown Vendor'}</td>
+                    <td>$${(p.price || 0).toLocaleString()}</td>
+                    <td>${(p.resources || []).length + (p.staff || []).length} inclusions</td>
+                    <td class="status-cell">${badge}</td>
+                    <td class="actions-cell">${actions}</td>
+                </tr>`;
+            }).join('');
+            
+            if (window.lucide) lucide.createIcons();
+        };
+
+        const modal = document.getElementById('packageReviewModal');
+        const mkTag = (text) => `<span style="font-size: 11.5px; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-secondary);">${text}</span>`;
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        if (modal) {
+            modal.querySelectorAll('[data-close="reviewModal"]').forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        }
+
+        moderationTbody.addEventListener('click', (e) => {
+            const tr = e.target.closest('tr');
+            if(!tr) return;
+            
+            const pkgId = tr.getAttribute('data-pkg');
+            const pkg = packagesData.find(p => p.id === pkgId);
+            
+            // Review BTN
+            if (e.target.closest('.review-pkg-btn')) {
+                if (pkg) {
+                    document.getElementById('reviewPkgName').textContent = pkg.name;
+                    document.getElementById('reviewPkgVendor').textContent = pkg.vendorName || pkg.vendorId || 'Unknown';
+                    document.getElementById('reviewPkgCategory').textContent = pkg.category || 'Package';
+                    document.getElementById('reviewPkgPrice').textContent = '$' + (pkg.price || 0).toLocaleString();
+                    document.getElementById('reviewPkgCapacity').textContent = (pkg.capacity || 'N/A') + ' / ' + (pkg.duration || 'N/A') + ' hrs';
+                    document.getElementById('reviewPkgDesc').textContent = pkg.desc || '';
+                    document.getElementById('reviewPkgResources').innerHTML = (pkg.resources || []).map(mkTag).join('');
+                    document.getElementById('reviewPkgStaff').innerHTML = (pkg.staff || []).map(mkTag).join('');
+                    
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            const handleDecision = (status, btnClass, successHtml) => {
+                const updated = api('PATCH', `packages/${pkgId}/decision`, { status });
+                if (updated) {
+                    const idx = packagesData.findIndex(p => p.id === pkgId);
+                    if (idx > -1) packagesData[idx] = updated;
+                    
+                    tr.classList.add('handled');
+                    tr.querySelector('.status-cell').innerHTML = successHtml.statusBadge;
+                    tr.querySelector('.actions-cell').innerHTML = successHtml.actionsHtml;
+                    
+                    setTimeout(() => {
+                        renderModerationTable();
+                    }, 2000);
+                }
+            };
+
+            // Approve BTN
+            if (e.target.closest('.approve-pkg-btn')) {
+                if(!tr.classList.contains('handled')) {
+                    handleDecision('approved', 'approve-pkg-btn', {
+                        statusBadge: `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Approved</span>`,
+                        actionsHtml: `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="check-circle-2" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Approved</span>`
+                    });
+                }
+            }
+
+            // Reject BTN
+            if (e.target.closest('.reject-pkg-btn')) {
+                if(!tr.classList.contains('handled')) {
+                    handleDecision('rejected', 'reject-pkg-btn', {
+                        statusBadge: `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">Rejected</span>`,
+                        actionsHtml: `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="x-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Rejected</span>`
+                    });
+                }
+            }
+        });
+
+        renderModerationTable();
     }
 });

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { DecisionDto } from '../../common/dto/action.dto';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -20,7 +21,7 @@ export class VendorsController {
 
   @Get('vendor-applications') @Roles('admin', 'superuser', 'vendor') applications() { return this.service.applications(); }
   @Get('vendor-applications/:id') @Roles('admin', 'superuser', 'vendor') findApplication(@Param() { id }: IdParamDto) { return this.service.findApplication(id); }
-  @Post('vendor-applications') @Roles('vendor', 'admin', 'superuser') createApplication(@Body() dto: CreateVendorApplicationDto) { return this.service.createApplication(dto); }
+  @Post('vendor-applications') @Public() createApplication(@Body() dto: CreateVendorApplicationDto) { return this.service.createApplication(dto); }
   @Put('vendor-applications/:id') @Roles('vendor', 'admin', 'superuser') updateApplicationPut(@Param() { id }: IdParamDto, @Body() dto: UpdateVendorApplicationDto) { return this.service.updateApplication(id, dto); }
   @Patch('vendor-applications/:id') @Roles('vendor', 'admin', 'superuser') updateApplication(@Param() { id }: IdParamDto, @Body() dto: UpdateVendorApplicationDto) { return this.service.updateApplication(id, dto); }
   @Patch('vendor-applications/:id/decision') @Roles('admin', 'superuser') decideApplication(@Param() { id }: IdParamDto, @Body() dto: DecisionDto) { return this.service.decideApplication(id, dto); }

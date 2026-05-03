@@ -12,5 +12,9 @@ export class CreatePackageDto {
   @ApiProperty({ example: 'Premium launch event package.' }) @IsString() desc: string;
   @ApiProperty({ example: ['Stage', 'Lighting Rig'] }) @IsArray() resources: string[];
   @ApiProperty({ example: ['Event Director', 'Security'] }) @IsArray() staff: string[];
+  
+  @ApiPropertyOptional({ example: 'pending' }) @IsOptional() @IsString() status?: 'pending' | 'approved' | 'rejected';
+  @ApiPropertyOptional({ example: 'V123' }) @IsOptional() @IsString() vendorId?: string;
+  @ApiPropertyOptional({ example: 'Starlight Events' }) @IsOptional() @IsString() vendorName?: string;
 }
 export class UpdatePackageDto extends PartialType(CreatePackageDto) {}
