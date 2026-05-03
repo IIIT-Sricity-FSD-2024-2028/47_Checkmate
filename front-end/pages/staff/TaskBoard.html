@@ -81,10 +81,9 @@
   <div id="taskBoardHeader">
     <div>
       <div class="page-title">Task Board</div>
-      <div class="page-sub">Double-click on columns to quickly add sub-tasks to your accepted events</div>
+      <div class="page-sub">Drag and drop tasks across columns to update their status</div>
     </div>
     <div style="display:flex; gap:10px;">
-       <button class="btn-primary" onclick="openModal()" id="mainAddTaskBtn" disabled>+ Add Custom Task</button>
     </div>
   </div>
 
@@ -254,8 +253,7 @@ function renderBoard() {
      `).join('');
   });
 
-  // Enable/Disable main add btn
-  document.getElementById('mainAddTaskBtn').disabled = (accepted.length === 0);
+  // Task board rendered successfully
 }
 
 // Drag & Drop

@@ -188,11 +188,11 @@ function submitIssue() {
     status: 'open'
   };
 
-  DB.add('issues', issue);
+  const savedIssue = DB.add('issues', issue);
 
   // Post to coordination hub
   if (window.CoordHub && eventId) {
-    CoordHub.postIssueToChat(eventId, issue);
+    CoordHub.postIssueToChat(eventId, savedIssue);
   }
 
   alert('Issue submitted successfully!');

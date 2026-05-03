@@ -102,17 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Also inject issues as system messages if not already in coordination
     const issues = Hub.getIssuesForEvent(selectedEventId);
     issues.forEach(iss => {
-      const alreadyExists = msgs.some(m => m.id === 'ISS_' + iss.id);
+      const msgId = 'MSG_ISS_' + iss.id;
+      const alreadyExists = msgs.some(m => m.id === msgId);
       if (!alreadyExists && iss.title) {
         msgs.push({
-          id: 'ISS_' + iss.id,
+          id: msgId,
           eventId: selectedEventId,
           channel: 'all',
           sender: iss.reporter || 'System',
           senderRole: 'System',
           senderInitials: '⚠',
-          text: `${iss.title}${iss.desc ? ' — ' + iss.desc : ''}`,
+          text: `${iss.title}${(iss.desc || iss.description) ? ' — ' + (iss.desc || iss.description) : ''}`,
           type: 'issue',
+          issueId: iss.id,
           createdAt: iss.createdAt || new Date().toISOString()
         });
       }
@@ -134,20 +136,36 @@ document.addEventListener('DOMContentLoaded', () => {
     chatBody.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
     chatBody.scrollTop = chatBody.scrollHeight;
     if (window.lucide) lucide.createIcons();
+
+    // Bind View Report buttons after render
+    chatBody.querySelectorAll('.ch-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const issueId = btn.dataset.issueId;
+        console.log('View Report clicked. Button data-issue-id:', issueId);
+        console.log('Button HTML:', btn.outerHTML);
+        if (issueId && typeof Hub.showIssueModal === 'function') {
+          Hub.showIssueModal(issueId);
+        } else {
+          console.error('Issue ID missing or showIssueModal not available');
+        }
+      });
+    });
   }
 
   /* ── Render contingency plans ────────── */
   function renderContingencyPanel() {
-    const listEl = document.querySelector('.ch-contingency__list');
-    const triggerBtn = document.querySelector('.ch-trigger-btn');
+    const listEl = document.getElementById('contingencyList');
+    const boxEl = document.getElementById('contingencyBox');
     if (!listEl || !selectedEventId) return;
 
     const plans = Hub.getContingencyPlans(selectedEventId);
     if (!plans.length) {
-      listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;text-align:center;">No contingency plans defined.</div>';
+      listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:12px;text-align:center;">No contingency plans defined.</div>';
+      if (boxEl) boxEl.style.display = 'block';
       return;
     }
 
+    if (boxEl) boxEl.style.display = 'block';
     listEl.innerHTML = plans.map(p => {
       const isTriggered = p.status === 'triggered';
       return `
@@ -177,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }).then(ok => {
             if (!ok) return;
             Hub.triggerContingency(selectedEventId, plan);
-            Toast.show('🚨 Contingency triggered and broadcast!', 'error', 4000);
+            if (window.Toast) Toast.show('🚨 Contingency triggered and broadcast!', 'error', 4000);
             _lastMsgCount = -1;
             refreshAll();
           });
@@ -206,19 +224,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     box.style.display = 'block';
     list.innerHTML = issues.slice(-5).map(iss => {
-      const isHigh = (iss.priority || '').toLowerCase() === 'high' || (iss.priority || '').toLowerCase() === 'critical';
+      const pri = (iss.priority || '').toLowerCase();
+      const isHigh = pri.includes('high') || pri.includes('critical');
       const color = isHigh ? 'var(--red)' : 'var(--orange)';
       const bg = isHigh ? 'rgba(239,68,68,0.06)' : 'rgba(234,179,8,0.06)';
       const border = isHigh ? 'rgba(239,68,68,0.2)' : 'rgba(234,179,8,0.2)';
+      const descText = iss.desc || iss.description || '';
       return `
         <div class="ch-alert-item" style="background:${bg};border:1px solid ${border}">
           <i data-lucide="alert-triangle" style="color:${color}"></i>
           <div class="ch-alert-item__body">
             <div class="ch-alert-item__title">${iss.title}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${iss.desc || ''}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${descText}</div>
           </div>
+          <button class="ch-view-report-btn" data-issue-id="${iss.id}" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:var(--red,#ef4444);padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;">View</button>
         </div>`;
     }).join('');
+
+    // Bind View Report buttons in issues panel
+    list.querySelectorAll('.ch-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const issueId = btn.dataset.issueId;
+        if (issueId) Hub.showIssueModal(issueId);
+      });
+    });
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -418,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => {
     _lastMsgCount = -1;
     renderMessages();
+    renderContingencyPanel();
     renderIssuesPanel();
   }, Hub.POLL_MS);
 });

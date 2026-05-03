@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
           id: 'ISS_' + iss.id, eventId: selectedEventId, channel: 'all',
           sender: 'System', senderRole: 'System', senderInitials: '⚠',
           text: `${iss.title}${iss.desc ? ' — ' + iss.desc : ''}`,
-          type: 'issue', createdAt: iss.createdAt || new Date().toISOString()
+          type: 'issue', issueId: iss.id, createdAt: iss.createdAt || new Date().toISOString()
         });
       }
     });
@@ -99,23 +99,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    chatWindow.innerHTML = msgs.map(m => {
-      const isSelf = m.sender?.toLowerCase() === session.name?.toLowerCase();
-      const isSystem = m.type === 'issue' || m.type === 'contingency';
-      const time = Hub.timeStr(m.createdAt);
-
-      if (isSystem) {
-        return `<div style="text-align:center;margin:8px 0;font-size:12px;color:#fca5a5;background:rgba(239,68,68,0.06);padding:8px 14px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);">${m.text}<span style="color:var(--text-muted);margin-left:8px;font-size:11px;">${time}</span></div>`;
-      }
-
-      if (isSelf) {
-        return `<div class="msg msg-sent"><div class="msg-bubble">${m.text}</div><div class="msg-time">${time}</div></div>`;
-      }
-
-      return `<div class="msg msg-received"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">${m.sender} <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,0.06);color:var(--text-muted);">${m.senderRole}</span></div><div class="msg-bubble">${m.text}</div><div class="msg-time">${time}</div></div>`;
-    }).join('');
+    chatWindow.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    // Bind View Report buttons
+    chatWindow.querySelectorAll('.ch-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const issueId = btn.dataset.issueId;
+        if (issueId) Hub.showIssueModal(issueId);
+      });
+    });
   }
 
   function sendMessage() {

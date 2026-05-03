@@ -105,18 +105,20 @@ document.addEventListener('DOMContentLoaded', () => {
       priority:  priorityEl.value,
       category:  categoryEl.value,
       event:     eventEl?.value || '',
+      eventId:   eventEl?.value || '',
       reporter:  DB.getSession().user,
+      reporterRole: DB.getSession().role,
       email:     DB.getSession().email,
       role:      DB.getSession().role,
       createdAt: new Date().toISOString(),
       status:    'open',
     };
 
-    DB.add('issues', issue);
+    const savedIssue = DB.add('issues', issue);
 
     /* Broadcast to Coordination Hub */
-    if (window.CoordHub && issue.event) {
-      CoordHub.postIssueToChat(issue.event, issue);
+    if (window.CoordHub && (savedIssue.event || savedIssue.eventId)) {
+      CoordHub.postIssueToChat(savedIssue.eventId || savedIssue.event, savedIssue);
     }
     // Legacy messages channel broadcast (keep for backward compat)
     const allMsgs = DB.get('messages') || {};

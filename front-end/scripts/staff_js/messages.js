@@ -79,7 +79,7 @@ function initMessages() {
           id: 'ISS_' + iss.id, eventId: selectedEventId, channel: 'all',
           sender: 'System', senderRole: 'System', senderInitials: '⚠',
           text: `${iss.title}${iss.desc ? ' — ' + iss.desc : ''}`,
-          type: 'issue', createdAt: iss.createdAt || new Date().toISOString()
+          type: 'issue', issueId: iss.id, createdAt: iss.createdAt || new Date().toISOString()
         });
       }
     });
@@ -94,27 +94,17 @@ function initMessages() {
       return;
     }
 
-    chatEl.innerHTML = msgs.map(m => {
-      const isSelf = m.sender?.toLowerCase() === session.name?.toLowerCase();
-      const isSystem = m.type === 'issue' || m.type === 'contingency';
-      const time = Hub.timeStr(m.createdAt);
-
-      if (isSystem) {
-        return `<div class="msg-enter-anim" style="text-align:center;font-size:11px;color:var(--pink,#e91e8c);padding:12px 20px;margin:10px auto;max-width:80%;background:rgba(233,30,140,0.1);border-radius:12px;border:1px solid rgba(233,30,140,0.2);font-weight:600;">${m.text}<div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:4px;">${time}</div></div>`;
-      }
-
-      if (isSelf) {
-        return `<div class="msg-bubble-wrap me msg-enter-anim"><div class="msg-bubble">${m.text}</div><div class="msg-time">${time}</div></div>`;
-      }
-
-      return `<div class="msg-bubble-wrap them msg-enter-anim">
-        <div class="msg-sender">${m.sender} <span class="sender-badge" style="background:rgba(6,182,212,0.15);color:var(--cyan,#06b6d4);padding:1px 5px;border-radius:8px;font-size:9px;font-weight:700">${m.senderRole}</span></div>
-        <div class="msg-bubble">${m.text}</div>
-        <div class="msg-time">${time}</div>
-      </div>`;
-    }).join('');
+    chatEl.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
 
     chatEl.scrollTop = chatEl.scrollHeight;
+
+    // Bind View Report buttons
+    chatEl.querySelectorAll('.ch-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const issueId = btn.dataset.issueId;
+        if (issueId) Hub.showIssueModal(issueId);
+      });
+    });
   }
 
   /* ── Send message ────────────────── */
@@ -174,28 +164,58 @@ function initMessages() {
   if (requestModal) requestModal.addEventListener('click', e => { if (e.target === requestModal) closeModal(); });
 
   if (reqSubmit) {
-    reqSubmit.addEventListener('click', () => {
+    reqSubmit.onclick = () => {
       const evId = reqEventId?.value;
       const type = document.getElementById('reqType')?.value;
       const item = document.getElementById('reqItem')?.value.trim();
       const qty = parseInt(document.getElementById('reqQty')?.value, 10);
+      const desc = document.getElementById('reqDesc')?.value?.trim() || '';
 
       if (!evId) { alert("Please select a target event."); return; }
       if (!item) { alert("Please specify the requested item."); return; }
       if (!qty || qty < 1) { alert("Enter a valid quantity."); return; }
 
-      const newReq = { id: 'sr_' + Date.now(), eventId: evId, type, item, qty, status: 'pending', requestedBy: session.name, createdAt: new Date().toISOString() };
-      if (!DB.get('staffRequests')) DB.set('staffRequests', []);
-      DB.add('staffRequests', newReq);
+      const ev = DB.find('events', evId);
+      const evName = ev ? ev.name : evId;
+
+      const newReq = {
+        id: 'sr_' + Date.now(),
+        eventId: evId,
+        eventName: evName,
+        type,
+        item,
+        qty,
+        desc,
+        status: 'pending',
+        requestedBy: session.name,
+        createdAt: new Date().toISOString()
+      };
+
+      const reqs = DB.get('staffRequests') || [];
+      reqs.push(newReq);
+      DB.set('staffRequests', reqs);
 
       // Post to coordination chat
-      Hub.sendMsg(evId, `📋 Dispatch Request: ${qty}x ${item} (${type})`, 'staff');
+      const descNote = desc ? ` — "${desc}"` : '';
+      Hub.sendMsg(evId, `📋 Dispatch Request: ${qty}x ${item} (${type})${descNote}`, 'staff');
 
-      alert("Request dispatched to coordinator!");
+      // Signal vendor monitoring page
+      try { localStorage.setItem('eventpro_staffRequestsUpdated', Date.now().toString()); } catch(e) {}
+
+      // Custom in-app popup instead of alert
+      const popup = document.createElement('div');
+      popup.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--pink,#e91e8c);color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 10px 25px rgba(233,30,140,0.4);font-size:14px;font-weight:600;z-index:9999;animation:fadeIn 0.3s ease-out;';
+      popup.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Request dispatched to vendor</div>';
+      document.body.appendChild(popup);
+      setTimeout(() => {
+        popup.style.animation = 'fadeOut 0.3s ease-in forwards';
+        setTimeout(() => popup.remove(), 300);
+      }, 3000);
+
       closeModal();
       _lastCount = -1;
       renderChat();
-    });
+    };
   }
 
   /* ── Boot ──────────────────────────── */

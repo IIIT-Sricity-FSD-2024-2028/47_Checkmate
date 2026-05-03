@@ -161,6 +161,8 @@
           const session = window.CoordHub ? CoordHub.getSession() : { name: 'Client', role: 'Client' };
           const eventId = eventSelect?.value || null;
 
+          console.log('Issue form submitted with:', { title, desc, eventId, eventSelect: eventSelect?.value });
+
           const issue = {
             id: 'ISS_' + Date.now(),
             title: title,
@@ -174,11 +176,11 @@
             status: 'open'
           };
 
-          DB.add('issues', issue);
+          const savedIssue = DB.add('issues', issue);
 
           // Post to coordination hub
           if (window.CoordHub && eventId) {
-            CoordHub.postIssueToChat(eventId, issue);
+            CoordHub.postIssueToChat(eventId, savedIssue);
           }
 
           btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Submitting...';

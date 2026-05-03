@@ -16,6 +16,43 @@ document.addEventListener('DOMContentLoaded', () => {
   let pollTimer         = null;
   let clockTimer        = null;
 
+  function normalizeText(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function isCoordinatorUpdate(issue) {
+    return normalizeText(issue?.type) === 'update';
+  }
+
+  function isOpenIssue(issue) {
+    const status = normalizeText(issue?.status || 'open');
+    return !['resolved', 'closed', 'completed', 'fixed'].includes(status);
+  }
+
+  function issueMatchesSelectedEvent(issue) {
+    if (!selectedEventId || !issue) return false;
+
+    const issueEventId = normalizeText(issue.eventId);
+    const issueEvent = normalizeText(issue.event);
+    const selectedId = normalizeText(selectedEventId);
+    const selectedName = normalizeText(selectedEventData?.name);
+
+    if (issueEventId && issueEventId === selectedId) return true;
+    if (issueEvent && issueEvent === selectedId) return true;
+    if (selectedName && (issueEventId === selectedName || issueEvent === selectedName)) return true;
+
+    // Older issue forms allowed "Related Event" to be left blank. Treat those
+    // as global live-event risks so they are not hidden from coordinators.
+    return !issueEventId && !issueEvent;
+  }
+
+  function getSelectedEventIssues({ includeUpdates = false } = {}) {
+    return (DB.getAll('issues') || [])
+      .filter(issueMatchesSelectedEvent)
+      .filter(isOpenIssue)
+      .filter(issue => includeUpdates || !isCoordinatorUpdate(issue));
+  }
+
   /* ─── Duration clock ──────────────────── */
   function updateClock() {
     if (!selectedEventData?.startedAt) return;
@@ -168,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const assignments = (DB.getAll('staffAssignments') || [])
       .filter(a=>a.eventId===selectedEventId);
-    const issues   = (DB.getAll('issues')||[]).filter(i=>i.eventId===selectedEventId);
+    const issues   = getSelectedEventIssues();
     const liveEvts = (DB.get('liveEvents') || [])
       .filter(e=>e.eventId===selectedEventId);
     const ev       = DB.find('events', selectedEventId);
@@ -186,7 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Staff check-ins (accepted assignments)
     const checkedIn = assignments.filter(a=>a.status==='accepted');
     if (checkedIn.length) {
-      items.push({ type:'done', icon:'check', title:`${checkedIn.length} Staff Checked In`, time:'on-site' });
+      checkedIn.forEach(a => {
+        items.push({ type:'done', icon:'user-check', title:`${a.staffName} Checked In`, time:'on-site' });
+      });
     }
 
     // 3. Staff task completions (done tasks)
@@ -198,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (doneTasks.length) {
       doneTasks.slice(-3).forEach(t=>{
-        items.push({ type:'done', icon:'check', title:`✓ ${t.desc}`, time:`by ${t.staffName}` });
+        items.push({ type:'done', icon:'check-square', title:`✓ ${t.desc}`, time:`by ${t.staffName}` });
       });
     }
 
@@ -218,16 +257,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 6. Contingency triggered
-    const contig = liveEvts.filter(e=>e.type==='contingency').slice(-1);
+    const contig = liveEvts.filter(e=>e.type==='contingency').slice(-3);
     if (contig.length) {
-      const t = new Date(contig[0].createdAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      items.push({ type:'current', icon:'zap', title:'⚡ Backup Plan Activated', time:t });
+      contig.forEach(c => {
+        const t = new Date(c.createdAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        items.push({ type:'current', icon:'zap', title: c.note || '⚡ Backup Plan Activated', time:t });
+      });
     }
 
     // 7. Reported issues
-    issues.slice(-2).forEach(iss=>{
+    issues.slice(-3).forEach(iss=>{
       const t = new Date(iss.createdAt||Date.now()).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      items.push({ type:'pending', icon:'alert-triangle', title:iss.title||iss.type, time:t });
+      const pri = (iss.priority||'').toLowerCase();
+      const isHighPri = pri.includes('high') || pri.includes('critical');
+      items.push({ type: isHighPri ? 'current' : 'pending', icon:'alert-triangle', title:`${iss.title||iss.type}: Reported`, time:t });
     });
 
     // 8. Event ended
@@ -271,8 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const assignments = (DB.getAll('staffAssignments') || [])
       .filter(a=>a.eventId===selectedEventId);
-    const issues = (DB.getAll('issues')||[])
-      .filter(i=>i.eventId===selectedEventId||!i.eventId)
+    const issues = getSelectedEventIssues({ includeUpdates: true })
       .slice(-6).reverse();
     const liveEvts = (DB.get('liveEvents') || [])
       .filter(e=>e.eventId===selectedEventId)
@@ -332,22 +374,27 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // System issues
+    // System issues — with View Report button for real issues
     issues.forEach(iss=>{
       const t = new Date(iss.createdAt||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
       const isUpdate = iss.type==='update';
+      const isRealIssue = !isUpdate && iss.type !== 'contingency';
+      const viewBtn = isRealIssue ? `<button class="mon-view-report-btn" data-issue-id="${iss.id}" style="margin-left:auto;flex-shrink:0;padding:4px 10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:4px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">View Report</button>` : '';
+      const priLabel = isRealIssue && iss.priority ? `<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:6px;background:${(iss.priority||'').toLowerCase().includes('high')||(iss.priority||'').toLowerCase().includes('critical')?'rgba(239,68,68,0.15);color:#fca5a5':'rgba(234,179,8,0.15);color:#fde047'};">${iss.priority}</span>` : '';
       html += `
-        <div class="mon-alert-item ${isUpdate?'mon-alert-item--info':'mon-alert-item--warning'}">
+        <div class="mon-alert-item ${isUpdate?'mon-alert-item--info':'mon-alert-item--warning'}" style="${isRealIssue?'border-left:3px solid rgba(239,68,68,0.5);':''}">
           <i data-lucide="${isUpdate?'info':'alert-triangle'}"></i>
-          <div class="mon-alert-item__body">
-            <div class="mon-alert-item__text">${iss.title||iss.type}</div>
-            <div class="mon-alert-item__time">${t}</div>
+          <div class="mon-alert-item__body" style="flex:1;">
+            <div class="mon-alert-item__text">${iss.title||iss.type}${priLabel}</div>
+            <div class="mon-alert-item__time">${t}${iss.reporter?' · by '+iss.reporter:''}</div>
           </div>
+          ${viewBtn}
         </div>`;
     });
 
     logEl.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Waiting for live updates…</div>';
     if (window.lucide) window.lucide.createIcons();
+    bindViewReportBtns(logEl);
   }
 
   /* ─── Active Risks from Issues ────────── */
@@ -355,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const listEl = document.querySelector('.mon-risk-list');
     if (!listEl || !selectedEventId) return;
 
-    const issues = (DB.getAll('issues')||[]).filter(i=>i.eventId===selectedEventId);
+    const issues = getSelectedEventIssues();
     if (!issues.length) {
       listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12.5px;padding:12px 0;text-align:center;">No active risks reported.</div>';
       return;
@@ -364,23 +411,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const pil = s => {
       if (!s) return 'medium';
       const p = s.toLowerCase();
-      if (p==='high'||p==='critical') return 'high';
-      if (p==='low') return 'low';
+      if (p.includes('high') || p.includes('critical')) return 'high';
+      if (p.includes('low')) return 'low';
       return 'medium';
     };
 
-    listEl.innerHTML = issues.slice(-3).reverse().map(iss=>{
+    listEl.innerHTML = issues.slice(-5).reverse().map(iss=>{
       const sev  = pil(iss.severity||iss.priority);
       const time = new Date(iss.createdAt||Date.now()).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
       return `
-        <div class="mon-risk-item">
-          <div class="mon-risk-item__body">
+        <div class="mon-risk-item" style="cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+          <div class="mon-risk-item__body" style="flex:1;min-width:0;">
             <div class="mon-risk-item__title">${iss.title||iss.type}</div>
-            <div class="mon-risk-item__time">Reported at ${time}</div>
+            <div class="mon-risk-item__time">Reported at ${time}${iss.reporter?' · by '+iss.reporter:''}</div>
           </div>
-          <span class="risk-pill risk-pill--${sev}">${sev}</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+            <span class="risk-pill risk-pill--${sev}">${sev}</span>
+            <button class="mon-view-report-btn" data-issue-id="${iss.id}" style="padding:3px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">View Report</button>
+          </div>
         </div>`;
     }).join('');
+    bindViewReportBtns(listEl);
+  }
+
+  /* ─── Bind View Report buttons in any container ── */
+  function bindViewReportBtns(container) {
+    if (!container) return;
+    container.querySelectorAll('.mon-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const issueId = btn.dataset.issueId;
+        if (issueId && window.CoordHub) {
+          CoordHub.showIssueModal(issueId);
+        } else if (issueId) {
+          showLocalIssueModal(issueId);
+        }
+      });
+    });
+  }
+
+  /* ─── Fallback issue modal if CoordHub not loaded ── */
+  function showLocalIssueModal(issueId) {
+    const issues = DB.getAll('issues') || [];
+    const iss = issues.find(i => i.id === issueId);
+    if (!iss) { Toast.show('Issue details not found.', 'warn'); return; }
+    const ev = iss.eventId ? DB.find('events', iss.eventId) : null;
+    const prioColor = (iss.priority||'').toLowerCase().includes('critical') ? '#ef4444' : (iss.priority||'').toLowerCase().includes('high') ? '#f97316' : (iss.priority||'').toLowerCase().includes('medium') ? '#eab308' : '#22c55e';
+    const time = new Date(iss.createdAt || Date.now()).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const date = new Date(iss.createdAt || Date.now()).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('_monIssueOverlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = '_monIssueOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s;';
+    ov.innerHTML = `<div style="background:var(--bg-card,#1e1b2e);border:1px solid var(--border);border-radius:12px;width:100%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.5);overflow:hidden;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;display:flex;align-items:center;justify-content:center;border:1px solid rgba(239,68,68,0.2);"><i data-lucide="alert-triangle"></i></div><div><h3 style="font-size:16px;font-weight:600;margin:0;color:var(--text-primary);">Issue Report</h3><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${iss.id}</div></div></div><button id="_monIssueClose" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:6px;">✕</button></div>
+      <div style="padding:24px;"><h4 style="font-size:15px;font-weight:600;color:var(--text-primary);margin:0 0 12px;">${iss.title}</h4><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary);display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:${prioColor};"></span>${iss.priority||'Normal'} Priority</span><span style="font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary);">Status: <span style="color:#f97316;text-transform:capitalize;">${iss.status||'open'}</span></span>${iss.category?'<span style="font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary);">'+iss.category+'</span>':''}</div><div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Description</div><p style="font-size:13.5px;color:var(--text-secondary);line-height:1.6;margin:0;">${iss.desc||iss.description||'No description provided.'}</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:16px;"><div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Reported By</div><div style="font-size:13px;font-weight:500;color:var(--text-primary);">${iss.reporter||'Unknown'}</div><div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${iss.reporterRole||iss.role||'N/A'}</div></div><div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Date Reported</div><div style="font-size:13px;font-weight:500;color:var(--text-primary);">${date}</div><div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${time}</div></div>${ev?'<div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Related Event</div><div style="font-size:13px;font-weight:500;color:var(--text-primary);">'+ev.name+'</div></div>':''}</div></div></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#_monIssueClose').addEventListener('click', () => ov.remove());
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    if (window.lucide) window.lucide.createIcons();
   }
 
   /* ─── Type label map (matches staff side) ── */
@@ -774,10 +863,8 @@ document.addEventListener('DOMContentLoaded', () => {
           liveEvts.push({ id:'le_'+Date.now(), eventId: selectedEventId, type:'update', note, createdAt: now });
           DB.set('liveEvents', liveEvts);
 
-          // Also write to issues so it shows up in risks/feed
-          const issues = DB.getAll('issues');
-          issues.push({ id:'iss_'+Date.now(), eventId: selectedEventId, type:'update', title: note, createdAt: now, severity:'info' });
-          DB.save('issues', issues);
+          // Also write to issues so it shows up in risks/feed (use DB.add for backend persistence)
+          DB.add('issues', { id:'iss_'+Date.now(), eventId: selectedEventId, type:'update', title: note, createdAt: now, severity:'info', priority:'Low', reporter:'Event Coordinator', reporterRole:'Vendor' });
         }
 
         if (status) {
@@ -852,10 +939,8 @@ document.addEventListener('DOMContentLoaded', () => {
       liveEvts.push({ id:'le_'+Date.now(), eventId: selectedEventId, type:'end', note:'Event ended by coordinator.', createdAt: now });
       DB.set('liveEvents', liveEvts);
 
-      // Log to issues
-      const issues = DB.getAll('issues');
-      issues.push({ id:'iss_'+Date.now(), eventId: selectedEventId, type:'update', title:'Event ended by coordinator.', createdAt: now, severity:'info' });
-      DB.save('issues', issues);
+      // Log to issues (use DB.add for backend persistence)
+      DB.add('issues', { id:'iss_'+Date.now(), eventId: selectedEventId, type:'update', title:'Event ended by coordinator.', createdAt: now, severity:'info', priority:'Low', reporter:'Event Coordinator', reporterRole:'Vendor' });
 
       selectedEventData = DB.find('events', selectedEventId);
       Toast.show('Event ended. Staff workload reset & resources returned.','success');
@@ -974,18 +1059,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     DB.set('liveEvents', liveEvts);
 
-    // 2. Write to issues
-    const issues = DB.getAll('issues');
-    issues.push({
+    // 2. Write to issues (use DB.add for backend persistence)
+    DB.add('issues', {
       id: 'iss_'+Date.now(),
       eventId: eventId||null,
       type: 'contingency',
       title: `⚡ Contingency: ${plan.problem} — ${plan.solution}`,
       createdAt: now,
       severity: 'high',
-      priority: 'high',
+      priority: 'High',
+      reporter: 'Event Coordinator',
+      reporterRole: 'Vendor'
     });
-    DB.save('issues', issues);
 
     // 3. Broadcast via MsgService
     const broadcastText = `[SYSTEM] ⚡ CONTINGENCY TRIGGERED${ev ? ' for "'+ev.name+'"' : ''}: ${plan.problem} → ${plan.solution}. Immediate action required. ${ts}`;
@@ -1050,6 +1135,8 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(clockTimer);
     clockTimer = setInterval(updateClock, 1000);
     pollTimer  = setInterval(()=>{
+      if (typeof DB.reset === 'function') DB.reset();
+
       // Re-read event data to catch external changes
       if (selectedEventId) {
         const fresh = DB.find('events', selectedEventId);

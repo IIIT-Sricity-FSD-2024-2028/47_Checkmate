@@ -164,7 +164,7 @@ window.CoordHub = (() => {
       sender: issue.reporter || 'System',
       senderRole: issue.reporterRole || 'System',
       senderInitials: initials(issue.reporter || 'System'),
-      text: `⚠️ Issue Reported: ${issue.title} — ${issue.desc || ''}`,
+      text: `⚠️ Issue Reported: ${issue.title} — ${issue.desc || issue.description || ''}`,
       type: 'issue',
       issueId: issue.id,
       createdAt: new Date().toISOString()
@@ -197,18 +197,34 @@ window.CoordHub = (() => {
     liveEvts.push({ id: 'le_' + Date.now(), eventId, type: 'contingency', note: `Contingency: ${plan.problem} — ${plan.solution}`, createdAt: msg.createdAt });
     DB.set('liveEvents', liveEvts);
 
-    // 3. Write to issues
-    const issues = DB.getAll('issues');
-    issues.push({ id: 'iss_' + Date.now(), eventId, type: 'contingency', title: `⚡ Contingency: ${plan.problem}`, desc: plan.solution, createdAt: msg.createdAt, severity: 'critical', priority: 'Critical' });
-    DB.save('issues', issues);
+    // 3. Write to issues (use DB.add for backend persistence)
+    DB.add('issues', { id: 'iss_' + Date.now(), eventId, type: 'contingency', title: `⚡ Contingency: ${plan.problem}`, desc: plan.solution, createdAt: msg.createdAt, severity: 'critical', priority: 'Critical', reporter: session.name, reporterRole: session.role });
 
     // 4. Update plan status
     const allPlans = DB.get('contingencyPlans') || {};
     if (allPlans[eventId]) {
       const p = allPlans[eventId].find(x => x.id === plan.id);
-      if (p) p.status = 'triggered';
+      if (p) {
+        p.status = 'triggered';
+        p.triggeredAt = new Date().toISOString();
+      }
       DB.set('contingencyPlans', allPlans);
     }
+
+    // 5. Cross-tab sync via localStorage (for monitoring page)
+    try {
+      const contKey = JSON.parse(localStorage.getItem('eventpro_contingencyAlerts') || '[]');
+      contKey.push({
+        id: 'ca_' + Date.now(),
+        eventId: eventId,
+        planId: plan.id,
+        problem: plan.problem,
+        solution: plan.solution,
+        triggeredBy: session.name,
+        triggeredAt: msg.createdAt
+      });
+      localStorage.setItem('eventpro_contingencyAlerts', JSON.stringify(contKey));
+    } catch(e) {}
 
     return msg;
   }
@@ -223,7 +239,7 @@ window.CoordHub = (() => {
       const cssClass = m.type === 'contingency' ? 'alert' : (m.type === 'issue' ? 'alert' : 'info');
       const icon = m.type === 'contingency' ? 'alert-triangle' : (m.type === 'issue' ? 'alert-triangle' : 'zap');
       const actionBtn = (m.type === 'issue' && m.issueId) ? 
-        `<button onclick="CoordHub.showIssueModal('${m.issueId}')" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; margin-left:10px; white-space:nowrap; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">View Report</button>` : '';
+        `<button class="ch-view-report-btn" data-issue-id="${m.issueId}" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; margin-left:10px; white-space:nowrap; transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">View Report</button>` : '';
         
       return `<div class="ch-sys-msg ${cssClass}" style="text-align:center;font-size:12px;color:${cssClass === 'alert' ? '#fca5a5' : '#93c5fd'};background:${cssClass === 'alert' ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)'};border:1px solid ${cssClass === 'alert' ? 'rgba(239,68,68,0.25)' : 'rgba(59,130,246,0.25)'};border-radius:6px;padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;">
         <i data-lucide="${icon}" style="width:13px;height:13px;flex-shrink:0;"></i>
@@ -260,72 +276,127 @@ window.CoordHub = (() => {
   /* ── Issue Detail Modal ──────────────── */
   function showIssueModal(issueId) {
     const issues = DB.getAll('issues') || [];
-    const issue = issues.find(i => i.id === issueId);
+    let issue = issues.find(i => i.id === issueId);
+    
+    // Fallback: try matching by partial ID or timestamp portion
     if (!issue) {
-      alert('Issue not found or has been removed.');
+      issue = issues.find(i => i.id && issueId && (i.id.includes(issueId) || issueId.includes(i.id)));
+    }
+    
+    // Fallback: reconstruct from the coordination message that contains this issue
+    if (!issue) {
+      const allMsgs = getAllMessages();
+      const issueMsg = allMsgs.find(m => m.issueId === issueId && m.type === 'issue');
+      if (issueMsg) {
+        // Extract details from the message text (format: "⚠️ Issue Reported: TITLE — DESC")
+        const textMatch = (issueMsg.text || '').match(/Issue Reported:\s*(.+?)(?:\s*—\s*(.*))?$/);
+        issue = {
+          id: issueId,
+          title: textMatch ? textMatch[1].trim() : issueMsg.text,
+          desc: textMatch && textMatch[2] ? textMatch[2].trim() : '',
+          reporter: issueMsg.sender || 'Unknown',
+          reporterRole: issueMsg.senderRole || 'N/A',
+          priority: 'Medium',
+          status: 'open',
+          createdAt: issueMsg.createdAt
+        };
+      }
+    }
+    
+    if (!issue) {
+      alert('Issue not found. It may have been removed.');
       return;
     }
     
+    // Remove any existing modal
+    document.getElementById('issueDetailOverlay')?.remove();
+    
     const overlay = document.createElement('div');
+    overlay.id = 'issueDetailOverlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
     
-    const prioColor = issue.priority === 'Critical' ? 'var(--red)' : (issue.priority === 'High' ? 'var(--orange)' : (issue.priority === 'Medium' ? 'var(--yellow)' : 'var(--green)'));
+    const prioColor = issue.priority === 'Critical' ? '#ef4444' : (issue.priority === 'High' ? '#f97316' : (issue.priority === 'Medium' ? '#eab308' : '#22c55e'));
     const time = timeStr(issue.createdAt || new Date().toISOString());
-    const date = new Date(issue.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const date = new Date(issue.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    overlay.innerHTML = `
-      <div style="background:var(--bg-card,#1e1b2e);border:1px solid var(--border,#334155);border-radius:12px;width:100%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.5);overflow:hidden;animation:fadeIn 0.2s ease-out;">
+    const modalCard = document.createElement('div');
+    modalCard.style.cssText = 'background:var(--bg-card,#1e1b2e);border:1px solid var(--border,#334155);border-radius:12px;width:100%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.5);overflow:hidden;animation:chFadeIn 0.2s ease-out;';
+
+    modalCard.innerHTML = `
         <div style="padding:16px 24px;border-bottom:1px solid var(--border,#334155);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:8px;background:rgba(239,68,68,0.1);color:var(--red,#ef4444);display:flex;align-items:center;justify-content:center;border:1px solid rgba(239,68,68,0.2);">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;display:flex;align-items:center;justify-content:center;border:1px solid rgba(239,68,68,0.2);">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </div>
             <div>
-              <h3 style="font-size:16px;font-weight:600;margin:0;color:var(--text-primary,#f8fafc);font-family:var(--font-display,sans-serif);">Issue Report</h3>
+              <h3 style="font-size:16px;font-weight:600;margin:0;color:var(--text-primary,#f8fafc);">Issue Report</h3>
               <div style="font-size:12px;color:var(--text-muted,#94a3b8);margin-top:2px;">${issue.id}</div>
             </div>
           </div>
-          <button onclick="this.closest('div[style*=\\'position:fixed\\']').remove()" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:4px;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
+          <button id="issueModalCloseBtn" style="background:transparent;border:none;color:var(--text-muted,#94a3b8);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         
         <div style="padding:24px;">
-          <h4 style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:12px;line-height:1.4;">${issue.title}</h4>
+          <h4 style="font-size:15px;font-weight:600;color:var(--text-primary,#f8fafc);margin:0 0 12px;line-height:1.4;">${issue.title}</h4>
           
-          <div style="display:flex;gap:12px;margin-bottom:20px;">
-            <div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary);display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+            <div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary,#cbd5e1);display:flex;align-items:center;gap:6px;">
               <span style="width:6px;height:6px;border-radius:50%;background:${prioColor};"></span>
-              ${issue.priority} Priority
+              ${issue.priority || 'Normal'} Priority
             </div>
-            <div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary);">
-              Status: <span style="color:${issue.status === 'open' ? 'var(--orange,#f97316)' : 'var(--green,#22c55e)'};text-transform:capitalize;">${issue.status || 'open'}</span>
+            <div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary,#cbd5e1);">
+              Status: <span style="color:${issue.status === 'open' ? '#f97316' : '#22c55e'};text-transform:capitalize;">${issue.status || 'open'}</span>
             </div>
+            ${issue.category ? `<div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-secondary,#cbd5e1);">${issue.category}</div>` : ''}
+            ${issue.severity ? `<div style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:${prioColor}20;color:${prioColor};border:1px solid ${prioColor}40;">Severity: ${issue.severity}</div>` : ''}
           </div>
           
           <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border,#334155);border-radius:8px;padding:16px;margin-bottom:20px;">
-            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Description</div>
-            <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.6;margin:0;white-space:pre-wrap;">${issue.desc || 'No description provided.'}</p>
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted,#94a3b8);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Description</div>
+            <p style="font-size:13.5px;color:var(--text-secondary,#cbd5e1);line-height:1.6;margin:0;white-space:pre-wrap;">${issue.desc || issue.description || 'No description provided.'}</p>
           </div>
           
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border,#334155);border-radius:8px;padding:16px;">
             <div>
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Reported By</div>
-              <div style="font-size:13px;font-weight:500;color:var(--text-primary);">${issue.reporter}</div>
-              <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${issue.reporterRole}</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:4px;">Reported By</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary,#f8fafc);">${issue.reporter || 'Unknown'}</div>
+              <div style="font-size:11.5px;color:var(--text-secondary,#cbd5e1);margin-top:2px;">${issue.reporterRole || issue.role || 'N/A'}</div>
             </div>
             <div>
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Date Reported</div>
-              <div style="font-size:13px;font-weight:500;color:var(--text-primary);">${date}</div>
-              <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${time}</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:4px;">Date Reported</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary,#f8fafc);">${date}</div>
+              <div style="font-size:11.5px;color:var(--text-secondary,#cbd5e1);margin-top:2px;">${time}</div>
             </div>
+            ${issue.email ? `<div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:4px;">Contact Email</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary,#f8fafc);">${issue.email}</div>
+            </div>` : ''}
+            ${(() => { try { const evId = issue.eventId || issue.event; const evObj = evId ? DB.find('events', evId) : null; return evObj ? `<div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:4px;">Related Event</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary,#f8fafc);">${evObj.name}</div>
+              <div style="font-size:11.5px;color:var(--text-secondary,#cbd5e1);margin-top:2px;">${evObj.status || ''}</div>
+            </div>` : ''; } catch(e) { return ''; } })()}
           </div>
-        </div>
-      </div>
-      <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>
-    `;
+        </div>`;
+
+    overlay.appendChild(modalCard);
+    
+    // Add animation style if not present
+    if (!document.getElementById('chModalStyle')) {
+      const style = document.createElement('style');
+      style.id = 'chModalStyle';
+      style.textContent = '@keyframes chFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }';
+      document.head.appendChild(style);
+    }
     
     document.body.appendChild(overlay);
+
+    // Close button
+    document.getElementById('issueModalCloseBtn').addEventListener('click', () => overlay.remove());
+    // Click outside to close
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
   }
 
   /* ── Public API ─────────────────────── */

@@ -183,6 +183,11 @@
           <input type="number" id="reqQty" placeholder="1" min="1" value="1" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:14px;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" required>
         </div>
       </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;">Reason / Description <span style="font-weight:400;color:var(--text3);">(optional)</span></label>
+        <textarea id="reqDesc" rows="2" placeholder="Why do you need this? E.g. Guest count increased, need more seating..." style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:13px;resize:vertical;font-family:inherit;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
+      </div>
       
     </div>
     <div style="padding:16px 24px;border-top:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.2);display:flex;justify-content:flex-end;gap:12px;">

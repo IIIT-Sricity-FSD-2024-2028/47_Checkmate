@@ -2895,9 +2895,17 @@
             "type": "string",
             "example": "Main stage lights flicker when the LED wall is active."
           },
+          "desc": {
+            "type": "string",
+            "example": "Main stage lights flicker."
+          },
           "reporter": {
             "type": "string",
             "example": "Sarah Williams"
+          },
+          "reporterRole": {
+            "type": "string",
+            "example": "Vendor"
           },
           "email": {
             "type": "string",
@@ -2910,14 +2918,22 @@
           "status": {
             "type": "string",
             "example": "open"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "example": "issue"
+          },
+          "severity": {
+            "type": "string",
+            "example": "high"
           }
         },
         "required": [
           "title",
-          "category",
-          "priority",
-          "description",
-          "reporter"
+          "priority"
         ]
       },
       "UpdateIssueDto": {

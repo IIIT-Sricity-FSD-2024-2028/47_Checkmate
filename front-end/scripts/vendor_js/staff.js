@@ -273,9 +273,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
+    // ── Single-event constraint ──
+    // Check if this staff already has assignments to an event
+    const allAssignments = DB.getAll('staffAssignments') || [];
+    const staffAssignments = allAssignments.filter(a => a.staffId === s.id);
+    const assignedEventIds = [...new Set(staffAssignments.map(a => a.eventId))];
+    
     // Broaden filter to any actionable status
     const validStatuses = ['approved', 'confirmed', 'live'];
-    const actionableEvents = DB.getAll('events').filter(e => validStatuses.includes((e.status || '').toLowerCase()));
+    let actionableEvents = DB.getAll('events').filter(e => validStatuses.includes((e.status || '').toLowerCase()));
+    
+    // If staff is already assigned to an event, restrict to only that event
+    let restrictedToEvent = null;
+    if (assignedEventIds.length > 0) {
+      restrictedToEvent = assignedEventIds[0]; // Staff can only work on one event
+      actionableEvents = actionableEvents.filter(e => e.id === restrictedToEvent);
+      
+      if (actionableEvents.length === 0) {
+        const evName = staffAssignments[0]?.eventName || restrictedToEvent;
+        Toast.show(`${s.name} is assigned to "${evName}" which is no longer active. Remove existing assignment first.`, 'warn');
+        return;
+      }
+    }
     
     if (actionableEvents.length === 0) {
       Toast.show('No approved or confirmed events available to assign.', 'warn');
@@ -295,6 +314,22 @@ document.addEventListener('DOMContentLoaded', () => {
     select.innerHTML = actionableEvents.map(ev => 
       `<option value="${ev.id}">${ev.name} [${ev.status.toUpperCase()}]</option>`
     ).join('');
+    
+    // Show info about restriction
+    let infoEl = document.getElementById('assignEventInfo');
+    if (!infoEl) {
+      infoEl = document.createElement('div');
+      infoEl.id = 'assignEventInfo';
+      select.parentElement.parentElement.appendChild(infoEl);
+    }
+    if (restrictedToEvent) {
+      const evName = actionableEvents[0]?.name || restrictedToEvent;
+      infoEl.style.cssText = 'font-size:11px;color:var(--yellow,#eab308);margin-top:6px;padding:8px 12px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:6px;display:flex;align-items:center;gap:6px;';
+      infoEl.innerHTML = `⚠️ ${s.name} is already assigned to <strong>"${evName}"</strong>. Staff can only be assigned to one event at a time.`;
+    } else {
+      infoEl.style.cssText = 'font-size:11px;color:var(--green,#22c55e);margin-top:6px;padding:8px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:6px;';
+      infoEl.innerHTML = `✓ ${s.name} has no current event assignment. You may assign to any event.`;
+    }
     
     // Clear task input
     document.getElementById('assignTaskName').value = '';

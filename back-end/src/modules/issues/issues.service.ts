@@ -8,7 +8,7 @@ export class IssuesService {
   findAll() { return this.data.collection('issues'); }
   findOne(id: string) { return this.data.find('issues', id); }
   create(dto: CreateIssueDto) {
-    return this.data.create('issues', 'ISS', { status: 'open', createdAt: new Date().toISOString(), ...dto });
+    return this.data.create('issues', 'ISS', { status: 'open', createdAt: new Date().toISOString(), ...dto } as any);
   }
   update(id: string, dto: UpdateIssueDto) { return this.data.update('issues', id, dto); }
   remove(id: string) { return this.data.remove('issues', id); }

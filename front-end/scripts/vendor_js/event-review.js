@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ── Contingency Plan helpers ────────── */
+  let _contClickHandler = null;
   function getPlansForEvent(eventId) {
     const allPlans = DB.get('contingencyPlans') || {};
     if (allPlans[eventId]) return allPlans[eventId];
@@ -124,6 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!eventId) {
       section.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No event loaded.</div>';
       return;
+    }
+
+    // Remove previous delegation handler to avoid stacking
+    if (_contClickHandler) {
+      section.removeEventListener('click', _contClickHandler);
+      _contClickHandler = null;
     }
 
     const plans = getPlansForEvent(eventId);
@@ -150,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${statusHtml}</td>
             <td style="text-align:right;">
               <button class="cont-del-btn" data-plan-id="${p.id}" title="Remove plan">
-                <i data-lucide="x"></i>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </td>
           </tr>`;
@@ -181,53 +188,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     section.innerHTML = html;
 
-    // Bind delete buttons
-    section.querySelectorAll('.cont-del-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const planId = btn.dataset.planId;
-        Confirm.ask({
-          title: 'Remove Plan?',
-          msg: 'This contingency plan will be deleted.',
-          okLabel: 'Remove', okColor: '#b91c1c',
-        }).then(ok => {
-          if (!ok) return;
+    // Render icons FIRST (lucide replaces <i> elements, breaking listeners)
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Event delegation for delete & add
+    _contClickHandler = function(e) {
+      // Handle delete
+      const delBtn = e.target.closest('.cont-del-btn');
+      if (delBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const planId = delBtn.dataset.planId;
+        if (!planId) return;
+
+        if (window.Confirm) {
+          Confirm.ask({
+            title: 'Remove Plan?',
+            msg: 'This contingency plan will be deleted.',
+            okLabel: 'Remove', okColor: '#b91c1c',
+          }).then(ok => {
+            if (!ok) return;
+            const allPlans = DB.get('contingencyPlans') || {};
+            if (allPlans[eventId]) {
+              allPlans[eventId] = allPlans[eventId].filter(p => p.id !== planId);
+              DB.set('contingencyPlans', allPlans);
+            }
+            if (window.Toast) Toast.show('Plan removed.', 'error');
+            renderContingencyPlans();
+          });
+        } else {
           const allPlans = DB.get('contingencyPlans') || {};
           if (allPlans[eventId]) {
             allPlans[eventId] = allPlans[eventId].filter(p => p.id !== planId);
             DB.set('contingencyPlans', allPlans);
           }
-          Toast.show('Plan removed.', 'error');
           renderContingencyPlans();
-        });
-      });
-    });
-
-    // Bind add button
-    document.getElementById('cpAddBtn')?.addEventListener('click', () => {
-      const problem  = document.getElementById('cpProblem')?.value.trim();
-      const trigger  = document.getElementById('cpTrigger')?.value.trim();
-      const solution = document.getElementById('cpSolution')?.value.trim();
-
-      if (!problem || !trigger || !solution) {
-        Toast.show('Please fill all three fields.', 'warn');
+        }
         return;
       }
 
-      const allPlans = DB.get('contingencyPlans') || {};
-      if (!allPlans[eventId]) allPlans[eventId] = [];
-      allPlans[eventId].push({
-        id: 'CP_' + Date.now(),
-        problem,
-        trigger,
-        solution,
-        status: 'ready',
-      });
-      DB.set('contingencyPlans', allPlans);
-      Toast.show('✓ Contingency plan added!', 'success');
-      renderContingencyPlans();
-    });
+      // Handle add
+      const addBtn = e.target.closest('#cpAddBtn');
+      if (addBtn) {
+        const problem  = document.getElementById('cpProblem')?.value.trim();
+        const trigger  = document.getElementById('cpTrigger')?.value.trim();
+        const solution = document.getElementById('cpSolution')?.value.trim();
 
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (!problem || !trigger || !solution) {
+          Toast.show('Please fill all three fields.', 'warn');
+          return;
+        }
+
+        const allPlans = DB.get('contingencyPlans') || {};
+        if (!allPlans[eventId]) allPlans[eventId] = [];
+        allPlans[eventId].push({
+          id: 'CP_' + Date.now(),
+          problem,
+          trigger,
+          solution,
+          status: 'ready',
+        });
+        DB.set('contingencyPlans', allPlans);
+        Toast.show('✓ Contingency plan added!', 'success');
+        renderContingencyPlans();
+      }
+    };
+    section.addEventListener('click', _contClickHandler);
   }
 
   /* ── Render contingency on load ──────── */
