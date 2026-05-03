@@ -4,5 +4,8 @@
     "start": "npm --prefix back-end run start",
     "build": "npm --prefix back-end run build",
     "test": "npm --prefix back-end run test"
+  },
+  "devDependencies": {
+    "@types/passport-jwt": "^4.0.1"
   }
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { CreateStaffAssignmentDto, CreateStaffDto, UpdateStaffAssignmentDto, UpdateStaffDto } from './dto';
 import { StaffService } from './staff.service';
@@ -16,6 +17,10 @@ export class StaffController {
   @Put('staff/:id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto) { return this.service.update(id, dto); }
   @Patch('staff/:id') @Roles('vendor', 'admin', 'superuser', 'staff') update(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto) { return this.service.update(id, dto); }
   @Delete('staff/:id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+
+  @Post('staff/signup') @Public() signup(@Body() dto: any) { return this.service.signup(dto); }
+  @Post('staff/login') @Public() login(@Body() dto: any) { return this.service.login(dto); }
+  @Get('staff/profile/:email') @Roles('admin', 'superuser', 'vendor', 'staff') getProfile(@Param('email') email: string) { return this.service.getProfile(email); }
 
   @Get('staff-assignments') @Roles('admin', 'superuser', 'vendor', 'staff', 'client') assignments() { return this.service.assignments(); }
   @Post('staff-assignments') @Roles('vendor', 'admin', 'superuser') createAssignment(@Body() dto: CreateStaffAssignmentDto) { return this.service.createAssignment(dto); }

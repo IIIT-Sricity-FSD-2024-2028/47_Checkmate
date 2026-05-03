@@ -910,6 +910,86 @@
         ]
       }
     },
+    "/api/staff/signup": {
+      "post": {
+        "operationId": "StaffController_signup",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/login": {
+      "post": {
+        "operationId": "StaffController_login",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/profile/{email}": {
+      "get": {
+        "operationId": "StaffController_getProfile",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/staff-assignments": {
       "get": {
         "operationId": "StaffController_assignments",
