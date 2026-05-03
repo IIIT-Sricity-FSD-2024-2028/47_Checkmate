@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── Build event selector cards ─────── */
   function initEventCards() {
     const events = DB.getAll('events')
-      .filter(e => ['live','confirmed','approved'].includes(e.status))
+      .filter(e => e.status === 'live')
       .sort((a,b) => {
         if (a.status==='live' && b.status!=='live') return -1;
         if (b.status==='live' && a.status!=='live') return  1;
@@ -888,8 +888,234 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal(overlay);
     if (window.lucide) window.lucide.createIcons();
   }
+  /* ─── Allocate Additional Resources ──────── */
+  function openAllocateResourceModal() {
+    if (!selectedEventId) { Toast.show('Please select an event first.','warn'); return; }
+    
+    // Fetch available resources
+    var resources = DB.getAll('resources') || [];
+    var availableResources = resources.filter(function(r) { return r.quantity > 0; });
+    if (availableResources.length === 0) {
+      Toast.show('No resources available to allocate.', 'warn');
+      return;
+    }
 
-  /* ─── End Event ───────────────────────── */
+    var overlay = document.getElementById('_allocResOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = '_allocResOverlay';
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = [
+        '<div class="modal" style="width:min(480px,94vw);padding:28px 28px 24px;">',
+        '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">',
+        '    <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text-primary);">Allocate Additional Resource</div>',
+        '    <button id="_allocResClose" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);padding:4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>',
+        '  </div>',
+        '  <div style="margin-bottom:16px;">',
+        '    <label style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;display:block;">Resource</label>',
+        '    <select id="_alloc_resId" class="ri-select">',
+        '      <option value="" disabled selected>Select a resource</option>',
+        '    </select>',
+        '  </div>',
+        '  <div style="margin-bottom:20px;">',
+        '    <label style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;display:block;">Quantity to Allocate</label>',
+        '    <input type="number" id="_alloc_resQty" class="ri-input" min="1" value="1">',
+        '  </div>',
+        '  <div style="display:flex;gap:10px;justify-content:flex-end;">',
+        '    <button class="ri-cancel" id="_allocResCancelBtn">Cancel</button>',
+        '    <button class="ri-submit" id="_allocResSaveBtn" style="flex:none;padding:12px 28px;"><i data-lucide="check" style="width:15px;height:15px;"></i> Allocate</button>',
+        '  </div>',
+        '</div>'
+      ].join('\n');
+      document.body.appendChild(overlay);
+
+      document.getElementById('_allocResClose').addEventListener('click', function() { closeModal(overlay); });
+      document.getElementById('_allocResCancelBtn').addEventListener('click', function() { closeModal(overlay); });
+      overlay.addEventListener('click', function(e) { if(e.target===overlay) closeModal(overlay); });
+
+      document.getElementById('_allocResSaveBtn').addEventListener('click', function() {
+        var resId = document.getElementById('_alloc_resId').value;
+        var qty = parseInt(document.getElementById('_alloc_resQty').value, 10);
+        
+        if (!resId) { Toast.show('Please select a resource.', 'warn'); return; }
+        if (!qty || qty <= 0) { Toast.show('Please enter a valid quantity.', 'warn'); return; }
+
+        var rList = DB.getAll('resources') || [];
+        var res = rList.find(function(r) { return r.id === resId; });
+        if (!res) { Toast.show('Resource not found.', 'warn'); return; }
+        if (qty > res.quantity) { Toast.show('Not enough availability. Only ' + res.quantity + ' left.', 'warn'); return; }
+
+        // Deduct
+        var newQty = res.quantity - qty;
+        DB.update('resources', res.id, { quantity: newQty, available: newQty > 0 });
+
+        // Record allocation
+        var allocs = DB.get('resourceAllocations') || {};
+        if (!allocs[selectedEventId]) allocs[selectedEventId] = [];
+        allocs[selectedEventId].push({
+          resourceId: res.id,
+          resourceName: res.name,
+          category: res.category,
+          qty: qty,
+          allocatedAt: new Date().toISOString()
+        });
+        DB.set('resourceAllocations', allocs);
+
+        // Broadcast to timeline
+        DB.add('issues', { 
+          id: 'iss_' + Date.now(), 
+          eventId: selectedEventId, 
+          type: 'update', 
+          title: 'Allocated ' + qty + 'x ' + res.name, 
+          createdAt: new Date().toISOString(), 
+          severity: 'info', 
+          priority: 'Low', 
+          reporter: 'Event Coordinator', 
+          reporterRole: 'Vendor' 
+        });
+
+        // Signal manage-resource page
+        localStorage.setItem('eventpro_resourcesUpdated', Date.now().toString());
+
+        Toast.show('Allocated ' + qty + ' ' + res.name + ' successfully.', 'success');
+        closeModal(overlay);
+        refreshAll();
+      });
+    }
+
+    // Refresh options dynamically when opened
+    var resSelect = document.getElementById('_alloc_resId');
+    var freshRes = DB.getAll('resources') || [];
+    var opts = '<option value="" disabled selected>Select a resource</option>';
+    freshRes.forEach(function(r) {
+      if (r.quantity > 0) {
+        opts += '<option value="' + r.id + '">' + r.name + ' (' + r.quantity + ' available)</option>';
+      }
+    });
+    resSelect.innerHTML = opts;
+    
+    document.getElementById('_alloc_resQty').value = '1';
+    openModal(overlay);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* ─── Allocate Additional Staff ──────────── */
+  function openAllocateStaffModal() {
+    if (!selectedEventId) { Toast.show('Please select an event first.','warn'); return; }
+    
+    var overlay = document.getElementById('_allocStaffOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = '_allocStaffOverlay';
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = [
+        '<div class="modal" style="width:min(480px,94vw);padding:28px 28px 24px;">',
+        '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">',
+        '    <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text-primary);">Allocate Additional Staff</div>',
+        '    <button id="_allocStaffClose" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);padding:4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>',
+        '  </div>',
+        '  <div style="margin-bottom:16px;">',
+        '    <label style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;display:block;">Available Staff</label>',
+        '    <select id="_alloc_staffId" class="ri-select">',
+        '      <option value="" disabled selected>Select a staff member</option>',
+        '    </select>',
+        '  </div>',
+        '  <div style="margin-bottom:20px;">',
+        '    <label style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;display:block;">Task / Role Description</label>',
+        '    <input type="text" id="_alloc_staffTask" class="ri-input" placeholder="e.g. Serve drinks at VIP table">',
+        '  </div>',
+        '  <div style="display:flex;gap:10px;justify-content:flex-end;">',
+        '    <button class="ri-cancel" id="_allocStaffCancelBtn">Cancel</button>',
+        '    <button class="ri-submit" id="_allocStaffSaveBtn" style="flex:none;padding:12px 28px;"><i data-lucide="user-check" style="width:15px;height:15px;"></i> Assign Staff</button>',
+        '  </div>',
+        '</div>'
+      ].join('\n');
+      document.body.appendChild(overlay);
+
+      document.getElementById('_allocStaffClose').addEventListener('click', function() { closeModal(overlay); });
+      document.getElementById('_allocStaffCancelBtn').addEventListener('click', function() { closeModal(overlay); });
+      overlay.addEventListener('click', function(e) { if(e.target===overlay) closeModal(overlay); });
+
+      document.getElementById('_allocStaffSaveBtn').addEventListener('click', function() {
+        var staffId = document.getElementById('_alloc_staffId').value;
+        var taskDesc = document.getElementById('_alloc_staffTask').value.trim();
+        
+        if (!staffId) { Toast.show('Please select a staff member.', 'warn'); return; }
+        if (!taskDesc) { Toast.show('Please enter a task description.', 'warn'); return; }
+
+        var sList = DB.getAll('staff') || [];
+        var staff = sList.find(function(s) { return s.id === staffId; });
+        if (!staff) return;
+
+        // Create assignment (default to 'pending' so staff can accept)
+        DB.add('staffAssignments', {
+          id: 'asm_' + Date.now(),
+          staffId: staff.id,
+          staffName: staff.name,
+          staffRole: staff.role,
+          eventId: selectedEventId,
+          eventName: (selectedEventData && selectedEventData.name) || 'Event',
+          role: staff.role,
+          taskDesc: taskDesc,
+          priority: 'Medium',
+          status: 'pending',
+          assignedAt: new Date().toISOString()
+        });
+
+        // Broadcast to timeline
+        DB.add('issues', { 
+          id: 'iss_' + Date.now(), 
+          eventId: selectedEventId, 
+          type: 'update', 
+          title: 'Assigned ' + staff.name + ' to event: ' + taskDesc, 
+          createdAt: new Date().toISOString(), 
+          severity: 'info', 
+          priority: 'Low', 
+          reporter: 'Event Coordinator', 
+          reporterRole: 'Vendor' 
+        });
+
+        Toast.show('Assigned ' + staff.name + ' successfully.', 'success');
+        closeModal(overlay);
+        refreshAll();
+      });
+    }
+
+    // Identify free staff — rebuild dropdown every time the modal opens
+    var staffSelect = document.getElementById('_alloc_staffId');
+    var allStaff = DB.getAll('staff') || [];
+    var allAssignments = DB.getAll('staffAssignments') || [];
+    
+    // "Free" staff = status 'available' and NO pending/accepted assignments across ANY event
+    var busyStaffIds = [];
+    allAssignments.forEach(function(a) {
+      var st = (a.status || '').toLowerCase();
+      if (st === 'pending' || st === 'accepted') {
+        busyStaffIds.push(a.staffId);
+      }
+    });
+      
+    var freeStaff = allStaff.filter(function(s) {
+      return (s.status || '').toLowerCase() === 'available' && busyStaffIds.indexOf(s.id) === -1;
+    });
+    
+    var staffOpts = '';
+    if (freeStaff.length === 0) {
+      staffOpts = '<option value="" disabled selected>No free staff available</option>';
+    } else {
+      staffOpts = '<option value="" disabled selected>Select a staff member</option>';
+      freeStaff.forEach(function(s) {
+        staffOpts += '<option value="' + s.id + '">' + s.name + ' (' + s.role + ')</option>';
+      });
+    }
+    staffSelect.innerHTML = staffOpts;
+    
+    document.getElementById('_alloc_staffTask').value = '';
+    openModal(overlay);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+
   function endCurrentEvent() {
     if (!selectedEventId) { Toast.show('No event selected.','warn'); return; }
     Confirm.ask({
@@ -906,16 +1132,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const assignments = (DB.getAll('staffAssignments') || []).filter(a => a.eventId === selectedEventId);
       assignments.forEach(a => {
         const activeTasks = (a.tasks || []).filter(t => t.status !== 'done').length;
-        const doneTasks = (a.tasks || []).filter(t => t.status === 'done').length;
-        // Each task that was NOT done still counts against workload — release them
-        const tasksToRelease = activeTasks; // these were consuming workload
-        if (tasksToRelease > 0) {
-          const staffMember = DB.find('staff', a.staffId);
-          if (staffMember) {
-            const newWl = Math.max((staffMember.workload || 0) - (tasksToRelease * 20), 0);
-            DB.update('staff', a.staffId, { workload: newWl });
-          }
+        const tasksToRelease = activeTasks;
+        
+        const staffMember = DB.find('staff', a.staffId);
+        if (staffMember) {
+          const newWl = Math.max((staffMember.workload || 0) - (tasksToRelease * 20), 0);
+          const assigned = Array.isArray(staffMember.assignedEvents) ? staffMember.assignedEvents : [];
+          const newAssigned = assigned.filter(id => id !== selectedEventId);
+          DB.update('staff', a.staffId, { 
+            workload: newWl,
+            assignedEvents: newAssigned,
+            status: newWl === 0 ? 'available' : staffMember.status
+          });
         }
+        
+        // Mark the assignment itself as completed so it drops from the staff dashboard
+        DB.update('staffAssignments', a.id, { status: 'completed' });
       });
 
       // ── Return allocated resources ──
@@ -981,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    listEl.innerHTML = plans.map(p => {
+    const html = plans.map(p => {
       if (p.status === 'triggered') {
         return `
           <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--radius-sm);background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);opacity:0.7;">
@@ -1003,6 +1235,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.2);font-weight:700;white-space:nowrap;">Ready</span>
         </button>`;
     }).join('');
+
+    listEl.innerHTML = html + `
+      <button class="mon-contig-btn" onclick="window.location.href='event-review.html?id=${selectedEventId}'" style="margin-top:8px;justify-content:center;background:rgba(255,255,255,0.03);border:1px dashed var(--border);color:var(--text-muted);padding:10px;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)';this.style.background='rgba(233,30,140,0.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)';this.style.background='rgba(255,255,255,0.03)'">
+        <i data-lucide="plus" style="width:16px;height:16px;margin-right:6px;"></i> Create New Contingency Plan
+      </button>
+    `;
 
     // Bind trigger buttons
     listEl.querySelectorAll('[data-plan-id]').forEach(btn => {
@@ -1113,8 +1351,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── Action buttons ──────────────────── */
   function bindActionBtns() {
     document.querySelector('.mon-action-btn--update')?.addEventListener('click', ()=>openUpdateEventModal());
-    document.querySelector('.mon-action-btn--allocate')?.addEventListener('click', ()=>window.location.href='manage-resource.html');
-    document.querySelector('.mon-action-btn--staff')?.addEventListener('click', ()=>window.location.href='manage-staff.html');
+    document.querySelector('.mon-action-btn--allocate')?.addEventListener('click', ()=>openAllocateResourceModal());
+    document.querySelector('.mon-action-btn--staff')?.addEventListener('click', ()=>openAllocateStaffModal());
     document.querySelector('.mon-action-btn--end')?.addEventListener('click', ()=>endCurrentEvent());
   }
 

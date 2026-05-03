@@ -445,7 +445,17 @@ document.addEventListener('DOMContentLoaded', () => {
   buildEventSelector();
 
   /* ── Real-time polling ─────────────── */
+  let _lastEventsHash = Hub.getEventsForUser().map(e => e.id + e.status).join(',');
+
   setInterval(() => {
+    // Check if new events became live or changed
+    const currentEvents = Hub.getEventsForUser();
+    const hash = currentEvents.map(e => e.id + e.status).join(',');
+    if (hash !== _lastEventsHash) {
+      _lastEventsHash = hash;
+      buildEventSelector();
+    }
+
     _lastMsgCount = -1;
     renderMessages();
     renderContingencyPanel();

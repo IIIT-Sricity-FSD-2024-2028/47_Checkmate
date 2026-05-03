@@ -167,6 +167,51 @@ body {
 }
 .nav-item.active i { opacity: 1; }
 
+/* Nav group (sidebar dropdown) */
+.nav-group { position: relative; }
+.nav-group > .nav-item {
+  cursor: pointer;
+  user-select: none;
+}
+.nav-group > .nav-item .nav-chevron {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  transition: transform 0.25s ease;
+}
+.nav-group.open > .nav-item .nav-chevron { transform: rotate(180deg); opacity: 0.8; }
+
+/* Override the pink active bar on the parent div — use a subtle left accent instead */
+.nav-group > .nav-item.active {
+  background: rgba(233,30,140,0.08);
+  box-shadow: none;
+  color: var(--pink-light);
+  border-left: 3px solid var(--pink);
+  border-radius: 0 8px 8px 0;
+}
+
+.nav-sub {
+  display: none;
+  flex-direction: column;
+  padding: 4px 0 4px 28px;
+  gap: 0;
+  overflow: hidden;
+}
+.nav-group.open .nav-sub { display: flex; }
+.nav-sub .nav-item {
+  font-size: 12.5px;
+  padding: 8px 14px;
+  gap: 10px;
+  border-radius: 6px;
+}
+.nav-sub .nav-item i { width: 15px; font-size: 13px; }
+.nav-sub .nav-item.active {
+  background: var(--pink);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--pink-glow);
+}
+
 /* Footer */
 .sidebar__footer {
   padding: 12px 10px 14px;
