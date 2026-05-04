@@ -323,10 +323,7 @@
       <header class="topbar">
         <h1 class="page-title">Manage Resource</h1>
         <div class="topbar__right">
-          <div class="search-box">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" placeholder="Search..." />
-          </div>
+
           <button class="notif-btn">
             <i data-lucide="bell"></i>
             <span class="notif-badge">1</span>
@@ -343,10 +340,42 @@
             <i data-lucide="search"></i>
             <input type="text" placeholder="Search resources..." />
           </div>
-          <button class="mr-filter-btn">
-            <i data-lucide="sliders-horizontal"></i>
-            More Filters
-          </button>
+          <div style="position:relative;" id="mrFilterWrapper">
+            <button class="mr-filter-btn">
+              <i data-lucide="sliders-horizontal"></i>
+              More Filters
+            </button>
+            <div id="mrFilterDropdown" style="display:none;position:absolute;top:100%;left:0;margin-top:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;width:240px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:100;">
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Category</label>
+                <select id="filterMrCategory" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                  <option value="All">All Categories</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Decor">Decor</option>
+                </select>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Condition</label>
+                <select id="filterMrCondition" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                  <option value="All">All Conditions</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Poor">Poor</option>
+                </select>
+              </div>
+              <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Stock Level</label>
+                <select id="filterMrStock" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                  <option value="All">All Levels</option>
+                  <option value="InStock">In Stock (> 0)</option>
+                  <option value="LowStock">Low Stock (1-10)</option>
+                  <option value="OutStock">Out of Stock (0)</option>
+                </select>
+              </div>
+              <button id="applyMrFilters" style="width:100%;padding:8px;background:var(--pink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Apply Filters</button>
+            </div>
+          </div>
           <button class="mr-add-btn">
             <i data-lucide="plus"></i>
             Add Resource

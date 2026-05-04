@@ -10,6 +10,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
+  let activeFilters = { category: 'All', condition: 'All', stock: 'All' };
   let editingId   = null;
 
   /* ── Inject Add/Edit modal HTML ──────────────── */
@@ -198,11 +199,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('.mr-table tbody');
     if (!tbody) return;
 
-    const filtered = resources.filter(r =>
-      !searchQuery ||
-      r.name.toLowerCase().includes(searchQuery) ||
-      r.category.toLowerCase().includes(searchQuery)
-    );
+    const filtered = resources.filter(r => {
+      const searchMatch = !searchQuery ||
+        r.name.toLowerCase().includes(searchQuery) ||
+        r.category.toLowerCase().includes(searchQuery);
+        
+      const catMatch = activeFilters.category === 'All' || r.category === activeFilters.category;
+      
+      let conditionMatch = true;
+      if (activeFilters.condition !== 'All') {
+        const cond = (r.condition || 'Good'); // Default condition fallback if not set
+        conditionMatch = cond === activeFilters.condition;
+      }
+      
+      let stockMatch = true;
+      if (activeFilters.stock !== 'All') {
+        const qty = r.quantity || 0;
+        if (activeFilters.stock === 'InStock') stockMatch = qty > 0;
+        else if (activeFilters.stock === 'LowStock') stockMatch = qty > 0 && qty <= 10;
+        else if (activeFilters.stock === 'OutStock') stockMatch = qty === 0;
+      }
+      
+      return searchMatch && catMatch && conditionMatch && stockMatch;
+    });
 
     tbody.innerHTML = filtered.length ? filtered.map(r => {
       const canAllocate = r.quantity > 0;
@@ -525,9 +544,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.mr-search input')?.focus();
   });
 
-  document.querySelector('.mr-filter-btn')?.addEventListener('click', () => {
-    Toast.show('Advanced filter options coming soon.', 'info');
-  });
+  const mrFilterBtn = document.querySelector('.mr-filter-btn');
+  const mrFilterDropdown = document.getElementById('mrFilterDropdown');
+  const applyMrFiltersBtn = document.getElementById('applyMrFilters');
+
+  if (mrFilterBtn && mrFilterDropdown) {
+    mrFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = mrFilterDropdown.style.display === 'block';
+      mrFilterDropdown.style.display = isShowing ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#mrFilterWrapper')) {
+        mrFilterDropdown.style.display = 'none';
+      }
+    });
+
+    applyMrFiltersBtn?.addEventListener('click', () => {
+      activeFilters.category = document.getElementById('filterMrCategory').value;
+      activeFilters.condition = document.getElementById('filterMrCondition').value;
+      activeFilters.stock = document.getElementById('filterMrStock').value;
+      
+      mrFilterDropdown.style.display = 'none';
+      render();
+      Toast.show('Filters applied!', 'success');
+    });
+  }
 
   initTopbarSearch(q => { searchQuery = q; render(); });
 

@@ -10,6 +10,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   let editingId = null;
+  let activeFilters = { price: 'All', capacity: 'All' };
 
   /* ── Inject Add/Edit modal ──────────── */
   document.body.insertAdjacentHTML('beforeend', `
@@ -284,7 +285,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtered = packages.filter(p => {
       const matchCat = activeCat === 'all' || p.category === activeCat;
       const matchQ   = !query || p.name.toLowerCase().includes(query) || p.desc.toLowerCase().includes(query);
-      return matchCat && matchQ;
+      
+      let matchPrice = true;
+      if (activeFilters.price === 'Under2k') matchPrice = p.price < 2000;
+      else if (activeFilters.price === '2kTo5k') matchPrice = p.price >= 2000 && p.price <= 5000;
+      else if (activeFilters.price === 'Over5k') matchPrice = p.price > 5000;
+      
+      let matchCap = true;
+      if (activeFilters.capacity !== 'All') {
+        const capStr = String(p.capacity || '');
+        const maxCapMatch = capStr.match(/\d+/g);
+        const maxCap = maxCapMatch ? Math.max(...maxCapMatch.map(Number)) : 0;
+        
+        if (activeFilters.capacity === 'Small') matchCap = maxCap < 100;
+        else if (activeFilters.capacity === 'Medium') matchCap = maxCap >= 100 && maxCap <= 300;
+        else if (activeFilters.capacity === 'Large') matchCap = maxCap > 300;
+      }
+
+      return matchCat && matchQ && matchPrice && matchCap;
     });
 
     const infoEl = document.getElementById('resultInfo');
@@ -457,9 +475,33 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pkgSearch')?.focus();
   });
 
-  document.querySelector('.pp-filter-btn')?.addEventListener('click', () => {
-    Toast.show('Advanced filter options coming soon.', 'info');
-  });
+  const pkgFilterBtn = document.querySelector('.pp-filter-btn');
+  const pkgFilterDropdown = document.getElementById('pkgFilterDropdown');
+  const applyPkgFiltersBtn = document.getElementById('applyPkgFilters');
+
+  if (pkgFilterBtn && pkgFilterDropdown) {
+    pkgFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = pkgFilterDropdown.style.display === 'block';
+      pkgFilterDropdown.style.display = isShowing ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#pkgFilterWrapper')) {
+        pkgFilterDropdown.style.display = 'none';
+      }
+    });
+
+    applyPkgFiltersBtn?.addEventListener('click', () => {
+      activeFilters.price = document.getElementById('filterPkgPrice').value;
+      activeFilters.capacity = document.getElementById('filterPkgCapacity').value;
+      
+      pkgFilterDropdown.style.display = 'none';
+      render();
+      Toast.show('Filters applied!', 'success');
+    });
+  }
 
   /* ── Category tabs ──────────────────── */
   document.querySelectorAll('.pp-tab').forEach(tab => {

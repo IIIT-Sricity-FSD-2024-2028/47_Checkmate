@@ -10,6 +10,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
+  let activeFilters = { role: 'All', status: 'All', workload: 'All' };
   let editingId   = null;
   let assignStaffId = null;
 
@@ -178,12 +179,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('.staff-grid');
     if (!grid) return;
 
-    const filtered = staffList.filter(s =>
-      !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery)  ||
-      s.role.toLowerCase().includes(searchQuery)  ||
-      s.email.toLowerCase().includes(searchQuery)
-    );
+    const filtered = staffList.filter(s => {
+      // Search
+      const searchMatch = !searchQuery ||
+        s.name.toLowerCase().includes(searchQuery)  ||
+        s.role.toLowerCase().includes(searchQuery)  ||
+        s.email.toLowerCase().includes(searchQuery);
+      
+      // Filters
+      const roleMatch = activeFilters.role === 'All' || s.role.toLowerCase().includes(activeFilters.role.toLowerCase());
+      const statusMatch = activeFilters.status === 'All' || s.status === activeFilters.status;
+      
+      let workloadMatch = true;
+      if (activeFilters.workload !== 'All') {
+        const wl = s.workload || 0;
+        if (activeFilters.workload === 'Low') workloadMatch = wl < 50;
+        else if (activeFilters.workload === 'Medium') workloadMatch = wl >= 50 && wl < 80;
+        else if (activeFilters.workload === 'High') workloadMatch = wl >= 80;
+      }
+      
+      return searchMatch && roleMatch && statusMatch && workloadMatch;
+    });
 
     if (!filtered.length) {
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">No staff found.</div>`;
@@ -537,9 +553,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.ms-search input')?.focus();
   });
 
-  document.querySelector('.ms-filter-btn')?.addEventListener('click', () => {
-    Toast.show('Advanced filter options coming soon.', 'info');
-  });
+  const filterBtn = document.querySelector('.ms-filter-btn');
+  const filterDropdown = document.getElementById('staffFilterDropdown');
+  const applyFiltersBtn = document.getElementById('applyStaffFilters');
+
+  if (filterBtn && filterDropdown) {
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = filterDropdown.style.display === 'block';
+      filterDropdown.style.display = isShowing ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#staffFilterWrapper')) {
+        filterDropdown.style.display = 'none';
+      }
+    });
+
+    applyFiltersBtn?.addEventListener('click', () => {
+      activeFilters.role = document.getElementById('filterStaffRole').value;
+      activeFilters.status = document.getElementById('filterStaffStatus').value;
+      activeFilters.workload = document.getElementById('filterStaffWorkload').value;
+      
+      filterDropdown.style.display = 'none';
+      render();
+      Toast.show('Filters applied!', 'success');
+    });
+  }
 
   initTopbarSearch(q => { searchQuery = q; render(); });
 

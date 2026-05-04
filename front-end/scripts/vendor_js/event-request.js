@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
   let currentPage = 1;
-  let PAGE_SIZE = 5; // default fallback
+  let PAGE_SIZE = 10;
+  let activeFilters = { status: 'All', date: 'All', type: 'All' }; // default fallback
 
   /* ── Dynamic page-size: fill available space ── */
   function calcPageSize() {
@@ -84,12 +85,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Get filtered list ──────────────── */
   function getFiltered() {
-    return DB.getAll('events').filter(ev =>
-      !searchQuery ||
-      ev.name.toLowerCase().includes(searchQuery) ||
-      ev.id.toLowerCase().includes(searchQuery)   ||
-      ev.type.toLowerCase().includes(searchQuery)
-    );
+    return DB.getAll('events').filter(ev => {
+      const searchMatch = !searchQuery ||
+        ev.name.toLowerCase().includes(searchQuery) ||
+        ev.id.toLowerCase().includes(searchQuery)   ||
+        ev.type.toLowerCase().includes(searchQuery);
+        
+      const statusMatch = activeFilters.status === 'All' || ev.status === activeFilters.status;
+      const typeMatch = activeFilters.type === 'All' || ev.type === activeFilters.type;
+      
+      let dateMatch = true;
+      if (activeFilters.date !== 'All' && ev.date) {
+        const evDate = new Date(ev.date + 'T00:00:00');
+        const now = new Date();
+        const diffDays = (evDate - now) / (1000 * 60 * 60 * 24);
+        
+        if (activeFilters.date === 'Past') {
+          dateMatch = diffDays < 0;
+        } else if (activeFilters.date === 'Upcoming7') {
+          dateMatch = diffDays >= 0 && diffDays <= 7;
+        } else if (activeFilters.date === 'Upcoming30') {
+          dateMatch = diffDays >= 0 && diffDays <= 30;
+        }
+      }
+      
+      return searchMatch && statusMatch && typeMatch && dateMatch;
+    });
   }
 
   /* ── Render table ───────────────────── */
@@ -304,9 +325,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.er-search input')?.focus();
   });
 
-  document.querySelector('.er-filter-btn')?.addEventListener('click', () => {
-    Toast.show('Advanced filter options coming soon.', 'info');
-  });
+  const erFilterBtn = document.querySelector('.er-filter-btn');
+  const erFilterDropdown = document.getElementById('erFilterDropdown');
+  const applyErFiltersBtn = document.getElementById('applyErFilters');
+
+  if (erFilterBtn && erFilterDropdown) {
+    erFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = erFilterDropdown.style.display === 'block';
+      erFilterDropdown.style.display = isShowing ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#erFilterWrapper')) {
+        erFilterDropdown.style.display = 'none';
+      }
+    });
+
+    applyErFiltersBtn?.addEventListener('click', () => {
+      activeFilters.status = document.getElementById('filterErStatus').value;
+      activeFilters.date = document.getElementById('filterErDate').value;
+      activeFilters.type = document.getElementById('filterErType').value;
+      
+      erFilterDropdown.style.display = 'none';
+      currentPage = 1;
+      render();
+      Toast.show('Filters applied!', 'success');
+    });
+  }
 
   /* ── Inject Batch Actions into Toolbar ── */
   const toolbar = document.querySelector('.er-toolbar');
