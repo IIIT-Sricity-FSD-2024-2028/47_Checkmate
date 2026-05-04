@@ -6,7 +6,7 @@ The implemented backend and integrated frontend stores cover the core CRUD flows
 
 - Authentication is now implemented for login and signup. It is in-memory like the rest of the backend, so newly registered accounts reset when the server restarts.
 - Some staff-only pages contain mostly visual dashboard widgets and do not expose enough form/action requirements to infer backend mutations safely.
-- Admin service moderation, payouts, audit logs, and settings pages include static informational panels or UI-only controls where the expected domain behavior was not specified.
+- Admin payouts, audit logs, and settings pages include static informational panels or UI-only controls where the expected domain behavior was not specified.
 
 ## Notes
 
