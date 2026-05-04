@@ -482,13 +482,49 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 
-  /* ── Add button ─────────────────────── */
+  /* ── Add button (Recruitment) ─────────────────────── */
+  const recruitModal = document.getElementById('recruitModal');
   document.querySelector('.ms-add-btn')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('staffModalTitle').textContent = 'Add Staff';
-    ['stName','stRole','stPhone','stEmail','stWorkload'].forEach(id => document.getElementById(id).value = '');
-    clearErrors();
-    openModal(overlay);
+    ['reqPosition','reqLocation','reqSalary','reqDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('reqType').value = 'Full Time';
+    recruitModal.style.display = 'flex';
+  });
+
+  document.getElementById('closeRecruitModal')?.addEventListener('click', () => {
+    recruitModal.style.display = 'none';
+  });
+
+  document.getElementById('submitRecruitModal')?.addEventListener('click', () => {
+    const pos = document.getElementById('reqPosition').value.trim();
+    const loc = document.getElementById('reqLocation').value.trim();
+    const type = document.getElementById('reqType').value;
+    const sal = document.getElementById('reqSalary').value.trim();
+    const desc = document.getElementById('reqDesc').value.trim();
+
+    if (!pos || !loc || !sal) {
+      Toast.show('Please fill in Position, Location, and Salary.', 'warn');
+      return;
+    }
+
+    // Push to adminChatMessages as a recruitment request
+    const msgs = DB.get('adminChatMessages') || [];
+    msgs.push({
+      id: 'req_' + Date.now(),
+      sender: 'Vendor',
+      senderRole: 'Vendor',
+      senderEmail: 'vendor@eventpro.com',
+      recipientEmail: 'admin@eventpro.com',
+      recipientName: 'Admin',
+      text: `Recruitment Request for ${pos}`,
+      details: { position: pos, location: loc, type: type, salary: sal, description: desc },
+      timestamp: new Date().toISOString(),
+      type: 'recruitment_request',
+      status: 'pending'
+    });
+    DB.set('adminChatMessages', msgs);
+
+    Toast.show('Recruitment request sent to Admin!', 'success');
+    recruitModal.style.display = 'none';
   });
 
   /* ── Search & Filters ─────────────────────────── */

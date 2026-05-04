@@ -186,6 +186,27 @@
       </header>
 
       <div class="content">
+        <!-- Recruitment Approvals Table -->
+        <div class="data-table-wrapper" style="margin-bottom: 24px;">
+          <h3 class="table-header-title">Recruitment Approvals</h3>
+          <table class="data-table" id="recruitmentTable" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Vendor</th>
+                <th style="text-align:left;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Position</th>
+                <th style="text-align:left;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Location</th>
+                <th style="text-align:left;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Type</th>
+                <th style="text-align:left;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Salary</th>
+                <th style="text-align:center;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Status</th>
+                <th style="text-align:right;padding:12px;border-bottom:1px solid var(--border);color:var(--text-muted);">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recruitmentBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">No pending recruitment requests.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="bipartite-section">
           <!-- Left: Conversation list -->
           <div class="data-table-wrapper" style="overflow-y: auto;">
@@ -257,6 +278,87 @@
         api('PUT', 'state/adminChatMessages', { value: msgs });
       }
 
+      function renderRecruitmentTable() {
+        var tbody = document.getElementById('recruitmentBody');
+        if (!tbody) return;
+        var messages = getMessages();
+        var requests = messages.filter(function(m) {
+          return m.type === 'recruitment_request' && m.status === 'pending';
+        });
+
+        if (requests.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">No pending recruitment requests.</td></tr>';
+          return;
+        }
+
+        var html = '';
+        requests.forEach(function(r) {
+          var details = r.details || {};
+          html += '<tr>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);">' + (r.sender || r.senderEmail) + '</td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);font-weight:600;">' + (details.position || 'N/A') + '</td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);">' + (details.location || 'N/A') + '</td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);">' + (details.type || 'N/A') + '</td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);">' + (details.salary || 'N/A') + '</td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);text-align:center;"><span style="background:rgba(245,158,11,0.15);color:#fbbf24;padding:4px 10px;border-radius:20px;font-size:11px;">Pending</span></td>' +
+            '<td style="padding:12px;border-bottom:1px solid var(--border);text-align:right;">' +
+              '<button class="btn-accept-req" data-id="' + r.id + '" style="background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);padding:6px 12px;border-radius:6px;cursor:pointer;margin-right:8px;font-size:12px;">Accept</button>' +
+              '<button class="btn-reject-req" data-id="' + r.id + '" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Reject</button>' +
+            '</td>' +
+          '</tr>';
+        });
+        tbody.innerHTML = html;
+
+        tbody.querySelectorAll('.btn-accept-req').forEach(function(btn) {
+          btn.addEventListener('click', function() { handleRecruitment(btn.getAttribute('data-id'), 'accepted'); });
+        });
+        tbody.querySelectorAll('.btn-reject-req').forEach(function(btn) {
+          btn.addEventListener('click', function() { handleRecruitment(btn.getAttribute('data-id'), 'rejected'); });
+        });
+      }
+
+      function handleRecruitment(id, action) {
+        var messages = getMessages();
+        var msg = messages.find(function(m) { return m.id === id; });
+        if (!msg) return;
+
+        // Update status
+        msg.status = action;
+        saveMessages(messages);
+
+        // Notify Vendor
+        var notifs = api('GET', 'state/vendorNotifications');
+        if (!Array.isArray(notifs)) notifs = [];
+        notifs.push({
+          id: 'n_' + Date.now(),
+          vendorEmail: msg.senderEmail,
+          title: 'Recruitment Request ' + (action === 'accepted' ? 'Accepted' : 'Rejected'),
+          message: 'Your request for ' + (msg.details ? msg.details.position : 'staff') + ' has been ' + action + ' by admin.',
+          timestamp: new Date().toISOString(),
+          read: false
+        });
+        api('PUT', 'state/vendorNotifications', { value: notifs });
+
+        // If accepted, add to Open Recruitments
+        if (action === 'accepted') {
+          var jobs = api('GET', 'state/recruitments');
+          if (!Array.isArray(jobs)) jobs = [];
+          jobs.push({
+            id: 'job_' + Date.now(),
+            position: msg.details.position,
+            location: msg.details.location,
+            type: msg.details.type,
+            salary: msg.details.salary,
+            description: msg.details.description,
+            vendorName: msg.sender || msg.senderEmail,
+            timestamp: new Date().toISOString()
+          });
+          api('PUT', 'state/recruitments', { value: jobs });
+        }
+
+        renderRecruitmentTable();
+      }
+
       var activeVendorEmail = null;
       var convListEl = document.getElementById('convList');
       var chatBody = document.getElementById('chatBody');
@@ -273,6 +375,7 @@
         // Group by vendor email
         var vendors = {};
         messages.forEach(function(m) {
+          if (m.type === 'recruitment_request') return; // Hide recruitment requests from chat preview
           var email = m.senderRole === 'Admin' || m.senderRole === 'admin' ? m.recipientEmail : m.senderEmail;
           if (!email) return;
           if (!vendors[email]) {
@@ -362,7 +465,7 @@
 
         var messages = getMessages();
         var filtered = messages.filter(function(m) {
-          return m.senderEmail === activeVendorEmail || m.recipientEmail === activeVendorEmail;
+          return m.type !== 'recruitment_request' && (m.senderEmail === activeVendorEmail || m.recipientEmail === activeVendorEmail);
         });
         filtered.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
 
@@ -427,6 +530,7 @@
 
       // Initial render
       renderConvList();
+      renderRecruitmentTable();
 
       // Auto-select from ?user= URL param
       var urlParams = new URLSearchParams(window.location.search);
@@ -447,6 +551,7 @@
       // Poll every 5s
       setInterval(function() {
         renderConvList();
+        renderRecruitmentTable();
         if (activeVendorEmail) renderChat();
       }, 5000);
     });

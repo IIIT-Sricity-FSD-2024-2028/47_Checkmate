@@ -218,12 +218,36 @@
                         <li><a href="#">Admin Console</a></li>
                     </ul>
                 </div>
+                <div class="link-group">
+                    <h4>Open Recruitments</h4>
+                    <ul id="footerRecruitmentsList">
+                        <li><span style="color:rgba(255,255,255,0.5);font-size:14px;">Loading...</span></li>
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="footer-bottom">
             <p>&copy; 2026 Event Manager. All rights reserved. Built with precision for event excellence.</p>
         </div>
     </footer>
+
+    <!-- Job Details Modal -->
+    <div id="jobModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;width:100%;max-width:500px;padding:30px;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,0.5);position:relative;">
+            <button id="closeJobModal" style="position:absolute;top:20px;right:20px;background:transparent;border:none;color:#9ca3af;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+            <h3 id="jobModalPosition" style="font-size:24px;margin-top:0;margin-bottom:10px;color:#e91e8c;">Position Title</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;font-size:14px;">
+                <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;"><i class="ph ph-map-pin"></i> <span id="jobModalLocation">Location</span></span>
+                <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;"><i class="ph ph-briefcase"></i> <span id="jobModalType">Type</span></span>
+                <span style="background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:20px;"><i class="ph ph-currency-dollar"></i> <span id="jobModalSalary">Salary</span></span>
+            </div>
+            <h4 style="font-size:16px;margin-bottom:8px;color:#cbd5e1;">Job Description</h4>
+            <p id="jobModalDesc" style="color:#9ca3af;font-size:14px;line-height:1.6;margin-bottom:30px;max-height:200px;overflow-y:auto;"></p>
+            <div style="text-align:center;">
+                <a href="../Login/signup-step1.html" style="display:inline-block;background:#e91e8c;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:15px;transition:background 0.3s;width:100%;">Create Account to Continue</a>
+            </div>
+        </div>
+    </div>
 
     <script src="js/script.js"></script>
 </body>
