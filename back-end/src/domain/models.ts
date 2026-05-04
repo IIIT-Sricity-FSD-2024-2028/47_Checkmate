@@ -31,6 +31,10 @@ export interface EventRecord {
   approvedAt?: string;
   startedAt?: string;
   endedAt?: string;
+  requestedResources?: Array<{resourceId: string; resourceName: string; category: string; quantity: number; pricePerDay: number}>;
+  requestedStaff?: Array<{staffId: string; staffName: string; role: string}>;
+  estimatedCost?: number;
+  budgetRange?: string;
 }
 
 export interface Resource {

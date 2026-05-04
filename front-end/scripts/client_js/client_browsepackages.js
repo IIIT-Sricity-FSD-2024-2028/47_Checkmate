@@ -187,6 +187,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const pid = qcPackageId.value;
             const pkg = DB.find('packages', pid);
             const session = DB.getSession();
+
+            // Match package resources/staff to real DB entries
+            const allResources = DB.getAll('resources') || [];
+            const allStaff = DB.getAll('staff') || [];
+            let reqResources = [];
+            let reqStaff = [];
+            let estimatedCost = 0;
+
+            if (pkg && pkg.resources) {
+                pkg.resources.forEach(rName => {
+                    const match = allResources.find(r => rName.toLowerCase().includes(r.name.toLowerCase().split(' ')[0]));
+                    if (match) {
+                        const qty = 1;
+                        reqResources.push({ resourceId: match.id, resourceName: match.name, category: match.category, quantity: qty, pricePerDay: match.price || 0 });
+                        estimatedCost += (match.price || 0) * qty;
+                    } else {
+                        // Unmatched resources get a dummy ID to intentionally trigger a conflict
+                        reqResources.push({ resourceId: `UNKNOWN_RES_${Date.now()}_${Math.random()}`, resourceName: rName, category: 'Uncategorized', quantity: 1, pricePerDay: 0 });
+                    }
+                });
+            }
+            if (pkg && pkg.staff) {
+                pkg.staff.forEach(sRole => {
+                    const match = allStaff.find(s => sRole.toLowerCase().includes(s.role.toLowerCase().split(' ')[0]) || sRole.toLowerCase().includes(s.name.toLowerCase().split(' ')[0]));
+                    if (match) {
+                        reqStaff.push({ staffId: match.id, staffName: match.name, role: match.role });
+                    } else {
+                        // Unmatched staff get a dummy ID to intentionally trigger a conflict
+                        reqStaff.push({ staffId: `UNKNOWN_STF_${Date.now()}_${Math.random()}`, staffName: sRole, role: sRole });
+                    }
+                });
+            }
             
             const newEvent = {
                 id: newId,
@@ -202,7 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 client: session.user,
                 vendor: pkg ? (pkg.vendorName || pkg.vendorId || '') : '',
                 presetPackageId: pid,
-                submittedAt: new Date().toISOString()
+                submittedAt: new Date().toISOString(),
+                requestedResources: reqResources.length > 0 ? reqResources : undefined,
+                requestedStaff: reqStaff.length > 0 ? reqStaff : undefined,
+                estimatedCost: estimatedCost > 0 ? estimatedCost : undefined,
             };
 
             // Save to DB

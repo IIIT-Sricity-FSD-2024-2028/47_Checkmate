@@ -541,37 +541,14 @@ Parking arrangements for at least 200 vehicles must be confirmed in advance. A p
           </div>
         </div>
 
-        <!-- 4. Conflicts -->
-        <div class="conflicts-box">
-          <div class="conflicts-title">
-            <i data-lucide="triangle-alert"></i> Conflicts Detected
-          </div>
-          <div class="conflict-item">
-            <div>
-              <div class="conflict-type">Resource Conflict</div>
-              <div class="conflict-desc">LED Screens double-booked with Corporate Gala on Apr 2</div>
-            </div>
-            <span class="conflict-severity high">high</span>
-          </div>
-          <div class="conflict-item">
-            <div>
-              <div class="conflict-type">Staff Conflict</div>
-              <div class="conflict-desc">2 Event Coordinators assigned to overlapping events</div>
-            </div>
-            <span class="conflict-severity high">high</span>
-          </div>
-          <div class="conflict-item">
-            <div>
-              <div class="conflict-type">Venue Conflict</div>
-              <div class="conflict-desc">Setup time conflicts with previous event</div>
-            </div>
-            <span class="conflict-severity medium">medium</span>
-          </div>
+        <div class="conflicts-box" style="display:none;">
+          <!-- Populated dynamically by event-review.js -->
         </div>
 
-        <!-- 5. Resource Requirements -->
-        <div>
-          <div class="section-title">Resource Requirements</div>
+        <div id="resourceReqSection">
+          <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">Resource Requirements
+            <button id="allocExtraResBtn" style="padding:6px 14px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid rgba(126,34,206,0.3);background:rgba(126,34,206,0.1);color:#d8b4fe;">+ Allocate Extra Resource</button>
+          </div>
           <div class="req-wrap">
             <table class="req-table">
               <thead>
@@ -582,40 +559,39 @@ Parking arrangements for at least 200 vehicles must be confirmed in advance. A p
                   <th style="text-align:center">Available</th>
                   <th style="text-align:right">Buffer</th>
                   <th style="text-align:right">Status</th>
+                  <th style="text-align:center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Audio System</td><td>Equipment</td><td class="col-num">10</td><td class="col-num">12</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
-                <tr><td>LED Screens</td><td>Equipment</td><td class="col-num">4</td><td class="col-num">4</td><td class="buffer-val zero">+0</td><td style="text-align:right"><span class="row-status risk">risk</span></td></tr>
-                <tr><td>Chairs</td><td>Furniture</td><td class="col-num">500</td><td class="col-num">550</td><td class="buffer-val pos">+50</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
-                <tr><td>Tables</td><td>Furniture</td><td class="col-num">50</td><td class="col-num">48</td><td class="buffer-val neg">-2</td><td style="text-align:right"><span class="row-status critical">critical</span></td></tr>
-                <tr><td>Projectors</td><td>Equipment</td><td class="col-num">6</td><td class="col-num">8</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>Audio System</td><td>Equipment</td><td class="col-num">10</td><td class="col-num">12</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td><td></td></tr>
+                <tr><td>LED Screens</td><td>Equipment</td><td class="col-num">4</td><td class="col-num">4</td><td class="buffer-val zero">+0</td><td style="text-align:right"><span class="row-status risk">risk</span></td><td></td></tr>
+                <tr><td>Chairs</td><td>Furniture</td><td class="col-num">500</td><td class="col-num">550</td><td class="buffer-val pos">+50</td><td style="text-align:right"><span class="row-status safe">safe</span></td><td></td></tr>
+                <tr><td>Tables</td><td>Furniture</td><td class="col-num">50</td><td class="col-num">48</td><td class="buffer-val neg">-2</td><td style="text-align:right"><span class="row-status critical">critical</span></td><td></td></tr>
+                <tr><td>Projectors</td><td>Equipment</td><td class="col-num">6</td><td class="col-num">8</td><td class="buffer-val pos">+2</td><td style="text-align:right"><span class="row-status safe">safe</span></td><td></td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- 6. Staff Requirements -->
-        <div>
-          <div class="section-title">Staff Requirements</div>
+        <div id="staffReqSection">
+          <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">Staff Requirements
+            <button id="allocExtraStaffBtn" style="padding:6px 14px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid rgba(34,197,94,0.3);background:rgba(34,197,94,0.1);color:#86efac;">+ Allocate Extra Staff</button>
+          </div>
           <div class="req-wrap">
             <table class="req-table">
               <thead>
                 <tr>
-                  <th>Staff Role</th>
-                  <th>Department</th>
+                  <th>Staff Name</th>
+                  <th>Role</th>
                   <th style="text-align:center">Required</th>
                   <th style="text-align:center">Available</th>
                   <th style="text-align:right">Buffer</th>
                   <th style="text-align:right">Status</th>
+                  <th style="text-align:center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Event Coordinators</td><td>Management</td><td class="col-num">3</td><td class="col-num">4</td><td class="buffer-val pos">+1</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
-                <tr><td>Technical Staff</td><td>Technical</td><td class="col-num">8</td><td class="col-num">8</td><td class="buffer-val zero">+0</td><td style="text-align:right"><span class="row-status risk">risk</span></td></tr>
-                <tr><td>Security Personnel</td><td>Security</td><td class="col-num">12</td><td class="col-num">10</td><td class="buffer-val neg">-2</td><td style="text-align:right"><span class="row-status critical">critical</span></td></tr>
-                <tr><td>Catering Staff</td><td>Service</td><td class="col-num">15</td><td class="col-num">18</td><td class="buffer-val pos">+3</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
-                <tr><td>Cleaning Crew</td><td>Service</td><td class="col-num">6</td><td class="col-num">7</td><td class="buffer-val pos">+1</td><td style="text-align:right"><span class="row-status safe">safe</span></td></tr>
+                <tr><td>Event Coordinators</td><td>Management</td><td class="col-num">3</td><td class="col-num">4</td><td class="buffer-val pos">+1</td><td style="text-align:right"><span class="row-status safe">safe</span></td><td></td></tr>
               </tbody>
             </table>
           </div>
@@ -645,22 +621,22 @@ Parking arrangements for at least 200 vehicles must be confirmed in advance. A p
 
           <div class="risk-card">
             <div class="risk-card__title"><i data-lucide="zap"></i> Risk &amp; Feasibility Summary</div>
-            <div class="risk-level-box">
-              <div class="risk-level-label">⚠ Medium Risk Level</div>
-              <div class="risk-level-sub">3 critical items require immediate attention</div>
+            <div class="risk-level-box" id="riskLevelBox">
+              <div class="risk-level-label" id="riskLevelLabel">⚠ Medium Risk Level</div>
+              <div class="risk-level-sub" id="riskLevelSub">3 critical items require immediate attention</div>
             </div>
             <div class="risk-bars">
               <div>
-                <div class="risk-bar-header"><span class="risk-bar-label">Resource Availability</span><span class="risk-bar-pct">80%</span></div>
-                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--yellow" style="width:80%"></div></div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Resource Availability</span><span class="risk-bar-pct" id="resPct">—</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--yellow" id="resBar" style="width:0%"></div></div>
               </div>
               <div>
-                <div class="risk-bar-header"><span class="risk-bar-label">Staff Availability</span><span class="risk-bar-pct">75%</span></div>
-                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--red" style="width:75%"></div></div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Staff Availability</span><span class="risk-bar-pct" id="staffPct">—</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--red" id="staffBar" style="width:0%"></div></div>
               </div>
               <div>
-                <div class="risk-bar-header"><span class="risk-bar-label">Contingency Readiness</span><span class="risk-bar-pct">100%</span></div>
-                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--green" style="width:100%"></div></div>
+                <div class="risk-bar-header"><span class="risk-bar-label">Contingency Readiness</span><span class="risk-bar-pct" id="contPct">—</span></div>
+                <div class="risk-bar-bg"><div class="risk-bar-fill risk-bar-fill--green" id="contBar" style="width:0%"></div></div>
               </div>
             </div>
           </div>

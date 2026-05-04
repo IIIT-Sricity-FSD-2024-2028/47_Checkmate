@@ -46,77 +46,227 @@
             <div class="topbar">
                 <div>
                     <div class="page-title">Create Event Request</div>
-                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Fill in the details for your event and submit for vendor review</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Build your perfect event step by step</div>
                 </div>
             </div>
             
-            <div class="content" style="max-width:800px; margin:0 auto; width:100%;">
-                <div class="card">
-                    <form id="create-event-form">
-                        <div class="form-section">
-                            <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:16px;">General Details</h3>
-                            <div class="form-grid">
-                                <div class="form-group full">
-                                    <label>Event Name *</label>
-                                    <input type="text" id="fieldEventName" class="form-control" placeholder="E.g., Sarah & Mike's Wedding" required>
-                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Event name is required.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label>Event Type *</label>
-                                    <select id="fieldEventType" class="form-control" required>
-                                        <option value="" disabled selected>Select an event type</option>
-                                        <option value="Wedding">Wedding</option>
-                                        <option value="Birthday">Birthday</option>
-                                        <option value="Conference">Conference</option>
-                                        <option value="Party">Party</option>
-                                        <option value="Corporate">Corporate</option>
-                                    </select>
-                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select an event type.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label>Event Date *</label>
-                                    <input type="date" id="fieldEventDate" class="form-control" required>
-                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select a date.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label>Event Time</label>
-                                    <input type="time" id="fieldEventTime" class="form-control" value="09:00">
-                                </div>
-                                <div class="form-group full">
-                                    <label>Venue (Optional)</label>
-                                    <input type="text" id="fieldVenue" class="form-control" placeholder="E.g., Grand Ballroom, Downtown">
-                                </div>
-                                <div class="form-group">
-                                    <label>Estimated Guest Count *</label>
-                                    <input type="number" id="fieldPeople" class="form-control" placeholder="E.g., 150" required>
-                                    <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please enter guest count.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label>Required Services</label>
-                                    <select id="fieldServices" class="form-control" multiple style="height:100px;">
-                                        <option value="catering">Catering</option>
-                                        <option value="lighting">Lighting & AV</option>
-                                        <option value="photography">Photography</option>
-                                        <option value="decoration">Decoration</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+            <div class="content" style="max-width:960px; margin:0 auto; width:100%;">
 
-                        <div class="form-section">
-                            <div class="form-group">
-                                <label>Additional Notes</label>
-                                <textarea class="form-control" rows="4" placeholder="Any special requirements?"></textarea>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; gap:12px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:20px;">
-                            <a href="client-dashboard.html" class="btn btn-ghost">Cancel</a>
-                            <button type="submit" class="btn btn-primary" id="btnSubmit"><i class="ph ph-paper-plane-tilt"></i> Submit Request</button>
-                        </div>
-                        <div id="formFeedback" style="color:var(--red); font-size:13px; margin-top:12px; text-align:right;"></div>
-                    </form>
+                <!-- ═══ Wizard Step Indicator ═══ -->
+                <div class="wizard-steps" id="wizardSteps">
+                    <div class="wizard-step active" data-step="1">
+                        <div class="wizard-step__circle">1</div>
+                        <span class="wizard-step__label">Event Details</span>
+                    </div>
+                    <div class="wizard-step__line" id="line1"></div>
+                    <div class="wizard-step" data-step="2">
+                        <div class="wizard-step__circle">2</div>
+                        <span class="wizard-step__label">Resources</span>
+                    </div>
+                    <div class="wizard-step__line" id="line2"></div>
+                    <div class="wizard-step" data-step="3">
+                        <div class="wizard-step__circle">3</div>
+                        <span class="wizard-step__label">Staff</span>
+                    </div>
+                    <div class="wizard-step__line" id="line3"></div>
+                    <div class="wizard-step" data-step="4">
+                        <div class="wizard-step__circle">4</div>
+                        <span class="wizard-step__label">Review</span>
+                    </div>
                 </div>
+
+                <!-- ═══ Step 1: Event Details ═══ -->
+                <div class="wizard-panel active" id="step1">
+                    <div class="card">
+                        <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:20px;"><i class="ph ph-calendar-dots" style="color:var(--pink);"></i> General Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label>Event Name *</label>
+                                <input type="text" id="fieldEventName" class="form-control" placeholder="E.g., Sarah & Mike's Wedding" required>
+                                <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Event name is required.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Type *</label>
+                                <select id="fieldEventType" class="form-control" required>
+                                    <option value="" disabled selected>Select an event type</option>
+                                    <option value="Wedding">Wedding</option>
+                                    <option value="Birthday">Birthday</option>
+                                    <option value="Conference">Conference</option>
+                                    <option value="Party">Party</option>
+                                    <option value="Corporate">Corporate</option>
+                                </select>
+                                <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select an event type.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Date *</label>
+                                <input type="date" id="fieldEventDate" class="form-control" required>
+                                <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please select a date.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Time</label>
+                                <input type="time" id="fieldEventTime" class="form-control" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Estimated Guest Count *</label>
+                                <input type="number" id="fieldPeople" class="form-control" placeholder="E.g., 150" required>
+                                <span class="error-msg" style="display:none; color:var(--red); font-size:12px;">Please enter guest count.</span>
+                            </div>
+                            <div class="form-group full">
+                                <label>Venue (Optional)</label>
+                                <input type="text" id="fieldVenue" class="form-control" placeholder="E.g., Grand Ballroom, Downtown">
+                            </div>
+                            <div class="form-group" style="position: relative;">
+                                <label>Budget Range (Optional)</label>
+                                <select id="fieldBudget" class="form-control" style="margin-bottom: 8px;">
+                                    <option value="">Select budget range</option>
+                                    <option value="$1,000 - $5,000">$1,000 - $5,000</option>
+                                    <option value="$5,000 - $15,000">$5,000 - $15,000</option>
+                                    <option value="$15,000 - $30,000">$15,000 - $30,000</option>
+                                    <option value="$30,000 - $50,000">$30,000 - $50,000</option>
+                                    <option value="$50,000+">$50,000+</option>
+                                    <option value="custom">Custom...</option>
+                                </select>
+                                <input type="number" id="fieldCustomBudget" class="form-control" placeholder="Enter maximum budget in $" style="display: none; margin-top: 8px;">
+                            </div>
+                            <div class="form-group full">
+                                <label>Additional Notes</label>
+                                <textarea id="fieldNotes" class="form-control" rows="3" placeholder="Any special requirements, dietary needs, or instructions..."></textarea>
+                            </div>
+                        </div>
+                        <div class="wizard-nav">
+                            <a href="client-dashboard.html" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Cancel</a>
+                            <button class="btn btn-primary" id="btnNext1"><i class="ph ph-arrow-right"></i> Next: Resources</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ Step 2: Select Resources ═══ -->
+                <div class="wizard-panel" id="step2">
+                    <div class="card">
+                        <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:6px;">
+                            <i class="ph ph-package" style="color:var(--pink);"></i> Request Resources
+                            <span class="ce-optional-badge"><i class="ph ph-info"></i> Optional</span>
+                        </h3>
+                        <p class="ce-section-subtitle">Browse available resources and select what you need. Quantities are based on real-time availability.</p>
+                        
+                        <!-- Toolbar -->
+                        <div class="ce-resource-toolbar">
+                            <div class="ce-resource-search">
+                                <i class="ph ph-magnifying-glass"></i>
+                                <input type="text" id="resSearchInput" placeholder="Search resources...">
+                            </div>
+                            <div id="resFilterPills" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                        </div>
+
+                        <!-- Resource Grid -->
+                        <div class="ce-resource-grid" id="resourceGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Selected Summary -->
+                        <div class="ce-selected-summary" id="selectedResourcesSummary" style="margin-top:16px; display:none;">
+                            <div class="ce-selected-summary__title">
+                                <i class="ph ph-check-circle" style="color:var(--green);"></i> Selected Resources
+                                <span class="count-badge" id="selectedResCount">0</span>
+                            </div>
+                            <div id="selectedResList"></div>
+                            <div id="budgetWarningBanner" style="display:none; margin-top:12px; padding:10px 14px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.3); border-radius:8px; color:var(--yellow); font-size:13px; font-weight:500; align-items:center; gap:8px;">
+                                <i class="ph ph-warning-circle" style="font-size:16px;"></i> <span id="budgetWarningText"></span>
+                            </div>
+                        </div>
+
+                        <div class="wizard-nav">
+                            <button class="btn btn-ghost" id="btnBack2"><i class="ph ph-arrow-left"></i> Back</button>
+                            <div style="display:flex;gap:10px;">
+                                <button class="btn btn-ghost" id="btnSkip2">Skip <i class="ph ph-arrow-right"></i></button>
+                                <button class="btn btn-primary" id="btnNext2"><i class="ph ph-arrow-right"></i> Next: Staff</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ Step 3: Select Staff ═══ -->
+                <div class="wizard-panel" id="step3">
+                    <div class="card">
+                        <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:6px;">
+                            <i class="ph ph-users-three" style="color:var(--pink);"></i> Request Staff
+                            <span class="ce-optional-badge"><i class="ph ph-info"></i> Optional</span>
+                        </h3>
+                        <p class="ce-section-subtitle">Select staff members for your event. Busy or assigned staff will be marked accordingly.</p>
+
+                        <!-- Toolbar -->
+                        <div class="ce-resource-toolbar">
+                            <div class="ce-resource-search">
+                                <i class="ph ph-magnifying-glass"></i>
+                                <input type="text" id="staffSearchInput" placeholder="Search staff by name or role...">
+                            </div>
+                        </div>
+
+                        <!-- Staff Grid -->
+                        <div class="ce-staff-grid" id="staffGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Selected Summary -->
+                        <div class="ce-selected-summary" id="selectedStaffSummary" style="margin-top:16px; display:none;">
+                            <div class="ce-selected-summary__title">
+                                <i class="ph ph-check-circle" style="color:var(--green);"></i> Selected Staff
+                                <span class="count-badge" id="selectedStaffCount">0</span>
+                            </div>
+                            <div id="selectedStaffList"></div>
+                        </div>
+
+                        <div class="wizard-nav">
+                            <button class="btn btn-ghost" id="btnBack3"><i class="ph ph-arrow-left"></i> Back</button>
+                            <div style="display:flex;gap:10px;">
+                                <button class="btn btn-ghost" id="btnSkip3">Skip <i class="ph ph-arrow-right"></i></button>
+                                <button class="btn btn-primary" id="btnNext3"><i class="ph ph-arrow-right"></i> Next: Review</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ Step 4: Review & Submit ═══ -->
+                <div class="wizard-panel" id="step4">
+                    <!-- Event Details Review -->
+                    <div class="ce-review-section">
+                        <div class="ce-review-section__title"><i class="ph ph-calendar-dots"></i> Event Details</div>
+                        <div class="ce-review-grid" id="reviewDetailsGrid"></div>
+                    </div>
+
+                    <!-- Resources Review -->
+                    <div class="ce-review-section" id="reviewResourcesSection" style="display:none;">
+                        <div class="ce-review-section__title"><i class="ph ph-package"></i> Requested Resources</div>
+                        <div id="reviewResourcesList"></div>
+                    </div>
+
+                    <!-- Staff Review -->
+                    <div class="ce-review-section" id="reviewStaffSection" style="display:none;">
+                        <div class="ce-review-section__title"><i class="ph ph-users-three"></i> Requested Staff</div>
+                        <div id="reviewStaffList"></div>
+                    </div>
+
+                    <!-- Cost Summary -->
+                    <div class="ce-cost-total" id="reviewCostTotal" style="display:none;">
+                        <span class="ce-cost-total__label"><i class="ph ph-currency-dollar" style="margin-right:4px;"></i> Estimated Resource Cost</span>
+                        <span class="ce-cost-total__value" id="reviewTotalCost">$0</span>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="ce-review-section" id="reviewNotesSection" style="display:none;">
+                        <div class="ce-review-section__title"><i class="ph ph-note-pencil"></i> Additional Notes</div>
+                        <div id="reviewNotes" style="font-size:13.5px; color:var(--text-secondary); line-height:1.7; white-space:pre-wrap;"></div>
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button class="btn btn-ghost" id="btnBack4"><i class="ph ph-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" id="btnSubmitFinal" style="min-width:200px;">
+                            <i class="ph ph-paper-plane-tilt"></i> Submit Event Request
+                        </button>
+                    </div>
+                    <div id="formFeedback" style="color:var(--red); font-size:13px; margin-top:12px; text-align:right;"></div>
+                </div>
+
             </div>
         </main>
     </div>

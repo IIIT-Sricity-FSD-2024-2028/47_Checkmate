@@ -2589,6 +2589,43 @@
           "endedAt": {
             "type": "string",
             "example": "2026-05-01T12:00:00.000Z"
+          },
+          "requestedResources": {
+            "description": "Resources requested by client",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requestedStaff": {
+            "description": "Staff requested by client",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "estimatedCost": {
+            "type": "number",
+            "example": 5000
+          },
+          "budgetRange": {
+            "type": "string",
+            "example": "$5,000 - $10,000"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "Reason for rejection"
+          },
+          "rejectedAt": {
+            "type": "string",
+            "example": "2026-05-01T12:00:00.000Z"
+          },
+          "conflicts": {
+            "description": "Detected conflicts",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [

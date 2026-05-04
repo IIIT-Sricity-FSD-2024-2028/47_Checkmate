@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<a href="client_trackprogress.html?id=${ev.id}" class="btn btn-ghost" style="padding:4px 12px; font-size:12px;"><i class="ph ph-chart-line-up"></i> Track</a>`;
         }
         if (ev.status === 'rejected') {
-            return `<button class="btn btn-ghost" style="padding:4px 12px; font-size:12px; opacity:0.5;" disabled>Rejected</button>`;
+            return `<button class="btn btn-ghost btn-view-reason" data-evid="${ev.id}" style="padding:4px 12px; font-size:12px; color:#fca5a5; border-color:rgba(239,68,68,0.3);"><i class="ph ph-warning-circle"></i> View Reason</button>`;
         }
         // pending — still allow tracking so client can see "awaiting approval" state
         return `<a href="client_trackprogress.html?id=${ev.id}" class="btn btn-ghost" style="padding:4px 12px; font-size:12px; opacity:0.8;"><i class="ph ph-hourglass"></i> View</a>`;
@@ -98,10 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (emptyEl) emptyEl.style.display = 'none';
 
-        tbody.innerHTML = filtered.map(ev => `
+        tbody.innerHTML = filtered.map(ev => {
+            const rejectionRow = ev.status === 'rejected' && ev.rejectionReason
+              ? `<div style="font-size:11px;color:#fca5a5;margin-top:4px;display:flex;align-items:center;gap:4px;"><i class="ph ph-warning-circle" style="font-size:12px;"></i> ${ev.rejectionReason.length > 80 ? ev.rejectionReason.slice(0, 80) + '…' : ev.rejectionReason}</div>`
+              : '';
+            return `
             <tr class="table-row" data-id="${ev.id}">
                 <td class="col-id">${ev.id}</td>
-                <td>${ev.name || '—'}</td>
+                <td>${ev.name || '—'}${rejectionRow}</td>
                 <td><span class="badge ${TYPE_CLASS[ev.type] || 'badge--conference'}">${ev.type || '—'}</span></td>
                 <td>${fmtDate(ev.date)}</td>
                 <td>${ev.venue || '—'}</td>
@@ -109,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${statusBadge(ev.status)}</td>
                 <td style="text-align:right;">${actionBtn(ev)}</td>
             </tr>
-        `).join('');
+        `}).join('');
 
         // Row hover flash
         tbody.querySelectorAll('.table-row').forEach(row => {
@@ -120,6 +124,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => row.style.backgroundColor = '', 160);
             });
         });
+
+        // View Reason buttons for rejected events
+        tbody.querySelectorAll('.btn-view-reason').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const evId = btn.dataset.evid;
+                const event = allEvents.find(ev => ev.id === evId);
+                if (!event) return;
+                showRejectionModal(event);
+            });
+        });
+    }
+
+    function showRejectionModal(event) {
+        const existing = document.getElementById('rejectionReasonModal');
+        if (existing) existing.remove();
+
+        const conflicts = event.conflicts || [];
+        const conflictHtml = conflicts.length
+          ? conflicts.map(c => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">
+              <div><div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">${c.type}</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${c.desc}</div></div>
+              <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:${c.severity === 'high' ? 'rgba(239,68,68,0.15)' : 'rgba(234,179,8,0.15)'};color:${c.severity === 'high' ? '#fca5a5' : 'var(--yellow)'};border:1px solid ${c.severity === 'high' ? 'rgba(239,68,68,0.3)' : 'rgba(234,179,8,0.3)'};">${c.severity}</span>
+            </div>`).join('')
+          : '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No specific conflicts recorded.</div>';
+
+        const overlay = document.createElement('div');
+        overlay.id = 'rejectionReasonModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+          <div style="background:var(--bg-sidebar, #1a1a2e);border:1px solid var(--border);border-radius:14px;width:min(500px,92vw);max-height:80vh;overflow-y:auto;" onclick="event.stopPropagation()">
+            <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+              <i class="ph ph-warning-circle" style="font-size:22px;color:#fca5a5;"></i>
+              <div>
+                <div style="font-size:16px;font-weight:700;color:var(--text-primary);">Event Rejected</div>
+                <div style="font-size:12px;color:var(--text-muted);">${event.name} · ${event.id}</div>
+              </div>
+            </div>
+            <div style="padding:20px 24px;">
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Rejection Reason</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;padding:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:8px;">${event.rejectionReason || 'Rejected by vendor.'}</div>
+              ${conflicts.length ? `<div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Conflicts (${conflicts.length})</div>${conflictHtml}` : ''}
+            </div>
+            <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+              <button class="btn btn-ghost" id="closeRejModal">Close</button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => overlay.remove());
+        document.getElementById('closeRejModal').addEventListener('click', () => overlay.remove());
     }
 
     function refreshData() {
