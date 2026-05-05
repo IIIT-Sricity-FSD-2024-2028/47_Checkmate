@@ -8,6 +8,15 @@ export interface User {
   phone?: string;
   role: UserRole;
   status: 'Active' | 'Inactive' | 'Pending' | 'active' | 'inactive' | 'pending';
+  profile_picture_url?: string;
+  bio?: string;
+  location?: string;
+  address?: string;
+  date_of_birth?: string;
+  years_experience?: number;
+  skills?: string;
+  website_url?: string;
+  linkedin_url?: string;
   created: string;
   passwordHash: string;
 }

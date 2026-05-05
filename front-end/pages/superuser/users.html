@@ -10,6 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     />
     <link rel="stylesheet" href="../../styles/superuser_css/user.css">
+    <link rel="stylesheet" href="../../styles/password-toggle.css">
   </head>
   <body>
     <aside class="sb">
@@ -219,6 +220,7 @@
       function closeM() {
         document.getElementById("modal").classList.remove("open");
         eid = null;
+        if (typeof window.resetAllPasswordToggles === 'function') window.resetAllPasswordToggles();
       }
       function editU(id) {
         openM(id);
@@ -280,5 +282,10 @@
       });
       render();
     </script>
-  </body>
+  
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
+    <script src="../../scripts/password-toggle.js"></script>
+</body>
 </html>
