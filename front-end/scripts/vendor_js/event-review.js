@@ -84,9 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     (event.requestedStaff||[]).forEach(s=>{
       const st=allStaff.find(x=>x.id===s.staffId);
-      if(!st){detectedConflicts.push({type:'Staff Not Found',desc:`${s.staffName} not found`,severity:'high'});return;}
-      const busy = (st.workload || 0) >= 100;
-      if(busy)detectedConflicts.push({type:'Staff Unavailable',desc:`${s.staffName} is at 100% workload`,severity:'high'});
+      if(!st){detectedConflicts.push({type:'Staff Not Found',desc:`${s.staffName} not found in staff list`,severity:'high'});return;}
+      const isBusy = st.status==='busy'||st.avail==='Busy';
+      const isOff = st.status==='off';
+      const isOverloaded = (st.workload||0)>=100;
+      const assignedTo = Array.isArray(st.assignedEvents)?st.assignedEvents:[];
+      const isAlreadyAssigned = assignedTo.length>0 && !assignedTo.includes(event.id);
+      const liveEvents = DB.getAll('events').filter(e=>e.status==='live');
+      const isInLive = liveEvents.some(e=>assignedTo.includes(e.id));
+      if(isOff) detectedConflicts.push({type:'Staff Off Duty',desc:`${s.staffName} is currently off duty`,severity:'high'});
+      else if(isInLive) detectedConflicts.push({type:'Staff In Live Event',desc:`${s.staffName} is assigned to a live event`,severity:'high'});
+      else if(isBusy) detectedConflicts.push({type:'Staff Busy',desc:`${s.staffName} is currently marked as busy`,severity:'high'});
+      else if(isOverloaded) detectedConflicts.push({type:'Staff Overloaded',desc:`${s.staffName} is at ${st.workload}% workload`,severity:'high'});
+      else if(isAlreadyAssigned) detectedConflicts.push({type:'Staff Already Assigned',desc:`${s.staffName} is assigned to ${assignedTo.length} other event(s)`,severity:'medium'});
     });
   }
 
@@ -96,17 +106,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const approveBtn=document.querySelector('.btn-approve');
     const rejectBtn=document.querySelector('.btn-reject');
     const actionBar=document.querySelector('.action-bar');
+    const hasReqRes = (ev && (ev.requestedResources||[]).length > 0);
+    const hasReqStaff = (ev && (ev.requestedStaff||[]).length > 0);
+    const alreadyDone = ev && (ev.status==='confirmed'||ev.status==='rejected'||ev.status==='live'||ev.status==='completed');
     if(detectedConflicts.length>0){
       if(box){
         box.style.display='block';
-        box.innerHTML=`<div style="padding:16px 20px;border:1px solid rgba(239,68,68,0.3);border-radius:12px;background:rgba(239,68,68,0.07);margin-bottom:20px;">
-          <div style="font-weight:700;color:#fca5a5;font-size:14px;margin-bottom:12px;">⚠ Conflicts Detected (${detectedConflicts.length}) — Allocate alternatives or Reject</div>
-          ${detectedConflicts.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid rgba(239,68,68,0.15);border-radius:8px;margin-bottom:6px;background:rgba(239,68,68,0.04);">
-            <div><div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">${c.type}</div><div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${c.desc}</div></div>
-            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(239,68,68,0.18);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);">${c.severity}</span>
+        box.innerHTML=`<div style="padding:20px 24px;border:1px solid rgba(239,68,68,0.35);border-radius:14px;background:rgba(239,68,68,0.08);margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;font-weight:700;color:#fca5a5;font-size:16px;margin-bottom:16px;"><span style="width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">⚠</span> Conflicts Detected (${detectedConflicts.length})</div>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">The following resource/staff conflicts prevent event approval. Use "Allocate Extra" buttons above to resolve, or reject the event.</div>
+          ${detectedConflicts.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid rgba(239,68,68,0.18);border-radius:10px;margin-bottom:8px;background:rgba(239,68,68,0.04);">
+            <div><div style="font-size:13px;font-weight:600;color:var(--text-primary);">${c.type}</div><div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${c.desc}</div></div>
+            <span style="font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(239,68,68,0.18);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);text-transform:uppercase;letter-spacing:0.5px;">${c.severity}</span>
           </div>`).join('')}
-          <div style="margin-top:14px;text-align:center;">
-            <button id="conflictRejectBtn" style="padding:12px 40px;border-radius:10px;border:1px solid rgba(239,68,68,0.5);background:rgba(239,68,68,0.2);color:#fca5a5;font-size:14px;font-weight:700;cursor:pointer;">✕ Reject Event</button>
+          <div style="margin-top:18px;display:flex;justify-content:center;gap:12px;">
+            <button id="conflictRejectBtn" style="padding:13px 44px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(239,68,68,0.3);transition:opacity 0.2s;">✕ Reject Event</button>
           </div>
         </div>`;
         document.getElementById('conflictRejectBtn')?.addEventListener('click',()=>doReject());
@@ -114,9 +128,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if(approveBtn)approveBtn.style.display='none';
       if(rejectBtn)rejectBtn.style.display='none';
     } else {
-      if(box){box.style.display='none';box.innerHTML='';}
-      if(approveBtn)approveBtn.style.display='';
-      if(rejectBtn)rejectBtn.style.display='';
+      if(box){
+        if(hasReqRes || hasReqStaff){
+          box.style.display='block';
+          box.innerHTML=`<div style="padding:16px 20px;border:1px solid rgba(34,197,94,0.3);border-radius:14px;background:rgba(34,197,94,0.06);margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+            <span style="width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">✅</span>
+            <div><div style="font-weight:700;color:#86efac;font-size:14px;">No Conflicts — Safe to Approve</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">All requested resources are in stock and staff members are available.</div></div>
+          </div>`;
+        } else {
+          box.style.display='none';box.innerHTML='';
+        }
+      }
+      if(alreadyDone){
+        if(approveBtn)approveBtn.style.display='none';
+        if(rejectBtn)rejectBtn.style.display='none';
+      } else {
+        if(approveBtn)approveBtn.style.display='';
+        if(rejectBtn)rejectBtn.style.display='';
+      }
     }
   }
 
@@ -328,6 +358,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* POPULATE CLIENT REQUIREMENTS DYNAMICALLY */
+  function renderClientReq(event){
+    const card=document.querySelector('.client-req-card');
+    if(!card)return;
+    const reqRes=event.requestedResources||[];
+    const reqStaff=event.requestedStaff||[];
+    const submittedDate=event.submittedAt?new Date(event.submittedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+new Date(event.submittedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'—';
+    const clientName=event.client||'Client';
+    // Header meta
+    const metaEl=card.querySelector('.client-req-card__meta');
+    if(metaEl) metaEl.innerHTML=`<i data-lucide="user"></i>&nbsp;Submitted by ${clientName}&nbsp;·&nbsp;<i data-lucide="clock"></i>&nbsp;${submittedDate}`;
+    // Tags: show requested resources & staff as tags
+    const tagsEl=card.querySelector('.client-req-tags');
+    if(tagsEl){
+      let tagHtml='';
+      reqRes.forEach(r=>tagHtml+=`<span class="client-tag"><i data-lucide="package"></i> ${r.resourceName} ×${r.quantity}</span>`);
+      reqStaff.forEach(s=>tagHtml+=`<span class="client-tag"><i data-lucide="user"></i> ${s.staffName} (${s.role})</span>`);
+      if(!tagHtml) tagHtml='<span style="color:var(--text-muted);font-size:12px;">No specific resources or staff requested.</span>';
+      tagsEl.innerHTML=tagHtml;
+    }
+    // Message: show notes
+    const msgEl=card.querySelector('.client-req-message');
+    if(msgEl) msgEl.textContent=event.notes||'No additional notes from client.';
+    // Extras: budget, people, event type
+    const extrasEl=card.querySelector('.client-req-extras');
+    if(extrasEl){
+      extrasEl.innerHTML=`
+        <div class="client-extra-item"><i data-lucide="dollar-sign"></i><div><div class="client-extra-label">Budget Range</div><div class="client-extra-value">${event.budgetRange||'Not specified'}</div></div></div>
+        <div class="client-extra-item"><i data-lucide="users"></i><div><div class="client-extra-label">Expected Guests</div><div class="client-extra-value">${event.people||0} people</div></div></div>
+        <div class="client-extra-item"><i data-lucide="tag"></i><div><div class="client-extra-label">Event Type</div><div class="client-extra-value">${event.type||'—'}</div></div></div>`;
+    }
+    if(typeof lucide!=='undefined')lucide.createIcons();
+  }
+
   /* WIRE UP PAGE */
   if(ev){
     const h2=document.querySelector('.ev-header__left h2');if(h2)h2.textContent=ev.name;
@@ -345,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(metaVals[2])metaVals[2].textContent=ev.venue||'—';
     if(metaVals[3])metaVals[3].textContent=`${ev.people||0} people`;
     document.title=`EventPro – Review: ${ev.name}`;
+    renderClientReq(ev);
     renderResourceTable(ev);
     renderStaffTable(ev);
     checkConflicts(ev);

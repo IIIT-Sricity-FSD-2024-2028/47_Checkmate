@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,13 +22,31 @@
       text-decoration: none;
       transition: transform 0.18s, opacity 0.18s;
     }
-    .er-action-btn svg { width: 18px; height: 18px; }
-    .er-action-btn:hover { transform: scale(1.2); opacity: 0.75; }
-    .er-action-btn.view    { color: var(--blue); }
-    .er-action-btn.approve { color: var(--green); }
-    .er-action-btn.reject  { color: var(--red); }
+
+    .er-action-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .er-action-btn:hover {
+      transform: scale(1.2);
+      opacity: 0.75;
+    }
+
+    .er-action-btn.view {
+      color: var(--blue);
+    }
+
+    .er-action-btn.approve {
+      color: var(--green);
+    }
+
+    .er-action-btn.reject {
+      color: var(--red);
+    }
   </style>
 </head>
+
 <body>
   <div class="app">
 
@@ -65,17 +84,22 @@
           <span>Preset Package</span>
         </a>
         <div class="nav-group" onclick="this.classList.toggle('open')">
-          <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down"
+              class="nav-chevron"></i></div>
           <div class="nav-sub">
-            <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
-            <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+            <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on
+                Event</span></a>
+            <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to
+                Admin</span></a>
           </div>
         </div>
         <div class="nav-group" onclick="this.classList.toggle('open')">
-          <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i
+              data-lucide="chevron-down" class="nav-chevron"></i></div>
           <div class="nav-sub">
             <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
-            <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+            <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin
+                Coordination</span></a>
           </div>
         </div>
         <a href="monitoring.html" class="nav-item">
@@ -132,10 +156,12 @@
               <i data-lucide="sliders-horizontal"></i>
               More Filters
             </button>
-            <div id="erFilterDropdown" style="display:none;position:absolute;top:100%;left:0;margin-top:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;width:240px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:100;">
+            <div id="erFilterDropdown"
+              style="display:none;position:absolute;top:100%;left:0;margin-top:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;width:240px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:100;">
               <div style="margin-bottom:12px;">
                 <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Status</label>
-                <select id="filterErStatus" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                <select id="filterErStatus"
+                  style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
                   <option value="All">All Statuses</option>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
@@ -144,8 +170,10 @@
                 </select>
               </div>
               <div style="margin-bottom:12px;">
-                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Date Range</label>
-                <select id="filterErDate" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Date
+                  Range</label>
+                <select id="filterErDate"
+                  style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
                   <option value="All">All Dates</option>
                   <option value="Upcoming7">Upcoming (7 days)</option>
                   <option value="Upcoming30">Upcoming (30 days)</option>
@@ -153,8 +181,10 @@
                 </select>
               </div>
               <div style="margin-bottom:16px;">
-                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Event Type</label>
-                <select id="filterErType" style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Event
+                  Type</label>
+                <select id="filterErType"
+                  style="width:100%;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);outline:none;">
                   <option value="All">All Types</option>
                   <option value="Wedding">Wedding</option>
                   <option value="Corporate">Corporate</option>
@@ -162,7 +192,9 @@
                   <option value="Birthday">Birthday</option>
                 </select>
               </div>
-              <button id="applyErFilters" style="width:100%;padding:8px;background:var(--pink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Apply Filters</button>
+              <button id="applyErFilters"
+                style="width:100%;padding:8px;background:var(--pink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Apply
+                Filters</button>
             </div>
           </div>
         </div>
@@ -202,7 +234,7 @@
                   <div class="er-actions">
                     <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
                     <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
-                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                    <button class="er-action-btn reject" title="Reject"><i data-lucide="x-circle"></i></button>
                   </div>
                 </td>
               </tr>
@@ -221,7 +253,7 @@
                   <div class="er-actions">
                     <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
                     <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
-                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                    <button class="er-action-btn reject" title="Reject"><i data-lucide="x-circle"></i></button>
                   </div>
                 </td>
               </tr>
@@ -240,7 +272,7 @@
                   <div class="er-actions">
                     <a href="event-review.html" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
                     <button class="er-action-btn approve" title="Approve"><i data-lucide="check-circle"></i></button>
-                    <button class="er-action-btn reject"  title="Reject"><i data-lucide="x-circle"></i></button>
+                    <button class="er-action-btn reject" title="Reject"><i data-lucide="x-circle"></i></button>
                   </div>
                 </td>
               </tr>
@@ -272,8 +304,9 @@
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/event-request.js"></script>
 
-    <!-- Global Injections -->
-    <script src="../../scripts/profile-modal.js"></script>
-    <script src="../../scripts/welcome-overlay.js"></script>
+  <!-- Global Injections -->
+  <script src="../../scripts/profile-modal.js"></script>
+  <script src="../../scripts/welcome-overlay.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Client Portal</title>
+    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
+    <link rel="stylesheet" href="../../styles/client_css/client.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .chat-container { display:flex; height: 600px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+        .chat-sidebar { width: 320px; border-right:1px solid var(--border); display:flex; flex-direction:column; background:rgba(255,255,255,0.01);}
+        .chat-search { padding:16px; border-bottom:1px solid var(--border); }
+        .chat-search input { width:100%; background:rgba(0,0,0,0.2); border:1px solid var(--border); padding:10px 16px; border-radius:8px; color:#fff; font-size:13px; outline:none; }
+        .chat-list { flex:1; overflow-y:auto; }
+        .chat-item { padding:16px; border-bottom:1px solid var(--border); cursor:pointer; transition:all 0.2s; display:flex; gap:12px; }
+        .chat-item:hover { background:var(--bg-hover); }
+        .chat-item.active { background:rgba(233,30,140,0.08); border-left:3px solid var(--pink); }
+        .chat-avatar { width:40px; height:40px; border-radius:50%; background:var(--purple); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; color:#fff; flex-shrink:0; position:relative;}
+        .online-dot { position:absolute; bottom:0; right:0; width:10px; height:10px; background:var(--green); border-radius:50%; border:2px solid var(--bg-card);}
+        .chat-info { flex:1; min-width:0; }
+        .chat-info-top { display:flex; justify-content:space-between; margin-bottom:4px; align-items:center; }
+        .chat-info h4 { font-size:14px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .chat-time { font-size:11px; color:var(--text-muted); }
+        .chat-info p { font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        
+        .chat-main { flex:1; display:flex; flex-direction:column; background:var(--bg-sidebar); }
+        .chat-header { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); }
+        .chat-header-info { display:flex; align-items:center; gap:12px; }
+        .chat-messages { flex:1; padding:24px; overflow-y:auto; display:flex; flex-direction:column; gap:20px; scroll-behavior: smooth;}
+        .msg { max-width:75%; display:flex; flex-direction:column; }
+        .msg-received { align-self:flex-start; }
+        .msg-sent { align-self:flex-end; }
+        .msg-bubble { padding:12px 18px; border-radius:14px; font-size:13.5px; line-height:1.5; }
+        .msg-received .msg-bubble { background:rgba(255,255,255,0.05); color:var(--text-primary); border-top-left-radius:4px; border:1px solid var(--border); }
+        .msg-sent .msg-bubble { background:var(--pink); color:#fff; border-top-right-radius:4px; box-shadow:0 4px 12px var(--pink-glow); }
+        .msg-time { font-size:11px; color:var(--text-muted); margin-top:6px; }
+        .msg-sent .msg-time { text-align:right; }
+        
+        .chat-input { padding:16px 24px; border-top:1px solid var(--border); background:var(--bg-card); display:flex; gap:12px; align-items:center;}
+        .chat-input input { flex:1; background:rgba(0,0,0,0.2); border:1px solid var(--border); padding:14px 20px; border-radius:24px; color:#fff; font-size:14px; outline:none; transition: border 0.2s;}
+        .chat-input input:focus { border-color:var(--pink); }
+        .chat-send { background:var(--pink); border:none; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; font-size:20px; transition:all 0.2s; flex-shrink:0;}
+        .chat-send:hover { background:var(--pink-light); transform:scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div>
+                    <div class="brand-name">EventPro</div>
+                    <div class="brand-role">Client Portal</div>
+                </div>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
+                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
+                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <div class="nav-group" onclick="this.classList.toggle('open')">
+                    <div class="nav-item"><i class="ph ph-warning-circle"></i><span>Report Issue</span><i class="ph ph-caret-down nav-chevron"></i></div>
+                    <div class="nav-sub">
+                        <a href="client_reportissue.html" class="nav-item"><i class="ph ph-warning"></i><span>Issue on Event</span></a>
+                        <a href="client_reportissue_admin.html" class="nav-item"><i class="ph ph-shield-warning"></i><span>Issue to Admin</span></a>
+                    </div>
+                </div>
+                <div class="nav-group" onclick="this.classList.toggle('open')">
+                    <div class="nav-item"><i class="ph ph-chat-teardrop-dots"></i><span>Coordination Hub</span><i class="ph ph-caret-down nav-chevron"></i></div>
+                    <div class="nav-sub">
+                        <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat"></i><span>Event Coordination</span></a>
+                        <a href="client_coordination_admin.html" class="nav-item"><i class="ph ph-shield"></i><span>Admin Coordination</span></a>
+                    </div>
+                </div>
+                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                
+                
+                
+            </nav>
+            <div class="sidebar__footer">
+                <div class="user-info">
+                    <div class="user-avatar">J</div>
+                    <div>
+                        <div class="user-name">John</div>
+                        <div class="user-email">john@gmail.com</div>
+                    </div>
+                </div>
+                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div>
+                    <div class="page-title">Admin Coordination</div>
+                    <div style="font-size:13px; color:var(--text-secondary); margin-top:2px;">Chat directly with platform administrators</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="chat-container">
+                    
+                    <div class="chat-sidebar">
+                        <div class="chat-search">
+                            <input type="text" placeholder="Search conversations...">
+                        </div>
+                        <div class="chat-list">
+                            <div class="chat-item active">
+                                <div class="chat-avatar"><div class="online-dot"></div>S</div>
+                                <div class="chat-info">
+                                    <div class="chat-info-top"><h4>Sarah Johnson</h4><span class="chat-time">10:42 AM</span></div>
+                                    <p>We've confirmed the catering menu for the Gala.</p>
+                                </div>
+                            </div>
+                            <div class="chat-item">
+                                <div class="chat-avatar" style="background:var(--blue);"><div class="online-dot" style="background:transparent; border:none;"></div>M</div>
+                                <div class="chat-info">
+                                    <div class="chat-info-top"><h4>Mike Chen</h4><span class="chat-time">Yesterday</span></div>
+                                    <p>Can you send me the guest list template?</p>
+                                </div>
+                            </div>
+                            <div class="chat-item">
+                                <div class="chat-avatar" style="background:var(--green);"><div class="online-dot" style="background:transparent; border:none;"></div>A</div>
+                                <div class="chat-info">
+                                    <div class="chat-info-top"><h4>Alice (Support)</h4><span class="chat-time">Mar 25</span></div>
+                                    <p>Your issue has been resolved.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-main">
+                        <div class="chat-header">
+                            <div class="chat-header-info">
+                                <div class="chat-avatar" style="width:36px; height:36px; font-size:13px;">S</div>
+                                <div>
+                                    <h4 style="font-size:15px; font-weight:600; color:var(--text-primary);">Sarah Johnson</h4>
+                                    <p style="font-size:12px; color:var(--green); display:flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block;"></span> Online • Corporate Gala Coordinator</p>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:12px; color:var(--text-secondary); font-size:20px;">
+                                <i class="ph ph-phone" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
+                                <i class="ph ph-video-camera" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
+                                <i class="ph ph-info" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chatWindow">
+                            <!-- Populated dynamically -->
+                        </div>
+                        
+                        <div class="chat-input">
+                            <i class="ph ph-paperclip" style="font-size:22px; color:var(--text-muted); cursor:pointer;"></i>
+                            <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off">
+                            <button class="chat-send" id="btnSend"><i class="ph ph-paper-plane-tilt"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/client_js/client_utils.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var session = null;
+        try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch(e) {}
+        var myName = 'Client User';
+        var myRole = 'Client';
+        var myEmail = 'client@example.com';
+        if (session) {
+          if (typeof session.user === 'string') myName = session.user;
+          else if (session.user && session.user.name) myName = session.user.name;
+          else if (session.name) myName = session.name;
+          myRole = session.role || 'Client';
+          myEmail = session.email || (session.user && session.user.email) || 'client@example.com';
+        }
+
+        var chatMessages = document.getElementById('chatWindow');
+        var chatInput = document.getElementById('chatInput');
+        var sendBtn = document.getElementById('btnSend');
+
+        function timeStr(iso) {
+          try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+          catch(e) { return ''; }
+        }
+
+        function getMessages() {
+          return DB.get('adminChatMessages') || [];
+        }
+
+        function getMyMessages() {
+          var all = getMessages();
+          return all.filter(function(m) {
+            return m.senderEmail === myEmail || m.recipientEmail === myEmail;
+          });
+        }
+
+        function renderMessages() {
+          var msgs = getMyMessages();
+          if (msgs.length === 0) {
+            chatMessages.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;">No messages yet. Start the conversation!</div>';
+            return;
+          }
+
+          msgs.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
+
+          var html = '';
+          msgs.forEach(function(m) {
+            var isMe = m.senderEmail === myEmail;
+            var isSystem = m.type === 'issue-report';
+
+            if (isSystem) {
+              html += '<div class="msg" style="align-self:center;">' +
+                '<div class="msg-bubble" style="background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.25); color:var(--orange); border-radius:8px; font-size:12.5px; text-align:center;">' + m.text + '</div>' +
+                '<span class="msg-time" style="text-align:center;">' + timeStr(m.timestamp) + '</span>' +
+                '</div>';
+            } else if (isMe) {
+              html += '<div class="msg msg-sent">' +
+                '<div class="msg-bubble">' + m.text + '</div>' +
+                '<span class="msg-time">' + timeStr(m.timestamp) + '</span>' +
+                '</div>';
+            } else {
+              html += '<div class="msg msg-received">' +
+                '<div style="font-size:11px;font-weight:600;color:var(--pink);margin-bottom:4px;">' + (m.sender || 'Admin') + '</div>' +
+                '<div class="msg-bubble">' + m.text + '</div>' +
+                '<span class="msg-time">' + timeStr(m.timestamp) + '</span>' +
+                '</div>';
+            }
+          });
+          chatMessages.innerHTML = html;
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+          var text = chatInput.value.trim();
+          if (!text) return;
+
+          var all = getMessages();
+          all.push({
+            id: 'msg_' + Date.now(),
+            sender: myName,
+            senderRole: myRole,
+            senderEmail: myEmail,
+            text: text,
+            timestamp: new Date().toISOString(),
+            type: 'message'
+          });
+          DB.set('adminChatMessages', all);
+          chatInput.value = '';
+          renderMessages();
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') sendMessage();
+        });
+
+        renderMessages();
+        setInterval(renderMessages, 3000);
+      });
+    </script>
+</body>
+</html>

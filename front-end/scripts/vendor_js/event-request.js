@@ -83,6 +83,35 @@ document.addEventListener('DOMContentLoaded', () => {
       : `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid var(--border);"><i data-lucide="minus-circle" style="width:12px;height:12px"></i>None</span>`;
   }
 
+  /* ── Conflict detection ───────────── */
+  function detectConflicts(ev) {
+    const conflicts = [];
+    const allRes = DB.getAll('resources') || [];
+    const allStaff = DB.getAll('staff') || [];
+    const liveEvents = DB.getAll('events').filter(e => e.status === 'live');
+    (ev.requestedResources || []).forEach(r => {
+      const db = allRes.find(x => x.id === r.resourceId);
+      if (!db || r.quantity > db.quantity)
+        conflicts.push({type:'Resource Shortage', desc: db ? `${r.resourceName}: need ${r.quantity}, only ${db.quantity} available` : `${r.resourceName}: not in inventory`, severity:'high'});
+    });
+    (ev.requestedStaff || []).forEach(s => {
+      const st = allStaff.find(x => x.id === s.staffId);
+      if (!st) { conflicts.push({type:'Staff Not Found', desc:`${s.staffName} not found`, severity:'high'}); return; }
+      const isBusy = st.status==='busy' || st.avail==='Busy';
+      const isOff = st.status==='off';
+      const isOverloaded = (st.workload||0) >= 100;
+      const assignedTo = Array.isArray(st.assignedEvents) ? st.assignedEvents : [];
+      const isAlreadyAssigned = assignedTo.length > 0 && !assignedTo.includes(ev.id);
+      const isInLive = liveEvents.some(e => assignedTo.includes(e.id));
+      if (isOff) conflicts.push({type:'Staff Off Duty', desc:`${s.staffName} is off duty`, severity:'high'});
+      else if (isInLive) conflicts.push({type:'Staff In Live Event', desc:`${s.staffName} is in a live event`, severity:'high'});
+      else if (isBusy) conflicts.push({type:'Staff Busy', desc:`${s.staffName} is busy`, severity:'high'});
+      else if (isOverloaded) conflicts.push({type:'Staff Overloaded', desc:`${s.staffName} at ${st.workload}% workload`, severity:'high'});
+      else if (isAlreadyAssigned) conflicts.push({type:'Staff Already Assigned', desc:`${s.staffName} assigned to ${assignedTo.length} other event(s)`, severity:'medium'});
+    });
+    return conflicts;
+  }
+
   /* ── Get filtered list ──────────────── */
   function getFiltered() {
     return DB.getAll('events').filter(ev => {
@@ -130,6 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const canStart = ev.status === 'confirmed';
         const isLive   = ev.status === 'live';
         const isDone   = ev.status === 'completed';
+        const isPending = ev.status === 'pending';
+        const conflicts = isPending ? detectConflicts(ev) : [];
+        const hasConflict = conflicts.length > 0;
+        let statusHtml = statusBadge(ev.status);
+        if (isPending && hasConflict) {
+          statusHtml = `<span class="status-badge" style="background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">⚠ Conflict</span>`;
+        }
         return `
         <tr data-id="${ev.id}">
           <td><input type="checkbox" data-id="${ev.id}" /></td>
@@ -140,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${ev.venue}</td>
           <td>${ev.people}</td>
           <td>${ev.time}</td>
-          <td>${statusBadge(ev.status)}</td>
+          <td>${statusHtml}</td>
           <td>${allocBadge(hasResources(ev.id), 'Allocated')}</td>
           <td>${allocBadge(hasStaff(ev.id),     'Assigned')}</td>
           <td>
@@ -149,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${canStart ? `<button class="er-action-btn" title="Start Event" data-action="start" data-id="${ev.id}" style="color:#22c55e"><i data-lucide="play-circle"></i></button>` : ''}
               ${isLive   ? `<button class="er-action-btn" title="End Event"   data-action="end"   data-id="${ev.id}" style="color:#ef4444"><i data-lucide="stop-circle"></i></button>` : ''}
               ${isDone   ? `<span style="font-size:11px;color:var(--text-muted);padding:4px 6px;">Done</span>` : ''}
-              ${!isLive && !isDone ? `<button class="er-action-btn approve" title="Approve" data-action="approve" data-id="${ev.id}"><i data-lucide="check-circle"></i></button>` : ''}
+              ${!isLive && !isDone && !hasConflict ? `<button class="er-action-btn approve" title="Approve" data-action="approve" data-id="${ev.id}"><i data-lucide="check-circle"></i></button>` : ''}
               ${!isLive && !isDone ? `<button class="er-action-btn reject"  title="Reject"  data-action="reject"  data-id="${ev.id}"><i data-lucide="x-circle"></i></button>` : ''}
               <button class="er-action-btn delete" title="Delete" data-action="delete" data-id="${ev.id}" style="color:var(--text-muted)"><i data-lucide="trash-2"></i></button>
             </div>
@@ -248,14 +284,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (action === 'reject') {
           if (ev.status === 'rejected') { Toast.show('Already rejected.', 'info'); return; }
+          const conflicts = detectConflicts(ev);
+          const hasConflict = conflicts.length > 0;
+          const summary = hasConflict ? conflicts.map(c => `${c.type}: ${c.desc}`).join('; ') : 'Rejected by vendor';
           Confirm.ask({
-            title:'Reject Event Request?',
-            msg:`"${ev.name}" will be marked as rejected.`,
+            title: hasConflict ? 'Reject Due to Conflict?' : 'Reject Event Request?',
+            msg: hasConflict ? `"${ev.name}" has ${conflicts.length} conflict(s). Reject and notify client?` : `"${ev.name}" will be marked as rejected.`,
             okLabel:'Reject', okColor:'#b91c1c',
           }).then(ok => {
             if (!ok) return;
-            DB.update('events', id, { status:'rejected' });
-            Toast.show(`"${ev.name}" rejected.`, 'error');
+            DB.update('events', id, { status:'rejected', rejectionReason: summary, rejectedAt: new Date().toISOString(), conflicts: hasConflict ? conflicts : undefined });
+            Toast.show(`"${ev.name}" rejected.${hasConflict ? ' Client notified.' : ''}`, 'error');
             render();
           });
         }
