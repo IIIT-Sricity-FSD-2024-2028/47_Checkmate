@@ -300,9 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getMyMessages() {
     var all = getMessages();
-    // Vendor sees messages involving their email
     return all.filter(function(m) {
-      return m.senderEmail === myEmail || m.recipientEmail === myEmail || m.senderRole === 'admin' || m.senderRole === 'Admin';
+      return m.senderEmail === myEmail || m.recipientEmail === myEmail;
     });
   }
 

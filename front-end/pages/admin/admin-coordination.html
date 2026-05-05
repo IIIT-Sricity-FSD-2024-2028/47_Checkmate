@@ -178,7 +178,7 @@
       <header class="topbar">
         <div>
           <h1 class="page-title">Coordination Hub</h1>
-          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors</p>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors, Staff & Clients</p>
         </div>
         <div class="topbar__right">
           <button class="notif-btn"><i data-lucide="bell"></i><span class="notif-badge" id="notifCount">0</span></button>
@@ -210,10 +210,17 @@
         <div class="bipartite-section">
           <!-- Left: Conversation list -->
           <div class="data-table-wrapper" style="overflow-y: auto;">
-            <h3 class="table-header-title">Vendor Conversations</h3>
+            <h3 class="table-header-title">Conversations</h3>
+            <!-- Role filter tabs -->
+            <div id="roleTabs" style="display:flex; gap:6px; margin-bottom:12px; padding:0 4px;">
+              <button class="role-tab active" data-role="all" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid var(--border);background:rgba(233,30,140,0.12);color:var(--pink);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;">All</button>
+              <button class="role-tab" data-role="vendor" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;">Vendors</button>
+              <button class="role-tab" data-role="staff" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;">Staff</button>
+              <button class="role-tab" data-role="client" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;">Clients</button>
+            </div>
             <div class="search-box" style="width: 100%; margin-bottom: 16px;">
               <i data-lucide="search" class="search-icon"></i>
-              <input type="text" id="searchInput" placeholder="Search vendors..." />
+              <input type="text" id="searchInput" placeholder="Search users..." />
             </div>
             <div class="conv-list" id="convList">
               <div class="chat-empty">No conversations yet.</div>
@@ -359,7 +366,8 @@
         renderRecruitmentTable();
       }
 
-      var activeVendorEmail = null;
+      var activeUserEmail = null;
+      var activeRoleFilter = 'all';
       var convListEl = document.getElementById('convList');
       var chatBody = document.getElementById('chatBody');
       var chatHeader = document.getElementById('chatHeader');
@@ -371,40 +379,65 @@
       var sendBtn = document.getElementById('sendBtn');
       var searchInput = document.getElementById('searchInput');
 
+      var ROLE_COLORS = { vendor: '#a855f7', staff: '#06b6d4', client: '#3b82f6' };
+
       function buildConversations(messages) {
-        // Group by vendor email
-        var vendors = {};
+        var users = {};
         messages.forEach(function(m) {
-          if (m.type === 'recruitment_request') return; // Hide recruitment requests from chat preview
-          var email = m.senderRole === 'Admin' || m.senderRole === 'admin' ? m.recipientEmail : m.senderEmail;
+          if (m.type === 'recruitment_request') return;
+          var isAdmin = m.senderRole === 'Admin' || m.senderRole === 'admin';
+          var email = isAdmin ? m.recipientEmail : m.senderEmail;
           if (!email) return;
-          if (!vendors[email]) {
-            vendors[email] = {
+          var role = isAdmin ? '' : (m.senderRole || '');
+          if (!users[email]) {
+            users[email] = {
               email: email,
-              name: m.senderRole === 'Admin' || m.senderRole === 'admin' ? (m.recipientName || email) : (m.sender || email),
+              name: isAdmin ? (m.recipientName || email) : (m.sender || email),
+              role: role,
               lastMsg: m.text,
               lastTime: m.timestamp,
               unread: 0
             };
           }
-          if (new Date(m.timestamp) > new Date(vendors[email].lastTime)) {
-            vendors[email].lastMsg = m.text;
-            vendors[email].lastTime = m.timestamp;
+          if (role && !users[email].role) users[email].role = role;
+          if (new Date(m.timestamp) > new Date(users[email].lastTime)) {
+            users[email].lastMsg = m.text;
+            users[email].lastTime = m.timestamp;
           }
-          // Count unread (messages from vendor, not admin)
-          if (m.senderRole !== 'Admin' && m.senderRole !== 'admin') {
-            vendors[email].unread++;
-          }
+          if (!isAdmin) users[email].unread++;
         });
-        return Object.values(vendors).sort(function(a, b) {
+        return Object.values(users).sort(function(a, b) {
           return new Date(b.lastTime) - new Date(a.lastTime);
         });
       }
+
+      // Role tab click handler
+      document.getElementById('roleTabs').addEventListener('click', function(e) {
+        var btn = e.target.closest('.role-tab');
+        if (!btn) return;
+        activeRoleFilter = btn.getAttribute('data-role');
+        document.querySelectorAll('.role-tab').forEach(function(t) {
+          t.style.background = 'transparent';
+          t.style.color = 'var(--text-muted)';
+          t.classList.remove('active');
+        });
+        btn.style.background = 'rgba(233,30,140,0.12)';
+        btn.style.color = 'var(--pink)';
+        btn.classList.add('active');
+        renderConvList();
+      });
 
       function renderConvList() {
         var messages = getMessages();
         var convs = buildConversations(messages);
         var q = searchInput ? searchInput.value.toLowerCase() : '';
+
+        // Filter by role tab
+        if (activeRoleFilter !== 'all') {
+          convs = convs.filter(function(c) {
+            return (c.role || '').toLowerCase() === activeRoleFilter;
+          });
+        }
 
         if (convs.length === 0) {
           convListEl.innerHTML = '<div class="chat-empty">No conversations yet.</div>';
@@ -414,29 +447,34 @@
         var html = '';
         convs.forEach(function(c, i) {
           if (q && c.name.toLowerCase().indexOf(q) === -1 && c.email.toLowerCase().indexOf(q) === -1) return;
-          var isActive = c.email === activeVendorEmail;
-          var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+          var isActive = c.email === activeUserEmail;
+          var r = (c.role || '').toLowerCase();
+          var color = ROLE_COLORS[r] || AVATAR_COLORS[i % AVATAR_COLORS.length];
           var initial = (c.name || '?')[0].toUpperCase();
           var preview = c.lastMsg || '';
           if (preview.length > 50) preview = preview.substring(0, 50) + '...';
+          var roleBadge = '';
+          if (r === 'vendor') roleBadge = '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(168,85,247,0.15);color:#a855f7;margin-left:6px;">Vendor</span>';
+          else if (r === 'staff') roleBadge = '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(6,182,212,0.15);color:#06b6d4;margin-left:6px;">Staff</span>';
+          else if (r === 'client') roleBadge = '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(59,130,246,0.15);color:#3b82f6;margin-left:6px;">Client</span>';
 
-          html += '<div class="conv-item' + (isActive ? ' active' : '') + '" data-email="' + c.email + '" data-name="' + c.name + '" data-color="' + color + '">' +
+          html += '<div class="conv-item' + (isActive ? ' active' : '') + '" data-email="' + c.email + '" data-name="' + c.name + '" data-color="' + color + '" data-role="' + r + '">' +
             '<div class="conv-avatar" style="background:' + color + ';">' + initial + '</div>' +
-            '<div class="conv-info"><h4>' + c.name + '</h4><p>' + preview + '</p></div>' +
+            '<div class="conv-info"><h4>' + c.name + roleBadge + '</h4><p>' + preview + '</p></div>' +
+            (c.unread > 0 ? '<div class="conv-badge">' + c.unread + '</div>' : '') +
             '</div>';
         });
         convListEl.innerHTML = html || '<div class="chat-empty">No matches.</div>';
 
-        // Attach click handlers
         convListEl.querySelectorAll('.conv-item').forEach(function(el) {
           el.addEventListener('click', function() {
-            selectConversation(el.getAttribute('data-email'), el.getAttribute('data-name'), el.getAttribute('data-color'));
+            selectConversation(el.getAttribute('data-email'), el.getAttribute('data-name'), el.getAttribute('data-color'), el.getAttribute('data-role'));
           });
         });
       }
 
-      function selectConversation(email, name, color) {
-        activeVendorEmail = email;
+      function selectConversation(email, name, color, role) {
+        activeUserEmail = email;
         chatHeader.style.display = '';
         chatInputBar.style.display = '';
         chatAvatar.textContent = (name || '?')[0].toUpperCase();
@@ -445,27 +483,25 @@
         chatStatus.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>Online';
         chatInput.placeholder = 'Type a message to ' + (name || email) + '...';
 
-        // Show View Report button
         var viewReportBtn = document.getElementById('viewReportBtn');
         if (viewReportBtn) {
           viewReportBtn.style.display = '';
           viewReportBtn.href = 'issue-tracking.html';
         }
         if (window.lucide) lucide.createIcons();
-
         renderChat();
-        renderConvList(); // update active state
+        renderConvList();
       }
 
       function renderChat() {
-        if (!activeVendorEmail) {
-          chatBody.innerHTML = '<div class="chat-empty">Select a vendor conversation to begin</div>';
+        if (!activeUserEmail) {
+          chatBody.innerHTML = '<div class="chat-empty">Select a conversation to begin</div>';
           return;
         }
 
         var messages = getMessages();
         var filtered = messages.filter(function(m) {
-          return m.type !== 'recruitment_request' && (m.senderEmail === activeVendorEmail || m.recipientEmail === activeVendorEmail);
+          return m.type !== 'recruitment_request' && (m.senderEmail === activeUserEmail || m.recipientEmail === activeUserEmail);
         });
         filtered.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
 
@@ -477,20 +513,14 @@
         var html = '';
         filtered.forEach(function(m) {
           var isAdmin = m.senderRole === 'Admin' || m.senderRole === 'admin';
-          var isSystem = m.type === 'issue-report';
+          var isSystem = m.type === 'issue-report' || m.type === 'system';
 
           if (isSystem) {
-            html += '<div class="chat-msg chat-msg--system">' +
-              '<div>' + m.text + '</div>' +
-              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+            html += '<div class="chat-msg chat-msg--system"><div>' + m.text + '</div><span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
           } else if (isAdmin) {
-            html += '<div class="chat-msg chat-msg--admin">' +
-              '<div>' + m.text + '</div>' +
-              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+            html += '<div class="chat-msg chat-msg--admin"><div>' + m.text + '</div><span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
           } else {
-            html += '<div class="chat-msg chat-msg--vendor">' +
-              '<div>' + m.text + '</div>' +
-              '<span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
+            html += '<div class="chat-msg chat-msg--vendor"><div style="font-size:10px;font-weight:600;color:var(--pink);margin-bottom:3px;">' + (m.sender || '') + '</div><div>' + m.text + '</div><span class="chat-msg__time">' + timeStr(m.timestamp) + '</span></div>';
           }
         });
         chatBody.innerHTML = html;
@@ -500,15 +530,14 @@
 
       function sendMessage() {
         var text = chatInput.value.trim();
-        if (!text || !activeVendorEmail) return;
-
+        if (!text || !activeUserEmail) return;
         var messages = getMessages();
         messages.push({
           id: 'msg_' + Date.now(),
           sender: 'Admin',
           senderRole: 'Admin',
           senderEmail: 'admin@eventpro.com',
-          recipientEmail: activeVendorEmail,
+          recipientEmail: activeUserEmail,
           recipientName: chatName.textContent,
           text: text,
           timestamp: new Date().toISOString(),
@@ -535,16 +564,15 @@
       // Auto-select from ?user= URL param
       var urlParams = new URLSearchParams(window.location.search);
       var userParam = urlParams.get('user');
+      var roleParam = urlParams.get('role');
       if (userParam) {
-        // Find the vendor by email
         var messages = getMessages();
         var convs = buildConversations(messages);
         var match = convs.find(function(c) { return c.email === userParam; });
         if (match) {
-          selectConversation(match.email, match.name, AVATAR_COLORS[0]);
+          selectConversation(match.email, match.name, ROLE_COLORS[(match.role||'').toLowerCase()] || AVATAR_COLORS[0], match.role);
         } else {
-          // Create a placeholder conversation
-          selectConversation(userParam, userParam.split('@')[0], AVATAR_COLORS[0]);
+          selectConversation(userParam, userParam.split('@')[0], ROLE_COLORS[(roleParam||'').toLowerCase()] || AVATAR_COLORS[0], roleParam || '');
         }
       }
 
@@ -552,7 +580,7 @@
       setInterval(function() {
         renderConvList();
         renderRecruitmentTable();
-        if (activeVendorEmail) renderChat();
+        if (activeUserEmail) renderChat();
       }, 5000);
     });
   </script>

@@ -73,4 +73,6 @@ export const seedData: AppData = {
       { id: 'CP_DEF_003', problem: 'Staff No-Show', trigger: 'Staff absence >30min', solution: 'Deploy backup staff from reserve pool', status: 'ready' },
     ]
   },
+  adminChatMessages: [],
+  coordinationMessages: [],
 };

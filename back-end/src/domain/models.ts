@@ -103,6 +103,8 @@ export interface Issue {
   reporter: string;
   email?: string;
   role?: string;
+  reporterRole?: string;
+  target?: string;
   status: string;
   createdAt: string;
 }
@@ -188,4 +190,6 @@ export interface AppData {
   session: { user: string; email: string; role: string };
   liveEvents: Array<Record<string, unknown>>;
   contingencyPlans: Record<string, Array<Record<string, unknown>>>;
+  adminChatMessages: Array<Record<string, unknown>>;
+  coordinationMessages: Array<Record<string, unknown>>;
 }

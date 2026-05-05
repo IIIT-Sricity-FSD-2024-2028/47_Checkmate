@@ -106,28 +106,14 @@
                     
                     <div class="chat-sidebar">
                         <div class="chat-search">
-                            <input type="text" placeholder="Search conversations...">
+                            <input type="text" placeholder="Search conversations..." disabled>
                         </div>
                         <div class="chat-list">
                             <div class="chat-item active">
-                                <div class="chat-avatar"><div class="online-dot"></div>S</div>
+                                <div class="chat-avatar" style="background:var(--pink);"><div class="online-dot"></div>A</div>
                                 <div class="chat-info">
-                                    <div class="chat-info-top"><h4>Sarah Johnson</h4><span class="chat-time">10:42 AM</span></div>
-                                    <p>We've confirmed the catering menu for the Gala.</p>
-                                </div>
-                            </div>
-                            <div class="chat-item">
-                                <div class="chat-avatar" style="background:var(--blue);"><div class="online-dot" style="background:transparent; border:none;"></div>M</div>
-                                <div class="chat-info">
-                                    <div class="chat-info-top"><h4>Mike Chen</h4><span class="chat-time">Yesterday</span></div>
-                                    <p>Can you send me the guest list template?</p>
-                                </div>
-                            </div>
-                            <div class="chat-item">
-                                <div class="chat-avatar" style="background:var(--green);"><div class="online-dot" style="background:transparent; border:none;"></div>A</div>
-                                <div class="chat-info">
-                                    <div class="chat-info-top"><h4>Alice (Support)</h4><span class="chat-time">Mar 25</span></div>
-                                    <p>Your issue has been resolved.</p>
+                                    <div class="chat-info-top"><h4>Admin Support</h4><span class="chat-time" id="sidebarTime"></span></div>
+                                    <p id="sidebarPreview">Chat with platform administrators</p>
                                 </div>
                             </div>
                         </div>
@@ -136,16 +122,11 @@
                     <div class="chat-main">
                         <div class="chat-header">
                             <div class="chat-header-info">
-                                <div class="chat-avatar" style="width:36px; height:36px; font-size:13px;">S</div>
+                                <div class="chat-avatar" style="width:36px; height:36px; font-size:13px; background:var(--pink);">A</div>
                                 <div>
-                                    <h4 style="font-size:15px; font-weight:600; color:var(--text-primary);">Sarah Johnson</h4>
-                                    <p style="font-size:12px; color:var(--green); display:flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block;"></span> Online • Corporate Gala Coordinator</p>
+                                    <h4 style="font-size:15px; font-weight:600; color:var(--text-primary);">Admin Support</h4>
+                                    <p style="font-size:12px; color:var(--green); display:flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block;"></span> Online • Platform Admin</p>
                                 </div>
-                            </div>
-                            <div style="display:flex; gap:12px; color:var(--text-secondary); font-size:20px;">
-                                <i class="ph ph-phone" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
-                                <i class="ph ph-video-camera" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
-                                <i class="ph ph-info" style="cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''"></i>
                             </div>
                         </div>
                         
