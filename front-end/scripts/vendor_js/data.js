@@ -213,7 +213,9 @@ window.DB = (() => {
     try {
       const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
       if (s && s.user) {
+        // Hydrate full user context including profile
         return {
+          ...s.user,
           user: s.user.name || s.user,
           email: s.user.email || '',
           role: s.user.role || s.role || 'Vendor',

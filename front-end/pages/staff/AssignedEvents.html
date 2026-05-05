@@ -86,7 +86,6 @@
   <div class="sb-footer">
     <div class="sb-uname">Mike Staff</div>
     <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')">Light Mode</button>
     <a href="../LandingPage/index.html" class="sb-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Logout
@@ -322,5 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(renderCards, 5000);
 });
 </script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

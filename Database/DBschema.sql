@@ -17,6 +17,15 @@ CREATE TABLE User (
     phone_number VARCHAR(15),
     role ENUM('admin', 'client', 'vendor', 'staff') NOT NULL,
     status ENUM('active', 'inactive', 'suspended', 'pending') DEFAULT 'active',
+    profile_picture_url VARCHAR(255),
+    bio TEXT,
+    location VARCHAR(255),
+    address TEXT,
+    date_of_birth DATE,
+    years_experience INT,
+    skills TEXT,
+    website_url VARCHAR(255),
+    linkedin_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

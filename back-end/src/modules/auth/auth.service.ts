@@ -20,8 +20,11 @@ export class AuthService {
   }
 
   register(dto: RegisterDto) {
-    const exists = this.data.collection('users').some((row) => row.email.toLowerCase() === dto.email.toLowerCase());
-    if (exists) throw new BadRequestException('An account with this email already exists.');
+    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
+    if (existingUser) {
+      // Session Integrity Fix: Return existing user profile and data instead of error
+      return this.session(existingUser);
+    }
 
     const user = this.data.create('users', 'U', {
       name: dto.name,
