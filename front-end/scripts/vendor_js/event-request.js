@@ -84,15 +84,55 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ── Conflict detection ───────────── */
+  function getResAvailER(resId, targetDate, currentEvId) {
+    const allRes = DB.getAll('resources') || [];
+    const db = allRes.find(x => x.id === resId);
+    if (!db) return 0;
+    const totalStock = db.total || db.quantity || 0;
+    const allocs = DB.get('resourceAllocations') || {};
+    const allEvents = DB.getAll('events') || [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeEvents = allEvents.filter(e => {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEvId) return false;
+      if (!e.date) return false;
+      
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+      
+      const evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    let allocated = 0;
+    activeEvents.forEach(ev => {
+      const evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(a => {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
+  }
+
   function detectConflicts(ev) {
     const conflicts = [];
     const allRes = DB.getAll('resources') || [];
     const allStaff = DB.getAll('staff') || [];
     const liveEvents = DB.getAll('events').filter(e => e.status === 'live');
+    const allocs = DB.get('resourceAllocations') || {};
+    const evAllocs = allocs[ev.id] || [];
+
     (ev.requestedResources || []).forEach(r => {
+      const isAlreadyAllocated = evAllocs.some(a => a.resourceId === r.resourceId);
+      if (isAlreadyAllocated) return;
       const db = allRes.find(x => x.id === r.resourceId);
-      if (!db || r.quantity > db.quantity)
-        conflicts.push({type:'Resource Shortage', desc: db ? `${r.resourceName}: need ${r.quantity}, only ${db.quantity} available` : `${r.resourceName}: not in inventory`, severity:'high'});
+      const avail = getResAvailER(r.resourceId, ev.date, ev.id);
+      if (!db || r.quantity > avail)
+        conflicts.push({type:'Resource Shortage', desc: db ? `${r.resourceName}: need ${r.quantity}, only ${avail} available` : `${r.resourceName}: not in inventory`, severity:'high'});
     });
     (ev.requestedStaff || []).forEach(s => {
       const st = allStaff.find(x => x.id === s.staffId);

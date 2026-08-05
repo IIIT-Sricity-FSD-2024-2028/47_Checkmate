@@ -193,6 +193,41 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<span class="badge--${map[cat] || 'equipment'}">${cat}</span>`;
   }
 
+  /* ── Effective availability helper ─────── */
+  function getEffectiveAvail(resId, targetDate, currentEvId) {
+    const allRes = DB.getAll('resources') || [];
+    const db = allRes.find(x => x.id === resId);
+    if (!db) return 0;
+    const totalStock = db.total || db.quantity || 0;
+    const allocs = DB.get('resourceAllocations') || {};
+    const allEvents = DB.getAll('events') || [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeEvents = allEvents.filter(e => {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEvId) return false;
+      if (!e.date) return false;
+      
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+      
+      const evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    let allocated = 0;
+    activeEvents.forEach(ev => {
+      const evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(a => {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
+  }
+
   /* ── Render table ───────────────────── */
   function render() {
     const resources = DB.getAll('resources');
@@ -208,13 +243,13 @@ document.addEventListener('DOMContentLoaded', () => {
       
       let conditionMatch = true;
       if (activeFilters.condition !== 'All') {
-        const cond = (r.condition || 'Good'); // Default condition fallback if not set
+        const cond = (r.condition || 'Good');
         conditionMatch = cond === activeFilters.condition;
       }
       
       let stockMatch = true;
       if (activeFilters.stock !== 'All') {
-        const qty = r.quantity || 0;
+        const qty = getEffectiveAvail(r.id, null, null);
         if (activeFilters.stock === 'InStock') stockMatch = qty > 0;
         else if (activeFilters.stock === 'LowStock') stockMatch = qty > 0 && qty <= 10;
         else if (activeFilters.stock === 'OutStock') stockMatch = qty === 0;
@@ -224,17 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tbody.innerHTML = filtered.length ? filtered.map(r => {
-      const canAllocate = r.quantity > 0;
+      const effectiveAvail = getEffectiveAvail(r.id, null, null);
+      const canAllocate = effectiveAvail > 0 && r.available !== false;
+      const availLabel = r.available === false ? 'unavailable' : (effectiveAvail > 0 ? 'available' : 'unavailable');
       return `
       <tr data-id="${r.id}">
         <td class="col-name">${r.name}</td>
         <td>${catBadge(r.category)}</td>
-        <td>${r.quantity}</td>
+        <td>${effectiveAvail} / ${r.total || r.quantity}</td>
         <td>$${r.price}/${r.unit || 'day'}</td>
-        <td><span class="avail-badge ${r.available ? 'available' : 'unavailable'}">${r.available ? 'available' : 'unavailable'}</span></td>
+        <td><span class="avail-badge ${availLabel}">${availLabel}</span></td>
         <td>
           <div class="mr-actions">
-            <button class="mr-action-btn allocate" title="${canAllocate ? 'Allocate to Event' : 'Out of stock — quantity is 0'}"
+            <button class="mr-action-btn allocate" title="${canAllocate ? 'Allocate to Event' : 'Out of stock'}"
               data-action="allocate" data-id="${r.id}" ${!canAllocate ? 'style="opacity:0.45;cursor:not-allowed"' : ''}>
               <i data-lucide="send"></i>
             </button>
@@ -275,8 +312,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const r = DB.find('resources', id);
     if (!r) return;
 
-    // Guard: resource out of stock
-    if (r.quantity <= 0) {
+    // Guard: resource out of stock (using effective availability)
+    const globalAvail = getEffectiveAvail(id, null, null);
+    if (globalAvail <= 0 || r.available === false) {
       Toast.show(`"${r.name}" is out of stock and cannot be allocated.`, 'warn');
       return;
     }
@@ -284,10 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
     _allocResId = id;
     _allocEvId  = null;
 
-    // Populate resource info bar
+    // Populate resource info bar (show global available across all dates)
     document.getElementById('allocResName').textContent  = r.name;
-    document.getElementById('allocResMeta').textContent  = `${r.category} · ${r.quantity} unit${r.quantity !== 1 ? 's' : ''} available`;
-    document.getElementById('allocAvailCount').textContent = r.quantity;
+    document.getElementById('allocResMeta').textContent  = `${r.category} · ${globalAvail} unit${globalAvail !== 1 ? 's' : ''} available`;
+    document.getElementById('allocAvailCount').textContent = globalAvail;
 
     // Populate event dropdown
     const evSelect = document.getElementById('allocEventSelect');
@@ -356,13 +394,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const ev = DB.find('events', evId);
     const r  = DB.find('resources', _allocResId);
 
+    // Compute effective availability for this event's date
+    const effAvail = r ? getEffectiveAvail(r.id, ev ? ev.date : null, evId) : 0;
+
     // Fill Phase 2 info
     document.getElementById('allocSelectedEventName').textContent = ev ? ev.name : evId;
     document.getElementById('allocPeopleCount').textContent       = ev?.people != null ? ev.people.toLocaleString() : '—';
-    document.getElementById('allocAvailCount').textContent        = r ? r.quantity : '—';
+    document.getElementById('allocAvailCount').textContent        = effAvail;
     document.getElementById('allocQtyInput').value                = '';
-    document.getElementById('allocQtyInput').max                  = r ? r.quantity : 1;
-    document.getElementById('allocQtyHint').textContent           = r ? `Max available: ${r.quantity} units` : '';
+    document.getElementById('allocQtyInput').max                  = effAvail;
+    document.getElementById('allocQtyHint').textContent           = `Max available: ${effAvail} units`;
 
     resetAllocErrors();
     showPhase(2);
@@ -378,9 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Qty live validation ─────────────── */
   document.getElementById('allocQtyInput').addEventListener('input', () => {
-    const r   = DB.find('resources', _allocResId);
+    const ev  = _allocEvId ? DB.find('events', _allocEvId) : null;
+    const max = getEffectiveAvail(_allocResId, ev ? ev.date : null, _allocEvId);
     const val = parseInt(document.getElementById('allocQtyInput').value, 10);
-    const max = r ? r.quantity : 0;
     const hasErr = isNaN(val) || val < 1 || val > max;
     showErr('allocQtyErr', hasErr ? true : false);
     if (hasErr && !isNaN(val) && val > max)
@@ -397,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!r || !ev) { Toast.show('Something went wrong. Please try again.', 'warn'); return; }
 
     const qty = parseInt(document.getElementById('allocQtyInput').value, 10);
+    const effAvail = getEffectiveAvail(r.id, ev.date, ev.id);
 
     // Validate
     if (isNaN(qty) || qty < 1) {
@@ -406,19 +448,15 @@ document.addEventListener('DOMContentLoaded', () => {
       Toast.show('Please enter a valid quantity.', 'warn');
       return;
     }
-    if (qty > r.quantity) {
+    if (qty > effAvail) {
       showErr('allocQtyErr', true);
-      document.getElementById('allocQtyErr').textContent = `Cannot exceed available quantity (${r.quantity}).`;
+      document.getElementById('allocQtyErr').textContent = `Cannot exceed available quantity (${effAvail}).`;
       markField('allocQtyInput', true);
-      Toast.show(`Only ${r.quantity} unit${r.quantity !== 1 ? 's' : ''} available.`, 'warn');
+      Toast.show(`Only ${effAvail} unit${effAvail !== 1 ? 's' : ''} available for this event date.`, 'warn');
       return;
     }
 
-    // Deduct from resource
-    const newQty = r.quantity - qty;
-    DB.update('resources', r.id, { quantity: newQty, available: newQty > 0 });
-
-    // Record allocation
+    // Record allocation without destroying master inventory stock
     const allocs = DB.get('resourceAllocations') || {};
     if (!allocs[ev.id]) allocs[ev.id] = [];
     allocs[ev.id].push({

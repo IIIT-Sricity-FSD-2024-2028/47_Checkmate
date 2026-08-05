@@ -131,18 +131,35 @@ document.addEventListener('DOMContentLoaded', () => {
        STEP 2: RESOURCES
     ══════════════════════════════════════ */
     function getResourceAvailability(resource) {
-        // Check how many are allocated to confirmed/live events
+        // Check how many are allocated to confirmed/live events on the same date
         const allocs = DB.get('resourceAllocations') || {};
+        const eventDate = document.getElementById('fieldEventDate')?.value || '';
         let allocated = 0;
-        const liveEvents = DB.getAll('events').filter(e => e.status === 'live' || e.status === 'confirmed');
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const liveEvents = DB.getAll('events').filter(e => {
+            if (e.status !== 'live' && e.status !== 'confirmed') return false;
+            if (!e.date) return false;
+            
+            if (eventDate) {
+                return e.date === eventDate;
+            }
+            
+            const evDate = new Date(e.date + 'T00:00:00');
+            return evDate <= today;
+        });
+
         liveEvents.forEach(ev => {
             const evAllocs = allocs[ev.id] || [];
             evAllocs.forEach(a => {
                 if (a.resourceId === resource.id) allocated += (a.qty || a.quantity || 0);
             });
         });
-        const available = Math.max(0, resource.quantity - allocated);
-        return { total: resource.quantity, allocated, available };
+        const total = resource.total || resource.quantity || 0;
+        const available = Math.max(0, total - allocated);
+        return { total, allocated, available };
     }
 
     function renderResources() {
