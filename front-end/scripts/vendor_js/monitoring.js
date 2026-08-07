@@ -611,23 +611,29 @@ document.addEventListener('DOMContentLoaded', () => {
       sub.textContent = `Staff requested: ${qtyStr}${req.item} for ${req.eventName || req.eventId}`;
 
       const resources = DB.getAll('resources');
-      const matching = resources.filter(r => r.available && r.quantity > 0);
+      const reqEv = DB.find('events', req.eventId);
+      const evDate = reqEv ? reqEv.date : null;
+
+      const matching = resources.map(r => ({
+        ...r,
+        availableQty: getResAvailMon(r.id, evDate, req.eventId)
+      })).filter(r => r.available !== false && r.availableQty > 0);
 
       // Find best match
-      const bestMatch = resources.find(r => r.name.toLowerCase().includes(req.item.toLowerCase()));
+      const bestMatch = matching.find(r => r.name.toLowerCase().includes(req.item.toLowerCase())) || matching[0];
 
       body.innerHTML = `
         <div style="margin-bottom:16px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">Select Resource to Allocate</label>
           <select id="_allocResource" style="width:100%;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-primary);font-size:13px;cursor:pointer;" onchange="updateAllocQtyMax()">
-            ${matching.map(r => `<option value="${r.id}" ${bestMatch && r.id === bestMatch.id ? 'selected' : ''}>${r.name} — ${r.quantity} available (${r.category})</option>`).join('')}
+            ${matching.map(r => `<option value="${r.id}" ${bestMatch && r.id === bestMatch.id ? 'selected' : ''}>${r.name} — ${r.availableQty} available (${r.category})</option>`).join('')}
             ${matching.length === 0 ? '<option value="">No resources available</option>' : ''}
           </select>
         </div>
         <div style="display:flex;gap:16px;align-items:flex-end;">
           <div style="flex:1;">
             <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">Quantity to Allocate</label>
-            <input type="number" id="_allocQty" value="${Math.min(req.qty, bestMatch ? bestMatch.quantity : req.qty)}" min="1" max="${bestMatch ? bestMatch.quantity : 999}" style="width:100%;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-primary);font-size:14px;font-weight:600;">
+            <input type="number" id="_allocQty" value="${Math.min(req.qty, bestMatch ? bestMatch.availableQty : req.qty)}" min="1" max="${bestMatch ? bestMatch.availableQty : 999}" style="width:100%;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-primary);font-size:14px;font-weight:600;">
           </div>
           <div style="flex:1;">
             <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Requested</div>
@@ -635,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div id="_allocInfo" style="margin-top:14px;padding:10px 14px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:8px;font-size:12px;color:var(--cyan);">
-          ℹ️ Inventory will be deducted and Manage Resource page will update automatically.
+          ℹ️ Resource allocation will be recorded for this event.
         </div>`;
     } else if (req.type === 'staff') {
       title.textContent = 'Assign Staff';
@@ -672,11 +678,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = document.getElementById('_allocResource');
     const qtyInput = document.getElementById('_allocQty');
     if (!sel || !qtyInput) return;
-    const res = DB.getAll('resources').find(r => r.id === sel.value);
-    if (res) {
-      qtyInput.max = res.quantity;
-      if (parseInt(qtyInput.value) > res.quantity) qtyInput.value = res.quantity;
-    }
+    const req = DB.get('staffRequests')?.find(r => r.id === _pendingAllocReqId);
+    const reqEv = req ? DB.find('events', req.eventId) : null;
+    const evDate = reqEv ? reqEv.date : null;
+    const avail = getResAvailMon(sel.value, evDate, req ? req.eventId : null);
+    qtyInput.max = avail;
+    if (parseInt(qtyInput.value) > avail) qtyInput.value = avail;
   };
 
   window.closeAllocModal = function() {
@@ -701,14 +708,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!resId) { Toast.show('Please select a resource to allocate.', 'warn'); return; }
       const allocQty = parseInt(qtyInput ? qtyInput.value : req.qty, 10) || req.qty;
 
-      // Find the resource and deduct
+      // Find the resource
       const res = DB.getAll('resources');
       const m = res.find(r => r.id === resId);
       if (m) {
-        const newQty = Math.max(0, m.quantity - allocQty);
-        DB.update('resources', m.id, { quantity: newQty, available: newQty > 0 });
-
-        // Record allocation
+        // Record allocation without permanently zeroing out inventory capacity
         const allocs = DB.get('resourceAllocations') || {};
         if (!allocs[req.eventId]) allocs[req.eventId] = [];
         allocs[req.eventId].push({
@@ -728,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Signal manage-resource page
         localStorage.setItem('eventpro_resourcesUpdated', Date.now().toString());
 
-        Toast.show(`✓ Allocated ${allocQty}× ${m.name} → deducted from inventory`, 'success');
+        Toast.show(`✓ Allocated ${allocQty}× ${m.name} to event`, 'success');
       }
     } else if (req.type === 'staff' && resSelect) {
       const staffId = resSelect.value;
@@ -888,15 +892,57 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal(overlay);
     if (window.lucide) window.lucide.createIcons();
   }
+
+  /* Helper for resource availability in monitoring */
+  function getResAvailMon(resId, targetDate, currentEventId) {
+    var allRes = DB.getAll('resources') || [];
+    var db = allRes.find(function(x) { return x.id === resId; });
+    if (!db) return 0;
+    var totalStock = db.total || db.quantity || 0;
+    var allocs = DB.get('resourceAllocations') || {};
+    var allEvents = DB.getAll('events') || [];
+    
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    var activeEvents = allEvents.filter(function(e) {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEventId) return false;
+      if (!e.date) return false;
+      
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+      
+      var evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    var allocated = 0;
+    activeEvents.forEach(function(ev) {
+      var evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(function(a) {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
+  }
+
   /* ─── Allocate Additional Resources ──────── */
   function openAllocateResourceModal() {
     if (!selectedEventId) { Toast.show('Please select an event first.','warn'); return; }
     
-    // Fetch available resources
+    var targetEv = DB.find('events', selectedEventId);
+    var targetDate = targetEv ? targetEv.date : null;
+
+    // Fetch available resources for target date
     var resources = DB.getAll('resources') || [];
-    var availableResources = resources.filter(function(r) { return r.quantity > 0; });
+    var availableResources = resources.map(function(r) {
+      return { resource: r, availQty: getResAvailMon(r.id, targetDate, selectedEventId) };
+    }).filter(function(item) { return item.resource.available !== false && item.availQty > 0; });
+
     if (availableResources.length === 0) {
-      Toast.show('No resources available to allocate.', 'warn');
+      Toast.show('No resources available to allocate for this date.', 'warn');
       return;
     }
 
@@ -943,13 +989,13 @@ document.addEventListener('DOMContentLoaded', () => {
         var rList = DB.getAll('resources') || [];
         var res = rList.find(function(r) { return r.id === resId; });
         if (!res) { Toast.show('Resource not found.', 'warn'); return; }
-        if (qty > res.quantity) { Toast.show('Not enough availability. Only ' + res.quantity + ' left.', 'warn'); return; }
+        
+        var curEv = DB.find('events', selectedEventId);
+        var curDate = curEv ? curEv.date : null;
+        var avail = getResAvailMon(res.id, curDate, selectedEventId);
+        if (qty > avail) { Toast.show('Not enough availability for this date. Only ' + avail + ' left.', 'warn'); return; }
 
-        // Deduct
-        var newQty = res.quantity - qty;
-        DB.update('resources', res.id, { quantity: newQty, available: newQty > 0 });
-
-        // Record allocation
+        // Record allocation without permanently deducting from master inventory
         var allocs = DB.get('resourceAllocations') || {};
         if (!allocs[selectedEventId]) allocs[selectedEventId] = [];
         allocs[selectedEventId].push({
@@ -988,8 +1034,9 @@ document.addEventListener('DOMContentLoaded', () => {
     var freshRes = DB.getAll('resources') || [];
     var opts = '<option value="" disabled selected>Select a resource</option>';
     freshRes.forEach(function(r) {
-      if (r.quantity > 0) {
-        opts += '<option value="' + r.id + '">' + r.name + ' (' + r.quantity + ' available)</option>';
+      var avail = getResAvailMon(r.id, targetDate, selectedEventId);
+      if (r.available !== false && avail > 0) {
+        opts += '<option value="' + r.id + '">' + r.name + ' (' + avail + ' available for date)</option>';
       }
     });
     resSelect.innerHTML = opts;

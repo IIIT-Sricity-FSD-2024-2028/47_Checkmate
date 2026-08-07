@@ -72,15 +72,56 @@ document.addEventListener('DOMContentLoaded', () => {
     if(contBarEl)  contBarEl.style.width  = contPct + '%';
   }
 
+  /* HELPER: Calculate available resource quantity for event date */
+  function getResourceAvailableForEvent(resId, targetDate, currentEventId) {
+    const allRes = DB.getAll('resources') || [];
+    const db = allRes.find(x => x.id === resId);
+    if (!db) return 0;
+    const totalStock = db.total || db.quantity || 0;
+    const allocs = DB.get('resourceAllocations') || {};
+    const allEvents = DB.getAll('events') || [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeEvents = allEvents.filter(e => {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEventId) return false;
+      if (!e.date) return false;
+      
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+      
+      const evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    let allocated = 0;
+    activeEvents.forEach(ev => {
+      const evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(a => {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
+  }
+
   /* CONFLICT CHECK */
   function checkConflicts(event){
     detectedConflicts=[];
     const allRes=DB.getAll('resources')||[];
     const allStaff=DB.getAll('staff')||[];
+    const allocs=DB.get('resourceAllocations')||{};
+    const evAllocs=allocs[event.id]||[];
+
     (event.requestedResources||[]).forEach(r=>{
+      const isAlreadyAllocated = evAllocs.some(a => a.resourceId === r.resourceId);
+      if (isAlreadyAllocated) return;
       const db=allRes.find(x=>x.id===r.resourceId);
-      if(!db||r.quantity>db.quantity)
-        detectedConflicts.push({type:'Resource Shortage',desc:db?`${r.resourceName}: need ${r.quantity}, only ${db.quantity} available`:`${r.resourceName}: not in inventory`,severity:'high'});
+      const avail=getResourceAvailableForEvent(r.resourceId, event.date, event.id);
+      if(!db||r.quantity>avail)
+        detectedConflicts.push({type:'Resource Shortage',desc:db?`${r.resourceName}: need ${r.quantity}, only ${avail} available`:`${r.resourceName}: not in inventory`,severity:'high'});
     });
     (event.requestedStaff||[]).forEach(s=>{
       const st=allStaff.find(x=>x.id===s.staffId);
@@ -158,15 +199,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!reqRes.length){section.style.display='none';return;}
     section.style.display='';
     const allRes=DB.getAll('resources')||[];
+    const allocs=DB.get('resourceAllocations')||{};
+    const evAllocs=allocs[event.id]||[];
     const tbody=section.querySelector('tbody');
     if(!tbody)return;
     tbody.innerHTML=reqRes.map(r=>{
-      const db=allRes.find(x=>x.id===r.resourceId);
-      const avail=db?db.quantity:0;
+      const isAllocated = evAllocs.some(a => a.resourceId === r.resourceId);
+      const avail=isAllocated ? r.quantity : getResourceAvailableForEvent(r.resourceId, event.date, event.id);
       const buf=avail-r.quantity;
       const bc=buf>0?'pos':buf===0?'zero':'neg';
-      const sc=buf>2?'safe':buf>=0?'risk':'critical';
-      const act=buf<0
+      const sc=isAllocated?'safe':buf>2?'safe':buf>=0?'risk':'critical';
+      const act=isAllocated
+        ?`<span class="row-status safe">✓ Allocated</span>`
+        :buf<0
         ?`<span class="row-status critical">⚠ Conflict</span>`
         :`<button class="er-alloc-btn" data-res-id="${r.resourceId}" data-res-name="${r.resourceName}" data-res-qty="${r.quantity}" data-res-cat="${r.category||''}" style="padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(233,30,140,0.5);background:rgba(233,30,140,0.15);color:#f472b6;">▶ Allocate</button>`;
       return`<tr><td>${r.resourceName}</td><td>${r.category||'—'}</td><td class="col-num">${r.quantity}</td><td class="col-num">${avail}</td><td class="buffer-val ${bc}">${buf>=0?'+':''}${buf}</td><td style="text-align:right"><span class="row-status ${sc}">${sc}</span></td><td style="text-align:center">${act}</td></tr>`;
@@ -174,9 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.querySelectorAll('.er-alloc-btn').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const resId=btn.dataset.resId,resName=btn.dataset.resName,qty=parseInt(btn.dataset.resQty,10),cat=btn.dataset.resCat;
-        const db=(DB.getAll('resources')||[]).find(x=>x.id===resId);
-        if(!db||qty>db.quantity){Toast.show('Not enough stock.','error');return;}
-        DB.update('resources',resId,{quantity:db.quantity-qty});
+        const avail=getResourceAvailableForEvent(resId, event.date, event.id);
+        if(qty>avail){Toast.show('Not enough stock available for this event date.','error');return;}
         const allocs=DB.get('resourceAllocations')||{};
         if(!allocs[event.id])allocs[event.id]=[];
         allocs[event.id].push({resourceId:resId,resourceName:resName,category:cat,qty});
@@ -226,9 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* EXTRA RESOURCE MODAL */
   function openExtraResModal(event){
     const allRes=DB.getAll('resources')||[];
-    const avail=allRes.filter(r=>r.quantity>0&&!(event.requestedResources||[]).find(x=>x.resourceId===r.id&&x.quantity<=r.quantity));
-    const all=allRes.filter(r=>r.quantity>0);
-    if(!all.length){Toast.show('No resources available.','warn');return;}
+    const all=allRes.map(r => ({ ...r, availableQty: getResourceAvailableForEvent(r.id, event.date, event.id) })).filter(r => r.availableQty > 0);
+    if(!all.length){Toast.show('No resources available for this date.','warn');return;}
     document.getElementById('_erModal')?.remove();
     const overlay=document.createElement('div');
     overlay.id='_erModal';
@@ -240,10 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="width:42px;height:42px;border-radius:10px;background:rgba(233,30,140,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📦</div>
           <div style="flex:1;">
             <div style="font-weight:600;color:var(--text-primary);font-size:13.5px;">${r.name}</div>
-            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${r.category} • $${r.price}/day • <span style="color:#86efac;font-weight:600;">${r.quantity} in stock</span></div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${r.category} • $${r.price}/day • <span style="color:#86efac;font-weight:600;">${r.availableQty} available for ${event.date || 'event date'}</span></div>
           </div>
           <div style="text-align:right;">
-            <input type="number" class="_erQtyInput" value="1" min="1" max="${r.quantity}" onclick="event.stopPropagation()" style="width:60px;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main,#0f0f23);color:var(--text-primary);font-size:12px;text-align:center;">
+            <input type="number" class="_erQtyInput" value="1" min="1" max="${r.availableQty}" onclick="event.stopPropagation()" style="width:60px;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main,#0f0f23);color:var(--text-primary);font-size:12px;text-align:center;">
           </div>
         </div>`).join('')}
         <button id="_erResCancel" style="margin-top:6px;padding:10px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;align-self:flex-end;">Cancel</button>
@@ -261,8 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const resId=card.dataset.rid;
         const qty=parseInt(card.querySelector('._erQtyInput').value,10)||1;
         const res=all.find(r=>r.id===resId);
-        if(!res||qty>res.quantity){Toast.show('Not enough stock.','error');return;}
-        DB.update('resources',resId,{quantity:res.quantity-qty});
+        if(!res||qty>res.availableQty){Toast.show('Not enough stock available.','error');return;}
         const allocs=DB.get('resourceAllocations')||{};
         if(!allocs[event.id])allocs[event.id]=[];
         allocs[event.id].push({resourceId:resId,resourceName:res.name,category:res.category,qty});
@@ -271,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove one unresolved resource conflict to simulate substitution
         const unresolvedIdx = (event.requestedResources||[]).findIndex(r => {
             const rDb = DB.getAll('resources').find(x => x.id === r.resourceId);
-            return !rDb || r.quantity > rDb.quantity;
+            return !rDb || r.quantity > getResourceAvailableForEvent(r.resourceId, event.date, event.id);
         });
         if (unresolvedIdx !== -1) {
             event.requestedResources.splice(unresolvedIdx, 1);
