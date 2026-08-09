@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EventPro Admin – Dashboard</title>
+  
   <link rel="stylesheet" href="../../styles/global.css">
-  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+    <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
@@ -46,7 +45,7 @@
         </a>
         <a href="report-analytics.html" class="nav-item">
           <i data-lucide="pie-chart"></i>
-          <span>Report & Analytics</span>
+          <span>Report &amp; Analytics</span>
         </a>
         <a href="issue-tracking.html" class="nav-item">
           <i data-lucide="bug"></i>
@@ -150,12 +149,12 @@
         </section>
 
         <!-- Second Section -->
-        <section class="bipartite-section">
+        <section class="bottom-grid">
             <!-- Left: Pending Vendor Approvals -->
-            <div class="card lg-card">
+            <div class="left-col"><div class="card lg-card">
                 <div class="card__header">
                     <h3>Pending Vendor Approvals</h3>
-                    <a href="vendor-approvals.html" style="font-size: 13px; color: var(--pink); font-weight: 500; text-decoration: none;">View All &rarr;</a>
+                    <a href="vendor-approvals.html" style="font-size: 13px; color: var(--pink); font-weight: 500; text-decoration: none;">View All →</a>
                 </div>
                 <div class="approval-list">
                     <div class="approval-item">
@@ -189,10 +188,10 @@
                         <button class="action-btn action-btn-clean" onclick="window.location.href='vendor-approvals.html?action=review'">Review</button>
                     </div>
                 </div>
-            </div>
+            </div></div>
 
             <!-- Right: User Distribution -->
-            <div class="card sm-card">
+            <div class="right-col"><div class="card sm-card">
                 <div class="card__header">
                     <h3>User Distribution</h3>
                 </div>
@@ -219,7 +218,7 @@
                         <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="distStaff">-</span>
                     </div>
                 </div>
-            </div>
+            </div></div>
         </section>
       </div>
     </main>
@@ -265,5 +264,6 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+
+
+</body></html>

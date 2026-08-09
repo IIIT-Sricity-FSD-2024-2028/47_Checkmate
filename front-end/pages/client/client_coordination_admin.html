@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages - Client Portal</title>
-    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    
+    <link rel="stylesheet" href="../../styles/global.css">
     <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
     <link rel="stylesheet" href="../../styles/client_css/client.css">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
         .chat-container { display:flex; height: 600px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
         .chat-sidebar { width: 320px; border-right:1px solid var(--border); display:flex; flex-direction:column; background:rgba(255,255,255,0.01);}
@@ -50,17 +49,17 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar__brand">
-                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
                 <div>
                     <div class="brand-name">EventPro</div>
                     <div class="brand-role">Client Portal</div>
                 </div>
             </div>
             <nav class="sidebar__nav">
-                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
-                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
-                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
-                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
+                <a href="client-dashboard.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+                <a href="create_event_client.html" class="nav-item"><i data-lucide="plus-circle"></i><span>Create Event</span></a>
+                <a href="client_myevents.html" class="nav-item"><i data-lucide="list"></i><span>My Events</span></a>
+                <a href="client_browsepackages.html" class="nav-item"><i data-lucide="package"></i><span>Browse Packages</span></a>
                 <div class="nav-group" onclick="this.classList.toggle('open')">
                     <div class="nav-item"><i class="ph ph-warning-circle"></i><span>Report Issue</span><i class="ph ph-caret-down nav-chevron"></i></div>
                     <div class="nav-sub">
@@ -75,7 +74,7 @@
                         <a href="client_coordination_admin.html" class="nav-item"><i class="ph ph-shield"></i><span>Admin Coordination</span></a>
                     </div>
                 </div>
-                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
+                <a href="client_billing.html" class="nav-item"><i data-lucide="credit-card"></i><span>Billing</span></a>
                 
                 
                 
@@ -88,7 +87,7 @@
                         <div class="user-email">john@gmail.com</div>
                     </div>
                 </div>
-                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+                <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
             </div>
         </aside>
         
@@ -106,7 +105,7 @@
                     
                     <div class="chat-sidebar">
                         <div class="chat-search">
-                            <input type="text" placeholder="Search conversations..." disabled>
+                            <input type="text" placeholder="Search conversations..." disabled="">
                         </div>
                         <div class="chat-list">
                             <div class="chat-item active">
@@ -246,5 +245,7 @@
         setInterval(renderMessages, 3000);
       });
     </script>
-</body>
-</html>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+
+</body></html>

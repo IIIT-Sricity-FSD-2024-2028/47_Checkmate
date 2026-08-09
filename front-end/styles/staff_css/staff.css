@@ -1,10 +1,4 @@
-/* ============================================================
-   EventPro Staff UI — staff.css  (SHARED BASE)
-   Import this in EVERY page HTML
-   ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/
 
 :root{
   --bg:#1D1D1D;--bg2:#1a1724;--bg3:#201d2e;--bg4:#252238;
@@ -23,7 +17,7 @@
   --sw:196px;--r:12px;--rs:8px;--rx:6px;
 }
 
-html,body{height:100%;background:var(--bg);color:var(--text);font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+html,
 a{text-decoration:none;color:inherit}
 button{font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;cursor:pointer}
 input,textarea,select{font-family:var(--font)}
@@ -31,17 +25,9 @@ input,textarea,select{font-family:var(--font)}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
 
-/* ── SHELL ── */
-.shell{display:flex;height:100vh;overflow:hidden}
+/
 
-/* ══════════════════════════════════════
-   SIDEBAR
-══════════════════════════════════════ */
-.sidebar{
-  width:var(--sw);background:var(--sidebar-bg);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;padding:18px 0;flex-shrink:0;
-}
+/
 .sb-brand{display:flex;align-items:center;gap:9px;padding:0 15px 22px}
 .sb-logo{
   width:34px;height:34px;border-radius:8px;
@@ -74,30 +60,15 @@ input,textarea,select{font-family:var(--font)}
 .sb-btn:hover{color:var(--text)}
 .sb-btn svg{width:14px;height:14px}
 
-/* ══════════════════════════════════════
-   MAIN AREA
-══════════════════════════════════════ */
-.main{
-  flex:1;overflow-y:auto;padding:28px 26px 40px;
-  background:linear-gradient(to bottom, #1D1D1D 0%, #1D1D1D 50%, #4A0D3A 80%, #c41368 100%);
-}
+/
 .page-title{font-size:22px;font-weight:700;letter-spacing:-.4px}
 .page-sub{font-size:12.5px;color:var(--text2);margin-top:2px;margin-bottom:22px}
 
-/* ══════════════════════════════════════
-   CARD
-══════════════════════════════════════ */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+/
 .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .card-title{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600}
 
-/* ══════════════════════════════════════
-   STAT CARDS
-══════════════════════════════════════ */
-.stats-grid{display:grid;gap:14px;margin-bottom:20px}
-.stats-grid.col3{grid-template-columns:repeat(3,1fr)}
-.stats-grid.col4{grid-template-columns:repeat(4,1fr)}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+/
 .stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .stat-label{font-size:12px;color:var(--text2);font-weight:500;line-height:1.3}
 .stat-ico{width:30px;height:30px;border-radius:var(--rx);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
@@ -114,10 +85,7 @@ input,textarea,select{font-family:var(--font)}
 .c-purple{color:var(--purple)}.c-text2{color:var(--text2)}
 .stat-delta{font-size:11px;color:var(--green)}
 
-/* ══════════════════════════════════════
-   BADGES
-══════════════════════════════════════ */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.2px}
+/
 .badge-pink{background:var(--pink-dim);color:var(--pink);border:1px solid rgba(233,30,140,.28)}
 .badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.22)}
 .badge-orange{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(245,166,35,.22)}
@@ -126,10 +94,7 @@ input,textarea,select{font-family:var(--font)}
 .badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.22)}
 .badge-yellow{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(234,179,8,.22)}
 
-/* ══════════════════════════════════════
-   PROGRESS BAR
-══════════════════════════════════════ */
-.prog{height:5px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+/
 .prog-fill{height:100%;border-radius:10px;transition:width .7s ease}
 .pf-pink{background:linear-gradient(90deg,var(--pink),var(--pink2))}
 .pf-green{background:linear-gradient(90deg,#16a34a,var(--green))}
@@ -137,16 +102,10 @@ input,textarea,select{font-family:var(--font)}
 .pf-multi{background:linear-gradient(90deg,var(--pink),var(--purple),var(--cyan))}
 .pf-orange{background:linear-gradient(90deg,#d97706,var(--orange))}
 
-/* ══════════════════════════════════════
-   LIVE DOT
-══════════════════════════════════════ */
-.live-dot{display:inline-block;width:7px;height:7px;background:var(--pink);border-radius:50%;animation:blink 1.4s ease-in-out infinite}
+/
 @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
 
-/* ══════════════════════════════════════
-   BUTTONS
-══════════════════════════════════════ */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--rs);font-size:12.5px;font-weight:600;border:none;transition:all .15s;cursor:pointer}
+/
 .btn-pink{background:var(--pink);color:#fff}
 .btn-pink:hover{background:var(--pink2)}
 .btn-outline{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
@@ -155,11 +114,7 @@ input,textarea,select{font-family:var(--font)}
 .btn-ghost:hover{background:var(--bg3)}
 .btn-sm{padding:7px 12px;font-size:11.5px}
 .btn-full{width:100%;justify-content:center}
-/* --- Global Professional Animations & Modern UI --- */
-
-a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
-    transition: all 0.3s ease !important;
-}
+/
 
 @keyframes fadeUpMod {
     0% {
@@ -186,4 +141,4 @@ button:hover, .btn:hover {
     transform: translateY(-1px);
 }
 
-body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+

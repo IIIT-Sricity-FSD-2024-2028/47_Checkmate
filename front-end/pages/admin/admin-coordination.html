@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EventPro Admin – Coordination Hub</title>
+  
   <link rel="stylesheet" href="../../styles/global.css">
-  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+    <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     .bipartite-section {
@@ -157,7 +156,7 @@
         <a href="vendor-approvals.html" class="nav-item"><i data-lucide="clipboard-check"></i><span>Vendor Approvals</span></a>
         <a href="manage-users.html" class="nav-item"><i data-lucide="users"></i><span>Manage Users</span></a>
         <a href="monitor-events.html" class="nav-item"><i data-lucide="calendar-check"></i><span>Monitor Events</span></a>
-        <a href="report-analytics.html" class="nav-item"><i data-lucide="pie-chart"></i><span>Report & Analytics</span></a>
+        <a href="report-analytics.html" class="nav-item"><i data-lucide="pie-chart"></i><span>Report &amp; Analytics</span></a>
         <a href="issue-tracking.html" class="nav-item"><i data-lucide="bug"></i><span>Issue Tracking</span></a>
         <a href="service-moderation.html" class="nav-item"><i data-lucide="shield"></i><span>Service Moderation</span></a>
         <a href="admin-payouts.html" class="nav-item"><i data-lucide="dollar-sign"></i><span>Financial Payouts</span></a>
@@ -178,7 +177,7 @@
       <header class="topbar">
         <div>
           <h1 class="page-title">Coordination Hub</h1>
-          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors, Staff & Clients</p>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Communicate with Vendors, Staff &amp; Clients</p>
         </div>
         <div class="topbar__right">
           <button class="notif-btn"><i data-lucide="bell"></i><span class="notif-badge" id="notifCount">0</span></button>
@@ -207,9 +206,9 @@
           </table>
         </div>
 
-        <div class="bipartite-section">
+        <div class="bottom-grid">
           <!-- Left: Conversation list -->
-          <div class="data-table-wrapper" style="overflow-y: auto;">
+          <div class="left-col"><div class="data-table-wrapper" style="overflow-y: auto;">
             <h3 class="table-header-title">Conversations</h3>
             <!-- Role filter tabs -->
             <div id="roleTabs" style="display:flex; gap:6px; margin-bottom:12px; padding:0 4px;">
@@ -220,15 +219,15 @@
             </div>
             <div class="search-box" style="width: 100%; margin-bottom: 16px;">
               <i data-lucide="search" class="search-icon"></i>
-              <input type="text" id="searchInput" placeholder="Search users..." />
+              <input type="text" id="searchInput" placeholder="Search users...">
             </div>
             <div class="conv-list" id="convList">
               <div class="chat-empty">No conversations yet.</div>
             </div>
-          </div>
+          </div></div>
 
           <!-- Right: Chat panel -->
-          <div class="chat-panel" id="chatPanel">
+          <div class="right-col"><div class="chat-panel" id="chatPanel">
             <div class="chat-header" id="chatHeader" style="display:none;">
               <div class="conv-avatar" id="chatAvatar" style="background:var(--pink);">?</div>
               <div>
@@ -241,10 +240,10 @@
               <div class="chat-empty">Select a vendor conversation to begin</div>
             </div>
             <div class="chat-input-bar" id="chatInputBar" style="display:none;">
-              <input type="text" id="chatInput" placeholder="Type a message..." />
+              <input type="text" id="chatInput" placeholder="Type a message...">
               <button class="chat-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block;"></i></button>
             </div>
-          </div>
+          </div></div>
         </div>
       </div>
     </main>
@@ -588,5 +587,6 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+
+
+</body></html>

@@ -1,24 +1,8 @@
-/* ============================================================
-   Message.css
-   ============================================================ */
+/
 
-/* ── OUTER LAYOUT ── */
-.msg-shell {
-  display:grid; grid-template-columns:260px 1fr; gap:16px;
-  height:calc(100vh - 130px);
-}
+/
 
-/* ── LEFT PANEL ── */
-.msg-left {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--r); display:flex; flex-direction:column; overflow:hidden;
-}
-
-/* tabs */
-.msg-tabs {
-  display:flex; gap:6px; padding:12px 14px 10px;
-  border-bottom:1px solid var(--border);
-}
+/
 .msg-tab {
   display:flex; align-items:center; gap:6px;
   padding:7px 14px; border-radius:var(--rs);
@@ -35,10 +19,7 @@
 .msg-tab-client .tab-badge { background:var(--bg4); color:var(--text2); }
 .msg-tab-client:hover { background:var(--bg4); color:var(--text); }
 
-/* search */
-.msg-search-wrap {
-  padding:10px 12px; border-bottom:1px solid var(--border);
-}
+/
 .msg-search {
   width:100%; padding:8px 12px 8px 34px;
   background:var(--bg3); border:1px solid var(--border);
@@ -52,8 +33,7 @@
   width:14px; height:14px; color:var(--text3); pointer-events:none;
 }
 
-/* conversation list */
-.msg-conv-list { flex:1; overflow-y:auto; padding:6px 0; }
+/
 .msg-conv-item {
   display:flex; align-items:center; gap:10px;
   padding:11px 14px; cursor:pointer; transition:background .13s;
@@ -73,7 +53,7 @@
   width:8px; height:8px; background:var(--green);
   border-radius:50%; border:2px solid var(--bg2);
 }
-.msg-conv-body { flex:1; min-width:0; }
+.msg-conv-
 .msg-conv-name { font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:space-between; }
 .msg-conv-time { font-size:10.5px; color:var(--text3); }
 .msg-conv-preview { font-size:11.5px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
@@ -84,17 +64,9 @@
   padding:0 4px; flex-shrink:0;
 }
 
-/* ── RIGHT PANEL ── */
-.msg-right {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--r); display:flex; flex-direction:column; overflow:hidden;
-}
+/
 
-/* chat header */
-.chat-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:13px 16px; border-bottom:1px solid var(--border);
-}
+/
 .chat-header-left { display:flex; align-items:center; gap:10px; }
 .chat-avatar {
   width:36px; height:36px; border-radius:50%;
@@ -116,8 +88,7 @@
 }
 .chat-kebab:hover { color:var(--text); background:var(--bg3); }
 
-/* messages area */
-.chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+/
 
 .msg-bubble-wrap {
   display:flex; flex-direction:column; max-width:75%;
@@ -149,11 +120,7 @@
 .msg-time { font-size:10px; color:var(--text3); margin-top:3px; }
 .me .msg-time { text-align:right; }
 
-/* chat input */
-.chat-input-bar {
-  display:flex; align-items:center; gap:10px;
-  padding:12px 14px; border-top:1px solid var(--border);
-}
+/
 .chat-attach-btn {
   background:none; border:none; color:var(--text2);
   font-size:18px; cursor:pointer; padding:4px; border-radius:var(--rx);
@@ -180,11 +147,7 @@
   font-size:14px; cursor:pointer; transition:background .14s; flex-shrink:0;
 }
 .chat-send-btn:hover { background:var(--pink2); }
-/* --- Global Professional Animations & Modern UI --- */
-
-a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
-    transition: all 0.3s ease !important;
-}
+/
 
 @keyframes fadeUpMod {
     0% {
@@ -211,4 +174,4 @@ button:hover, .btn:hover {
     transform: translateY(-1px);
 }
 
-body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+

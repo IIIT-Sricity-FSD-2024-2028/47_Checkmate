@@ -14,41 +14,16 @@
     --blue-solid: #3b82f6;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 100% 100%, rgba(200, 30, 100, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(100, 30, 200, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
-}
+
+
 
 .app-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* --- Sidebar Content --- */
-.sidebar {
-    width: 260px;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 30px 20px;
-    flex-shrink: 0;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.2);
-}
+/
 
 .logo-container {
     display: flex;
@@ -152,14 +127,7 @@ body {
     background-color: #2d2d34;
 }
 
-/* --- Main Content --- */
-.main-content {
-    flex: 1;
-    padding: 40px 60px;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-}
+/
 
 .main-header {
     margin-bottom: 32px;
@@ -177,30 +145,14 @@ body {
     font-size: 16px;
 }
 
-/* --- Filter Tabs --- */
-.filter-tabs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-}
+/
 
 .filter-btn {
     background-color: var(--sidebar-bg);
     border: 1px solid var(--border-light);
     color: var(--text-secondary);
     padding: 8px 18px;
-    border-radius: 20px; /* Pill shape */
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.filter-btn:hover {
-    background-color: var(--border-light);
-    color: var(--text-primary);
-}
+    border-radius: 20px; /
 
 .filter-btn.active {
     background: var(--pink-gradient);
@@ -209,13 +161,7 @@ body {
     box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
 }
 
-/* --- Packages Grid --- */
-.packages-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 40px;
-}
+/
 
 .package-card {
     background-color: var(--card-bg);
@@ -367,15 +313,7 @@ body {
     box-shadow: 0 6px 20px rgba(255, 51, 102, 0.5);
 }
 
-/* --- Bottom Summary Cards --- */
-.summary-cards {
-    display: flex;
-    gap: 16px;
-    margin-top: 40px;
-    flex-wrap: wrap;
-    border-top: 1px solid var(--border-color);
-    padding-top: 32px;
-}
+/
 
 .summary-card {
     background-color: var(--card-bg);
@@ -403,11 +341,7 @@ body {
     font-weight: 500;
 }
 
-/* --- Responsiveness --- */
-@media (max-width: 1024px) {
-    .packages-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/
 }
 
 @media (max-width: 768px) {
@@ -417,14 +351,7 @@ body {
     .app-container {
         flex-direction: column;
     }
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-        box-shadow: none;
-        padding: 20px;
-    }
+    
     .main-content {
         padding: 30px 20px;
     }

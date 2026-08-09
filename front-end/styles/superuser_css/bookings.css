@@ -1,21 +1,6 @@
-*,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html {
-        font-size: 14px;
-      }
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background: #0d0d13;
-        color: #e2e8f0;
-        min-height: 100vh;
-        display: flex;
-        -webkit-font-smoothing: antialiased;
-      }
+
+      
+      
       ::-webkit-scrollbar {
         width: 5px;
       }
@@ -167,19 +152,7 @@
         background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
       }
-      .page {
-        flex: 1;
-        padding: 28px 30px;
-        background: linear-gradient(
-          160deg,
-          #0d0d13 0%,
-          #0f0f1c 35%,
-          #130818 70%,
-          #1a0a18 100%
-        );
-        min-height: 100vh;
-        overflow-y: auto;
-      }
+      
       .ph {
         margin-bottom: 20px;
       }
@@ -198,14 +171,7 @@
         font-size: 12.5px;
       }
 
-      /* Stats */
-      .stats2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        margin-bottom: 18px;
-        max-width: 600px;
-      }
+      /
       .sc {
         background: #1a1a2e;
         border: 1px solid rgba(255, 255, 255, 0.07);
@@ -258,11 +224,7 @@
         color: #64748b;
       }
 
-      /* Search */
-      .sw {
-        position: relative;
-        margin-bottom: 14px;
-      }
+      /
       .sw input {
         width: 100%;
         padding: 11px 16px 11px 42px;
@@ -292,13 +254,7 @@
         pointer-events: none;
       }
 
-      /* Table */
-      .tw {
-        background: #1a1a2e;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        overflow: hidden;
-      }
+      /
       .th {
         display: flex;
         align-items: center;
@@ -352,16 +308,7 @@
         font-size: 13px;
       }
 
-      /* Badges */
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 9px;
-        border-radius: 20px;
-        font-size: 10.5px;
-        font-weight: 700;
-        border: 1px solid transparent;
-      }
+      /
       .b-confirmed {
         background: rgba(59, 130, 246, 0.14);
         color: #60a5fa;
@@ -388,20 +335,7 @@
         border-color: rgba(239, 68, 68, 0.28);
       }
 
-      /* Buttons */
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 600;
-        cursor: pointer;
-        border: 1px solid transparent;
-        font-family: inherit;
-        transition: all 0.18s;
-      }
+      /
       .btn-p {
         background: linear-gradient(135deg, #ec4899, #db2777);
         color: #fff;
@@ -457,20 +391,7 @@
         background: rgba(239, 68, 68, 0.2);
       }
 
-      /* Modal */
-      .ov {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.72);
-        backdrop-filter: blur(4px);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s;
-      }
+      /
       .ov.open {
         opacity: 1;
         visibility: visible;

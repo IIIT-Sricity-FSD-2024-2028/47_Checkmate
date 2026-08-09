@@ -1,57 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EventPro - Schedule</title>
-<link rel="stylesheet" href="../../styles/staff_css/staff.css"/>
-<link rel="stylesheet" href="../../styles/staff_css/Schedule.css"/>
-<link rel="stylesheet" href="../../styles/staff_css/animations.css"/>
+<link rel="stylesheet" href="../../styles/global.css">
+    <link rel="stylesheet" href="../../styles/staff_css/staff.css">
+<link rel="stylesheet" href="../../styles/staff_css/Schedule.css">
+<link rel="stylesheet" href="../../styles/staff_css/animations.css">
 </head>
 <body>
-<div class="shell">
+<div class="app">
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sb-brand">
-    <div class="sb-logo">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-    </div>
-    <div><div class="sb-name">EventPro</div><div class="sb-badge">Staff</div></div>
+  <div class="sidebar__brand">
+    <div class="brand-icon"><i data-lucide="calendar-check" class="icon-white"></i></div>
+    <div><div class="brand-name">EventPro</div><div class="brand-role">Staff</div></div>
   </div>
-  <nav class="sb-nav">
-    <button class="sb-link" onclick="location.href='staff.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard
-    </button>
-    <button class="sb-link" onclick="location.href='AssignedEvents.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Assigned Events
-    </button>
-    <button class="sb-link" onclick="location.href='TaskBoard.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>Task Board
-    </button>
-    <button class="sb-link active" onclick="location.href='Schedule.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Schedule
-    </button>
-    <button class="sb-link" onclick="location.href='Performance.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Performance
-    </button>
-    <button class="sb-link" onclick="location.href='Report.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>Report Issue
-    </button>
-    <button class="sb-link" onclick="location.href='Messages.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages
-    </button>
+  <nav class="sidebar__nav">
+    <a href="staff.html" class="nav-item"><i data-lucide="layout-dashboard"></i> <span>
+      Dashboard
+    </span></a>
+    <a href="AssignedEvents.html" class="nav-item"><i data-lucide="clipboard-list"></i> <span>
+      Assigned Events
+    </span></a>
+    <a href="TaskBoard.html" class="nav-item"><i data-lucide="kanban"></i> <span>
+      Task Board
+    </span></a>
+    <a href="Schedule.html" class="nav-item active"><i data-lucide="calendar-clock"></i> <span>
+      Schedule
+    </span></a>
+    <a href="Performance.html" class="nav-item"><i data-lucide="trending-up"></i> <span>
+      Performance
+    </span></a>
+    <a href="Report.html" class="nav-item"><i data-lucide="alert-triangle"></i> <span>
+      Report Issue
+    </span></a>
+    <a href="Messages.html" class="nav-item"><i data-lucide="message-square"></i> <span>
+      Messages
+    </span></a>
   </nav>
-  <div class="sb-footer">
-    <div class="sb-uname">Mike Staff</div>
-    <div class="sb-uemail">staff@demo.com</div>
-    <a href="../LandingPage/index.html"> <button class="sb-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button> </a>
-</aside>
+  <div class="sidebar__footer">
+    <div class="user-name">Mike Staff</div>
+    <div class="user-email">staff@demo.com</div>
+    <a href="../LandingPage/index.html"> <button class="logout-btn" style="text-decoration: none;"><i data-lucide="log-out"></i> <span>Logout</span></button> </a>
+</div></aside>
 
 <!-- MAIN -->
-<main class="main">
-  <div class="sch-topbar">
+<main class="main"><div class="content"><div class="sch-topbar">
     <div>
       <div class="page-title">My Schedule</div>
       <div style="font-size:12.5px;color:var(--text2);margin-top:2px">View and manage your upcoming events</div>
@@ -61,21 +55,15 @@
       <button class="sch-view-btn">Week</button>
       <button class="sch-view-btn">Month</button>
     </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="sch-stats">
-    <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Events</span><div class="stat-ico ico-pink"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div></div><div class="stat-val" style="color:var(--text)">2</div></div>
-    <div class="stat-card"><div class="stat-top"><span class="stat-label">This Week</span><div class="stat-ico ico-cyan"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div><div class="stat-val" style="color:var(--text)">0</div></div>
-    <div class="stat-card"><div class="stat-top"><span class="stat-label">Upcoming</span><div class="stat-ico ico-green">ðŸ•</div></div><div class="stat-val c-green">2</div></div>
-  </div>
-
-  <!-- Calendar + events grid -->
-  <div class="sch-grid">
+  </div><div class="sch-stats">
+    <div class="stat-card"><div class="stat-card__top"><div class="stat-icon stat-icon--purple"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></div><span class="stat-trend up" style="color:#22c55e;"><i data-lucide="trending-up"></i> +5%</span></div><span class="stat-label">Total Events</span><div class="stat-value" style="color:var(--text)">2</div></div>
+    <div class="stat-card"><div class="stat-card__top"><div class="stat-icon stat-icon--blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><span class="stat-trend up" style="color:#22c55e;"><i data-lucide="trending-up"></i> +5%</span></div><span class="stat-label">This Week</span><div class="stat-value" style="color:var(--text)">0</div></div>
+    <div class="stat-card"><div class="stat-card__top"><div class="stat-icon stat-icon--green">ðŸ•</div><span class="stat-trend up" style="color:#22c55e;"><i data-lucide="trending-up"></i> +5%</span></div><span class="stat-label">Upcoming</span><div class="stat-value">2</div></div>
+  </div><div class="sch-grid">
     <!-- Calendar -->
     <div class="cal-card">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
         <span style="font-size:13.5px;font-weight:600">Calendar</span>
       </div>
       <div class="cal-head">
@@ -97,13 +85,13 @@
       <div class="card">
         <div class="card-head">
           <div class="card-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
             <span id="selected-date-label">Monday, March 30, 2026</span>
           </div>
         </div>
         <div id="day-events">
           <div class="sch-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
             <p>No events scheduled for this date</p>
           </div>
         </div>
@@ -120,8 +108,8 @@
               <div class="sch-event-name">Johnson Wedding</div>
               <div class="sch-event-role">Event Coordinator</div>
               <div class="sch-event-metas">
-                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>4/15/2026</div>
-                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Grand Ballroom, Downtow</div>
+                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>4/15/2026</div>
+                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Grand Ballroom, Downtow</div>
               </div>
             </div>
             <span class="badge badge-pink" style="flex-shrink:0">In Progress</span>
@@ -132,8 +120,8 @@
               <div class="sch-event-name">Johnson Wedding</div>
               <div class="sch-event-role">Event Coordinator</div>
               <div class="sch-event-metas">
-                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>4/15/2026</div>
-                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Grand Ballroom, Downtow</div>
+                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>4/15/2026</div>
+                <div class="sch-event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Grand Ballroom, Downtow</div>
               </div>
             </div>
             <span class="badge badge-pink" style="flex-shrink:0">In Progress</span>
@@ -142,8 +130,7 @@
         </div>
       </div>
     </div>
-  </div>
-</main>
+  </div></div></main>
 </div>
 <script src="../../scripts/vendor_js/data.js"></script>
 <script>
@@ -231,5 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+
+<script>lucide.createIcons();</script></body></html>

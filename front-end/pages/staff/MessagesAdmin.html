@@ -1,90 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EventPro - Messages</title>
-<link rel="stylesheet" href="../../styles/staff_css/staff.css"/>
-<link rel="stylesheet" href="../../styles/staff_css/Messages.css"/>
-<link rel="stylesheet" href="../../styles/staff_css/animations.css"/>
-<link rel="stylesheet" href="../../styles/message-animations.css"/>
+<link rel="stylesheet" href="../../styles/global.css">
+    <link rel="stylesheet" href="../../styles/staff_css/staff.css">
+<link rel="stylesheet" href="../../styles/staff_css/Messages.css">
+<link rel="stylesheet" href="../../styles/staff_css/animations.css">
+<link rel="stylesheet" href="../../styles/message-animations.css">
 </head>
 <body>
-<div class="shell">
+<div class="app">
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sb-brand">
-    <div class="sb-logo">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-    </div>
-    <div><div class="sb-name">EventPro</div><div class="sb-badge">Staff</div></div>
+  <div class="sidebar__brand">
+    <div class="brand-icon"><i data-lucide="calendar-check" class="icon-white"></i></div>
+    <div><div class="brand-name">EventPro</div><div class="brand-role">Staff</div></div>
   </div>
-  <nav class="sb-nav">
-    <button class="sb-link" onclick="location.href='staff.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard
-    </button>
-    <button class="sb-link" onclick="location.href='AssignedEvents.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Assigned Events
-    </button>
-    <button class="sb-link" onclick="location.href='TaskBoard.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>Task Board
-    </button>
-    <button class="sb-link" onclick="location.href='Schedule.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Schedule
-    </button>
-    <button class="sb-link" onclick="location.href='Performance.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Performance
-    </button>
+  <nav class="sidebar__nav">
+    <a href="staff.html" class="nav-item"><i data-lucide="layout-dashboard"></i> <span>
+      Dashboard
+    </span></a>
+    <a href="AssignedEvents.html" class="nav-item"><i data-lucide="clipboard-list"></i> <span>
+      Assigned Events
+    </span></a>
+    <a href="TaskBoard.html" class="nav-item"><i data-lucide="kanban"></i> <span>
+      Task Board
+    </span></a>
+    <a href="Schedule.html" class="nav-item"><i data-lucide="calendar-clock"></i> <span>
+      Schedule
+    </span></a>
+    <a href="Performance.html" class="nav-item"><i data-lucide="trending-up"></i> <span>
+      Performance
+    </span></a>
 <div class="nav-group" onclick="this.classList.toggle('open')">
-      <div class="sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg><span>Report Issue</span><svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+      <a href="#" class="nav-item"><i data-lucide="alert-triangle"></i> <span>Report Issue</span></a>
       <div class="nav-sub">
-        <button class="sb-link" onclick="event.stopPropagation(); location.href='Report.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Issue on Event</button>
-        <button class="sb-link" onclick="event.stopPropagation(); location.href='ReportAdmin.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Issue to Admin</button>
+        <a href="Report.html" class="nav-item"><i data-lucide="circle"></i> <span>Issue on Event</span></a>
+        <a href="ReportAdmin.html" class="nav-item"><i data-lucide="circle"></i> <span>Issue to Admin</span></a>
       </div>
     </div>
     <div class="nav-group" onclick="this.classList.toggle('open')">
-      <div class="sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Coordination Hub</span><svg class="nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+      <a href="#" class="nav-item"><i data-lucide="circle"></i> <span>Coordination Hub</span></a>
       <div class="nav-sub">
-        <button class="sb-link" onclick="event.stopPropagation(); location.href='Messages.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Event Coordination</button>
-        <button class="sb-link" onclick="event.stopPropagation(); location.href='MessagesAdmin.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Coordination</button>
+        <a href="Messages.html" class="nav-item"><i data-lucide="circle"></i> <span>Event Coordination</span></a>
+        <a href="MessagesAdmin.html" class="nav-item"><i data-lucide="circle"></i> <span>Admin Coordination</span></a>
       </div>
     </div>
     
     
   </nav>
-  <div class="sb-footer">
-    <div class="sb-uname">Mike Staff</div>
-    <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>Light Mode</button>
-   <a href="../LandingPage/index.html"> <button class="sb-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button></a>
+  <div class="sidebar__footer">
+    <div class="user-name">Mike Staff</div>
+    <div class="user-email">staff@demo.com</div>
+    <button class="logout-btn" onclick="document.body.classList.toggle('light-mode')" style="text-decoration: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>Light Mode</button>
+   <a href="../LandingPage/index.html"> <button class="logout-btn" style="text-decoration: none;"><i data-lucide="log-out"></i> <span>Logout</span></button></a>
   </div>
 </aside>
 
 <!-- MAIN -->
-<main class="main" style="padding-bottom:20px">
-  <div class="page-title">Admin Coordination</div>
-  <div class="page-sub">Chat directly with platform administrators</div>
-
-  <div class="msg-shell">
+<main class="main" style="padding-bottom:20px"><div class="content"><div class="page-title">Admin Coordination</div><div class="page-sub">Chat directly with platform administrators</div><div class="msg-shell">
     <!-- LEFT: conversations -->
     <div class="msg-left">
       <!-- Tabs -->
       <div class="msg-tabs">
         <button class="msg-tab msg-tab-vendor" id="tab-vendor" onclick="switchTab('vendor')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
           Vendor <span class="tab-badge">3</span>
         </button>
         <button class="msg-tab msg-tab-client" id="tab-client" onclick="switchTab('client')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           Client <span class="tab-badge">1</span>
         </button>
       </div>
       <!-- Search -->
       <div class="msg-search-wrap">
-        <svg class="msg-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="msg-search" type="text" placeholder="Search conversations..."/>
+        <svg class="msg-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input class="msg-search" type="text" placeholder="Search conversations...">
       </div>
       <!-- Conversation list -->
       <div class="msg-conv-list">
@@ -138,15 +129,14 @@
       <!-- Input -->
       <div class="chat-input-bar">
         <button class="chat-attach-btn" title="Attach file">ðŸ“Ž</button>
-        <input class="chat-input" id="msg-input" type="text" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <input class="chat-input" id="msg-input" type="text" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendMsg()">
         <button class="chat-emoji-btn">ðŸ˜Š</button>
         <button class="chat-send-btn" onclick="sendMsg()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
       </div>
     </div>
-  </div>
-</main>
+  </div></div></main>
 </div>
 <!-- Quick Create Request Modal -->
 <div class="modal-overlay" id="requestModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); z-index:1000; align-items:center; justify-content:center; animation:fadeIn 0.2s ease-out;">
@@ -155,7 +145,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;padding:24px;border-bottom:1px solid rgba(255,255,255,0.05);background:linear-gradient(to right, rgba(6,182,212,0.05), transparent);">
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="width:36px;height:36px;border-radius:10px;background:rgba(6,182,212,0.15);display:flex;align-items:center;justify-content:center;color:var(--cyan);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
         </div>
         <div>
           <h3 style="font-size:16px;font-weight:700;color:var(--text1);margin:0;line-height:1.2;">Create Dispatch Request</h3>
@@ -185,12 +175,12 @@
       <div style="display:flex;gap:16px;">
         <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
           <label style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;">Requested Item</label>
-          <input type="text" id="reqItem" placeholder="E.g. Extra Tables" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:14px;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" required>
+          <input type="text" id="reqItem" placeholder="E.g. Extra Tables" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:14px;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" required="">
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px;width:90px;">
           <label style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;">Quantity</label>
-          <input type="number" id="reqQty" placeholder="1" min="1" value="1" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:14px;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" required>
+          <input type="number" id="reqQty" placeholder="1" min="1" value="1" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text1);outline:none;font-size:14px;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" required="">
         </div>
       </div>
 
@@ -204,7 +194,7 @@
       <button id="reqCancel" style="padding:10px 18px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text1);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Cancel</button>
       <button id="reqSubmit" style="padding:10px 20px;border:none;background:linear-gradient(135deg, var(--cyan), #0284c7);color:#fff;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;box-shadow:0 4px 12px rgba(6,182,212,0.3);transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
         <span style="display:flex;align-items:center;gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           Send Request
         </span>
       </button>
@@ -325,4 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (reqModal) reqModal.style.display = 'none';
 });
 </script>
-</html>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script></body></html>

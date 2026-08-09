@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Issue - Client Portal</title>
-    <link rel="stylesheet" href="../../styles/vendor_css/global.css">
+    
+    <link rel="stylesheet" href="../../styles/global.css">
     <link rel="stylesheet" href="../../styles/vendor_css/vendor.css"> 
     <link rel="stylesheet" href="../../styles/client_css/client.css">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .ph-spin { animation: spin 1s linear infinite; }
@@ -18,20 +17,20 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar__brand">
-                <div class="brand-icon"><i class="ph-fill ph-calendar-blank"></i></div>
+                <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
                 <div>
                     <div class="brand-name">EventPro</div>
                     <div class="brand-role">Client Portal</div>
                 </div>
             </div>
             <nav class="sidebar__nav">
-                <a href="client-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
-                <a href="create_event_client.html" class="nav-item"><i class="ph ph-plus"></i> Create Event</a>
-                <a href="client_myevents.html" class="nav-item"><i class="ph ph-list-bullets"></i> My Events</a>
-                <a href="client_browsepackages.html" class="nav-item"><i class="ph ph-tote"></i> Browse Packages</a>
-                <a href="client_coordination.html" class="nav-item"><i class="ph ph-chat-teardrop-dots"></i> Messages</a>
-                <a href="client_billing.html" class="nav-item"><i class="ph ph-credit-card"></i> Billing</a>
-                <a href="client_reportissue.html" class="nav-item active"><i class="ph ph-warning-circle"></i> Report Issue</a>
+                <a href="client-dashboard.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+                <a href="create_event_client.html" class="nav-item"><i data-lucide="plus-circle"></i><span>Create Event</span></a>
+                <a href="client_myevents.html" class="nav-item"><i data-lucide="list"></i><span>My Events</span></a>
+                <a href="client_browsepackages.html" class="nav-item"><i data-lucide="package"></i><span>Browse Packages</span></a>
+                <a href="client_coordination.html" class="nav-item"><i data-lucide="message-square"></i><span>Messages</span></a>
+                <a href="client_billing.html" class="nav-item"><i data-lucide="credit-card"></i><span>Billing</span></a>
+                <a href="client_reportissue.html" class="nav-item active"><i data-lucide="alert-triangle"></i><span>Report Issue</span></a>
             </nav>
             <div class="sidebar__footer">
                 <div class="user-info">
@@ -41,7 +40,7 @@
                         <div class="user-email">john@gmail.com</div>
                     </div>
                 </div>
-                <a href="../LandingPage/index.html" class="logout-btn"><i class="ph ph-sign-out"></i> Logout</a>
+                <a href="../LandingPage/index.html" class="logout-btn"><i data-lucide="log-out"></i><span>Logout</span></a>
             </div>
         </aside>
         
@@ -70,19 +69,19 @@
                         <div class="form-section">
                             <div class="form-group mb-4">
                                 <label>Issue Title *</label>
-                                <input type="text" class="form-control" placeholder="Brief description of the issue" required>
+                                <input type="text" class="form-control" placeholder="Brief description of the issue" required="">
                             </div>
                             
                             <div class="form-group mb-6">
                                 <label>Detailed Description *</label>
-                                <textarea class="form-control" rows="5" placeholder="Provide as much detail as possible about the issue" required></textarea>
+                                <textarea class="form-control" rows="5" placeholder="Provide as much detail as possible about the issue" required=""></textarea>
                             </div>
                             
                             <div class="form-grid mb-4">
                                 <div class="form-group">
                                     <label>Priority Level</label>
-                                    <select class="form-control" required>
-                                        <option value="" disabled selected>Select Priority</option>
+                                    <select class="form-control" required="">
+                                        <option value="" disabled="" selected="">Select Priority</option>
                                         <option>🔴 Critical</option>
                                         <option>🟠 High</option>
                                         <option>🟡 Medium</option>
@@ -92,9 +91,9 @@
                                 <div class="form-group">
                                     <label>Related Event (Optional)</label>
                                     <select class="form-control">
-                                        <option value="" disabled selected>Select Event</option>
+                                        <option value="" disabled="" selected="">Select Event</option>
                                         <option>Corporate Gala</option>
-                                        <option>Wedding - Sarah & Mike</option>
+                                        <option>Wedding - Sarah &amp; Mike</option>
                                         <option>Birthday Party</option>
                                     </select>
                                 </div>
@@ -202,5 +201,7 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+
+</body></html>

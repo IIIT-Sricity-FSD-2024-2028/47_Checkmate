@@ -1,21 +1,6 @@
-*,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html {
-        font-size: 14px;
-      }
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background: #0d0d13;
-        color: #e2e8f0;
-        min-height: 100vh;
-        display: flex;
-        -webkit-font-smoothing: antialiased;
-      }
+
+      
+      
       ::-webkit-scrollbar {
         width: 5px;
       }
@@ -37,19 +22,7 @@
         }
       }
 
-      /* ── Sidebar ── */
-      .sb {
-        width: 236px;
-        flex-shrink: 0;
-        background: #0f0f1a;
-        border-right: 1px solid rgba(255, 255, 255, 0.07);
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-        overflow-y: auto;
-      }
+      /
       .sb-brand {
         display: flex;
         align-items: center;
@@ -169,25 +142,9 @@
         color: #ef4444;
       }
 
-      /* ── Page ── */
-      .page {
-        flex: 1;
-        padding: 28px 30px;
-        background: linear-gradient(
-          160deg,
-          #0d0d13 0%,
-          #0f0f1c 35%,
-          #130818 70%,
-          #1a0a18 100%
-        );
-        min-height: 100vh;
-        overflow-y: auto;
-      }
+      /
 
-      /* ── Page header ── */
-      .ph {
-        margin-bottom: 22px;
-      }
+      /
       .ph h1 {
         display: flex;
         align-items: center;
@@ -203,13 +160,7 @@
         font-size: 12.5px;
       }
 
-      /* ── Stat cards ── */
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 20px;
-      }
+      /
       .sc {
         background: #1a1a2e;
         border: 1px solid rgba(255, 255, 255, 0.07);
@@ -279,13 +230,7 @@
         gap: 4px;
       }
 
-      /* ── Charts row ── */
-      .ch2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 18px;
-      }
+      /
       .cc {
         background: #1a1a2e;
         border: 1px solid rgba(255, 255, 255, 0.07);
@@ -302,22 +247,9 @@
         margin-bottom: 14px;
       }
 
-      /* ── Revenue card ── */
-      .rc {
-        background: #1a1a2e;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 18px;
-      }
+      /
 
-      /* ── Health ── */
-      .hc {
-        background: #1a1a2e;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        padding: 20px;
-      }
+      /
       .hc-title {
         display: flex;
         align-items: center;

@@ -14,41 +14,16 @@
     --blue-solid: #3b82f6;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 100% 100%, rgba(200, 30, 100, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(100, 30, 200, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
-}
+
+
 
 .app-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* --- Sidebar Content --- */
-.sidebar {
-    width: 260px;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 30px 20px;
-    flex-shrink: 0;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.2);
-}
+/
 
 .logo-container {
     display: flex;
@@ -152,14 +127,7 @@ body {
     background-color: #2d2d34;
 }
 
-/* --- Main Content --- */
-.main-content {
-    flex: 1;
-    padding: 40px 60px;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-}
+/
 
 .main-header {
     display: flex;
@@ -205,14 +173,7 @@ body {
     font-size: 20px;
 }
 
-/* --- Events Section & Table --- */
-.events-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 32px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-}
+/
 
 .card-header h2 {
     font-size: 18px;
@@ -250,12 +211,7 @@ body {
 
 .events-table tr:last-child td {
     border-bottom: none;
-    padding-bottom: 0px; /* Leave some space padding, or 0 since it's inside the card body */
-}
-
-.events-table tr.table-row {
-    transition: background-color 0.2s ease;
-}
+    padding-bottom: 0px; /
 
 .events-table tr.table-row:hover td {
     background-color: rgba(255, 255, 255, 0.01);
@@ -266,26 +222,11 @@ body {
     font-weight: 500 !important;
 }
 
-/* Badges styling */
-.badge {
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    display: inline-block;
-}
+/
 
 .badge-purple {
     background-color: rgba(138, 43, 226, 0.15);
-    color: #c98cff; /* Light purple */
-    border: 1px solid rgba(138, 43, 226, 0.3);
-}
-
-.badge-green {
-    background-color: rgba(46, 213, 115, 0.15);
-    color: var(--green-solid);
-    border: 1px solid rgba(46, 213, 115, 0.3);
-}
+    color: #c98cff; /
 
 .badge-orange {
     background-color: rgba(245, 166, 35, 0.15);
@@ -295,29 +236,14 @@ body {
 
 .badge-blue {
     background-color: rgba(59, 130, 246, 0.15);
-    color: #6da2ff; /* Light blue */
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-/* Responsive constraints */
-@media (max-width: 992px) {
-    .main-content {
-        padding: 30px;
-    }
+    color: #6da2ff; /
 }
 
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;
     }
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-        box-shadow: none;
-        padding: 20px;
-    }
+    
     .main-header {
         flex-direction: column;
         gap: 16px;

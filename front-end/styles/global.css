@@ -47,12 +47,7 @@
   --font-display: 'Space Grotesk', sans-serif;
   --font-body:    'DM Sans', sans-serif;
 
-  font-family: var(--font-body);
-}
-
-/* ── Seamless Page Transitions ── */
-@view-transition {
-    navigation: auto;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ── Body — Figma gradient ── */
@@ -118,7 +113,7 @@ body {
 }
 
 .brand-name {
-  font-family: var(--font-display);
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   font-weight: 700;
   font-size: 15px;
   color: var(--text-primary);
@@ -171,6 +166,51 @@ body {
   box-shadow: 0 2px 16px var(--pink-glow);
 }
 .nav-item.active i { opacity: 1; }
+
+/* Nav group (sidebar dropdown) */
+.nav-group { position: relative; }
+.nav-group > .nav-item {
+  cursor: pointer;
+  user-select: none;
+}
+.nav-group > .nav-item .nav-chevron {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  transition: transform 0.25s ease;
+}
+.nav-group.open > .nav-item .nav-chevron { transform: rotate(180deg); opacity: 0.8; }
+
+/* Override the pink active bar on the parent div — use a subtle left accent instead */
+.nav-group > .nav-item.active {
+  background: rgba(233,30,140,0.08);
+  box-shadow: none;
+  color: var(--pink-light);
+  border-left: 3px solid var(--pink);
+  border-radius: 0 8px 8px 0;
+}
+
+.nav-sub {
+  display: none;
+  flex-direction: column;
+  padding: 4px 0 4px 28px;
+  gap: 0;
+  overflow: hidden;
+}
+.nav-group.open .nav-sub { display: flex; }
+.nav-sub .nav-item {
+  font-size: 12.5px;
+  padding: 8px 14px;
+  gap: 10px;
+  border-radius: 6px;
+}
+.nav-sub .nav-item i { width: 15px; font-size: 13px; }
+.nav-sub .nav-item.active {
+  background: var(--pink);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--pink-glow);
+}
 
 /* Footer */
 .sidebar__footer {
@@ -226,18 +266,12 @@ body {
 /* ══════════════════════
    MAIN AREA
 ══════════════════════ */
-@keyframes fadeInMain {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  animation: fadeInMain 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Topbar */
@@ -255,7 +289,7 @@ body {
 }
 
 .page-title {
-  font-family: var(--font-display);
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
@@ -287,7 +321,7 @@ body {
   outline: none;
   color: var(--text-primary);
   font-size: 13.5px;
-  font-family: inherit;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   width: 100%;
 }
 .search-box input::placeholder { color: var(--text-muted); }
@@ -325,7 +359,7 @@ body {
   justify-content: center;
   padding: 0 3px;
   border: 2px solid var(--bg-sidebar);
-  font-family: var(--font-display);
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Content wrapper */
@@ -358,7 +392,7 @@ body {
 }
 
 .card__header h3 {
-  font-family: var(--font-display);
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   font-weight: 600;
 }
@@ -432,7 +466,7 @@ body {
   gap: 7px;
   padding: 9px 18px;
   border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
@@ -466,3 +500,148 @@ body {
   .content { padding: 16px; }
   .topbar { padding: 14px 16px; }
 }
+/* --- Global Professional Animations & Modern UI --- */
+
+a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
+    transition: all 0.3s ease !important;
+}
+
+@keyframes fadeUpMod {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body, main, .dashboard-content, .container, .page-content, .wrapper {
+    animation: fadeUpMod 0.6s ease forwards;
+}
+
+.card:hover, .task-card:hover, .event-card:hover, .booking-card:hover, .stat-card:hover, .package-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 15px rgba(255, 105, 180, 0.2) !important;
+}
+
+button:hover, .btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+}
+
+body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+
+
+/* ══════════════════════════════════════════
+   MIGRATED VENDOR GRIDS
+   ══════════════════════════════════════════ */
+/* ══════════════════════
+   DASHBOARD — welcome banner
+══════════════════════ */
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(233,30,140,0.20) 0%,
+    rgba(58,16,80,0.85)   45%,
+    rgba(42,16,64,0.95)   100%
+  );
+  border: 1px solid rgba(233,30,140,0.35);
+  border-radius: var(--radius);
+  padding: 26px 30px;
+  box-shadow: 0 0 30px rgba(233,30,140,0.18);
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(233,30,140,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.welcome-banner h2 {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.welcome-banner p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  position: relative;
+}
+
+/* ── Stats Grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.stat-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+}
+
+.stat-icon--blue   { background: #1d4ed8; }
+.stat-icon--green  { background: #15803d; }
+.stat-icon--purple { background: #7e22ce; }
+.stat-icon--orange { background: #c2410c; }
+
+.stat-trend { font-size: 12px; font-weight: 600; }
+.stat-trend.up { color: var(--green); }
+
+.stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.stat-value {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* ── Bottom Grid ── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.left-col, .right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+

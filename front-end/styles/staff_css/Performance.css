@@ -1,22 +1,6 @@
 
 
-/* ════ COMPONENT SPECIFIC VARIABLES ════ */
-:root {
-  --bg-card:  #151222;
-  --bg-card2: #1b1828;
-  --accent:   #e0157a;
-  --accent2:  #ff2d8f;
-  --glow:     rgba(224,21,122,0.28);
-  --soft:     rgba(224,21,122,0.13);
-  --gold:     #f5c842;
-  --teal:     #00e6c3;
-  --blue:     #60a5fa;
-  --sub:      #9890b8;
-  --muted:    #5a5470;
-  --border:   rgba(255,255,255,0.07);
-  --r:        14px;
-  --r-sm:     9px;
-}
+/
 
 .page-title {
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
@@ -24,12 +8,7 @@
 }
 .page-sub { font-size: 12px; color: var(--muted); margin-top: 3px; margin-bottom: 20px; }
 
-/* STAT CARDS */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 10px; margin-bottom: 14px;
-}
+/
 
 .stat-card {
   background: var(--bg-card);
@@ -66,8 +45,7 @@
 
 .stat-chg { font-size: 11px; color: var(--accent); display: flex; align-items: center; gap: 3px; }
 
-/* CHARTS */
-.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 14px; }
+/
 
 .card {
   background: var(--bg-card);
@@ -86,11 +64,9 @@
 canvas { display: block; }
 .chart-sub { text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; }
 
-/* BOTTOM */
-.bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+/
 
-/* ACHIEVEMENTS */
-.ach-list { display: flex; flex-direction: column; gap: 8px; }
+/
 
 .ach-item {
   display: flex; align-items: center; gap: 11px;
@@ -120,11 +96,7 @@ canvas { display: block; }
 }
 .ach-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
-/* RATING */
-.rating-hero {
-  text-align: center; padding: 10px 0 14px;
-  border-bottom: 1px solid var(--border); margin-bottom: 15px;
-}
+/
 .r-num {
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   font-size: 50px; font-weight: 800; color: var(--text); line-height: 1;
@@ -148,8 +120,7 @@ canvas { display: block; }
 .rv-text { font-size: 12px; font-style: italic; color: var(--sub); line-height: 1.6; margin-bottom: 5px; }
 .rv-by   { font-size: 11px; color: var(--muted); }
 
-/* ANIMATIONS */
-@keyframes up { from { opacity:0; transform:translateY(13px); } to { opacity:1; transform:translateY(0); } }
+/ to { opacity:1; transform:translateY(0); } }
 .stat-card:nth-child(1){ animation: up .35s ease .04s both; }
 .stat-card:nth-child(2){ animation: up .35s ease .09s both; }
 .stat-card:nth-child(3){ animation: up .35s ease .14s both; }
@@ -159,11 +130,7 @@ canvas { display: block; }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 99px; }
-/* --- Global Professional Animations & Modern UI --- */
-
-a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
-    transition: all 0.3s ease !important;
-}
+/
 
 @keyframes fadeUpMod {
     0% {
@@ -190,4 +157,4 @@ button:hover, .btn:hover {
     transform: translateY(-1px);
 }
 
-body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+

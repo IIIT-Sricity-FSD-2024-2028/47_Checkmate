@@ -1,60 +1,60 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Events — EventPro</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
     <link rel="stylesheet" href="../../styles/superuser_css/events.css">
-  </head>
-  <body>
-    <aside class="sb">
-      <div class="sb-brand">
-        <div class="sb-logo">📅</div>
+  <link rel="stylesheet" href="../../styles/global.css"></head>
+  <body><div class="app">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="brand-icon"><i data-lucide="calendar-check"></i></div>
         <div>
-          <div class="sb-name">EventPro</div>
-          <div class="sb-badge">Superuser</div>
+          <div class="brand-name">EventPro</div>
+          <div class="brand-role">Superuser</div>
         </div>
       </div>
-      <nav class="sb-nav">
-        <a href="dashboard.html" class="nl">⊞ Dashboard</a>
-        <a href="events.html" class="nl active">🛡 All Events</a>
-        <a href="bookings.html" class="nl">📖 All Bookings</a>
-        <a href="resources.html" class="nl">📦 All Resources</a>
-        <a href="staff.html" class="nl">👤 All Staff</a>
-        <a href="users.html" class="nl">👥 Users Management</a>
+      <nav class="sidebar__nav">
+        <a href="dashboard.html" class="nav-item"><i data-lucide="layout-dashboard"></i> <span>Dashboard</span></a>
+        <a href="events.html" class="active nav-item"><i data-lucide="calendar-check"></i> <span>All Events</span></a>
+        <a href="bookings.html" class="nav-item"><i data-lucide="book-open"></i> <span>All Bookings</span></a>
+        <a href="resources.html" class="nav-item"><i data-lucide="package"></i> <span>All Resources</span></a>
+        <a href="staff.html" class="nav-item"><i data-lucide="user-check"></i> <span>All Staff</span></a>
+        <a href="users.html" class="nav-item"><i data-lucide="users"></i> <span>Users Management</span></a>
       </nav>
-      <div class="sb-foot">
-        <div class="sb-user">
-          <div class="sb-av">S</div>
+      <div class="sidebar__footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
           <div>
-            <div class="sb-un">Super Admin</div>
-            <div class="sb-ue">superuser@demo.com</div>
+            <div class="user-name">Super Admin</div>
+            <div class="user-email">superuser@demo.com</div>
           </div>
         </div>
         <button class="sb-out">⇥ Logout</button>
       </div>
     </aside>
 
-    <main class="page">
-      <div class="ph">
-        <h1><span style="color: #ec4899">📅</span> All Events</h1>
-        <p>Complete system-wide event management</p>
-      </div>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">All Events</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Complete system-wide event management</p>
+        </div>
+        <div class="topbar__right">
+          <button class="notif-btn">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge">0</span>
+          </button>
+        </div>
+      </header>
+        <div class="content">
+      
 
       <div class="top-row">
         <div class="sw">
           <span class="sw-ico">🔍</span>
-          <input
-            type="text"
-            id="q"
-            placeholder="Search events, clients, or vendors..."
-            oninput="render()"
-          />
+          <input type="text" id="q" placeholder="Search events, clients, or vendors..." oninput="render()">
         </div>
         <button class="btn btn-p" onclick="openM()">+ Add Event</button>
       </div>
@@ -86,30 +86,26 @@
           <p>No events found</p>
         </div>
       </div>
-    </main>
+    </div></main>
 
     <!-- Modal -->
     <div class="ov" id="modal">
       <div class="modal">
         <div class="mh">
-          <span class="mt" id="mt">Add Event</span
-          ><button class="mx" onclick="closeM()">✕</button>
+          <span class="mt" id="mt">Add Event</span><button class="mx" onclick="closeM()">✕</button>
         </div>
         <form id="mform" onsubmit="return false;">
           <div class="fg2">
             <div class="fg">
-              <label class="fl">Event Name *</label
-              ><input class="fc" id="f_nm" placeholder="e.g. Johnson Wedding" />
+              <label class="fl">Event Name *</label><input class="fc" id="f_nm" placeholder="e.g. Johnson Wedding">
               <div class="ferr" id="f_nm_e"></div>
             </div>
             <div class="fg">
-              <label class="fl">Venue *</label
-              ><input class="fc" id="f_ve" placeholder="e.g. Grand Ballroom" />
+              <label class="fl">Venue *</label><input class="fc" id="f_ve" placeholder="e.g. Grand Ballroom">
               <div class="ferr" id="f_ve_e"></div>
             </div>
             <div class="fg">
-              <label class="fl">Client *</label
-              ><input class="fc" id="f_cl" placeholder="Client name" />
+              <label class="fl">Client *</label><input class="fc" id="f_cl" placeholder="Client name">
               <div class="ferr" id="f_cl_e"></div>
             </div>
             <div class="fg">
@@ -120,8 +116,7 @@
               <div class="ferr" id="f_vn_e"></div>
             </div>
             <div class="fg">
-              <label class="fl">Date *</label
-              ><input class="fc" type="date" id="f_dt" />
+              <label class="fl">Date *</label><input class="fc" type="date" id="f_dt">
               <div class="ferr" id="f_dt_e"></div>
             </div>
             <div class="fg">
@@ -137,14 +132,7 @@
               <div class="ferr" id="f_ty_e"></div>
             </div>
             <div class="fg">
-              <label class="fl">Guest Count *</label
-              ><input
-                class="fc"
-                type="number"
-                id="f_gs"
-                placeholder="e.g. 200"
-                min="1"
-              />
+              <label class="fl">Guest Count *</label><input class="fc" type="number" id="f_gs" placeholder="e.g. 200" min="1">
               <div class="ferr" id="f_gs_e"></div>
             </div>
             <div class="fg">
@@ -172,8 +160,7 @@
     <div class="ov" id="vmodal">
       <div class="modal">
         <div class="mh">
-          <span class="mt">Event Details</span
-          ><button class="mx" onclick="closeV()">✕</button>
+          <span class="mt">Event Details</span><button class="mx" onclick="closeV()">✕</button>
         </div>
         <div id="vbody"></div>
         <div class="mf">
@@ -354,5 +341,7 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+
+
+</div><script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script></body></html>

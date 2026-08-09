@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EventPro Admin – Global Settings</title>
+  
   <link rel="stylesheet" href="../../styles/global.css">
-  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+    <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
@@ -34,7 +33,7 @@
           <i data-lucide="calendar-check"></i><span>Monitor Events</span>
         </a>
         <a href="report-analytics.html" class="nav-item">
-          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+          <i data-lucide="pie-chart"></i><span>Report &amp; Analytics</span>
         </a>
         <a href="issue-tracking.html" class="nav-item">
           <i data-lucide="bug"></i><span>Issue Tracking</span>
@@ -79,31 +78,31 @@
       </header>
 
       <div class="content">
-        <div class="bipartite-section" style="grid-template-columns: 1fr 1fr;">
+        <div class="bottom-grid" style="grid-template-columns: 1fr 1fr;">
             <!-- Left Config -->
-            <div class="data-table-wrapper">
+            <div class="left-col"><div class="data-table-wrapper">
                 <h3 class="table-header-title">Platform Business Settings</h3>
                 <div class="filter-grid" style="grid-template-columns: 1fr;">
                     <div class="input-group">
                         <label>Global Platform Commission Fee (%)</label>
-                        <input type="number" class="form-control" value="10" />
+                        <input type="number" class="form-control" value="10">
                     </div>
                     <div class="input-group">
                         <label>Tax Withholding Rate (%)</label>
-                        <input type="number" class="form-control" value="0" />
+                        <input type="number" class="form-control" value="0">
                     </div>
                     <div class="input-group">
                         <label>Minimum Vendor Payout Threshold ($)</label>
-                        <input type="number" class="form-control" value="500" />
+                        <input type="number" class="form-control" value="500">
                     </div>
                     <div style="margin-top: 10px;">
                       <button class="export-btn">Save Business Rules</button>
                     </div>
                 </div>
-            </div>
+            </div></div>
 
             <!-- Right Config -->
-            <div class="data-table-wrapper">
+            <div class="right-col"><div class="data-table-wrapper">
                 <h3 class="table-header-title">System Features Toggles</h3>
                 <div class="approval-list">
                     <div class="approval-item" style="padding: 16px;">
@@ -111,25 +110,25 @@
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Vendor Auto-Approval</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Automatically approve trusted vendor documents</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);">
                     </div>
                     <div class="approval-item" style="padding: 16px;">
                         <div>
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Maintenance Mode</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Prevent client and vendor logins</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);">
                     </div>
                     <div class="approval-item" style="padding: 16px;">
                         <div>
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Public Event Directory</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Allow non-registered users to view public events</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" checked />
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" checked="">
                     </div>
                 </div>
                 <button class="export-btn" style="margin-top: 24px;">Save Toggles</button>
-            </div>
+            </div></div>
         </div>
       </div>
     </main>
@@ -174,5 +173,6 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+
+
+</body></html>

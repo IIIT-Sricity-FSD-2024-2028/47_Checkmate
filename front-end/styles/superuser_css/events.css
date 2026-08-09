@@ -1,21 +1,6 @@
-*,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html {
-        font-size: 14px;
-      }
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background: #0d0d13;
-        color: #e2e8f0;
-        min-height: 100vh;
-        display: flex;
-        -webkit-font-smoothing: antialiased;
-      }
+
+      
+      
       ::-webkit-scrollbar {
         width: 5px;
       }
@@ -167,19 +152,7 @@
         background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
       }
-      .page {
-        flex: 1;
-        padding: 28px 30px;
-        background: linear-gradient(
-          160deg,
-          #0d0d13 0%,
-          #0f0f1c 35%,
-          #130818 70%,
-          #1a0a18 100%
-        );
-        min-height: 100vh;
-        overflow-y: auto;
-      }
+      
       .ph {
         margin-bottom: 20px;
       }

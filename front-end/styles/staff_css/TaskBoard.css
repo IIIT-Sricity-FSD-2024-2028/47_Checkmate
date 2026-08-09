@@ -1,12 +1,6 @@
-/* ============================================================
-   Task Board.css
-   ============================================================ */
+/
 
-/* ── SUMMARY STATS ── */
-.tb-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
-
-/* ── KANBAN COLUMNS ── */
-.kanban { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+/
 
 .kanban-col { display:flex; flex-direction:column; gap:10px; }
 
@@ -24,12 +18,7 @@
 .col-progress .col-count { background:var(--pink-dim);   color:var(--pink);   }
 .col-done     .col-count { background:var(--green-dim);  color:var(--green);  }
 
-/* task card */
-.task-card {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--r); padding:13px 14px;
-  cursor:grab; transition:border-color .15s, transform .15s;
-}
+/
 .task-card:hover { border-color:rgba(255,255,255,.13); transform:translateY(-1px); }
 .task-card.dragging { opacity:.5; transform:rotate(1deg); }
 
@@ -62,15 +51,9 @@
 .task-prog { margin-top:8px; }
 .task-prog .prog { height:3px; }
 
-/* drop-zone highlight */
-.kanban-col.drag-over .col-header { border-color:var(--pink); }
+/
 
-/* ── INFO BOX ── */
-.tb-info {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--r); padding:14px 16px;
-  display:flex; gap:12px; align-items:flex-start;
-}
+/
 .tb-info-icon {
   width:32px; height:32px; border-radius:var(--rx);
   background:var(--pink-dim); color:var(--pink);
@@ -80,10 +63,7 @@
 .tb-info-title { font-size:13px; font-weight:600; margin-bottom:4px; }
 .tb-info-text  { font-size:12px; color:var(--text2); line-height:1.55; }
 
-/* ── INLINE EDIT MODE ── */
-.task-card {
-  position: relative; /* For absolutely positioned edit button */
-}
+/
 
 .task-actions {
   position: absolute;
@@ -101,22 +81,7 @@
 }
 
 .task-card.editing .task-actions {
-  display: none; /* Hide when actually editing */
-}
-
-.action-btn {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 6px;
-  padding: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  display: none; /
 
 .action-btn:hover {
   background: rgba(255,255,255,0.1);
@@ -238,11 +203,7 @@
   font-style: italic;
 }
 
-/* --- Global Professional Animations & Modern UI --- */
-
-a, button, .btn, .card, .task-card, .event-card, .booking-card, input, select, textarea, .nav-item, .sidebar-item {
-    transition: all 0.3s ease !important;
-}
+/
 
 @keyframes fadeUpMod {
     0% {
@@ -269,4 +230,4 @@ button:hover, .btn:hover {
     transform: translateY(-1px);
 }
 
-body { font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+

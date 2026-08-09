@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EventPro Admin – Reports & Analytics</title>
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventPro Admin – Reports &amp; Analytics</title>
+  
   <link rel="stylesheet" href="../../styles/global.css">
-  <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
+    <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -35,7 +34,7 @@
           <i data-lucide="calendar-check"></i><span>Monitor Events</span>
         </a>
         <a href="report-analytics.html" class="nav-item active">
-          <i data-lucide="pie-chart"></i><span>Report & Analytics</span>
+          <i data-lucide="pie-chart"></i><span>Report &amp; Analytics</span>
         </a>
         <a href="issue-tracking.html" class="nav-item">
           <i data-lucide="bug"></i><span>Issue Tracking</span>
@@ -68,7 +67,7 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h1 class="page-title">Reports & Analytics</h1>
+          <h1 class="page-title">Reports &amp; Analytics</h1>
           <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">View insights about events, resources and staff usage</p>
         </div>
         <div class="topbar__right">
@@ -89,17 +88,17 @@
                     <select class="form-control" id="filterReportType">
                         <option value="all">Comprehensive (All Reports)</option>
                         <option value="financial">Financial (Revenue Only)</option>
-                        <option value="operational">Operational (Events & Staff)</option>
+                        <option value="operational">Operational (Events &amp; Staff)</option>
                         <option value="resources">Logistics (Resources Only)</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>Start Date</label>
-                    <input type="date" id="filterStartDate" class="form-control" />
+                    <input type="date" id="filterStartDate" class="form-control">
                 </div>
                 <div class="input-group">
                     <label>End Date</label>
-                    <input type="date" id="filterEndDate" class="form-control" />
+                    <input type="date" id="filterEndDate" class="form-control">
                 </div>
                 <div class="input-group">
                     <label>Event Type</label>
@@ -170,7 +169,7 @@
         <!-- Resource Usage Report -->
         <div class="table-container report-section" id="reportResources" style="margin-bottom: 24px;">
             <div class="data-table-wrapper">
-                <div class="table-header-title">Resource Inventory & Usage</div>
+                <div class="table-header-title">Resource Inventory &amp; Usage</div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -191,7 +190,7 @@
         <!-- Revenue Report -->
         <div class="table-container report-section" id="reportFinancial" style="margin-bottom: 24px;">
             <div class="data-table-wrapper">
-                <div class="table-header-title">Financial Report (Bookings & Payouts)</div>
+                <div class="table-header-title">Financial Report (Bookings &amp; Payouts)</div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -264,5 +263,6 @@
     <!-- Global Injections -->
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
-</body>
-</html>
+
+
+</body></html>

@@ -15,41 +15,16 @@
     --error-color: #ff4a4a;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image: 
-        radial-gradient(circle at 100% 100%, rgba(200, 30, 100, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(100, 30, 200, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
-}
+
+
 
 .app-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* --- Sidebar (Dashboard Consistency) --- */
-.sidebar {
-    width: 260px;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 30px 20px;
-    flex-shrink: 0;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.2);
-}
+/
 
 .logo-container {
     display: flex;
@@ -153,14 +128,7 @@ body {
     background-color: #2d2d34;
 }
 
-/* --- Main Content (Create Event Form) --- */
-.main-content {
-    flex: 1;
-    padding: 60px 40px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-}
+/
 
 .form-container-wrapper {
     width: 100%;
@@ -205,12 +173,7 @@ body {
     font-size: 16px;
 }
 
-/* Form Styles */
-.event-form {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-}
+/
 
 .form-grid {
     display: grid;
@@ -327,15 +290,7 @@ input:focus, select:focus {
     box-shadow: 0 0 0 3px rgba(255, 74, 74, 0.15) !important;
 }
 
-/* Actions */
-.form-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 10px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border-light);
-    align-items: stretch;
-}
+/
 
 .btn-primary {
     flex: 1;
@@ -382,11 +337,7 @@ input:focus, select:focus {
     border-color: var(--text-secondary);
 }
 
-/* Responsive Focus */
-@media (max-width: 768px) {
-    .main-content {
-        padding: 30px 20px;
-    }
+/
     .form-card {
         padding: 30px 20px;
     }
@@ -407,12 +358,7 @@ input:focus, select:focus {
         order: 1;
     }
     
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        box-shadow: none;
-    }
+    
     .app-container {
         flex-direction: column;
     }
