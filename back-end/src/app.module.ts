@@ -21,6 +21,10 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'front-end'),
+      serveRoot: '/front-end',
+    }),
     DatabaseModule,
     AuthModule,
     UsersModule,
