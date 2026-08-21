@@ -46,8 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return !issueEventId && !issueEvent;
   }
 
+  function getActiveIssueCount(eventId) {
+    return (DB.getMyIssues() || [])
+      .filter(i => (i.eventId === eventId || i.event === eventId) && i.status !== 'resolved' && i.status !== 'closed')
+      .length;
+  }
+
   function getSelectedEventIssues({ includeUpdates = false } = {}) {
-    return (DB.getAll('issues') || [])
+    return (DB.getMyIssues() || [])
       .filter(issueMatchesSelectedEvent)
       .filter(isOpenIssue)
       .filter(issue => includeUpdates || !isCoordinatorUpdate(issue));
@@ -79,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── Build event selector cards ─────── */
   function initEventCards() {
-    const events = DB.getAll('events')
+    const events = DB.getMyEvents()
       .filter(e => e.status === 'live')
       .sort((a,b) => {
         if (a.status==='live' && b.status!=='live') return -1;
@@ -452,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── Fallback issue modal if CoordHub not loaded ── */
   function showLocalIssueModal(issueId) {
-    const issues = DB.getAll('issues') || [];
+    const issues = DB.getMyIssues() || [];
     const iss = issues.find(i => i.id === issueId);
     if (!iss) { Toast.show('Issue details not found.', 'warn'); return; }
     const ev = iss.eventId ? DB.find('events', iss.eventId) : null;
@@ -610,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
       title.textContent = 'Allocate Resource';
       sub.textContent = `Staff requested: ${qtyStr}${req.item} for ${req.eventName || req.eventId}`;
 
-      const resources = DB.getAll('resources');
+      const resources = DB.getMyResources();
       const matching = resources.filter(r => r.available && r.quantity > 0);
 
       // Find best match
@@ -641,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
       title.textContent = 'Assign Staff';
       sub.textContent = `Staff requested: ${qtyStr}${req.item} for ${req.eventName || req.eventId}`;
 
-      const staff = DB.getAll('staff').filter(s => s.status === 'available');
+      const staff = DB.getMyStaff().filter(s => s.status === 'available');
       body.innerHTML = `
         <div style="margin-bottom:16px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">Select Staff to Assign</label>
@@ -672,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = document.getElementById('_allocResource');
     const qtyInput = document.getElementById('_allocQty');
     if (!sel || !qtyInput) return;
-    const res = DB.getAll('resources').find(r => r.id === sel.value);
+    const res = DB.getMyResources().find(r => r.id === sel.value);
     if (res) {
       qtyInput.max = res.quantity;
       if (parseInt(qtyInput.value) > res.quantity) qtyInput.value = res.quantity;
@@ -702,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const allocQty = parseInt(qtyInput ? qtyInput.value : req.qty, 10) || req.qty;
 
       // Find the resource and deduct
-      const res = DB.getAll('resources');
+      const res = DB.getMyResources();
       const m = res.find(r => r.id === resId);
       if (m) {
         const newQty = Math.max(0, m.quantity - allocQty);
@@ -733,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (req.type === 'staff' && resSelect) {
       const staffId = resSelect.value;
       if (!staffId) { Toast.show('Please select a staff member.', 'warn'); return; }
-      const staffMember = DB.getAll('staff').find(s => s.id === staffId);
+      const staffMember = DB.getMyStaff().find(s => s.id === staffId);
       if (staffMember) {
         // Mark staff as busy
         DB.update('staff', staffId, { status: 'busy', workload: Math.min(100, staffMember.workload + 20) });
@@ -893,7 +899,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!selectedEventId) { Toast.show('Please select an event first.','warn'); return; }
     
     // Fetch available resources
-    var resources = DB.getAll('resources') || [];
+    var resources = DB.getMyResources() || [];
     var availableResources = resources.filter(function(r) { return r.quantity > 0; });
     if (availableResources.length === 0) {
       Toast.show('No resources available to allocate.', 'warn');
@@ -940,7 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!resId) { Toast.show('Please select a resource.', 'warn'); return; }
         if (!qty || qty <= 0) { Toast.show('Please enter a valid quantity.', 'warn'); return; }
 
-        var rList = DB.getAll('resources') || [];
+        var rList = DB.getMyResources() || [];
         var res = rList.find(function(r) { return r.id === resId; });
         if (!res) { Toast.show('Resource not found.', 'warn'); return; }
         if (qty > res.quantity) { Toast.show('Not enough availability. Only ' + res.quantity + ' left.', 'warn'); return; }
@@ -985,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Refresh options dynamically when opened
     var resSelect = document.getElementById('_alloc_resId');
-    var freshRes = DB.getAll('resources') || [];
+    var freshRes = DB.getMyResources() || [];
     var opts = '<option value="" disabled selected>Select a resource</option>';
     freshRes.forEach(function(r) {
       if (r.quantity > 0) {
@@ -1043,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!staffId) { Toast.show('Please select a staff member.', 'warn'); return; }
         if (!taskDesc) { Toast.show('Please enter a task description.', 'warn'); return; }
 
-        var sList = DB.getAll('staff') || [];
+        var sList = DB.getMyStaff() || [];
         var staff = sList.find(function(s) { return s.id === staffId; });
         if (!staff) return;
 
@@ -1083,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Identify free staff — rebuild dropdown every time the modal opens
     var staffSelect = document.getElementById('_alloc_staffId');
-    var allStaff = DB.getAll('staff') || [];
+    var allStaff = DB.getMyStaff() || [];
     var allAssignments = DB.getAll('staffAssignments') || [];
     
     // "Free" staff = status 'available' and NO pending/accepted assignments across ANY event

@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!wrap) return;
     wrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
     const isRes  = wrapId === 'resTagWrap';
-    const dbItems = isRes ? DB.getAll('resources') : DB.getAll('staff');
+    const dbItems = isRes ? DB.getMyResources() : DB.getMyStaff();
     items.forEach(item => {
       const match = isRes
         ? dbItems.find(r => r.name === item || r.id === item)
@@ -136,11 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Button-grid Picker ─────────────── */
 
   function getAvailableResources() {
-    return (DB.getAll('resources') || []).filter(r => r.available === true);
+    return (DB.getMyResources() || []).filter(r => r.available === true);
   }
 
   function getAvailableStaff() {
-    return (DB.getAll('staff') || []).filter(s => s.status === 'available');
+    return (DB.getMyStaff() || []).filter(s => s.status === 'available');
   }
 
   function getSelectedIds(wrapId) {
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const query   = (document.getElementById('pkgSearch')?.value || '').trim().toLowerCase();
     const activeCat = document.querySelector('.pp-tab.active')?.dataset?.cat || 'all';
-    const packages  = DB.getAll('packages');
+    const packages  = DB.getMyPackages();
 
     const filtered = packages.filter(p => {
       const matchCat = activeCat === 'all' || p.category === activeCat;

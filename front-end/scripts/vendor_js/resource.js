@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Render table ───────────────────── */
   function render() {
-    const resources = DB.getAll('resources');
+    const resources = DB.getMyResources();
     const tbody = document.querySelector('.mr-table tbody');
     if (!tbody) return;
 
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Populate event dropdown
     const evSelect = document.getElementById('allocEventSelect');
-    const approvedEvents = DB.getAll('events').filter(e => e.status === 'confirmed' || e.status === 'approved');
+    const approvedEvents = DB.getMyEvents().filter(e => e.status === 'confirmed' || e.status === 'approved');
 
     evSelect.innerHTML = `<option value="">Choose an event…</option>`;
     if (approvedEvents.length) {

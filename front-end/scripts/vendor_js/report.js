@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Populate related-event dropdown from DB ── */
   function populateEvents() {
     if (eventEl) {
-      const events = window.CoordHub ? window.CoordHub.getEventsForUser() : DB.getAll('events').filter(e => e.status === 'live');
+      const events = window.CoordHub ? window.CoordHub.getEventsForUser() : DB.getMyEvents().filter(e => e.status === 'live' || e.status === 'confirmed');
       eventEl.innerHTML = `<option value="" disabled selected>Select related event *</option>`;
       events.forEach(ev => {
         const opt = document.createElement('option');

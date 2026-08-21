@@ -610,6 +610,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const session = typeof DB !== 'undefined' ? DB.getSession() : {};
 
+        let targetVendor = 'Elite Events Co.';
+        let targetVendorId = 'V001';
+        if (reqResources.length > 0) {
+            const firstRes = Object.values(selectedResources)[0];
+            if (firstRes && (firstRes.vendor || firstRes.vendorId)) {
+                targetVendor = firstRes.vendor || targetVendor;
+                targetVendorId = firstRes.vendorId || targetVendorId;
+            }
+        }
+
         const newEvent = {
             id:         generateId(),
             name,
@@ -621,7 +631,11 @@ document.addEventListener('DOMContentLoaded', () => {
             status:     'pending',
             notes,
             createdBy:  'client',
-            client:     session.user || 'Client',
+            client:     session.user || session.name || 'Client',
+            clientId:   session.id || session.userId || '',
+            clientEmail: session.email || '',
+            vendor:     targetVendor,
+            vendorId:   targetVendorId,
             budgetRange: budget,
             requestedResources: reqResources.length > 0 ? reqResources : undefined,
             requestedStaff: reqStaff.length > 0 ? reqStaff : undefined,

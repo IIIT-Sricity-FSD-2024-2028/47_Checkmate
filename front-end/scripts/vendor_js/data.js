@@ -98,6 +98,270 @@ window.DB = (() => {
     });
   }
 
+  /* ── Multi-Tenant Context Resolution ─── */
+
+  function getTenantContext() {
+    let session = null;
+    try {
+      session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+    } catch {}
+
+    const user = session && session.user ? session.user : {};
+    const role = (session && session.role ? session.role : (user.role || 'Vendor')).toLowerCase();
+    const userId = user.id || user.userId || '';
+    const userName = user.name || user.user || '';
+    const userEmail = (user.email || '').toLowerCase();
+
+    // Resolve Vendor Identity
+    let vendorId = user.vendorId || '';
+    let vendorName = user.vendorName || user.businessName || userName || 'Vendor';
+    let businessName = user.businessName || user.vendorName || userName;
+
+    if (role === 'vendor') {
+      const allVendors = getAll('vendors');
+      const matched = allVendors.find(v => 
+        (userId && v.userId === userId) ||
+        (user.vendorId && v.id === user.vendorId) ||
+        (v.name && v.name.toLowerCase() === userName.toLowerCase()) ||
+        (v.businessName && v.businessName.toLowerCase() === userName.toLowerCase()) ||
+        (userEmail && userEmail.includes('eliteevents') && v.id === 'V001')
+      );
+      if (matched) {
+        vendorId = matched.id;
+        vendorName = matched.name || matched.businessName || vendorName;
+        businessName = matched.businessName || matched.name || businessName;
+      } else if (!vendorId) {
+        vendorId = userId ? `V_${userId}` : 'V_CURRENT';
+      }
+    }
+
+    // Resolve Staff Identity
+    let staffId = user.staffId || '';
+    if (role === 'staff') {
+      const allStaff = getAll('staff');
+      const matched = allStaff.find(s => 
+        (userId && s.userId === userId) ||
+        (userEmail && s.email && s.email.toLowerCase() === userEmail) ||
+        (userName && s.name && s.name.toLowerCase() === userName.toLowerCase())
+      );
+      if (matched) staffId = matched.id;
+    }
+
+    return {
+      role,
+      userId,
+      userName,
+      userEmail,
+      vendorId,
+      vendorName,
+      businessName,
+      staffId,
+      isAdmin: role === 'admin' || role === 'superuser',
+      isVendor: role === 'vendor',
+      isClient: role === 'client',
+      isStaff: role === 'staff',
+    };
+  }
+
+  /* ── Scoped Data Retrieval Methods ────── */
+
+  function getMyEvents() {
+    const ctx = getTenantContext();
+    const all = getAll('events');
+
+    if (ctx.isAdmin) return all;
+
+    if (ctx.isVendor) {
+      return all.filter(ev => {
+        const evVId = (ev.vendorId || '').toLowerCase();
+        const evVName = (ev.vendor || '').toLowerCase();
+        const evVEmail = (ev.vendorEmail || '').toLowerCase();
+        const ctxVId = (ctx.vendorId || '').toLowerCase();
+        const ctxVName = (ctx.vendorName || '').toLowerCase();
+        const ctxBName = (ctx.businessName || '').toLowerCase();
+        const ctxUName = (ctx.userName || '').toLowerCase();
+        const ctxUEmail = (ctx.userEmail || '').toLowerCase();
+
+        return (
+          (ctxVId && evVId === ctxVId) ||
+          (ctxVName && evVName === ctxVName) ||
+          (ctxBName && evVName === ctxBName) ||
+          (ctxUName && evVName === ctxUName) ||
+          (ctxUEmail && evVEmail === ctxUEmail) ||
+          (ev.createdBy === ctx.userEmail || ev.createdBy === ctx.userId)
+        );
+      });
+    }
+
+    if (ctx.isClient) {
+      return all.filter(ev => {
+        const evCId = (ev.clientId || '').toLowerCase();
+        const evCEmail = (ev.clientEmail || '').toLowerCase();
+        const evCName = (ev.client || '').toLowerCase();
+        const ctxUId = (ctx.userId || '').toLowerCase();
+        const ctxUEmail = (ctx.userEmail || '').toLowerCase();
+        const ctxUName = (ctx.userName || '').toLowerCase();
+
+        return (
+          (ctxUId && evCId === ctxUId) ||
+          (ctxUEmail && evCEmail === ctxUEmail) ||
+          (ctxUName && (evCName === ctxUName || evCName.includes(ctxUName) || ctxUName.includes(evCName))) ||
+          (ev.createdBy === ctx.userEmail || ev.createdBy === ctx.userId)
+        );
+      });
+    }
+
+    if (ctx.isStaff) {
+      const allStaff = getAll('staff');
+      const staffRec = allStaff.find(s => s.id === ctx.staffId || (s.email && s.email.toLowerCase() === ctx.userEmail));
+      const assignedEvIds = (staffRec && Array.isArray(staffRec.assignedEvents)) ? staffRec.assignedEvents : [];
+      const assignments = getAll('staffAssignments') || [];
+      const myAssignedEvIds = assignments
+        .filter(a => a.staffId === ctx.staffId || (a.staffName && a.staffName.toLowerCase() === ctx.userName.toLowerCase()))
+        .map(a => a.eventId);
+
+      const allMyIds = new Set([...assignedEvIds, ...myAssignedEvIds]);
+      return all.filter(ev => allMyIds.has(ev.id));
+    }
+
+    return all;
+  }
+
+  function getMyResources() {
+    const ctx = getTenantContext();
+    const all = getAll('resources');
+
+    if (ctx.isAdmin) return all;
+
+    if (ctx.isVendor) {
+      return all.filter(r => {
+        const rVId = (r.vendorId || '').toLowerCase();
+        const rVName = (r.vendor || '').toLowerCase();
+        const ctxVId = (ctx.vendorId || '').toLowerCase();
+        const ctxVName = (ctx.vendorName || '').toLowerCase();
+        const ctxBName = (ctx.businessName || '').toLowerCase();
+        const ctxUName = (ctx.userName || '').toLowerCase();
+
+        return (
+          (ctxVId && rVId === ctxVId) ||
+          (ctxVName && rVName === ctxVName) ||
+          (ctxBName && rVName === ctxBName) ||
+          (ctxUName && rVName === ctxUName)
+        );
+      });
+    }
+
+    return all;
+  }
+
+  function getMyStaff() {
+    const ctx = getTenantContext();
+    const all = getAll('staff');
+
+    if (ctx.isAdmin) return all;
+
+    if (ctx.isVendor) {
+      return all.filter(s => {
+        const sVId = (s.vendorId || '').toLowerCase();
+        const sVName = (s.vendor || '').toLowerCase();
+        const ctxVId = (ctx.vendorId || '').toLowerCase();
+        const ctxVName = (ctx.vendorName || '').toLowerCase();
+        const ctxBName = (ctx.businessName || '').toLowerCase();
+        const ctxUName = (ctx.userName || '').toLowerCase();
+
+        return (
+          (ctxVId && sVId === ctxVId) ||
+          (ctxVName && sVName === ctxVName) ||
+          (ctxBName && sVName === ctxBName) ||
+          (ctxUName && sVName === ctxUName)
+        );
+      });
+    }
+
+    if (ctx.isStaff) {
+      return all.filter(s => s.id === ctx.staffId || (s.email && s.email.toLowerCase() === ctx.userEmail));
+    }
+
+    return all;
+  }
+
+  function getMyPackages() {
+    const ctx = getTenantContext();
+    const all = getAll('packages');
+
+    if (ctx.isAdmin) return all;
+
+    if (ctx.isVendor) {
+      return all.filter(p => {
+        const pVId = (p.vendorId || '').toLowerCase();
+        const pVName = (p.vendorName || p.vendor || '').toLowerCase();
+        const ctxVId = (ctx.vendorId || '').toLowerCase();
+        const ctxVName = (ctx.vendorName || '').toLowerCase();
+        const ctxBName = (ctx.businessName || '').toLowerCase();
+        const ctxUName = (ctx.userName || '').toLowerCase();
+
+        return (
+          (ctxVId && pVId === ctxVId) ||
+          (ctxVName && pVName === ctxVName) ||
+          (ctxBName && pVName === ctxBName) ||
+          (ctxUName && pVName === ctxUName) ||
+          (p.createdBy === ctx.userEmail || p.createdBy === ctx.userId)
+        );
+      });
+    }
+
+    return all;
+  }
+
+  function getMarketplacePackages() {
+    const all = getAll('packages');
+    return all.filter(p => !p.status || p.status === 'approved' || p.status === 'Active');
+  }
+
+  function getMyIssues() {
+    const ctx = getTenantContext();
+    const all = getAll('issues');
+
+    if (ctx.isAdmin) return all;
+
+    const myEventIds = new Set(getMyEvents().map(e => e.id));
+    return all.filter(iss => 
+      (iss.eventId && myEventIds.has(iss.eventId)) ||
+      (iss.reporter && iss.reporter.toLowerCase() === ctx.userName.toLowerCase()) ||
+      (iss.email && iss.email.toLowerCase() === ctx.userEmail)
+    );
+  }
+
+  function getMyBookings() {
+    const ctx = getTenantContext();
+    const all = getAll('bookings');
+
+    if (ctx.isAdmin) return all;
+
+    if (ctx.isVendor) {
+      return all.filter(b => {
+        const bVendor = (b.vendor || '').toLowerCase();
+        return (
+          bVendor === ctx.vendorName.toLowerCase() ||
+          bVendor === ctx.businessName.toLowerCase() ||
+          bVendor === ctx.userName.toLowerCase()
+        );
+      });
+    }
+
+    if (ctx.isClient) {
+      return all.filter(b => {
+        const bClient = (b.client || '').toLowerCase();
+        return (
+          bClient === ctx.userName.toLowerCase() ||
+          (b.clientId && b.clientId === ctx.userId)
+        );
+      });
+    }
+
+    return all;
+  }
+
   /* ── Public API ──────────────────────── */
 
   function init() {
@@ -145,9 +409,32 @@ window.DB = (() => {
   }
 
   function add(name, item) {
+    const ctx = getTenantContext();
+    const itemToSave = { ...item };
+
+    // Auto-attach tenant context if creating entities
+    if (name === 'resources' || name === 'packages' || name === 'staff') {
+      if (ctx.isVendor) {
+        if (!itemToSave.vendor && !itemToSave.vendorId) {
+          itemToSave.vendor = ctx.vendorName || ctx.businessName || ctx.userName;
+          itemToSave.vendorId = ctx.vendorId;
+          itemToSave.createdBy = ctx.userEmail || ctx.userId;
+        }
+      }
+    } else if (name === 'events') {
+      if (ctx.isClient) {
+        if (!itemToSave.clientId && !itemToSave.client) {
+          itemToSave.client = ctx.userName;
+          itemToSave.clientId = ctx.userId;
+          itemToSave.clientEmail = ctx.userEmail;
+          itemToSave.createdBy = 'client';
+        }
+      }
+    }
+
     const endpoint = COLLECTION_ENDPOINTS[name];
     if (endpoint) {
-      const result = xhr('POST', endpoint, item);
+      const result = xhr('POST', endpoint, itemToSave);
       if (result) {
         // Update cache
         if (!Array.isArray(_cache[name])) _cache[name] = [];
@@ -157,11 +444,11 @@ window.DB = (() => {
     }
     // Fallback: state key array or local-only
     if (!Array.isArray(_cache[name])) _cache[name] = [];
-    _cache[name].push(item);
+    _cache[name].push(itemToSave);
     if (STATE_KEYS.has(name)) {
       xhr('PUT', `state/${name}`, { value: _cache[name] });
     }
-    return item;
+    return itemToSave;
   }
 
   function update(name, id, patch) {
@@ -252,8 +539,16 @@ window.DB = (() => {
     setSession,
     reset,
     init,
+    getTenantContext,
+    getMyEvents,
+    getMyResources,
+    getMyStaff,
+    getMyPackages,
+    getMarketplacePackages,
+    getMyIssues,
+    getMyBookings,
     // Expose _cache for debugging
     get _cache() { return _cache; },
   };
 
-})();
+})();

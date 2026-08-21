@@ -13,7 +13,11 @@ export class CreateEventDto {
   @ApiPropertyOptional({ example: 200 }) @IsOptional() @IsNumber() @Min(1) guests?: number;
   @ApiPropertyOptional({ example: 'pending' }) @IsOptional() @IsString() status?: string;
   @ApiPropertyOptional({ example: 'Acme Inc.' }) @IsOptional() @IsString() client?: string;
+  @ApiPropertyOptional({ example: 'U004' }) @IsOptional() @IsString() clientId?: string;
+  @ApiPropertyOptional({ example: 'client@example.com' }) @IsOptional() @IsString() clientEmail?: string;
   @ApiPropertyOptional({ example: 'Elite Events Co.' }) @IsOptional() @IsString() vendor?: string;
+  @ApiPropertyOptional({ example: 'V001' }) @IsOptional() @IsString() vendorId?: string;
+  @ApiPropertyOptional({ example: 'vendor@example.com' }) @IsOptional() @IsString() vendorEmail?: string;
   @ApiPropertyOptional({ example: 'client' }) @IsOptional() @IsString() createdBy?: string;
   @ApiPropertyOptional({ example: 'P004' }) @IsOptional() @IsString() packageId?: string;
   @ApiPropertyOptional({ example: 12000 }) @IsOptional() @IsNumber() @Min(0) budget?: number;

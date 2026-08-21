@@ -233,6 +233,20 @@ document.addEventListener('DOMContentLoaded', () => {
         showError('Business Name is required.');
         return;
       }
+
+      // Capture actual file names from file inputs
+      const fileInputs = document.querySelectorAll('#signup-form-4 input[type="file"]');
+      const documents = [];
+      const docTypes = ['license', 'tax_id'];
+      const docLabels = ['Business License', 'Tax ID / GST'];
+      fileInputs.forEach((input, idx) => {
+        if (input.files && input.files.length > 0) {
+          documents.push({ name: input.files[0].name, type: docTypes[idx] || 'document' });
+        } else {
+          // Even if no file chosen, record the expected document type
+          documents.push({ name: docLabels[idx] || 'Document', type: docTypes[idx] || 'document' });
+        }
+      });
       
       const submitBtn = e.currentTarget;
       submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Submitting...</span>';
@@ -242,12 +256,11 @@ document.addEventListener('DOMContentLoaded', () => {
           businessName: businessName,
           email: data.email,
           phone: data.phone || '',
-          category: 'General', // Fallback since category was removed
-          documents: [], // Handle document upload UI as needed, mocking for now
-          passwordHash: data.password // Passing password temporarily for when account is approved
+          category: 'General',
+          documents: documents,
+          passwordHash: data.password // Raw password; will be hashed on approval by backend
         });
         localStorage.removeItem(SIGNUP_KEY);
-        // Alert user and redirect to landing page
         alert('Application submitted successfully! Please wait for admin approval.');
         document.querySelector('.container').classList.add('page-exit');
         setTimeout(() => { window.location.href = '../LandingPage/index.html'; }, 450);

@@ -5,6 +5,11 @@ export class StatusDto {
   @ApiProperty({ example: 'approved' })
   @IsString()
   status: string;
+
+  @ApiPropertyOptional({ example: 'Approval remarks or rejection reason' })
+  @IsOptional()
+  @IsString()
+  note?: string;
 }
 
 export class DecisionDto {

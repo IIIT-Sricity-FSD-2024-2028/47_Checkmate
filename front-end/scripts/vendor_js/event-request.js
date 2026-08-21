@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function hasStaff(evId) {
-    return DB.getAll('staff').some(s =>
+    return DB.getMyStaff().some(s =>
       Array.isArray(s.assignedEvents) && s.assignedEvents.includes(evId)
     );
   }
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Conflict detection ───────────── */
   function detectConflicts(ev) {
     const conflicts = [];
-    const allRes = DB.getAll('resources') || [];
-    const allStaff = DB.getAll('staff') || [];
-    const liveEvents = DB.getAll('events').filter(e => e.status === 'live');
+    const allRes = DB.getMyResources() || [];
+    const allStaff = DB.getMyStaff() || [];
+    const liveEvents = DB.getMyEvents().filter(e => e.status === 'live');
     (ev.requestedResources || []).forEach(r => {
       const db = allRes.find(x => x.id === r.resourceId);
       if (!db || r.quantity > db.quantity)
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Get filtered list ──────────────── */
   function getFiltered() {
-    return DB.getAll('events').filter(ev => {
+    return DB.getMyEvents().filter(ev => {
       const searchMatch = !searchQuery ||
         ev.name.toLowerCase().includes(searchQuery) ||
         ev.id.toLowerCase().includes(searchQuery)   ||
