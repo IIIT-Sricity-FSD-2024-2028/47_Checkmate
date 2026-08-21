@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const actionBar=document.querySelector('.action-bar');
     const hasReqRes = (ev && (ev.requestedResources||[]).length > 0);
     const hasReqStaff = (ev && (ev.requestedStaff||[]).length > 0);
-    const alreadyDone = ev && (ev.status==='confirmed'||ev.status==='rejected'||ev.status==='live'||ev.status==='completed');
+    const alreadyDone = ev && (ev.status==='confirmed'||ev.status==='cancelled'||ev.status==='live'||ev.status==='completed');
     if(detectedConflicts.length>0){
       if(box){
         box.style.display='block';
@@ -384,18 +384,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* REJECT */
+  /* CANCEL */
   function doReject(){
     if(!ev)return;
-    if(ev.status==='rejected'){Toast.show('Already rejected.','info');return;}
-    const summary=detectedConflicts.length?detectedConflicts.map(c=>`${c.type}: ${c.desc}`).join('; '):'Rejected by vendor';
-    const msg=detectedConflicts.length?`"${ev.name}" has ${detectedConflicts.length} conflict(s). Reject and notify client?`:`"${ev.name}" will be rejected.`;
-    Confirm.ask({title:'Reject Event?',msg,okLabel:'Reject',okColor:'#b91c1c'}).then(ok=>{
+    if(ev.status==='cancelled'){Toast.show('Already cancelled.','info');return;}
+    const summary=detectedConflicts.length?detectedConflicts.map(c=>`${c.type}: ${c.desc}`).join('; '):'Cancelled by vendor';
+    const msg=detectedConflicts.length?`"${ev.name}" has ${detectedConflicts.length} conflict(s). Reject and notify client?`:`"${ev.name}" will be cancelled.`;
+    Confirm.ask({title:detectedConflicts.length?'Reject Due to Conflict?':'Reject Event Request?',msg:msg,okLabel:'Reject',okColor:'#b91c1c'}).then(ok=>{
       if(!ok)return;
-      DB.update('events',ev.id,{status:'rejected',rejectionReason:summary,rejectedAt:new Date().toISOString(),conflicts:detectedConflicts});
-      Toast.show(`"${ev.name}" rejected. Client notified.`,'error');
+      DB.update('events',ev.id,{status:'cancelled',cancellationReason:summary,cancelledAt:new Date().toISOString(),conflicts:detectedConflicts});
+      Toast.show(`"${ev.name}" cancelled. Client notified.`,'error');
       const badge=document.querySelector('.ev-status-badge');
-      if(badge){badge.textContent='Rejected';badge.style.background='rgba(239,68,68,0.15)';badge.style.color='var(--red)';badge.style.border='1px solid rgba(239,68,68,0.3)';}
+      if(badge){badge.textContent='Cancelled';badge.style.background='rgba(239,68,68,0.15)';badge.style.color='var(--red)';badge.style.border='1px solid rgba(239,68,68,0.3)';}
       setTimeout(()=>window.location.href='event-request.html',1400);
     });
   }
@@ -440,8 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const subP=document.querySelector('.ev-header__left p');if(subP)subP.textContent=`Event ID: ${ev.id} · ${ev.type}`;
     const badge=document.querySelector('.ev-status-badge');
     if(badge){
-      const labels={pending:'Under Review',confirmed:'Approved',rejected:'Rejected',live:'Live',completed:'Completed'};
-      const colors={pending:{bg:'rgba(234,179,8,0.15)',color:'var(--yellow)',border:'rgba(234,179,8,0.3)'},confirmed:{bg:'rgba(34,197,94,0.15)',color:'var(--green)',border:'rgba(34,197,94,0.3)'},rejected:{bg:'rgba(239,68,68,0.15)',color:'var(--red)',border:'rgba(239,68,68,0.3)'},live:{bg:'rgba(59,130,246,0.15)',color:'var(--blue)',border:'rgba(59,130,246,0.3)'},completed:{bg:'rgba(107,93,126,0.15)',color:'var(--text-muted)',border:'rgba(107,93,126,0.3)'}};
+      const labels={pending:'Under Review',confirmed:'Approved',cancelled:'Cancelled',live:'Live',completed:'Completed'};
+      const colors={pending:{bg:'rgba(234,179,8,0.15)',color:'var(--yellow)',border:'rgba(234,179,8,0.3)'},confirmed:{bg:'rgba(34,197,94,0.15)',color:'var(--green)',border:'rgba(34,197,94,0.3)'},cancelled:{bg:'rgba(239,68,68,0.15)',color:'var(--red)',border:'rgba(239,68,68,0.3)'},live:{bg:'rgba(59,130,246,0.15)',color:'var(--blue)',border:'rgba(59,130,246,0.3)'},completed:{bg:'rgba(107,93,126,0.15)',color:'var(--text-muted)',border:'rgba(107,93,126,0.3)'}};
       const c=colors[ev.status]||colors.pending;
       badge.textContent=labels[ev.status]||'Under Review';badge.style.background=c.bg;badge.style.color=c.color;badge.style.border=`1px solid ${c.border}`;
     }

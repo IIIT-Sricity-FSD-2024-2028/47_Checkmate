@@ -201,7 +201,7 @@ function statusBadge(status) {
   if (status === 'completed') {
     return `<span class="status-badge confirmed" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.25);">Completed</span>`;
   }
-  const map = { pending:'pending', confirmed:'confirmed', approved:'confirmed', rejected:'rejected' };
+  const map = { pending:'pending', confirmed:'confirmed', approved:'confirmed', cancelled:'rejected' };
   const cls = map[status] || 'pending';
   return `<span class="status-badge ${cls}">${status}</span>`;
 }

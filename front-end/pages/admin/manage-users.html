@@ -83,14 +83,14 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
                     <div class="table-header-title" style="margin-bottom: 0;">User Directory</div>
                     <div style="display: flex; gap: 12px; align-items: center;">
-                        <select id="userRoleFilter" style="padding: 10px 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
+                        <select id="userRoleFilter" style="padding: 8px 32px 8px 12px; background: var(--bg-hover) url(&quot;data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e&quot;) no-repeat right 10px center / 14px; appearance: none; -webkit-appearance: none; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
                             <option value="all">All Roles</option>
                             <option value="Client">Client</option>
                             <option value="Vendor">Vendor</option>
                             <option value="Staff">Staff</option>
                             <option value="Admin">Admin</option>
                         </select>
-                        <select id="userStatusFilter" style="padding: 10px 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
+                        <select id="userStatusFilter" style="padding: 8px 32px 8px 12px; background: var(--bg-hover) url(&quot;data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e&quot;) no-repeat right 10px center / 14px; appearance: none; -webkit-appearance: none; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; cursor: pointer;">
                             <option value="all">All Statuses</option>
                             <option value="active">Active</option>
                             <option value="pending">Pending</option>
@@ -108,9 +108,9 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th style="text-align: right;">Actions</th>
+                            <th style="text-align: center;">Role</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="userTableBody">
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Real-time User Statistics grid -->
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="card" style="padding: 16px;">
                 <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Active Clients</h4>
                 <div id="statActiveClients" style="font-size: 24px; font-weight: 700; color: #00e676;">0</div>

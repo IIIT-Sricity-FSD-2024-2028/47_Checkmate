@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             vendorTbody.innerHTML = '';
             currentSlice.forEach(vendor => {
                 let statusBadge = `<span class="status-badge pending">pending</span>`;
-                if(vendor.status === 'approved') statusBadge = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">approved</span>`;
-                if(vendor.status === 'rejected') statusBadge = `<span class="status-badge" style="background: rgba(255, 77, 77, 0.15); color: #ff4d4d; font-weight: 600;">rejected</span>`;
+                if(vendor.status === 'approved') statusBadge = `<span class="status-badge approved">approved</span>`;
+                if(vendor.status === 'rejected') statusBadge = `<span class="status-badge rejected">rejected</span>`;
 
                 // Show a doc count badge for real submissions
                 const docCount = vendor.documents?.length || 0;
@@ -82,8 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="business-name-col">${vendor.businessName}</td>
                     <td>${vendor.email}</td>
                     <td>${vendor.phone}</td>
-                    <td>${docBadge}</td>
-                    <td class="actions-cell">${statusBadge}&nbsp;${actionBtn}</td>
+                    <td style="text-align: center;">${docBadge}</td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;">${actionBtn}</td>
                 `;
                 vendorTbody.appendChild(tr);
             });
@@ -329,14 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
             userTbody.innerHTML = '';
             currentObj.forEach(u => {
                 let badge = `<span class="status-badge pending">Pending</span>`;
-                if(u.status === 'active') badge = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Active</span>`;
-                if(u.status === 'inactive') badge = `<span class="status-badge" style="background: rgba(255, 77, 77, 0.15); color: #ff4d4d; font-weight: 600;">Inactive</span>`;
+                if(u.status === 'active') badge = `<span class="status-badge approved">Active</span>`;
+                if(u.status === 'inactive') badge = `<span class="status-badge rejected">Inactive</span>`;
 
                 let actionHtml = `
                     <button class="action-btn edit-user-btn" data-uid="${u.id}" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);"><i data-lucide="edit-3"></i> Edit</button>
                     ${u.status !== 'inactive' 
                         ? `<button class="action-btn reject-btn deactivate-user-btn" data-uid="${u.id}"><i data-lucide="power-off"></i> Disable</button>` 
-                        : `<button class="action-btn" style="opacity:0.5; pointer-events:none; border: 1px solid var(--border); color: var(--text-muted);"><i data-lucide="power-off"></i> Disabled</button>`}
+                        : `<button class="action-btn approve-btn activate-user-btn" data-uid="${u.id}"><i data-lucide="power"></i> Enable</button>`}
                 `;
 
                 const tr = document.createElement('tr');
@@ -344,9 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${u.id}</td>
                     <td class="vendor-name-col">${u.name}</td>
                     <td>${u.email}</td>
-                    <td>${u.role}</td>
-                    <td>${badge}</td>
-                    <td class="actions-cell" style="justify-content: flex-end;">${actionHtml}</td>
+                    <td style="text-align: center;">${u.role}</td>
+                    <td style="text-align: center;">${badge}</td>
+                    <td class="actions-cell" style="justify-content: center;">${actionHtml}</td>
                 `;
                 userTbody.appendChild(tr);
             });
@@ -387,6 +388,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (idx > -1) {
                     const updated = api('PATCH', `users/${uid}`, { status: 'inactive' });
                     userData[idx] = { ...(updated || userData[idx]), status: 'inactive' };
+                    updateUserStats();
+                    applyUserFilters();
+                }
+            }
+
+            const aBtn = e.target.closest('.activate-user-btn');
+            if (aBtn) {
+                const uid = aBtn.getAttribute('data-uid');
+                const idx = userData.findIndex(u => u.id === uid);
+                if (idx > -1) {
+                    const updated = api('PATCH', `users/${uid}`, { status: 'active' });
+                    userData[idx] = { ...(updated || userData[idx]), status: 'active' };
                     updateUserStats();
                     applyUserFilters();
                 }
@@ -480,15 +493,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const eInfo = document.getElementById('eventPaginationInfo');
 
         const updateEventStats = () => {
-            const counts = {"Pending":0, "Staff Assigned":0, "Resources Allocated":0, "Completed":0, "Approved":0};
+            const counts = {"Pending":0, "Confirmed":0, "Live":0, "Completed":0, "Cancelled":0};
             eventData.forEach(e => { if(counts[e.status] !== undefined) counts[e.status]++; });
             
             const ec = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
             ec('statEvtPending', counts['Pending']);
-            ec('statEvtStaff', counts['Staff Assigned']);
-            ec('statEvtRes', counts['Resources Allocated']);
+            ec('statEvtStaff', counts['Confirmed']);
+            ec('statEvtRes', counts['Live']);
             ec('statEvtCompleted', counts['Completed']);
-            ec('statEvtApproved', counts['Approved']);
+            ec('statEvtApproved', counts['Cancelled']);
         };
 
         const renderEventTable = () => {
@@ -501,14 +514,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             eventTbody.innerHTML = '';
             currentObj.forEach(ev => {
-                let badgeStyle = `background: rgba(255,255,255,0.1); color: #fff; font-weight:500; border: 1px solid var(--border);`;
+                let badgeStyle = `background: rgba(255,255,255,0.05); color: #fff; font-weight:600; border: 1px solid rgba(255,255,255,0.1);`;
                 
-                if(ev.status === 'Pending') badgeStyle = `background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-weight:600;`;
-                if(ev.status === 'Staff Assigned') badgeStyle = `background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight:600;`;
-                if(ev.status === 'Resources Allocated') badgeStyle = `background: rgba(139, 92, 246, 0.15); color: #8b5cf6; font-weight:600;`;
-                if(ev.status === 'Completed') badgeStyle = `background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight:600;`;
-                if(ev.status === 'Approved') badgeStyle = `background: rgba(255, 255, 255, 0.15); color: #fff; font-weight:600;`;
-                if(ev.status === 'Refunded') badgeStyle = `background: rgba(255, 77, 77, 0.15); color: #ff4d4d; font-weight:600;`;
+                if(ev.status === 'Pending') badgeStyle = `background: rgba(234, 179, 8, 0.12); color: var(--yellow); border: 1px solid rgba(234, 179, 8, 0.25); font-weight:600;`;
+                if(ev.status === 'Confirmed' || ev.status === 'Staff Assigned') badgeStyle = `background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.25); font-weight:600;`;
+                if(ev.status === 'Live' || ev.status === 'Resources Allocated') badgeStyle = `background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); font-weight:600;`;
+                if(ev.status === 'Completed') badgeStyle = `background: rgba(34, 197, 94, 0.12); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.25); font-weight:600;`;
+                if(ev.status === 'Approved') badgeStyle = `background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); font-weight:600;`;
+                if(ev.status === 'Refunded' || ev.status === 'Cancelled') badgeStyle = `background: rgba(239, 68, 68, 0.12); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.25); font-weight:600;`;
 
                 const badge = `<span class="status-badge" style="${badgeStyle}">${ev.status}</span>`;
 
@@ -519,8 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         : ev.status === 'Approved'
                         ? `<button class="action-btn refund-event-btn" data-eid="${ev.id}" style="background-color: #ef4444; color: #fff; border: 1px solid #dc2626;"><i data-lucide="refresh-ccw"></i> Refund</button>`
                         : ev.status === 'Refunded'
-                        ? `<button class="action-btn" style="opacity: 0.5; pointer-events: none; border: 1px solid var(--border); color: var(--text-muted);"><i data-lucide="refresh-ccw"></i> Refunded</button>`
-                        : `<button class="action-btn" style="opacity:0.5; pointer-events:none;"><i data-lucide="check-square"></i> Managed</button>`}
+                        ? `<button class="action-btn" style="opacity: 0.8; pointer-events: none; background-color: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3);"><i data-lucide="refresh-ccw"></i> Refunded</button>`
+                        : `<button class="action-btn" style="opacity: 0.8; pointer-events: none; background-color: rgba(34, 197, 94, 0.1); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.3);"><i data-lucide="check-square"></i> Managed</button>`}
                 `;
 
                 const tr = document.createElement('tr');
@@ -529,8 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="vendor-name-col">${ev.name}</td>
                     <td><div style="font-weight: 500;">${ev.clientName}</div><div style="font-size: 11px; color: var(--text-muted);">${ev.clientId}</div></td>
                     <td>${ev.date}</td>
-                    <td>${badge}</td>
-                    <td class="actions-cell">${actionHtml}</td>
+                    <td style="text-align: center;">${badge}</td>
+                    <td class="actions-cell" style="justify-content: center;">${actionHtml}</td>
                 `;
                 eventTbody.appendChild(tr);
             });
@@ -660,13 +673,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 
                 if (status === 'approved') {
-                    badge = `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Approved</span>`;
+                    badge = `<span class="status-badge approved">Approved</span>`;
                     actions = `
                         <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
                         <button class="action-btn reject-btn reject-pkg-btn"><i data-lucide="x"></i> Terminate</button>
                     `;
                 } else if (status === 'rejected') {
-                    badge = `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">Rejected</span>`;
+                    badge = `<span class="status-badge rejected">Rejected</span>`;
                     actions = `
                         <button class="action-btn action-btn-clean review-pkg-btn"><i data-lucide="eye"></i> Review</button>
                         <button class="action-btn approve-btn approve-pkg-btn"><i data-lucide="check"></i> Approve</button>
@@ -746,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.closest('.approve-pkg-btn')) {
                 if(!tr.classList.contains('handled')) {
                     handleDecision('approved', 'approve-pkg-btn', {
-                        statusBadge: `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;">Approved</span>`,
+                        statusBadge: `<span class="status-badge approved">Approved</span>`,
                         actionsHtml: `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="check-circle-2" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Approved</span>`
                     });
                 }
@@ -756,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.closest('.reject-pkg-btn')) {
                 if(!tr.classList.contains('handled')) {
                     handleDecision('rejected', 'reject-pkg-btn', {
-                        statusBadge: `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">Rejected</span>`,
+                        statusBadge: `<span class="status-badge rejected">Rejected</span>`,
                         actionsHtml: `<span style="color: var(--text-muted); font-size: 13px; font-weight: 500;"><i data-lucide="x-circle" style="width:14px; vertical-align:middle; margin-right:4px;"></i>Rejected</span>`
                     });
                 }

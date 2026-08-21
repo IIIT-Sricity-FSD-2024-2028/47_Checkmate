@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLive   = ev.status === 'live';
         const isDone   = ev.status === 'completed';
         const isPending = ev.status === 'pending';
+        const isCancelled = ev.status === 'cancelled';
         const conflicts = isPending ? detectConflicts(ev) : [];
         const hasConflict = conflicts.length > 0;
         let statusHtml = statusBadge(ev.status);
@@ -225,8 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
               ${canStart ? `<button class="er-action-btn" title="Start Event" data-action="start" data-id="${ev.id}" style="color:#22c55e"><i data-lucide="play-circle"></i></button>` : ''}
               ${isLive   ? `<button class="er-action-btn" title="End Event"   data-action="end"   data-id="${ev.id}" style="color:#ef4444"><i data-lucide="stop-circle"></i></button>` : ''}
               ${isDone   ? `<span style="font-size:11px;color:var(--text-muted);padding:4px 6px;">Done</span>` : ''}
-              ${!isLive && !isDone && !hasConflict ? `<button class="er-action-btn approve" title="Approve" data-action="approve" data-id="${ev.id}"><i data-lucide="check-circle"></i></button>` : ''}
-              ${!isLive && !isDone ? `<button class="er-action-btn reject"  title="Reject"  data-action="reject"  data-id="${ev.id}"><i data-lucide="x-circle"></i></button>` : ''}
+              ${!isLive && !isDone && !hasConflict && !isCancelled ? `<button class="er-action-btn approve" title="Approve" data-action="approve" data-id="${ev.id}"><i data-lucide="check-circle"></i></button>` : ''}
+              ${!isLive && !isDone && !isCancelled ? `<button class="er-action-btn reject"  title="Reject"  data-action="reject"  data-id="${ev.id}"><i data-lucide="x-circle"></i></button>` : ''}
               <button class="er-action-btn delete" title="Delete" data-action="delete" data-id="${ev.id}" style="color:var(--text-muted)"><i data-lucide="trash-2"></i></button>
             </div>
           </td>
@@ -323,18 +324,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (action === 'reject') {
-          if (ev.status === 'rejected') { Toast.show('Already rejected.', 'info'); return; }
+          if (ev.status === 'cancelled') { Toast.show('Already cancelled.', 'info'); return; }
           const conflicts = detectConflicts(ev);
           const hasConflict = conflicts.length > 0;
-          const summary = hasConflict ? conflicts.map(c => `${c.type}: ${c.desc}`).join('; ') : 'Rejected by vendor';
+          const summary = hasConflict ? conflicts.map(c => `${c.type}: ${c.desc}`).join('; ') : 'Cancelled by vendor';
           Confirm.ask({
             title: hasConflict ? 'Reject Due to Conflict?' : 'Reject Event Request?',
-            msg: hasConflict ? `"${ev.name}" has ${conflicts.length} conflict(s). Reject and notify client?` : `"${ev.name}" will be marked as rejected.`,
+            msg: hasConflict ? `"${ev.name}" has ${conflicts.length} conflict(s). Reject and notify client?` : `"${ev.name}" will be marked as cancelled.`,
             okLabel:'Reject', okColor:'#b91c1c',
           }).then(ok => {
             if (!ok) return;
-            DB.update('events', id, { status:'rejected', rejectionReason: summary, rejectedAt: new Date().toISOString(), conflicts: hasConflict ? conflicts : undefined });
-            Toast.show(`"${ev.name}" rejected.${hasConflict ? ' Client notified.' : ''}`, 'error');
+            DB.update('events', id, { status:'cancelled', cancellationReason: summary, cancelledAt: new Date().toISOString(), conflicts: hasConflict ? conflicts : undefined });
+            Toast.show(`"${ev.name}" cancelled.${hasConflict ? ' Client notified.' : ''}`, 'error');
             render();
           });
         }
@@ -387,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowId = cb.dataset.id;
         if(rowId) DB.update('events', rowId, { status });
       });
-      Toast.show(`${checked.length} events ${status === 'confirmed' ? 'approved' : 'rejected'}.`, status==='confirmed' ? 'success' : 'error');
+      Toast.show(`${checked.length} events ${status === 'confirmed' ? 'approved' : 'cancelled'}.`, status==='confirmed' ? 'success' : 'error');
       render();
       toggleBatchActions();
     });
@@ -445,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `);
     
     document.getElementById('batchApprove')?.addEventListener('click', () => batchAction('confirmed'));
-    document.getElementById('batchReject')?.addEventListener('click', () => batchAction('rejected'));
+    document.getElementById('batchReject')?.addEventListener('click', () => batchAction('cancelled'));
   }
 
   initTopbarSearch(q => { searchQuery = q; currentPage = 1; render(); });
