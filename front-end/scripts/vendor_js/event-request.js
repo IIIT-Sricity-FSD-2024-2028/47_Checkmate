@@ -21,24 +21,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const SAFETY_MARGIN = 20;       // breathing room at bottom
 
     const vh = window.innerHeight;
-    const topbar   = document.querySelector('.topbar');
-    const toolbar  = document.querySelector('.er-toolbar');
-    const thead    = document.querySelector('.er-table thead');
-    const footer   = document.querySelector('.er-footer');
-    const content  = document.querySelector('.content');
+    const topbar = document.querySelector('.topbar');
+    const toolbar = document.querySelector('.er-toolbar');
+    const thead = document.querySelector('.er-table thead');
+    const footer = document.querySelector('.er-footer');
+    const content = document.querySelector('.content');
 
-    const topbarH  = topbar  ? topbar.offsetHeight  : 60;
+    const topbarH = topbar ? topbar.offsetHeight : 60;
     const toolbarH = toolbar ? toolbar.offsetHeight : 56;
-    const theadH   = thead   ? thead.offsetHeight   : 44;
-    const footerH  = footer  ? footer.offsetHeight  : 50;
+    const theadH = thead ? thead.offsetHeight : 44;
+    const footerH = footer ? footer.offsetHeight : 50;
     const contentPad = content
       ? parseFloat(getComputedStyle(content).paddingTop) +
-        parseFloat(getComputedStyle(content).paddingBottom)
+      parseFloat(getComputedStyle(content).paddingBottom)
       : 48;
     const gapSpace = 40; // content gap between toolbar, table, footer
 
     const usedHeight = topbarH + toolbarH + theadH + footerH + contentPad + gapSpace + SAFETY_MARGIN;
-    const available  = vh - usedHeight;
+    const available = vh - usedHeight;
     const rows = Math.floor(available / ROW_HEIGHT);
     return Math.max(3, rows);       // always show at least 3 rows
   }
@@ -54,11 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const TYPE_CLASS = {
-    Conference:'badge--conference',
-    Wedding:   'badge--wedding',
+    Conference: 'badge--conference',
+    Wedding: 'badge--wedding',
     Corporate: 'badge--corporate',
-    Birthday:  'badge--birthday',
-    Party:     'badge--birthday',
+    Birthday: 'badge--birthday',
+    Party: 'badge--birthday',
   };
 
   function typeBadge(type) {
@@ -84,30 +84,70 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ── Conflict detection ───────────── */
+  function getResAvailER(resId, targetDate, currentEvId) {
+    const allRes = DB.getAll('resources') || [];
+    const db = allRes.find(x => x.id === resId);
+    if (!db) return 0;
+    const totalStock = db.total || db.quantity || 0;
+    const allocs = DB.get('resourceAllocations') || {};
+    const allEvents = DB.getAll('events') || [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeEvents = allEvents.filter(e => {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEvId) return false;
+      if (!e.date) return false;
+
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+
+      const evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    let allocated = 0;
+    activeEvents.forEach(ev => {
+      const evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(a => {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
+  }
+
   function detectConflicts(ev) {
     const conflicts = [];
     const allRes = DB.getMyResources() || [];
     const allStaff = DB.getMyStaff() || [];
-    const liveEvents = DB.getMyEvents().filter(e => e.status === 'live');
+    const liveEvents = (DB.getMyEvents() || []).filter(e => e.status === 'live');
+    const allocs = DB.get('resourceAllocations') || {};
+    const evAllocs = allocs[ev.id] || [];
+
     (ev.requestedResources || []).forEach(r => {
+      const isAlreadyAllocated = evAllocs.some(a => a.resourceId === r.resourceId);
+      if (isAlreadyAllocated) return;
       const db = allRes.find(x => x.id === r.resourceId);
-      if (!db || r.quantity > db.quantity)
-        conflicts.push({type:'Resource Shortage', desc: db ? `${r.resourceName}: need ${r.quantity}, only ${db.quantity} available` : `${r.resourceName}: not in inventory`, severity:'high'});
+      const avail = getResAvailER(r.resourceId, ev.date, ev.id);
+      if (!db || r.quantity > avail)
+        conflicts.push({ type: 'Resource Shortage', desc: db ? `${r.resourceName}: need ${r.quantity}, only ${avail} available` : `${r.resourceName}: not in inventory`, severity: 'high' });
     });
     (ev.requestedStaff || []).forEach(s => {
       const st = allStaff.find(x => x.id === s.staffId);
-      if (!st) { conflicts.push({type:'Staff Not Found', desc:`${s.staffName} not found`, severity:'high'}); return; }
-      const isBusy = st.status==='busy' || st.avail==='Busy';
-      const isOff = st.status==='off';
-      const isOverloaded = (st.workload||0) >= 100;
+      if (!st) { conflicts.push({ type: 'Staff Not Found', desc: `${s.staffName} not found`, severity: 'high' }); return; }
+      const isBusy = st.status === 'busy' || st.avail === 'Busy';
+      const isOff = st.status === 'off';
+      const isOverloaded = (st.workload || 0) >= 100;
       const assignedTo = Array.isArray(st.assignedEvents) ? st.assignedEvents : [];
       const isAlreadyAssigned = assignedTo.length > 0 && !assignedTo.includes(ev.id);
       const isInLive = liveEvents.some(e => assignedTo.includes(e.id));
-      if (isOff) conflicts.push({type:'Staff Off Duty', desc:`${s.staffName} is off duty`, severity:'high'});
-      else if (isInLive) conflicts.push({type:'Staff In Live Event', desc:`${s.staffName} is in a live event`, severity:'high'});
-      else if (isBusy) conflicts.push({type:'Staff Busy', desc:`${s.staffName} is busy`, severity:'high'});
-      else if (isOverloaded) conflicts.push({type:'Staff Overloaded', desc:`${s.staffName} at ${st.workload}% workload`, severity:'high'});
-      else if (isAlreadyAssigned) conflicts.push({type:'Staff Already Assigned', desc:`${s.staffName} assigned to ${assignedTo.length} other event(s)`, severity:'medium'});
+      if (isOff) conflicts.push({ type: 'Staff Off Duty', desc: `${s.staffName} is off duty`, severity: 'high' });
+      else if (isInLive) conflicts.push({ type: 'Staff In Live Event', desc: `${s.staffName} is in a live event`, severity: 'high' });
+      else if (isBusy) conflicts.push({ type: 'Staff Busy', desc: `${s.staffName} is busy`, severity: 'high' });
+      else if (isOverloaded) conflicts.push({ type: 'Staff Overloaded', desc: `${s.staffName} at ${st.workload}% workload`, severity: 'high' });
+      else if (isAlreadyAssigned) conflicts.push({ type: 'Staff Already Assigned', desc: `${s.staffName} assigned to ${assignedTo.length} other event(s)`, severity: 'medium' });
     });
     return conflicts;
   }
@@ -117,18 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return DB.getMyEvents().filter(ev => {
       const searchMatch = !searchQuery ||
         ev.name.toLowerCase().includes(searchQuery) ||
-        ev.id.toLowerCase().includes(searchQuery)   ||
+        ev.id.toLowerCase().includes(searchQuery) ||
         ev.type.toLowerCase().includes(searchQuery);
-        
+
       const statusMatch = activeFilters.status === 'All' || ev.status === activeFilters.status;
       const typeMatch = activeFilters.type === 'All' || ev.type === activeFilters.type;
-      
+
       let dateMatch = true;
       if (activeFilters.date !== 'All' && ev.date) {
         const evDate = new Date(ev.date + 'T00:00:00');
         const now = new Date();
         const diffDays = (evDate - now) / (1000 * 60 * 60 * 24);
-        
+
         if (activeFilters.date === 'Past') {
           dateMatch = diffDays < 0;
         } else if (activeFilters.date === 'Upcoming7') {
@@ -137,14 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
           dateMatch = diffDays >= 0 && diffDays <= 30;
         }
       }
-      
+
       return searchMatch && statusMatch && typeMatch && dateMatch;
     });
   }
 
   /* ── Render table ───────────────────── */
   function render() {
-    const filtered   = getFiltered();
+    const filtered = getFiltered();
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (currentPage > totalPages) currentPage = totalPages;
 
@@ -157,8 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       tbody.innerHTML = paged.map(ev => {
         const canStart = ev.status === 'confirmed';
-        const isLive   = ev.status === 'live';
-        const isDone   = ev.status === 'completed';
+        const isLive = ev.status === 'live';
+        const isDone = ev.status === 'completed';
         const isPending = ev.status === 'pending';
         const conflicts = isPending ? detectConflicts(ev) : [];
         const hasConflict = conflicts.length > 0;
@@ -178,13 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${ev.time}</td>
           <td>${statusHtml}</td>
           <td>${allocBadge(hasResources(ev.id), 'Allocated')}</td>
-          <td>${allocBadge(hasStaff(ev.id),     'Assigned')}</td>
+          <td>${allocBadge(hasStaff(ev.id), 'Assigned')}</td>
           <td>
             <div class="er-actions">
               <a href="event-review.html?id=${ev.id}" class="er-action-btn view" title="View"><i data-lucide="eye"></i></a>
               ${canStart ? `<button class="er-action-btn" title="Start Event" data-action="start" data-id="${ev.id}" style="color:#22c55e"><i data-lucide="play-circle"></i></button>` : ''}
-              ${isLive   ? `<button class="er-action-btn" title="End Event"   data-action="end"   data-id="${ev.id}" style="color:#ef4444"><i data-lucide="stop-circle"></i></button>` : ''}
-              ${isDone   ? `<span style="font-size:11px;color:var(--text-muted);padding:4px 6px;">Done</span>` : ''}
+              ${isLive ? `<button class="er-action-btn" title="End Event"   data-action="end"   data-id="${ev.id}" style="color:#ef4444"><i data-lucide="stop-circle"></i></button>` : ''}
+              ${isDone ? `<span style="font-size:11px;color:var(--text-muted);padding:4px 6px;">Done</span>` : ''}
               ${!isLive && !isDone && !hasConflict ? `<button class="er-action-btn approve" title="Approve" data-action="approve" data-id="${ev.id}"><i data-lucide="check-circle"></i></button>` : ''}
               ${!isLive && !isDone ? `<button class="er-action-btn reject"  title="Reject"  data-action="reject"  data-id="${ev.id}"><i data-lucide="x-circle"></i></button>` : ''}
               <button class="er-action-btn delete" title="Delete" data-action="delete" data-id="${ev.id}" style="color:var(--text-muted)"><i data-lucide="trash-2"></i></button>
@@ -235,8 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (action === 'approve') {
           if (ev.status === 'confirmed' || ev.status === 'live') { Toast.show('Already approved.', 'info'); return; }
-          DB.update('events', id, { status:'confirmed', approvedAt: new Date().toISOString() });
-          
+          DB.update('events', id, { status: 'confirmed', approvedAt: new Date().toISOString() });
+
           const allMsgs = DB.get('messages') || {};
           if (!allMsgs['vendor-client']) allMsgs['vendor-client'] = [];
           allMsgs['vendor-client'].push({
@@ -244,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sender: 'System',
             self: false,
             text: `Event "${ev.name}" has been officially approved.`,
-            time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             isSystem: true,
             sysClass: 'success'
           });
@@ -290,10 +330,10 @@ document.addEventListener('DOMContentLoaded', () => {
           Confirm.ask({
             title: hasConflict ? 'Reject Due to Conflict?' : 'Reject Event Request?',
             msg: hasConflict ? `"${ev.name}" has ${conflicts.length} conflict(s). Reject and notify client?` : `"${ev.name}" will be marked as rejected.`,
-            okLabel:'Reject', okColor:'#b91c1c',
+            okLabel: 'Reject', okColor: '#b91c1c',
           }).then(ok => {
             if (!ok) return;
-            DB.update('events', id, { status:'rejected', rejectionReason: summary, rejectedAt: new Date().toISOString(), conflicts: hasConflict ? conflicts : undefined });
+            DB.update('events', id, { status: 'rejected', rejectionReason: summary, rejectedAt: new Date().toISOString(), conflicts: hasConflict ? conflicts : undefined });
             Toast.show(`"${ev.name}" rejected.${hasConflict ? ' Client notified.' : ''}`, 'error');
             render();
           });
@@ -301,9 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (action === 'delete') {
           Confirm.ask({
-            title:'Delete Event Request?',
-            msg:`"${ev.name}" will be permanently removed.`,
-            okLabel:'Delete', okColor:'#b91c1c',
+            title: 'Delete Event Request?',
+            msg: `"${ev.name}" will be permanently removed.`,
+            okLabel: 'Delete', okColor: '#b91c1c',
           }).then(ok => {
             if (!ok) return;
             DB.remove('events', id);
@@ -345,9 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!ok) return;
       checked.forEach(cb => {
         const rowId = cb.dataset.id;
-        if(rowId) DB.update('events', rowId, { status });
+        if (rowId) DB.update('events', rowId, { status });
       });
-      Toast.show(`${checked.length} events ${status === 'confirmed' ? 'approved' : 'rejected'}.`, status==='confirmed' ? 'success' : 'error');
+      Toast.show(`${checked.length} events ${status === 'confirmed' ? 'approved' : 'rejected'}.`, status === 'confirmed' ? 'success' : 'error');
       render();
       toggleBatchActions();
     });
@@ -374,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isShowing = erFilterDropdown.style.display === 'block';
       erFilterDropdown.style.display = isShowing ? 'none' : 'block';
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#erFilterWrapper')) {
@@ -386,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeFilters.status = document.getElementById('filterErStatus').value;
       activeFilters.date = document.getElementById('filterErDate').value;
       activeFilters.type = document.getElementById('filterErType').value;
-      
+
       erFilterDropdown.style.display = 'none';
       currentPage = 1;
       render();
@@ -403,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button id="batchReject" style="padding: 8px 12px; border-radius: 4px; border: 1px solid var(--red); background: transparent; color: var(--red); cursor: pointer; font-size: 13px; font-weight:600;">Reject All</button>
       </div>
     `);
-    
+
     document.getElementById('batchApprove')?.addEventListener('click', () => batchAction('confirmed'));
     document.getElementById('batchReject')?.addEventListener('click', () => batchAction('rejected'));
   }

@@ -22,8 +22,7 @@ export class AuthService {
   register(dto: RegisterDto) {
     const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
     if (existingUser) {
-      // Session Integrity Fix: Return existing user profile and data instead of error
-      return this.session(existingUser);
+      throw new BadRequestException('This email is already registered. Please sign in instead.');
     }
 
     const user = this.data.create('users', 'U', {

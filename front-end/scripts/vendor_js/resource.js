@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
   let activeFilters = { category: 'All', condition: 'All', stock: 'All' };
-  let editingId   = null;
+  let editingId = null;
 
   /* ── Inject Add/Edit modal HTML ──────────────── */
   document.body.insertAdjacentHTML('beforeend', `
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   lucide.createIcons();
 
-  const overlay     = document.getElementById('resModalOverlay');
+  const overlay = document.getElementById('resModalOverlay');
   const allocOverlay = document.getElementById('allocModalOverlay');
 
   wireModalClose(overlay, document.getElementById('resModalClose'), document.getElementById('resCancelBtn'));
@@ -189,8 +189,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Category badge ─────────────────── */
   function catBadge(cat) {
-    const map = { Equipment:'equipment', Furniture:'furniture', Decor:'decor' };
+    const map = { Equipment: 'equipment', Furniture: 'furniture', Decor: 'decor' };
     return `<span class="badge--${map[cat] || 'equipment'}">${cat}</span>`;
+  }
+
+  /* ── Effective availability helper ─────── */
+  function getEffectiveAvail(resId, targetDate, currentEvId) {
+    const allRes = DB.getAll('resources') || [];
+    const db = allRes.find(x => x.id === resId);
+    if (!db) return 0;
+    const totalStock = db.total || db.quantity || 0;
+    const allocs = DB.get('resourceAllocations') || {};
+    const allEvents = DB.getAll('events') || [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeEvents = allEvents.filter(e => {
+      if (e.status !== 'live' && e.status !== 'confirmed') return false;
+      if (e.id === currentEvId) return false;
+      if (!e.date) return false;
+
+      if (targetDate) {
+        return e.date === targetDate;
+      }
+
+      const evDate = new Date(e.date + 'T00:00:00');
+      return evDate <= today;
+    });
+
+    let allocated = 0;
+    activeEvents.forEach(ev => {
+      const evAllocs = allocs[ev.id] || [];
+      evAllocs.forEach(a => {
+        if (a.resourceId === resId) allocated += (a.qty || a.quantity || 0);
+      });
+    });
+    return Math.max(0, totalStock - allocated);
   }
 
   /* ── Render table ───────────────────── */
@@ -203,38 +238,40 @@ document.addEventListener('DOMContentLoaded', () => {
       const searchMatch = !searchQuery ||
         r.name.toLowerCase().includes(searchQuery) ||
         r.category.toLowerCase().includes(searchQuery);
-        
+
       const catMatch = activeFilters.category === 'All' || r.category === activeFilters.category;
-      
+
       let conditionMatch = true;
       if (activeFilters.condition !== 'All') {
-        const cond = (r.condition || 'Good'); // Default condition fallback if not set
+        const cond = (r.condition || 'Good');
         conditionMatch = cond === activeFilters.condition;
       }
-      
+
       let stockMatch = true;
       if (activeFilters.stock !== 'All') {
-        const qty = r.quantity || 0;
+        const qty = getEffectiveAvail(r.id, null, null);
         if (activeFilters.stock === 'InStock') stockMatch = qty > 0;
         else if (activeFilters.stock === 'LowStock') stockMatch = qty > 0 && qty <= 10;
         else if (activeFilters.stock === 'OutStock') stockMatch = qty === 0;
       }
-      
+
       return searchMatch && catMatch && conditionMatch && stockMatch;
     });
 
     tbody.innerHTML = filtered.length ? filtered.map(r => {
-      const canAllocate = r.quantity > 0;
+      const effectiveAvail = getEffectiveAvail(r.id, null, null);
+      const canAllocate = effectiveAvail > 0 && r.available !== false;
+      const availLabel = r.available === false ? 'unavailable' : (effectiveAvail > 0 ? 'available' : 'unavailable');
       return `
       <tr data-id="${r.id}">
         <td class="col-name">${r.name}</td>
         <td>${catBadge(r.category)}</td>
-        <td>${r.quantity}</td>
+        <td>${effectiveAvail} / ${r.total || r.quantity}</td>
         <td>$${r.price}/${r.unit || 'day'}</td>
-        <td><span class="avail-badge ${r.available ? 'available' : 'unavailable'}">${r.available ? 'available' : 'unavailable'}</span></td>
+        <td><span class="avail-badge ${availLabel}">${availLabel}</span></td>
         <td>
           <div class="mr-actions">
-            <button class="mr-action-btn allocate" title="${canAllocate ? 'Allocate to Event' : 'Out of stock — quantity is 0'}"
+            <button class="mr-action-btn allocate" title="${canAllocate ? 'Allocate to Event' : 'Out of stock'}"
               data-action="allocate" data-id="${r.id}" ${!canAllocate ? 'style="opacity:0.45;cursor:not-allowed"' : ''}>
               <i data-lucide="send"></i>
             </button>
@@ -244,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       </tr>`;
     }).join('')
-    : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No resources found.</td></tr>`;
+      : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No resources found.</td></tr>`;
 
     const countEl = document.querySelector('.mr-showing');
     if (countEl) countEl.textContent = `Showing ${filtered.length} Resource${filtered.length !== 1 ? 's' : ''}`;
@@ -259,8 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async () => {
         const { action, id } = btn.dataset;
         if (action === 'allocate') allocateResource(id);
-        if (action === 'edit')     editResource(id);
-        if (action === 'delete')   deleteResource(id);
+        if (action === 'edit') editResource(id);
+        if (action === 'delete') deleteResource(id);
       });
     });
   }
@@ -268,26 +305,27 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ══════════════════════════════════════════
      ALLOCATE MODAL — 2-phase flow
   ══════════════════════════════════════════ */
-  let _allocResId  = null;
-  let _allocEvId   = null;
+  let _allocResId = null;
+  let _allocEvId = null;
 
   function allocateResource(id) {
     const r = DB.find('resources', id);
     if (!r) return;
 
-    // Guard: resource out of stock
-    if (r.quantity <= 0) {
+    // Guard: resource out of stock (using effective availability)
+    const globalAvail = getEffectiveAvail(id, null, null);
+    if (globalAvail <= 0 || r.available === false) {
       Toast.show(`"${r.name}" is out of stock and cannot be allocated.`, 'warn');
       return;
     }
 
     _allocResId = id;
-    _allocEvId  = null;
+    _allocEvId = null;
 
-    // Populate resource info bar
-    document.getElementById('allocResName').textContent  = r.name;
-    document.getElementById('allocResMeta').textContent  = `${r.category} · ${r.quantity} unit${r.quantity !== 1 ? 's' : ''} available`;
-    document.getElementById('allocAvailCount').textContent = r.quantity;
+    // Populate resource info bar (show global available across all dates)
+    document.getElementById('allocResName').textContent = r.name;
+    document.getElementById('allocResMeta').textContent = `${r.category} · ${globalAvail} unit${globalAvail !== 1 ? 's' : ''} available`;
+    document.getElementById('allocAvailCount').textContent = globalAvail;
 
     // Populate event dropdown
     const evSelect = document.getElementById('allocEventSelect');
@@ -301,12 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
         opt.textContent = `${ev.name} (${fmtDate(ev.date)})`;
         evSelect.appendChild(opt);
       });
-      document.getElementById('allocNoEventsMsg').style.display  = 'none';
-      document.getElementById('allocEventSelect').style.display  = '';
+      document.getElementById('allocNoEventsMsg').style.display = 'none';
+      document.getElementById('allocEventSelect').style.display = '';
       document.getElementById('allocNextBtn').disabled = false;
     } else {
-      document.getElementById('allocNoEventsMsg').style.display  = 'flex';
-      document.getElementById('allocEventSelect').style.display  = 'none';
+      document.getElementById('allocNoEventsMsg').style.display = 'flex';
+      document.getElementById('allocEventSelect').style.display = 'none';
       document.getElementById('allocNextBtn').disabled = true;
     }
 
@@ -321,11 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Phase switcher ─────────────────── */
   function showPhase(n) {
-    document.getElementById('allocPhase1').style.display       = n === 1 ? 'flex' : 'none';
+    document.getElementById('allocPhase1').style.display = n === 1 ? 'flex' : 'none';
     document.getElementById('allocPhase1Footer').style.display = n === 1 ? 'flex' : 'none';
-    document.getElementById('allocPhase2').style.display       = n === 2 ? 'flex' : 'none';
+    document.getElementById('allocPhase2').style.display = n === 2 ? 'flex' : 'none';
     document.getElementById('allocPhase2Footer').style.display = n === 2 ? 'flex' : 'none';
-    document.getElementById('allocModalTitle').textContent     = n === 1 ? 'Allocate Resource — Step 1 of 2' : 'Allocate Resource — Step 2 of 2';
+    document.getElementById('allocModalTitle').textContent = n === 1 ? 'Allocate Resource — Step 1 of 2' : 'Allocate Resource — Step 2 of 2';
   }
 
   /* ── Event select → show info ─────── */
@@ -335,8 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!evId) { infoPanel.style.display = 'none'; return; }
     const ev = DB.find('events', evId);
     if (!ev) { infoPanel.style.display = 'none'; return; }
-    document.getElementById('allocInfoVenue').textContent  = ev.venue  || '—';
-    document.getElementById('allocInfoDate').textContent   = fmtDate(ev.date);
+    document.getElementById('allocInfoVenue').textContent = ev.venue || '—';
+    document.getElementById('allocInfoDate').textContent = fmtDate(ev.date);
     document.getElementById('allocInfoPeople').textContent = ev.people != null ? ev.people.toLocaleString() : '—';
     infoPanel.style.display = 'flex';
     showErr('allocEventErr', false);
@@ -354,15 +392,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     _allocEvId = evId;
     const ev = DB.find('events', evId);
-    const r  = DB.find('resources', _allocResId);
+    const r = DB.find('resources', _allocResId);
+
+    // Compute effective availability for this event's date
+    const effAvail = r ? getEffectiveAvail(r.id, ev ? ev.date : null, evId) : 0;
 
     // Fill Phase 2 info
     document.getElementById('allocSelectedEventName').textContent = ev ? ev.name : evId;
-    document.getElementById('allocPeopleCount').textContent       = ev?.people != null ? ev.people.toLocaleString() : '—';
-    document.getElementById('allocAvailCount').textContent        = r ? r.quantity : '—';
-    document.getElementById('allocQtyInput').value                = '';
-    document.getElementById('allocQtyInput').max                  = r ? r.quantity : 1;
-    document.getElementById('allocQtyHint').textContent           = r ? `Max available: ${r.quantity} units` : '';
+    document.getElementById('allocPeopleCount').textContent = ev?.people != null ? ev.people.toLocaleString() : '—';
+    document.getElementById('allocAvailCount').textContent = effAvail;
+    document.getElementById('allocQtyInput').value = '';
+    document.getElementById('allocQtyInput').max = effAvail;
+    document.getElementById('allocQtyHint').textContent = `Max available: ${effAvail} units`;
 
     resetAllocErrors();
     showPhase(2);
@@ -378,9 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Qty live validation ─────────────── */
   document.getElementById('allocQtyInput').addEventListener('input', () => {
-    const r   = DB.find('resources', _allocResId);
+    const ev = _allocEvId ? DB.find('events', _allocEvId) : null;
+    const max = getEffectiveAvail(_allocResId, ev ? ev.date : null, _allocEvId);
     const val = parseInt(document.getElementById('allocQtyInput').value, 10);
-    const max = r ? r.quantity : 0;
     const hasErr = isNaN(val) || val < 1 || val > max;
     showErr('allocQtyErr', hasErr ? true : false);
     if (hasErr && !isNaN(val) && val > max)
@@ -392,11 +433,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Confirm allocation ──────────────── */
   document.getElementById('allocConfirmBtn').addEventListener('click', () => {
-    const r   = DB.find('resources', _allocResId);
-    const ev  = DB.find('events', _allocEvId);
+    const r = DB.find('resources', _allocResId);
+    const ev = DB.find('events', _allocEvId);
     if (!r || !ev) { Toast.show('Something went wrong. Please try again.', 'warn'); return; }
 
     const qty = parseInt(document.getElementById('allocQtyInput').value, 10);
+    const effAvail = getEffectiveAvail(r.id, ev.date, ev.id);
 
     // Validate
     if (isNaN(qty) || qty < 1) {
@@ -406,27 +448,23 @@ document.addEventListener('DOMContentLoaded', () => {
       Toast.show('Please enter a valid quantity.', 'warn');
       return;
     }
-    if (qty > r.quantity) {
+    if (qty > effAvail) {
       showErr('allocQtyErr', true);
-      document.getElementById('allocQtyErr').textContent = `Cannot exceed available quantity (${r.quantity}).`;
+      document.getElementById('allocQtyErr').textContent = `Cannot exceed available quantity (${effAvail}).`;
       markField('allocQtyInput', true);
-      Toast.show(`Only ${r.quantity} unit${r.quantity !== 1 ? 's' : ''} available.`, 'warn');
+      Toast.show(`Only ${effAvail} unit${effAvail !== 1 ? 's' : ''} available for this event date.`, 'warn');
       return;
     }
 
-    // Deduct from resource
-    const newQty = r.quantity - qty;
-    DB.update('resources', r.id, { quantity: newQty, available: newQty > 0 });
-
-    // Record allocation
+    // Record allocation without destroying master inventory stock
     const allocs = DB.get('resourceAllocations') || {};
     if (!allocs[ev.id]) allocs[ev.id] = [];
     allocs[ev.id].push({
-      resourceId:   r.id,
+      resourceId: r.id,
       resourceName: r.name,
-      category:     r.category,
+      category: r.category,
       qty,
-      allocatedAt:  new Date().toISOString(),
+      allocatedAt: new Date().toISOString(),
     });
     DB.set('resourceAllocations', allocs);
 
@@ -448,11 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!r) return;
     editingId = id;
     document.getElementById('resModalTitle').textContent = 'Edit Resource';
-    document.getElementById('resName').value     = r.name;
+    document.getElementById('resName').value = r.name;
     document.getElementById('resCategory').value = r.category;
-    document.getElementById('resQuantity').value  = r.quantity;
-    document.getElementById('resPrice').value     = r.price;
-    document.getElementById('resAvail').value     = String(r.available);
+    document.getElementById('resQuantity').value = r.quantity;
+    document.getElementById('resPrice').value = r.price;
+    document.getElementById('resAvail').value = String(r.available);
     clearErrors();
     openModal(overlay);
   }
@@ -460,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function deleteResource(id) {
     const r = DB.find('resources', id);
     if (!r) return;
-    const ok = await Confirm.ask({ title:'Delete Resource?', msg:`"${r.name}" will be permanently removed.` });
+    const ok = await Confirm.ask({ title: 'Delete Resource?', msg: `"${r.name}" will be permanently removed.` });
     if (!ok) return;
     DB.remove('resources', id);
     render();
@@ -469,10 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Validate (add/edit form) ───────────────────────── */
   function validate() {
-    const name     = document.getElementById('resName').value.trim();
+    const name = document.getElementById('resName').value.trim();
     const category = document.getElementById('resCategory').value;
     const quantity = document.getElementById('resQuantity').value;
-    const price    = document.getElementById('resPrice').value;
+    const price = document.getElementById('resPrice').value;
 
     let valid = true;
 
@@ -496,25 +534,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function clearErrors() {
-    ['resNameErr','resCatErr','resQtyErr','resPriceErr'].forEach(id => showErr(id, false));
-    ['resName','resCategory','resQuantity','resPrice'].forEach(id => markField(id, false));
+    ['resNameErr', 'resCatErr', 'resQtyErr', 'resPriceErr'].forEach(id => showErr(id, false));
+    ['resName', 'resCategory', 'resQuantity', 'resPrice'].forEach(id => markField(id, false));
   }
 
   /* ── Save (add/edit) ───────────────────────── */
   document.getElementById('resSaveBtn').addEventListener('click', () => {
     if (!validate()) { Toast.show('Please fix the errors above.', 'warn'); return; }
 
-    const name      = document.getElementById('resName').value.trim();
-    const category  = document.getElementById('resCategory').value;
-    const quantity  = parseInt(document.getElementById('resQuantity').value, 10);
-    const price     = parseFloat(document.getElementById('resPrice').value);
+    const name = document.getElementById('resName').value.trim();
+    const category = document.getElementById('resCategory').value;
+    const quantity = parseInt(document.getElementById('resQuantity').value, 10);
+    const price = parseFloat(document.getElementById('resPrice').value);
     const available = document.getElementById('resAvail').value === 'true';
 
     if (editingId) {
       DB.update('resources', editingId, { name, category, quantity, price, available });
       Toast.show('Resource updated!', 'success');
     } else {
-      DB.add('resources', { id:uid('R'), name, category, quantity, price, unit:'day', available });
+      DB.add('resources', { id: uid('R'), name, category, quantity, price, unit: 'day', available });
       Toast.show('Resource added!', 'success');
     }
 
@@ -527,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.mr-add-btn')?.addEventListener('click', () => {
     editingId = null;
     document.getElementById('resModalTitle').textContent = 'Add Resource';
-    ['resName','resQuantity','resPrice'].forEach(id => document.getElementById(id).value = '');
+    ['resName', 'resQuantity', 'resPrice'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('resCategory').value = '';
     document.getElementById('resAvail').value = 'true';
     clearErrors();
@@ -554,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isShowing = mrFilterDropdown.style.display === 'block';
       mrFilterDropdown.style.display = isShowing ? 'none' : 'block';
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#mrFilterWrapper')) {
@@ -566,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeFilters.category = document.getElementById('filterMrCategory').value;
       activeFilters.condition = document.getElementById('filterMrCondition').value;
       activeFilters.stock = document.getElementById('filterMrStock').value;
-      
+
       mrFilterDropdown.style.display = 'none';
       render();
       Toast.show('Filters applied!', 'success');
