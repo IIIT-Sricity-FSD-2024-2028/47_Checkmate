@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EventPro – Dashboard</title>
+  <title>EventPro Vendor – Dashboard</title>
   <link rel="stylesheet" href="../../styles/vendor_css/global.css">
   <link rel="stylesheet" href="../../styles/vendor_css/vendor.css">
   <!-- Lucide Icons -->
@@ -44,14 +44,20 @@
           <i data-lucide="box"></i>
           <span>Preset Package</span>
         </a>
-        <a href="./report-issue.html" class="nav-item">
-          <i data-lucide="flag"></i>
-          <span>Report Issue</span>
-        </a>
-        <a href="./coordination.html" class="nav-item">
-          <i data-lucide="message-square"></i>
-          <span>Coordination Hub</span>
-        </a>
+        <div class="nav-group" onclick="this.classList.toggle('open')">
+          <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-sub">
+            <a href="./report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+            <a href="./report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+          </div>
+        </div>
+        <div class="nav-group" onclick="this.classList.toggle('open')">
+          <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-sub">
+            <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+            <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+          </div>
+        </div>
         <a href="./monitoring.html" class="nav-item">
           <i data-lucide="radio"></i>
           <span>Monitor Live Events</span>
@@ -84,10 +90,7 @@
       <header class="topbar">
         <h1 class="page-title">Dashboard</h1>
         <div class="topbar__right">
-          <div class="search-box">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" placeholder="Search..." />
-          </div>
+
           <button class="notif-btn">
             <i data-lucide="bell"></i>
             <span class="notif-badge">1</span>
@@ -320,5 +323,9 @@
   <script src="../../scripts/vendor_js/data.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/dashboard.js"></script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

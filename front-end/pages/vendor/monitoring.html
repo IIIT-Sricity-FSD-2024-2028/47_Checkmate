@@ -174,6 +174,12 @@
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 0;
+      align-items: start;
+    }
+    @media (max-width: 600px) {
+      .mon-stats-grid { grid-template-columns: 1fr; }
+      .mon-stat { border-right: none !important; border-bottom: 1px solid var(--border); padding: 16px 0 !important; }
+      .mon-stat:last-child { border-bottom: none; }
     }
 
     .mon-stat {
@@ -330,7 +336,7 @@
       gap: 10px;
     }
 
-    .mon-risk-item__body {}
+    .mon-risk-item__body { display: flex; flex-direction: column; }
     .mon-risk-item__title { font-size: 13.5px; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
     .mon-risk-item__time  { font-size: 11.5px; color: var(--text-muted); }
 
@@ -430,9 +436,94 @@
     .mon-alert-item--success i { color: var(--green); }
     .mon-alert-item--warning i { color: var(--yellow); }
 
-    .mon-alert-item__body {}
+    .mon-alert-item__body { display: flex; flex-direction: column; }
     .mon-alert-item__text { font-size: 13.5px; color: var(--text-primary); margin-bottom: 3px; }
     .mon-alert-item__time { font-size: 11.5px; color: var(--text-muted); }
+
+    /* ── Modal overlay (for dynamic modals created by monitoring.js) ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      transform: translateY(16px);
+      transition: transform 0.22s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    /* ── Form elements used inside modals ── */
+    .ri-input,
+    .ri-textarea,
+    .ri-select {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.18s;
+    }
+    .ri-input:focus,
+    .ri-textarea:focus,
+    .ri-select:focus { border-color: rgba(233,30,140,0.5); }
+    .ri-input::placeholder,
+    .ri-textarea::placeholder { color: var(--text-muted); }
+    .ri-textarea { min-height: 110px; resize: vertical; }
+    .ri-select { appearance: none; cursor: pointer; }
+    .ri-select option { background: #2e1c40; }
+
+    .ri-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 18px var(--pink-glow);
+      transition: background 0.18s;
+    }
+    .ri-submit:hover { background: var(--pink-light); }
+
+    .ri-cancel {
+      padding: 12px 22px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .ri-cancel:hover { border-color: var(--border-hover); color: var(--text-primary); }
   </style>
 </head>
 <body>
@@ -453,8 +544,20 @@
       <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
       <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
       <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
-      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
-      <a href="coordination.html"    class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+      <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+      <div class="nav-sub">
+        <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+        <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+      </div>
+      </div>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+        <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
       <a href="monitoring.html"      class="nav-item active"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
         <a href="./verify-docs.html" class="nav-item">
           <i data-lucide="shield-check"></i>
@@ -525,11 +628,11 @@
         </button>
         <button class="mon-action-btn mon-action-btn--allocate">
           <i data-lucide="package"></i>
-          Allocate Resources
+          Allocate Additional Resources
         </button>
         <button class="mon-action-btn mon-action-btn--staff">
           <i data-lucide="user-check"></i>
-          Assign Staff
+          Allocate Additional Staff
         </button>
         <button class="mon-action-btn mon-action-btn--end">
           <i data-lucide="zap"></i>
@@ -546,116 +649,37 @@
         <div class="mon-stats-grid">
           <div class="mon-stat">
             <div class="mon-stat__label">Event Progress</div>
-            <div class="mon-stat__value">65%</div>
-            <div class="mon-progress-bar">
-              <div class="mon-progress-fill" id="progressFill" style="width:65%"></div>
+            <div class="mon-stat__value" id="progressValue">0%</div>
+            <div class="mon-progress-bar" style="margin-top:8px;">
+              <div class="mon-progress-fill" id="progressFill" style="width:0%"></div>
             </div>
           </div>
           <div class="mon-stat">
             <div class="mon-stat__label">Duration</div>
-            <div class="mon-stat__value">2h 30m</div>
-            <div class="mon-stat__sub">Started at 6:00 PM</div>
+            <div class="mon-stat__value" id="durationValue">—</div>
+            <div class="mon-stat__sub" id="durationSub">Not started</div>
           </div>
           <div class="mon-stat">
             <div class="mon-stat__label">Active Staff</div>
-            <div class="mon-stat__value">24 / 25</div>
-            <div class="mon-stat__sub green">All positions covered</div>
+            <div class="mon-stat__value" id="staffValue">0 / 0</div>
+            <div class="mon-stat__sub" id="staffSub">Loading…</div>
           </div>
         </div>
       </div>
 
-      <!-- ── Allocated Resources per Event ── -->
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:9px;background:rgba(126,34,206,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <i data-lucide="package" style="width:16px;height:16px;color:#d8b4fe"></i>
-            </div>
-            <div>
-              <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text-primary)">Allocated Resources</div>
-              <div style="font-size:12px;color:var(--text-muted)">Resources assigned to the selected event</div>
-            </div>
-          </div>
-          <a href="manage-resource.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(126,34,206,0.12);border:1px solid rgba(126,34,206,0.25);border-radius:20px;font-size:12px;font-weight:600;color:#d8b4fe;text-decoration:none;transition:opacity .18s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
-            <i data-lucide="plus" style="width:12px;height:12px"></i> Allocate More
-          </a>
-        </div>
-        <div id="monAllocatedResources" style="padding:4px 20px 8px">
-          <!-- populated by monitoring.js -->
-        </div>
-      </div>
+      <!-- Allocated Resources removed — shown in Manage Resource page -->
 
       <!-- ── Bottom: Timeline + Right panels ── -->
       <div class="mon-bottom">
 
-        <!-- Timeline -->
+        <!-- Timeline — populated dynamically by monitoring.js -->
         <div class="mon-timeline-card">
-          <h3>Event Timeline</h3>
-          <div class="timeline">
-
-            <div class="tl-item done">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--done"><i data-lucide="check"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Setup Complete</div>
-                <div class="tl-time">5:00 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item done">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--done"><i data-lucide="check"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Guest Arrival</div>
-                <div class="tl-time">6:00 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item done">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--done"><i data-lucide="check"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Ceremony Started</div>
-                <div class="tl-time">6:30 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item current">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--current"><i data-lucide="play"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Reception Ongoing</div>
-                <div class="tl-time">7:30 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--pending"><i data-lucide="clock"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Dinner Service</div>
-                <div class="tl-time">8:45 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--pending"><i data-lucide="clock"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Entertainment</div>
-                <div class="tl-time">9:30 PM</div>
-              </div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-line"></div>
-              <div class="tl-icon tl-icon--pending"><i data-lucide="clock"></i></div>
-              <div class="tl-body">
-                <div class="tl-title">Event Conclusion</div>
-                <div class="tl-time">11:00 PM</div>
-              </div>
-            </div>
-
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h3 style="margin-bottom:0;">Event Timeline</h3>
+            <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>Live</span>
+          </div>
+          <div class="timeline" id="eventTimeline">
+            <div style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center;">Loading timeline…</div>
           </div>
         </div>
 
@@ -673,103 +697,39 @@
             </div>
           </div>
 
-          <!-- Active Risks -->
+          <!-- Active Risks — populated dynamically -->
           <div class="mon-risks">
             <div class="mon-risks__header">
               <i data-lucide="alert-triangle"></i>
               <h4>Active Risks</h4>
             </div>
             <div class="mon-risk-list">
-              <div class="mon-risk-item">
-                <div class="mon-risk-item__body">
-                  <div class="mon-risk-item__title">Audio feedback in main hall</div>
-                  <div class="mon-risk-item__time">Reported at 8:15 PM</div>
-                </div>
-                <span class="risk-pill risk-pill--medium">medium</span>
-              </div>
-              <div class="mon-risk-item">
-                <div class="mon-risk-item__body">
-                  <div class="mon-risk-item__title">Catering running 10 mins behind</div>
-                  <div class="mon-risk-item__time">Reported at 8:20 PM</div>
-                </div>
-                <span class="risk-pill risk-pill--low">low</span>
-              </div>
+              <div style="color:var(--text-muted);font-size:12.5px;padding:12px 0;text-align:center;">Loading…</div>
             </div>
           </div>
 
-          <!-- Contingency Actions -->
+          <!-- Contingency Actions — populated dynamically per event -->
           <div class="mon-contingency">
-            <div class="mon-contingency__header">
-              <h4>Contingency Actions</h4>
+            <div class="mon-contingency__header" style="display:flex;align-items:center;justify-content:space-between;">
+              <h4>Contingency Plans</h4>
+              <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>Synced</span>
             </div>
-            <div class="mon-contingency__list">
-              <button class="mon-contig-btn mon-contig-btn--orange">
-                <i data-lucide="zap"></i>
-                <div>
-                  <div class="mon-contig-btn__title">Trigger Backup Plan</div>
-                  <div class="mon-contig-btn__sub">Activate contingency resources</div>
-                </div>
-              </button>
-              <button class="mon-contig-btn mon-contig-btn--blue">
-                <i data-lucide="users"></i>
-                <div>
-                  <div class="mon-contig-btn__title">Reassign Staff</div>
-                  <div class="mon-contig-btn__sub">Emergency staff reallocation</div>
-                </div>
-              </button>
+            <div class="mon-contingency__list" id="monContingencyList">
+              <div style="color:var(--text-muted);font-size:12.5px;padding:12px 0;text-align:center;">Loading plans…</div>
             </div>
           </div>
 
         </div><!-- /mon-right -->
       </div><!-- /mon-bottom -->
 
-      <!-- ── Live Alerts Feed ── -->
+      <!-- ── Live Alerts Feed — populated dynamically ── -->
       <div class="mon-alerts-card">
-        <div class="mon-alerts-card__header">
+        <div class="mon-alerts-card__header" style="display:flex;align-items:center;justify-content:space-between;">
           <h3>Live Alerts Feed</h3>
+          <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulse-dot 1.4s ease-in-out infinite;display:inline-block;"></span>Real-time</span>
         </div>
         <div class="mon-alert-list">
-
-          <div class="mon-alert-item mon-alert-item--info">
-            <i data-lucide="zap"></i>
-            <div class="mon-alert-item__body">
-              <div class="mon-alert-item__text">Guest count exceeded by 5 people</div>
-              <div class="mon-alert-item__time">8:25 PM</div>
-            </div>
-          </div>
-
-          <div class="mon-alert-item mon-alert-item--success">
-            <i data-lucide="check-circle"></i>
-            <div class="mon-alert-item__body">
-              <div class="mon-alert-item__text">Audio issue resolved by technical team</div>
-              <div class="mon-alert-item__time">8:20 PM</div>
-            </div>
-          </div>
-
-          <div class="mon-alert-item mon-alert-item--warning">
-            <i data-lucide="alert-triangle"></i>
-            <div class="mon-alert-item__body">
-              <div class="mon-alert-item__text">Backup lighting activated in hall B</div>
-              <div class="mon-alert-item__time">8:10 PM</div>
-            </div>
-          </div>
-
-          <div class="mon-alert-item mon-alert-item--success">
-            <i data-lucide="check-circle"></i>
-            <div class="mon-alert-item__body">
-              <div class="mon-alert-item__text">All staff checked in successfully</div>
-              <div class="mon-alert-item__time">7:45 PM</div>
-            </div>
-          </div>
-
-          <div class="mon-alert-item mon-alert-item--success">
-            <i data-lucide="check-circle"></i>
-            <div class="mon-alert-item__body">
-              <div class="mon-alert-item__text">Event started on schedule</div>
-              <div class="mon-alert-item__time">6:00 PM</div>
-            </div>
-          </div>
-
+          <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading feed…</div>
         </div>
       </div><!-- /alerts feed -->
 
@@ -782,8 +742,14 @@
 fasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/message-system.js"></script>
+  <script src="../../scripts/notification-system.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/monitoring.js"></script>
   <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

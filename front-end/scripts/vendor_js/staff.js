@@ -10,6 +10,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
+  let activeFilters = { role: 'All', status: 'All', workload: 'All' };
   let editingId   = null;
   let assignStaffId = null;
 
@@ -59,13 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- Assign Modal -->
     <div class="modal-overlay" id="assignModalOverlay">
-      <div class="modal" style="width:min(420px,94vw)">
+      <div class="modal" style="width:min(480px,94vw)">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border)">
-          <h3 style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text-primary)">Assign Event</h3>
+          <h3 style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text-primary)">Assign Task</h3>
           <button id="assignModalClose" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:16px">✕</button>
         </div>
         <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
-          <div style="font-size:13px;color:var(--text-secondary)">Assign <strong id="assignStaffName" style="color:var(--text-primary)"></strong> to an approved event.</div>
+          <div style="font-size:13px;color:var(--text-secondary)">Assign a task to <strong id="assignStaffName" style="color:var(--text-primary)"></strong></div>
+          <!-- Workload bar -->
+          <div id="assignWorkloadBar" style="background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Current Workload</span>
+              <span id="assignWorkloadPct" style="font-size:12px;font-weight:700;color:var(--pink)">0%</span>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+              <div id="assignWorkloadFill" style="height:100%;width:0%;background:var(--pink);border-radius:4px;transition:width .3s"></div>
+            </div>
+          </div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Select Event *</label>
             <div class="ri-select-wrap">
@@ -73,10 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
               </select>
             </div>
           </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Task Name *</label>
+            <input id="assignTaskName" class="ri-input" type="text" placeholder="e.g. Setup Sound System, Manage Guest Entry" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.4px">Priority</label>
+            <div class="ri-select-wrap">
+              <select id="assignTaskPriority" class="ri-select">
+                <option value="High">High</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border)">
           <button id="assignCancelBtn" class="ri-cancel">Cancel</button>
-          <button id="assignSaveBtn" class="ri-submit" style="flex:unset;padding:12px 28px">Assign</button>
+          <button id="assignSaveBtn" class="ri-submit" style="flex:unset;padding:12px 28px">Assign Task</button>
         </div>
       </div>
     </div>`);
@@ -150,16 +175,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Render cards ───────────────────── */
   function render() {
-    const staffList = DB.getAll('staff');
+    const staffList = DB.getMyStaff();
     const grid = document.querySelector('.staff-grid');
     if (!grid) return;
 
-    const filtered = staffList.filter(s =>
-      !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery)  ||
-      s.role.toLowerCase().includes(searchQuery)  ||
-      s.email.toLowerCase().includes(searchQuery)
-    );
+    const filtered = staffList.filter(s => {
+      // Search
+      const searchMatch = !searchQuery ||
+        s.name.toLowerCase().includes(searchQuery)  ||
+        s.role.toLowerCase().includes(searchQuery)  ||
+        s.email.toLowerCase().includes(searchQuery);
+      
+      // Filters
+      const roleMatch = activeFilters.role === 'All' || s.role.toLowerCase().includes(activeFilters.role.toLowerCase());
+      const statusMatch = activeFilters.status === 'All' || s.status === activeFilters.status;
+      
+      let workloadMatch = true;
+      if (activeFilters.workload !== 'All') {
+        const wl = s.workload || 0;
+        if (activeFilters.workload === 'Low') workloadMatch = wl < 50;
+        else if (activeFilters.workload === 'Medium') workloadMatch = wl >= 50 && wl < 80;
+        else if (activeFilters.workload === 'High') workloadMatch = wl >= 80;
+      }
+      
+      return searchMatch && roleMatch && statusMatch && workloadMatch;
+    });
 
     if (!filtered.length) {
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">No staff found.</div>`;
@@ -232,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function scheduleStaff(id) {
     const s = DB.find('staff', id);
     if (!s) return;
-    const confirmed = DB.getAll('events').filter(e => e.status === 'confirmed');
+    const confirmed = DB.getMyEvents().filter(e => e.status === 'confirmed');
     Toast.show(
       `${s.name} (${s.role}) — ${confirmed.length} confirmed event(s) available. Workload: ${s.workload}%`,
       'info', 5000
@@ -243,9 +283,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const s = DB.find('staff', id);
     if (!s) return;
     
+    // Check workload cap
+    if ((s.workload || 0) >= 100) {
+      Toast.show(`${s.name} is at 100% workload. Complete existing tasks first.`, 'warn');
+      return;
+    }
+    
+    // ── Single-event constraint ──
+    // Check if this staff already has assignments to an event
+    const allAssignments = DB.getAll('staffAssignments') || [];
+    const staffAssignments = allAssignments.filter(a => a.staffId === s.id && (a.status === 'pending' || a.status === 'accepted'));
+    const assignedEventIds = [...new Set(staffAssignments.map(a => a.eventId))];
+    
     // Broaden filter to any actionable status
     const validStatuses = ['approved', 'confirmed', 'live'];
-    const actionableEvents = DB.getAll('events').filter(e => validStatuses.includes((e.status || '').toLowerCase()));
+    let actionableEvents = DB.getMyEvents().filter(e => validStatuses.includes((e.status || '').toLowerCase()));
+    
+    // If staff is already assigned to an event, restrict to only that event
+    let restrictedToEvent = null;
+    if (assignedEventIds.length > 0) {
+      restrictedToEvent = assignedEventIds[0]; // Staff can only work on one event
+      actionableEvents = actionableEvents.filter(e => e.id === restrictedToEvent);
+      
+      if (actionableEvents.length === 0) {
+        const evName = staffAssignments[0]?.eventName || restrictedToEvent;
+        Toast.show(`${s.name} is assigned to "${evName}" which is no longer active. Remove existing assignment first.`, 'warn');
+        return;
+      }
+    }
     
     if (actionableEvents.length === 0) {
       Toast.show('No approved or confirmed events available to assign.', 'warn');
@@ -254,11 +319,37 @@ document.addEventListener('DOMContentLoaded', () => {
     
     assignStaffId = id;
     document.getElementById('assignStaffName').textContent = s.name;
-    const select = document.getElementById('assignEventSelect');
     
+    // Show workload
+    const wl = Math.min(s.workload || 0, 100);
+    document.getElementById('assignWorkloadPct').textContent = wl + '%';
+    document.getElementById('assignWorkloadFill').style.width = wl + '%';
+    document.getElementById('assignWorkloadFill').style.background = wl >= 80 ? '#ef4444' : wl >= 60 ? '#f59e0b' : 'var(--pink)';
+    
+    const select = document.getElementById('assignEventSelect');
     select.innerHTML = actionableEvents.map(ev => 
       `<option value="${ev.id}">${ev.name} [${ev.status.toUpperCase()}]</option>`
     ).join('');
+    
+    // Show info about restriction
+    let infoEl = document.getElementById('assignEventInfo');
+    if (!infoEl) {
+      infoEl = document.createElement('div');
+      infoEl.id = 'assignEventInfo';
+      select.parentElement.parentElement.appendChild(infoEl);
+    }
+    if (restrictedToEvent) {
+      const evName = actionableEvents[0]?.name || restrictedToEvent;
+      infoEl.style.cssText = 'font-size:11px;color:var(--yellow,#eab308);margin-top:6px;padding:8px 12px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:6px;display:flex;align-items:center;gap:6px;';
+      infoEl.innerHTML = `⚠️ ${s.name} is already assigned to <strong>"${evName}"</strong>. Staff can only be assigned to one event at a time.`;
+    } else {
+      infoEl.style.cssText = 'font-size:11px;color:var(--green,#22c55e);margin-top:6px;padding:8px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:6px;';
+      infoEl.innerHTML = `✓ ${s.name} has no current event assignment. You may assign to any event.`;
+    }
+    
+    // Clear task input
+    document.getElementById('assignTaskName').value = '';
+    document.getElementById('assignTaskPriority').value = 'Medium';
     
     openModal(assignOverlay);
   }
@@ -266,41 +357,92 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('assignSaveBtn')?.addEventListener('click', () => {
     if (!assignStaffId) return;
     const eventId = document.getElementById('assignEventSelect').value;
+    const taskName = document.getElementById('assignTaskName').value.trim();
+    const priority = document.getElementById('assignTaskPriority').value;
     const s = DB.find('staff', assignStaffId);
     const ev = DB.find('events', eventId);
     
-    if (s && ev) {
-      // 1. Update staff member's local list
+    if (!taskName) {
+      Toast.show('Please enter a task name.', 'warn');
+      return;
+    }
+    
+    if (!s || !ev) return;
+    
+    // 1. Check workload cap
+    const currentWorkload = s.workload || 0;
+    if (currentWorkload >= 100) {
+      Toast.show(`${s.name} is at 100% workload. Cannot assign more tasks.`, 'warn');
+      closeModal(assignOverlay);
+      assignStaffId = null;
+      return;
+    }
+
+    // 2. Check for duplicate task name for same staff+event
+    const allAssignments = DB.getAll('staffAssignments');
+    const existingAssignment = allAssignments.find(a => a.staffId === s.id && a.eventId === ev.id);
+    
+    if (existingAssignment && existingAssignment.tasks) {
+      const dupTask = existingAssignment.tasks.find(t => t.desc.trim().toLowerCase() === taskName.toLowerCase());
+      if (dupTask) {
+        Toast.show(`Task "${taskName}" already assigned to ${s.name} for ${ev.name}.`, 'warn');
+        closeModal(assignOverlay);
+        assignStaffId = null;
+        return;
+      }
+    }
+
+    // 3. Create the task object
+    const newTask = {
+      id: 'T_' + Date.now(),
+      desc: taskName,
+      priority: priority,
+      status: 'todo',
+      eventName: ev.name
+    };
+
+    if (existingAssignment) {
+      // 4a. Add task to existing assignment
+      const updatedTasks = [...(existingAssignment.tasks || []), newTask];
+      DB.update('staffAssignments', existingAssignment.id, { tasks: updatedTasks });
+    } else {
+      // 4b. Create new assignment with this task
       const assigned = Array.isArray(s.assignedEvents) ? s.assignedEvents : [];
       if (!assigned.includes(eventId)) {
         assigned.push(eventId);
         DB.update('staff', assignStaffId, { assignedEvents: assigned });
       }
 
-      // 2. Create official assignment for monitoring/tracking
       const newAssignment = {
         id: 'SA_' + Date.now(),
         staffId: s.id,
         staffName: s.name,
         staffRole: s.role,
+        role: s.role,
         eventId: ev.id,
         eventName: ev.name,
         eventDate: ev.date,
         eventVenue: ev.venue,
         eventPeople: ev.people,
-        taskDesc: 'Assigned as ' + s.role,
-        priority: 'Medium',
+        taskDesc: taskName,
+        priority: priority,
         status: 'pending',
-        tasks: [],
+        tasks: [newTask],
         assignedAt: new Date().toISOString()
       };
       
       DB.add('staffAssignments', newAssignment);
-      Toast.show(`${s.name} assigned to ${ev.name} successfully!`, 'success');
     }
+
+    // 5. Increase workload by 20%
+    const newWorkload = Math.min(currentWorkload + 20, 100);
+    DB.update('staff', assignStaffId, { workload: newWorkload });
+    
+    Toast.show(`Task "${taskName}" assigned to ${s.name} for ${ev.name}! Workload: ${newWorkload}%`, 'success');
     
     closeModal(assignOverlay);
     assignStaffId = null;
+    render();
   });
 
   function editStaff(id) {
@@ -356,13 +498,49 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 
-  /* ── Add button ─────────────────────── */
+  /* ── Add button (Recruitment) ─────────────────────── */
+  const recruitModal = document.getElementById('recruitModal');
   document.querySelector('.ms-add-btn')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('staffModalTitle').textContent = 'Add Staff';
-    ['stName','stRole','stPhone','stEmail','stWorkload'].forEach(id => document.getElementById(id).value = '');
-    clearErrors();
-    openModal(overlay);
+    ['reqPosition','reqLocation','reqSalary','reqDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('reqType').value = 'Full Time';
+    recruitModal.style.display = 'flex';
+  });
+
+  document.getElementById('closeRecruitModal')?.addEventListener('click', () => {
+    recruitModal.style.display = 'none';
+  });
+
+  document.getElementById('submitRecruitModal')?.addEventListener('click', () => {
+    const pos = document.getElementById('reqPosition').value.trim();
+    const loc = document.getElementById('reqLocation').value.trim();
+    const type = document.getElementById('reqType').value;
+    const sal = document.getElementById('reqSalary').value.trim();
+    const desc = document.getElementById('reqDesc').value.trim();
+
+    if (!pos || !loc || !sal) {
+      Toast.show('Please fill in Position, Location, and Salary.', 'warn');
+      return;
+    }
+
+    // Push to adminChatMessages as a recruitment request
+    const msgs = DB.get('adminChatMessages') || [];
+    msgs.push({
+      id: 'req_' + Date.now(),
+      sender: 'Vendor',
+      senderRole: 'Vendor',
+      senderEmail: 'vendor@eventpro.com',
+      recipientEmail: 'admin@eventpro.com',
+      recipientName: 'Admin',
+      text: `Recruitment Request for ${pos}`,
+      details: { position: pos, location: loc, type: type, salary: sal, description: desc },
+      timestamp: new Date().toISOString(),
+      type: 'recruitment_request',
+      status: 'pending'
+    });
+    DB.set('adminChatMessages', msgs);
+
+    Toast.show('Recruitment request sent to Admin!', 'success');
+    recruitModal.style.display = 'none';
   });
 
   /* ── Search & Filters ─────────────────────────── */
@@ -375,9 +553,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.ms-search input')?.focus();
   });
 
-  document.querySelector('.ms-filter-btn')?.addEventListener('click', () => {
-    Toast.show('Advanced filter options coming soon.', 'info');
-  });
+  const filterBtn = document.querySelector('.ms-filter-btn');
+  const filterDropdown = document.getElementById('staffFilterDropdown');
+  const applyFiltersBtn = document.getElementById('applyStaffFilters');
+
+  if (filterBtn && filterDropdown) {
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = filterDropdown.style.display === 'block';
+      filterDropdown.style.display = isShowing ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#staffFilterWrapper')) {
+        filterDropdown.style.display = 'none';
+      }
+    });
+
+    applyFiltersBtn?.addEventListener('click', () => {
+      activeFilters.role = document.getElementById('filterStaffRole').value;
+      activeFilters.status = document.getElementById('filterStaffStatus').value;
+      activeFilters.workload = document.getElementById('filterStaffWorkload').value;
+      
+      filterDropdown.style.display = 'none';
+      render();
+      Toast.show('Filters applied!', 'success');
+    });
+  }
 
   initTopbarSearch(q => { searchQuery = q; render(); });
 

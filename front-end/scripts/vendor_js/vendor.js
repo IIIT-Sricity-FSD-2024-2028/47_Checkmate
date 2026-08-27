@@ -217,22 +217,234 @@ function avatarClass(idx) { return `avatar--${AVATAR_COLORS[idx % AVATAR_COLORS.
 /* ── Sidebar user from session (runs on every page) ── */
 document.addEventListener('DOMContentLoaded', () => {
   const s = DB.getSession();
-  document.querySelectorAll('.user-name').forEach(el  => el.textContent = s.user);
-  document.querySelectorAll('.user-email').forEach(el => el.textContent = s.email);
-  document.querySelectorAll('.user-avatar').forEach(el => el.textContent = s.user[0]);
-  document.querySelectorAll('.brand-role').forEach(el  => el.textContent = s.role);
+  const userName = s.user || 'Vendor';
+  const userEmail = s.email || '';
+  const userRole = s.role || 'Vendor';
+  document.querySelectorAll('.user-name').forEach(el  => el.textContent = userName);
+  document.querySelectorAll('.user-email').forEach(el => el.textContent = userEmail);
+  document.querySelectorAll('.user-avatar').forEach(el => el.textContent = userName[0] || 'V');
+  document.querySelectorAll('.brand-role').forEach(el  => el.textContent = userRole);
 
-  /* Live notification badge = pending events count */
-  const pending = DB.getAll('events').filter(e => e.status === 'pending').length;
-  document.querySelectorAll('.notif-badge').forEach(el => {
-    el.textContent = pending || '';
-    el.style.display = pending ? '' : 'none';
+  /* Live notification badge & Dropdown */
+  function updateNotifications() {
+    const s = DB.getSession();
+    const vendorEmail = s.email;
+
+    const events = DB.getAll('events') || [];
+    const pendingEvents = events.filter(e => e.status === 'pending');
+    
+    // Live events with unresolved issues
+    const liveIssueEvents = events.filter(e => 
+      e.status === 'live' && 
+      e.issues && 
+      e.issues.some(i => i.status !== 'resolved')
+    );
+
+    // Unread Admin messages
+    let adminMsgs = DB.get('adminChatMessages') || [];
+    if (!Array.isArray(adminMsgs)) adminMsgs = [];
+    const unreadAdminMsgs = adminMsgs.filter(m => 
+      m.recipientEmail === vendorEmail && 
+      (m.senderRole === 'Admin' || m.senderRole === 'admin') && 
+      !m.read
+    );
+    
+    let notifs = DB.get('vendorNotifications') || [];
+    if (!Array.isArray(notifs)) notifs = [];
+    const unreadNotifs = notifs.filter(n => !n.read);
+    
+    const totalPending = pendingEvents.length + liveIssueEvents.length + unreadAdminMsgs.length + unreadNotifs.length;
+    
+    document.querySelectorAll('.notif-badge').forEach(el => {
+      el.textContent = totalPending || '';
+      el.style.display = totalPending > 0 ? 'flex' : 'none';
+    });
+    
+    return { pendingEvents, liveIssueEvents, adminMsgs, unreadAdminMsgs, notifs, unreadNotifs };
+  }
+
+  updateNotifications();
+
+  // Polling for updates
+  setInterval(updateNotifications, 5000);
+
+  // Handle dropdown
+  document.querySelectorAll('.notif-btn').forEach(btn => {
+    btn.style.position = 'relative';
+    const dropdown = document.createElement('div');
+    dropdown.className = 'notif-dropdown';
+    dropdown.style.cssText = `
+      position:absolute;top:100%;right:0;width:340px;
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);
+      z-index:9999;display:none;flex-direction:column;
+      overflow:hidden;margin-top:10px;text-align:left;
+    `;
+    btn.appendChild(dropdown);
+
+    btn.addEventListener('click', (e) => {
+      // Toggle logic
+      const isShowing = dropdown.style.display === 'flex';
+      
+      // Close all other dropdowns
+      document.querySelectorAll('.notif-dropdown').forEach(d => d.style.display = 'none');
+      
+      if (!isShowing) {
+        const { pendingEvents, liveIssueEvents, adminMsgs, unreadAdminMsgs, notifs, unreadNotifs } = updateNotifications();
+        let html = '<div style="padding:16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text-primary);font-size:15px;display:flex;justify-content:space-between;">Notifications <span id="markAllRead" style="font-size:12px;color:var(--pink);cursor:pointer;font-weight:500;">Mark all read</span></div>';
+        html += '<div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;">';
+        
+        let hasItems = false;
+
+        if (liveIssueEvents.length > 0) {
+          hasItems = true;
+          liveIssueEvents.forEach(ev => {
+            html += `<a href="monitor-live.html" style="padding:16px;border-bottom:1px solid var(--border);text-decoration:none;display:flex;gap:12px;background:rgba(239,68,68,0.05);transition:background 0.2s;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,0.15);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="alert-triangle"></i>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#fca5a5;">Live Issue: ${ev.name}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Unresolved issues detected requiring your attention.</div>
+              </div>
+            </a>`;
+          });
+        }
+
+        if (pendingEvents.length > 0) {
+          hasItems = true;
+          html += `<a href="dashboard.html" style="padding:16px;border-bottom:1px solid var(--border);text-decoration:none;display:flex;gap:12px;transition:background 0.2s;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.1);color:#f59e0b;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="calendar"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Pending Events</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">You have ${pendingEvents.length} pending event(s) to review.</div>
+            </div>
+          </a>`;
+        }
+
+        if (unreadAdminMsgs.length > 0) {
+          hasItems = true;
+          unreadAdminMsgs.forEach(m => {
+            html += `<div class="notif-admin-msg" data-id="${m.id}" style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.03);border-left:2px solid var(--pink);cursor:pointer;display:flex;gap:12px;transition:background 0.2s;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(233,30,140,0.1);color:var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="message-circle"></i>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Message from Admin</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">"${m.text.substring(0, 40)}${m.text.length > 40 ? '...' : ''}"</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;opacity:0.7;">${new Date(m.timestamp).toLocaleTimeString()}</div>
+              </div>
+            </div>`;
+          });
+        }
+
+        const sortedNotifs = [...notifs].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if (sortedNotifs.length > 0) {
+          hasItems = true;
+          sortedNotifs.forEach(n => {
+            const bg = n.read ? 'transparent' : 'rgba(255,255,255,0.03)';
+            const border = n.read ? 'none' : '2px solid var(--pink)';
+            html += `<div class="notif-item" data-id="${n.id}" style="padding:16px;border-bottom:1px solid var(--border);background:${bg};border-left:${border};cursor:pointer;display:flex;gap:12px;transition:background 0.2s;">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,0.1);color:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="bell"></i>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${n.title}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${n.message}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;opacity:0.7;">${new Date(n.timestamp).toLocaleTimeString()}</div>
+              </div>
+            </div>`;
+          });
+        }
+
+        if (!hasItems) {
+          html += '<div style="padding:30px 16px;text-align:center;color:var(--text-muted);font-size:13px;">No new notifications</div>';
+        }
+
+        html += '</div>';
+        dropdown.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+        dropdown.style.display = 'flex';
+        
+        // Setup item clicks for standard notifs
+        dropdown.querySelectorAll('.notif-item').forEach(item => {
+          item.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const nid = item.getAttribute('data-id');
+            const nIndex = notifs.findIndex(x => x.id === nid);
+            if (nIndex > -1 && !notifs[nIndex].read) {
+              notifs[nIndex].read = true;
+              DB.set('vendorNotifications', notifs);
+              updateNotifications();
+              item.style.background = 'transparent';
+              item.style.borderLeft = 'none';
+            }
+          });
+        });
+
+        // Setup item clicks for admin msgs
+        dropdown.querySelectorAll('.notif-admin-msg').forEach(item => {
+          item.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const nid = item.getAttribute('data-id');
+            const nIndex = adminMsgs.findIndex(x => x.id === nid);
+            if (nIndex > -1 && !adminMsgs[nIndex].read) {
+              adminMsgs[nIndex].read = true;
+              DB.set('adminChatMessages', adminMsgs);
+              updateNotifications();
+              item.style.background = 'transparent';
+              item.style.borderLeft = 'none';
+              // Redirect to coordination hub
+              window.location.href = 'coordination-hub.html';
+            } else {
+              window.location.href = 'coordination-hub.html';
+            }
+          });
+        });
+
+        // Setup mark all read
+        const markAllBtn = dropdown.querySelector('#markAllRead');
+        if (markAllBtn) {
+          markAllBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            notifs.forEach(n => n.read = true);
+            DB.set('vendorNotifications', notifs);
+            adminMsgs.forEach(m => {
+              if (m.recipientEmail === vendorEmail && (m.senderRole === 'Admin' || m.senderRole === 'admin')) {
+                m.read = true;
+              }
+            });
+            DB.set('adminChatMessages', adminMsgs);
+            updateNotifications();
+            dropdown.querySelectorAll('.notif-item, .notif-admin-msg').forEach(item => {
+              item.style.background = 'transparent';
+              item.style.borderLeft = 'none';
+            });
+          });
+        }
+      } else {
+        dropdown.style.display = 'none';
+      }
+    });
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.notif-btn')) {
+      document.querySelectorAll('.notif-dropdown').forEach(d => d.style.display = 'none');
+    }
   });
 
   /* Logout */
   document.querySelectorAll('.logout-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault();
+      sessionStorage.removeItem('checkmate_session');
+      sessionStorage.removeItem('accountType');
+      localStorage.removeItem('checkmate_session');
+      localStorage.removeItem('accountType');
       Toast.show('Logged out. Redirecting…', 'info', 1500);
       setTimeout(() => window.location.href = '../LandingPage/index.html', 1600);
     });

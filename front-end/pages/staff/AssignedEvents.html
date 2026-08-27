@@ -86,7 +86,6 @@
   <div class="sb-footer">
     <div class="sb-uname">Mike Staff</div>
     <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')">Light Mode</button>
     <a href="../LandingPage/index.html" class="sb-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Logout
@@ -120,6 +119,8 @@
 </main>
 </div>
 
+<!-- Data layer -->
+<script src="../../scripts/vendor_js/data.js"></script>
 <!-- Gradient palettes for card headers -->
 <script>
 const GRAD = [
@@ -130,32 +131,66 @@ const GRAD = [
   'linear-gradient(135deg,rgba(139,92,246,.7),rgba(236,72,153,.6))',
 ];
 
-// ── Shared localStorage persistence (mirrors vendor's data.js key) ──
-const STORE_KEY = 'eventpro_staffAssignments';
+// ── Shared DB persistence ──
+const STORE_KEY = 'staffAssignments';
 
 function loadAssignments() {
-  // If data.js DB is present, use it. Otherwise, use localStorage.
-  if (typeof DB !== 'undefined') return DB.getAll('staffAssignments') || [];
-  return JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  return DB.getAll('staffAssignments') || [];
 }
 
 function saveAssignments(arr) {
   if (typeof DB !== 'undefined') {
     DB.save('staffAssignments', arr);
-  } else {
-    localStorage.setItem(STORE_KEY, JSON.stringify(arr));
   }
 }
 
-/* ── Current staff ID (hardcoded for demo — S001=Alex etc) ── */
-const MY_STAFF_ID = 'S001'; // In real app this would come from session
+let MY_STAFF_ID = null;
+let MY_NAME = 'Staff Member';
+let MY_EMAIL = '';
+
+function initIdentity() {
+  if (typeof DB !== 'undefined') {
+    const s = DB.getSession();
+    console.log('[AssignedEvents] Session:', JSON.stringify(s));
+    MY_NAME = s.user || 'Staff Member';
+    MY_EMAIL = (s.email || '').toLowerCase();
+    
+    // Try matching by name first, then by email
+    const staffList = DB.getAll('staff');
+    console.log('[AssignedEvents] Staff list:', staffList.length, 'members');
+    let me = staffList.find(st => st.name && st.name.trim().toLowerCase() === MY_NAME.trim().toLowerCase());
+    if (!me && MY_EMAIL) {
+      me = staffList.find(st => (st.email || '').toLowerCase() === MY_EMAIL);
+    }
+    if (me) {
+      MY_STAFF_ID = me.id;
+      console.log('[AssignedEvents] Matched staff:', me.id, me.name);
+    } else {
+      console.warn('[AssignedEvents] No staff match found for:', MY_NAME, MY_EMAIL);
+    }
+    
+    const assignments = DB.getAll('staffAssignments');
+    console.log('[AssignedEvents] Total assignments:', assignments.length);
+    
+    // Update UI
+    document.querySelectorAll('.sb-uname').forEach(el => el.textContent = MY_NAME);
+    document.querySelectorAll('.sb-uemail').forEach(el => el.textContent = s.email || 'staff@demo.com');
+  } else {
+    console.error('[AssignedEvents] DB is undefined! data.js not loaded.');
+  }
+}
 
 let currentFilter = 'all';
 
 function renderCards() {
   const all = loadAssignments();
   // Show only assignments for this staff member
-  const mine = all.filter(a => a.staffId === MY_STAFF_ID || a.staffName === 'Alex Johnson');
+  const safeName = (MY_NAME || '').trim().toLowerCase();
+  const mine = all.filter(a => {
+    if (MY_STAFF_ID && a.staffId === MY_STAFF_ID) return true;
+    if (a.staffName && a.staffName.trim().toLowerCase() === safeName) return true;
+    return false;
+  });
   const filtered = currentFilter === 'all' ? mine : mine.filter(a => a.status === currentFilter);
 
   // Stats
@@ -224,11 +259,19 @@ function renderCards() {
           </div>` : ''}
         </div>
         <div class="ae-task-box">
-          <div class="ae-task-label">Assigned Task</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <div class="ae-task-label">Assigned Tasks (${(a.tasks || []).length})</div>
+          ${(a.tasks && a.tasks.length > 0) ? a.tasks.map(t => {
+            const tPri = t.priority === 'High' ? 'pri-high' : t.priority === 'Low' ? 'pri-low' : 'pri-medium';
+            const tStatus = t.status === 'done' ? '✅' : t.status === 'progress' ? '🔄' : '⬜';
+            return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border2)">
+              <span style="font-size:12px">${tStatus}</span>
+              <span class="ae-task-text" style="flex:1">${t.desc}</span>
+              <span class="priority-badge ${tPri}" style="font-size:9px">${t.priority}</span>
+            </div>`;
+          }).join('') : `<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span class="ae-task-text">${a.taskDesc}</span>
             <span class="priority-badge ${priCls}">${a.priority}</span>
-          </div>
+          </div>`}
           <div style="font-size:11px;color:var(--text3);margin-top:5px;">Assigned by Vendor · ${new Date(a.assignedAt).toLocaleDateString()}</div>
         </div>
         <div class="ae-actions">${actionBtns}</div>
@@ -238,12 +281,12 @@ function renderCards() {
 }
 
 function respond(id, decision) {
-  const all = loadAssignments();
-  const idx = all.findIndex(a => a.id === id);
-  if (idx === -1) return;
-  all[idx].status = decision;
-  if (decision === 'accepted') all[idx].respondedAt = new Date().toISOString();
-  saveAssignments(all);
+  const patch = { status: decision };
+  if (decision === 'accepted') patch.respondedAt = new Date().toISOString();
+  
+  // Use DB.update which goes through PATCH /staff-assignments/:id API
+  DB.update('staffAssignments', id, patch);
+  
   showToast(decision === 'accepted' ? '✓ Assignment accepted! Check your Task Board.' : '✕ Assignment rejected.', decision === 'accepted' ? 'success' : 'warn');
   renderCards();
 }
@@ -272,8 +315,15 @@ function showToast(msg, type='success') {
 
 // Clean up: Ensure we are pulling fresh on load
 document.addEventListener('DOMContentLoaded', () => {
+    initIdentity();
     renderCards();
+    // Auto-refresh UI to sync with backend
+    setInterval(renderCards, 5000);
 });
 </script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

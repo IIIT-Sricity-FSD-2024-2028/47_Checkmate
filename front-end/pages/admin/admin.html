@@ -112,9 +112,9 @@
                     <div class="stat-icon stat-icon--blue"><i data-lucide="users"></i></div>
                 </div>
                 <div class="stat-label">Total Users</div>
-                <div class="stat-value">1,245</div>
-                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +30 since last login
+                <div class="stat-value" id="dashTotalUsers">-</div>
+                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;" id="dashUsersTrend">
+                    <i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change
                 </div>
             </div>
             <div class="stat-card">
@@ -122,9 +122,9 @@
                     <div class="stat-icon stat-icon--purple"><i data-lucide="store"></i></div>
                 </div>
                 <div class="stat-label">Total Vendors</div>
-                <div class="stat-value">320</div>
-                <div style="font-size: 13px; color: #ef4444; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                    <i data-lucide="trending-down" style="width: 14px; height: 14px;"></i> -10 since last login
+                <div class="stat-value" id="dashTotalVendors">-</div>
+                <div style="font-size: 13px; color: #ef4444; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;" id="dashVendorsTrend">
+                    <i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change
                 </div>
             </div>
             <div class="stat-card">
@@ -132,9 +132,9 @@
                     <div class="stat-icon stat-icon--green"><i data-lucide="calendar"></i></div>
                 </div>
                 <div class="stat-label">Active Events</div>
-                <div class="stat-value">84</div>
-                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +5 since last login
+                <div class="stat-value" id="dashActiveEvents">-</div>
+                <div style="font-size: 13px; color: #22c55e; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;" id="dashEventsTrend">
+                    <i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change
                 </div>
             </div>
             <div class="stat-card">
@@ -142,8 +142,8 @@
                     <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
                 </div>
                 <div class="stat-label">Pending Approvals</div>
-                <div class="stat-value">12</div>
-                <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                <div class="stat-value" id="dashPendingApps">-</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 4px;" id="dashPendingTrend">
                     <i data-lucide="minus" style="width: 14px; height: 14px;"></i> No change
                 </div>
             </div>
@@ -202,21 +202,21 @@
                             <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i data-lucide="user"></i></div>
                             <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Clients</span>
                         </div>
-                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">850</span>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="distClients">-</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(168, 85, 247, 0.1); color: #a855f7;"><i data-lucide="store"></i></div>
                             <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Vendors</span>
                         </div>
-                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">300</span>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="distVendors">-</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); color: #22c55e;"><i data-lucide="shield-check"></i></div>
                             <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Staff</span>
                         </div>
-                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);">95</span>
+                        <span style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="distStaff">-</span>
                     </div>
                 </div>
             </div>
@@ -261,5 +261,9 @@
   <script src="../../scripts/admin_js/admin-alerts.js"></script>
   <script src="../../scripts/admin_js/admin.js"></script>
   <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

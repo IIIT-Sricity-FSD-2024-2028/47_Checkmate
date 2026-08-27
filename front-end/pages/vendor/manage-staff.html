@@ -352,14 +352,20 @@
           <i data-lucide="box"></i>
           <span>Preset Package</span>
         </a>
-        <a href="report-issue.html" class="nav-item">
-          <i data-lucide="flag"></i>
-          <span>Report Issue</span>
-        </a>
-        <a href="coordination.html" class="nav-item">
-          <i data-lucide="message-square"></i>
-          <span>Coordination Hub</span>
-        </a>
+        <div class="nav-group" onclick="this.classList.toggle('open')">
+          <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-sub">
+            <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+            <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+          </div>
+        </div>
+        <div class="nav-group" onclick="this.classList.toggle('open')">
+          <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+          <div class="nav-sub">
+            <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+            <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+          </div>
+        </div>
         <a href="monitoring.html" class="nav-item">
           <i data-lucide="radio"></i>
           <span>Monitor Live Events</span>
@@ -392,10 +398,7 @@
       <header class="topbar">
         <h1 class="page-title">Manage Staff</h1>
         <div class="topbar__right">
-          <div class="search-box">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" placeholder="Search..." />
-          </div>
+
           <button class="notif-btn">
             <i data-lucide="bell"></i>
             <span class="notif-badge">1</span>
@@ -412,330 +415,50 @@
             <i data-lucide="search"></i>
             <input type="text" placeholder="Search staff by name or email..." />
           </div>
-          <button class="ms-filter-btn">
-            <i data-lucide="sliders-horizontal"></i>
-            More Filters
-          </button>
+          <div style="position:relative;" id="staffFilterWrapper">
+            <button class="ms-filter-btn">
+              <i data-lucide="sliders-horizontal"></i>
+              More Filters
+            </button>
+            <div id="staffFilterDropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:8px;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:8px;padding:16px;width:240px;box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:100;">
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Role</label>
+                <select id="filterStaffRole" class="ri-select">
+                  <option value="All">All Roles</option>
+                  <option value="Coordinator">Coordinator</option>
+                  <option value="Technician">Technician</option>
+                  <option value="Photographer">Photographer</option>
+                </select>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Status</label>
+                <select id="filterStaffStatus" class="ri-select">
+                  <option value="All">All Statuses</option>
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                  <option value="off">Off Duty</option>
+                </select>
+              </div>
+              <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Workload</label>
+                <select id="filterStaffWorkload" class="ri-select">
+                  <option value="All">All Workloads</option>
+                  <option value="Low">Low (<50%)</option>
+                  <option value="Medium">Medium (50-79%)</option>
+                  <option value="High">High (80%+)</option>
+                </select>
+              </div>
+              <button id="applyStaffFilters" style="width:100%;padding:8px;background:var(--pink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Apply Filters</button>
+            </div>
+          </div>
           <button class="ms-add-btn">
             <i data-lucide="plus"></i>
             Add Staff
           </button>
         </div>
 
-        <!-- Staff Cards Grid -->
-        <div class="staff-grid">
-
-          <!-- Card 1 — Alex Johnson -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--pink">AJ</div>
-                <div>
-                  <div class="staff-name">Alex Johnson</div>
-                  <div class="staff-role">Event Coordinator</div>
-                </div>
-              </div>
-              <span class="staff-status available">available</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8901
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                alex@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct medium">75%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill medium" style="width: 75%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S001" data-staff-name="Alex Johnson" data-staff-role="Event Coordinator">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 2 — Sarah Williams -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--teal">SW</div>
-                <div>
-                  <div class="staff-name">Sarah Williams</div>
-                  <div class="staff-role">Technical Lead</div>
-                </div>
-              </div>
-              <span class="staff-status available">available</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8902
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                sarah@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct medium">60%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill medium" style="width: 60%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S002" data-staff-name="Sarah Williams" data-staff-role="Technical Lead">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 3 — Michael Brown -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--purple">MB</div>
-                <div>
-                  <div class="staff-name">Michael Brown</div>
-                  <div class="staff-role">Security Chief</div>
-                </div>
-              </div>
-              <span class="staff-status busy">busy</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8903
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                michael@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct high">90%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill high" style="width: 90%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S003" data-staff-name="Michael Brown" data-staff-role="Security Chief">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 4 — Lisa Chen -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--green">LC</div>
-                <div>
-                  <div class="staff-name">Lisa Chen</div>
-                  <div class="staff-role">Catering Manager</div>
-                </div>
-              </div>
-              <span class="staff-status available">available</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8904
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                lisa@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct low">40%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill low" style="width: 40%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S004" data-staff-name="Lisa Chen" data-staff-role="Catering Manager">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 5 — James Rivera -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--orange">JR</div>
-                <div>
-                  <div class="staff-name">James Rivera</div>
-                  <div class="staff-role">AV Technician</div>
-                </div>
-              </div>
-              <span class="staff-status busy">busy</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8905
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                james@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct high">85%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill high" style="width: 85%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S005" data-staff-name="James Rivera" data-staff-role="AV Technician">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 6 — Nina Patel -->
-          <div class="staff-card">
-            <div class="staff-card__header">
-              <div class="staff-card__info">
-                <div class="staff-avatar avatar--teal">NP</div>
-                <div>
-                  <div class="staff-name">Nina Patel</div>
-                  <div class="staff-role">Logistics Officer</div>
-                </div>
-              </div>
-              <span class="staff-status off">off duty</span>
-            </div>
-
-            <div class="staff-card__contact">
-              <div class="contact-row">
-                <i data-lucide="phone"></i>
-                +1 234-567-8906
-              </div>
-              <div class="contact-row">
-                <i data-lucide="mail"></i>
-                nina@eventpro.com
-              </div>
-            </div>
-
-            <div class="staff-card__workload">
-              <div class="workload-header">
-                <span class="workload-label">
-                  <i data-lucide="activity"></i> Workload
-                </span>
-                <span class="workload-pct low">20%</span>
-              </div>
-              <div class="workload-bar-bg">
-                <div class="workload-bar-fill low" style="width: 20%"></div>
-              </div>
-            </div>
-
-            <div class="staff-card__actions">
-              <button class="staff-btn staff-btn--schedule">
-                <i data-lucide="calendar"></i> Schedule
-              </button>
-              <button class="staff-btn staff-btn--edit">
-                <i data-lucide="pencil"></i> Edit
-              </button>
-              <button class="staff-btn staff-btn--delete">
-                <i data-lucide="trash-2"></i> Delete
-              </button>
-              <button class="staff-btn staff-btn--assign assign-btn" data-staff-id="S006" data-staff-name="Nina Patel" data-staff-role="Logistics Officer">
-                <i data-lucide="user-plus"></i> Assign
-              </button>
-            </div>
-          </div><!-- /card Nina Patel -->
+        <!-- Staff Cards Grid (dynamically populated by staff.js) -->
+        <div class="staff-grid"></div>
 
       </div><!-- /.content -->
     </main>
@@ -744,6 +467,47 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
+  <!-- Recruitment Modal -->
+  <div id="recruitModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-sidebar,#1a1a2e);border:1px solid var(--border);border-radius:12px;width:min(450px,90vw);padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+      <h3 style="margin-top:0;margin-bottom:15px;color:var(--text-primary);font-size:18px;">Request New Recruitment</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Position</label>
+          <input type="text" id="reqPosition" placeholder="e.g. Senior Photographer" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main);color:#fff;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Location</label>
+          <input type="text" id="reqLocation" placeholder="e.g. New York, NY" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main);color:#fff;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Type</label>
+          <select id="reqType" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main);color:#fff;">
+            <option value="Full Time">Full Time</option>
+            <option value="Part Time">Part Time</option>
+            <option value="Contract">Contract</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Salary / Rate</label>
+          <input type="text" id="reqSalary" placeholder="e.g. $40,000 or $25/hr" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main);color:#fff;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Job Description</label>
+          <textarea id="reqDesc" rows="3" placeholder="Brief description of the role..." style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-main);color:#fff;resize:vertical;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button id="closeRecruitModal" style="padding:10px 16px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;">Cancel</button>
+        <button id="submitRecruitModal" style="padding:10px 16px;border-radius:8px;background:var(--pink);border:none;color:#fff;font-weight:600;cursor:pointer;">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../../scripts/vendor_js/staff.js"></script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

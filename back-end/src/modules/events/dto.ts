@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Allow, IsArray, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateEventDto {
   @ApiPropertyOptional({ example: 'EVT005' }) @IsOptional() @IsString() id?: string;
@@ -13,7 +13,11 @@ export class CreateEventDto {
   @ApiPropertyOptional({ example: 200 }) @IsOptional() @IsNumber() @Min(1) guests?: number;
   @ApiPropertyOptional({ example: 'pending' }) @IsOptional() @IsString() status?: string;
   @ApiPropertyOptional({ example: 'Acme Inc.' }) @IsOptional() @IsString() client?: string;
+  @ApiPropertyOptional({ example: 'U004' }) @IsOptional() @IsString() clientId?: string;
+  @ApiPropertyOptional({ example: 'client@example.com' }) @IsOptional() @IsString() clientEmail?: string;
   @ApiPropertyOptional({ example: 'Elite Events Co.' }) @IsOptional() @IsString() vendor?: string;
+  @ApiPropertyOptional({ example: 'V001' }) @IsOptional() @IsString() vendorId?: string;
+  @ApiPropertyOptional({ example: 'vendor@example.com' }) @IsOptional() @IsString() vendorEmail?: string;
   @ApiPropertyOptional({ example: 'client' }) @IsOptional() @IsString() createdBy?: string;
   @ApiPropertyOptional({ example: 'P004' }) @IsOptional() @IsString() packageId?: string;
   @ApiPropertyOptional({ example: 12000 }) @IsOptional() @IsNumber() @Min(0) budget?: number;
@@ -24,5 +28,12 @@ export class CreateEventDto {
   @ApiPropertyOptional({ example: '2026-05-01T12:00:00.000Z' }) @IsOptional() @IsString() approvedAt?: string;
   @ApiPropertyOptional({ example: '2026-05-01T12:00:00.000Z' }) @IsOptional() @IsString() startedAt?: string;
   @ApiPropertyOptional({ example: '2026-05-01T12:00:00.000Z' }) @IsOptional() @IsString() endedAt?: string;
+  @ApiPropertyOptional({ description: 'Resources requested by client' }) @IsOptional() @Allow() requestedResources?: any[];
+  @ApiPropertyOptional({ description: 'Staff requested by client' }) @IsOptional() @Allow() requestedStaff?: any[];
+  @ApiPropertyOptional({ example: 5000 }) @IsOptional() @IsNumber() estimatedCost?: number;
+  @ApiPropertyOptional({ example: '$5,000 - $10,000' }) @IsOptional() @IsString() budgetRange?: string;
+  @ApiPropertyOptional({ description: 'Reason for rejection' }) @IsOptional() @IsString() rejectionReason?: string;
+  @ApiPropertyOptional({ example: '2026-05-01T12:00:00.000Z' }) @IsOptional() @IsString() rejectedAt?: string;
+  @ApiPropertyOptional({ description: 'Detected conflicts' }) @IsOptional() @Allow() conflicts?: any[];
 }
 export class UpdateEventDto extends PartialType(CreateEventDto) {}

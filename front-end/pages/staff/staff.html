@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>EventPro - Dashboard</title>
+<title>EventPro Staff - Dashboard</title>
 <link rel="stylesheet" href="../../styles/staff_css/staff.css"/>
 <link rel="stylesheet" href="../../styles/staff_css/animations.css"/>
 <style>
@@ -103,7 +103,6 @@
   <div class="sb-footer">
     <div class="sb-uname">Mike Staff</div>
     <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>Light Mode</button>
     <a href="../LandingPage/index.html" class="sb-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Logout
@@ -208,12 +207,34 @@
 </div>
 <script src="../../scripts/vendor_js/data.js"></script>
 <script>
-const STORE_KEY = 'eventpro_staffAssignments';
-const MY_STAFF_ID = 'S001';
+const STORE_KEY = 'staffAssignments';
 
 function updateDashboard() {
-  const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-  const mine = all.filter(a => a.staffId === MY_STAFF_ID || a.staffName === 'Alex Johnson');
+  const s = DB.getSession();
+  const MY_NAME = s.user || 'Staff Member';
+  const MY_EMAIL = (s.email || '').toLowerCase();
+  
+  // Try matching by name first, then by email
+  const staffList = DB.getAll('staff');
+  let me = staffList.find(st => st.name === MY_NAME);
+  if (!me && MY_EMAIL) {
+    me = staffList.find(st => (st.email || '').toLowerCase() === MY_EMAIL);
+  }
+  const MY_STAFF_ID = me ? me.id : null;
+
+  // Update UI names
+  document.querySelectorAll('.sb-uname').forEach(el => el.textContent = MY_NAME);
+  document.querySelectorAll('.sb-uemail').forEach(el => el.textContent = s.email || 'staff@demo.com');
+  const topbarTitle = document.querySelector('.topbar-left h1');
+  if (topbarTitle) topbarTitle.innerHTML = `Welcome back, ${MY_NAME.split(' ')[0]} 👋`;
+
+  const all = DB.getAll('staffAssignments') || [];
+  const safeName = (MY_NAME || '').trim().toLowerCase();
+  const mine = all.filter(a => {
+    if (MY_STAFF_ID && a.staffId === MY_STAFF_ID) return true;
+    if (a.staffName && a.staffName.trim().toLowerCase() === safeName) return true;
+    return false;
+  });
   
   // Stats
   const pendingCount = mine.filter(a => a.status === 'pending').length;
@@ -286,6 +307,9 @@ function updateDashboard() {
   setInterval(updateClock, 1000);
 }
 
+// Check for updates every 5 seconds to sync with backend polling
+setInterval(updateDashboard, 5000);
+
 function showDashboardToast(msg, type='success') {
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:12px;background:rgba(15,23,42,0.9);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);color:#fff;font-weight:600;font-size:14px;box-shadow:0 20px 40px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideDown 0.4s cubic-bezier(.16,1,.3,1);';
@@ -297,5 +321,9 @@ function showDashboardToast(msg, type='success') {
 
 document.addEventListener('DOMContentLoaded', updateDashboard);
 </script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

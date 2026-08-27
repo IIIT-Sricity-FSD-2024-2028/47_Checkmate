@@ -7,10 +7,11 @@ export class CreateVendorApplicationDto {
   @ApiProperty({ example: 'Aurora Event Studio' }) @IsString() businessName: string;
   @ApiProperty({ example: 'priya@auroraevents.com' }) @IsEmail() email: string;
   @ApiProperty({ example: '+1 555-0101' }) @IsString() phone: string;
-  @ApiProperty({ example: 'Event Planning' }) @IsString() category: string;
+  @ApiPropertyOptional({ example: 'Event Planning' }) @IsOptional() @IsString() category?: string;
   @ApiPropertyOptional({ example: 'active' }) @IsOptional() @IsString() categoryClass?: string;
   @ApiProperty({ example: [{ name: 'license.pdf', type: 'license' }] }) @IsArray() documents: Array<{ name: string; type: string }>;
   @ApiPropertyOptional({ enum: ['pending', 'approved', 'rejected'] }) @IsOptional() @IsIn(['pending', 'approved', 'rejected']) status?: 'pending' | 'approved' | 'rejected';
+  @ApiPropertyOptional({ example: 'hashed_password' }) @IsOptional() @IsString() passwordHash?: string;
 }
 export class UpdateVendorApplicationDto extends PartialType(CreateVendorApplicationDto) {}
 

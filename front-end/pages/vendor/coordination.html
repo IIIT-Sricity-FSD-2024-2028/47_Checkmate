@@ -602,8 +602,20 @@
       <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
       <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
       <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
-      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
-      <a href="coordination.html"    class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+      <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+      <div class="nav-sub">
+        <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+        <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+      </div>
+      </div>
+      <div class="nav-group open" onclick="this.classList.toggle('open')">
+        <div class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item active"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
       <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
         <a href="./verify-docs.html" class="nav-item">
           <i data-lucide="shield-check"></i>
@@ -639,65 +651,30 @@
       <!-- Intro -->
       <div class="ch-intro">
         <h2>Coordination Hub</h2>
-        <p>Tech Summit 2026 – Real-time collaboration</p>
+        <p>Select an event to start collaborating</p>
       </div>
 
       <!-- Section switcher -->
       <div class="ch-section-tabs">
         <a href="coordination.html"        class="ch-section-tab active">
-          <i data-lucide="store"></i>
-          Vendor – Vendor
+          <i data-lucide="message-square"></i>
+          All Channels
         </a>
         <a href="coordination-staff.html"  class="ch-section-tab">
           <i data-lucide="hard-hat"></i>
-          Vendor – Staff
+          Staff Channel
         </a>
         <a href="coordination-client.html" class="ch-section-tab">
           <i data-lucide="user-round"></i>
-          Vendor – Client
+          Client Channel
         </a>
       </div>
 
-      <!-- Participants -->
+      <!-- Participants (dynamic) -->
       <div class="ch-participants">
         <h4>Event Participants</h4>
         <div class="ch-participant-list">
-
-          <div class="ch-participant active-user">
-            <div class="ch-avatar ch-avatar--aj">AJ<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Alex Johnson</div>
-              <div class="ch-participant-role">
-                <span class="role-badge-coord">Coordinator</span>
-                Event Coordinator
-              </div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--sw">SW<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Sarah Williams</div>
-              <div class="ch-participant-role">Event Coordinator</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--mb">MB<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Michael Brown</div>
-              <div class="ch-participant-role">Catering Vendor</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--ed">ED<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Emily Davis</div>
-              <div class="ch-participant-role">Security Vendor</div>
-            </div>
-          </div>
-
+          <!-- Populated by coordination.js -->
         </div>
       </div>
 
@@ -714,85 +691,19 @@
           <!-- Channel tabs -->
           <div class="ch-channel-tabs">
             <button class="ch-tab active" data-ch="all">All</button>
-            <button class="ch-tab" data-ch="lighting">Lighting</button>
-            <button class="ch-tab" data-ch="catering">Catering</button>
-            <button class="ch-tab" data-ch="coordination">Coordination</button>
-            <button class="ch-tab" data-ch="security">Security</button>
+            <button class="ch-tab" data-ch="staff">Staff</button>
+            <button class="ch-tab" data-ch="client">Client</button>
+            <button class="ch-tab" data-ch="issues">Issues</button>
           </div>
 
-          <!-- Messages -->
+          <!-- Messages (dynamic) -->
           <div class="ch-messages" id="messagesArea">
-
-            <div class="ch-sys-msg event-start">
-              <i data-lucide="zap" style="width:13px;height:13px"></i>
-              Event coordination started for Tech Summit 2026
-              <span class="sys-time">10:00 AM</span>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--aj">AJ</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Alex Johnson</span>
-                  <span class="ch-msg__role-tag">Event Coordinator</span>
-                  <span class="ch-msg__time">10:05 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Good morning team! Let's prepare for the setup tomorrow.</div>
-              </div>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--sw">SW</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Sarah Williams</span>
-                  <span class="ch-msg__role-tag">Event Coordinator</span>
-                  <span class="ch-msg__time">10:12 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Audio equipment is ready. Running final tests now.</div>
-              </div>
-            </div>
-
-            <div class="ch-sys-msg alert">
-              <i data-lucide="alert-triangle" style="width:13px;height:13px"></i>
-              Resource shortage detected: LED Screen allocation requires confirmation
-              <span class="sys-time">10:15 AM</span>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--mb">MB</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Michael Brown</span>
-                  <span class="ch-msg__role-tag">Catering Vendor</span>
-                  <span class="ch-msg__time">10:20 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Catering supplies ordered. Delivery confirmed for tomorrow 7 AM.</div>
-              </div>
-            </div>
-
-            <div class="ch-announce">
-              <div class="ch-announce__label">
-                <i data-lucide="megaphone" style="width:12px;height:12px"></i>
-                Announcement
-                <span class="ch-announce__time">10:25 AM</span>
-              </div>
-              <div class="ch-announce__body">ANNOUNCEMENT: Team briefing at 2 PM today. Attendance is mandatory.</div>
-              <div class="ch-announce__from">From: Alex Johnson (Event Coordinator)</div>
-            </div>
-
-            <div class="ch-sys-msg staff-move">
-              <i data-lucide="users" style="width:13px;height:13px"></i>
-              Staff reassigned: 2 technicians moved to lighting setup
-              <span class="sys-time">10:30 AM</span>
-            </div>
-
-          </div><!-- /ch-messages -->
+            <!-- Populated by coordination.js -->
+          </div>
 
           <!-- Input bar -->
           <div class="ch-input-bar">
             <button class="ch-input-icon-btn" title="Attach"><i data-lucide="paperclip" style="width:16px;height:16px;display:block"></i></button>
-            <button class="ch-input-icon-btn" title="Emoji"><i data-lucide="smile" style="width:16px;height:16px;display:block"></i></button>
             <input class="ch-input" id="msgInput" type="text" placeholder="Type a message..." />
             <button class="ch-send-btn" id="sendBtn" title="Send"><i data-lucide="send" style="width:16px;height:16px;display:block"></i></button>
           </div>
@@ -801,7 +712,7 @@
         <!-- ── Right column ── -->
         <div class="ch-right">
 
-          <!-- Reported Issues -->
+          <!-- Reported Issues (dynamic) -->
           <div class="ch-contingency" id="coordIssuesBox" style="display:none">
             <div class="ch-contingency__header">
               <i data-lucide="alert-octagon" style="color:var(--red);width:16px;height:16px;"></i>
@@ -811,33 +722,16 @@
             </div>
           </div>
 
-          <!-- Contingency Actions -->
-          <div class="ch-contingency">
+          <!-- Contingency Actions (dynamic) -->
+          <div class="ch-contingency" id="contingencyBox">
             <div class="ch-contingency__header">
               <i data-lucide="shield-alert"></i>
-              <h4>Contingency Actions</h4>
+              <h4>Contingency Plans</h4>
             </div>
-            <div class="ch-contingency__list">
-              <div class="ch-alert-item">
-                <i data-lucide="alert-triangle"></i>
-                <div class="ch-alert-item__body">
-                  <div class="ch-alert-item__title">Lighting delay detected</div>
-                  <div class="ch-alert-item__sub">→ Use backup LED system</div>
-                </div>
-              </div>
-              <div class="ch-alert-item">
-                <i data-lucide="alert-triangle"></i>
-                <div class="ch-alert-item__body">
-                  <div class="ch-alert-item__title">Audio equipment shortage</div>
-                  <div class="ch-alert-item__sub">→ Rent additional speakers</div>
-                </div>
-              </div>
+            <div class="ch-contingency__list" id="contingencyList">
+              <!-- Populated by coordination.js -->
             </div>
-            <button class="ch-trigger-btn">Trigger Contingency</button>
           </div>
-
-          <!-- Tasks -->
-
 
         </div><!-- /ch-right -->
       </div><!-- /ch-grid -->
@@ -846,16 +740,18 @@
   </main>
 </div>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
-"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/coordination-hub.js"></script>
   <script src="../../scripts/message-system.js"></script>
   <script src="../../scripts/notification-system.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/coordination.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
+  <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
+
 </html>

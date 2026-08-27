@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function setSession(payload) {
     const user = payload.user;
     const role = payload.role || roleHeader[user.role] || 'client';
-    localStorage.setItem('checkmate_session', JSON.stringify({ token: payload.token, user, role }));
-    localStorage.setItem('accountType', user.role);
+    sessionStorage.setItem('checkmate_session', JSON.stringify({ token: payload.token, user, role }));
+    sessionStorage.setItem('accountType', user.role);
   }
 
   function showError(message) {
@@ -187,30 +187,90 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.querySelector('.btn-submit')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const selectedTypeCard = document.querySelector('.type-card.selected');
-    const data = { ...draft(), role: selectedTypeCard ? selectedTypeCard.dataset.type : draft().role || 'Vendor' };
-    const submitBtn = e.currentTarget;
-    submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
-    try {
-      const endpoint = data.role === 'Staff' ? 'staff/signup' : 'auth/register';
-      const payload = api('POST', endpoint, {
-        name: `${data.firstName} ${data.lastName}`.trim(),
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
-        role: data.role,
+  const step3Btn = document.querySelector('#signup-form-3 .btn-submit') || document.querySelector('.btn-submit');
+  if (step3Btn) {
+    step3Btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const selectedTypeCard = document.querySelector('.type-card.selected');
+      const data = { ...draft(), role: selectedTypeCard ? selectedTypeCard.dataset.type : draft().role || 'Vendor' };
+      
+      if (data.role === 'Vendor') {
+        saveDraft({ role: data.role });
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = 'signup-step4.html'; }, 450);
+        return;
+      }
+      
+      const submitBtn = e.currentTarget;
+      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
+      try {
+        const endpoint = data.role === 'Staff' ? 'auth/register' : 'auth/register';
+        const payload = api('POST', endpoint, {
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+          role: data.role,
+        });
+        setSession(payload);
+        localStorage.removeItem(SIGNUP_KEY);
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = redirectByRole[payload.role]; }, 450);
+      } catch (error) {
+        submitBtn.innerHTML = 'Finish &rarr;';
+        showError(error.message);
+      }
+    });
+  }
+
+  const step4Btn = document.querySelector('#signup-form-4 .btn-submit');
+  if (step4Btn) {
+    step4Btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const data = draft();
+      const businessName = document.getElementById('businessName').value.trim();
+      
+      if (!businessName) {
+        showError('Business Name is required.');
+        return;
+      }
+
+      // Capture actual file names from file inputs
+      const fileInputs = document.querySelectorAll('#signup-form-4 input[type="file"]');
+      const documents = [];
+      const docTypes = ['license', 'tax_id'];
+      const docLabels = ['Business License', 'Tax ID / GST'];
+      fileInputs.forEach((input, idx) => {
+        if (input.files && input.files.length > 0) {
+          documents.push({ name: input.files[0].name, type: docTypes[idx] || 'document' });
+        } else {
+          // Even if no file chosen, record the expected document type
+          documents.push({ name: docLabels[idx] || 'Document', type: docTypes[idx] || 'document' });
+        }
       });
-      setSession(payload);
-      localStorage.removeItem(SIGNUP_KEY);
-      document.querySelector('.container').classList.add('page-exit');
-      setTimeout(() => { window.location.href = redirectByRole[payload.role]; }, 450);
-    } catch (error) {
-      submitBtn.innerHTML = 'Finish &rarr;';
-      showError(error.message);
-    }
-  });
+      
+      const submitBtn = e.currentTarget;
+      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Submitting...</span>';
+      try {
+        const payload = api('POST', 'vendor-applications', {
+          vendorName: `${data.firstName} ${data.lastName}`.trim(),
+          businessName: businessName,
+          email: data.email,
+          phone: data.phone || '',
+          category: 'General',
+          documents: documents,
+          passwordHash: data.password // Raw password; will be hashed on approval by backend
+        });
+        localStorage.removeItem(SIGNUP_KEY);
+        alert('Application submitted successfully! Please wait for admin approval.');
+        document.querySelector('.container').classList.add('page-exit');
+        setTimeout(() => { window.location.href = '../LandingPage/index.html'; }, 450);
+      } catch (error) {
+        submitBtn.innerHTML = 'Submit Application &rarr;';
+        showError(error.message);
+      }
+    });
+  }
 
   document.querySelectorAll('.btn-secondary').forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -237,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         payload = api('POST', 'auth/login', { email, password });
       }
       setSession(payload);
+      localStorage.removeItem('checkmate_admin_baseline');
       window.location.href = redirectByRole[payload.role] || '../LandingPage/index.html';
     } catch (error) {
       showError(error.message);

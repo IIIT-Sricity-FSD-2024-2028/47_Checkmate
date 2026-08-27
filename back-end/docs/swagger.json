@@ -2742,6 +2742,10 @@
           "status": {
             "type": "string",
             "example": "approved"
+          },
+          "note": {
+            "type": "string",
+            "example": "Approval remarks or rejection reason"
           }
         },
         "required": [

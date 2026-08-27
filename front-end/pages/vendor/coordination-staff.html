@@ -285,8 +285,20 @@
       <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
       <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
       <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
-      <a href="report-issue.html"    class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span></a>
-      <a href="coordination.html"    class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+      <div class="nav-item"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+      <div class="nav-sub">
+        <a href="report-issue.html" class="nav-item"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+        <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+      </div>
+      </div>
+      <div class="nav-group open" onclick="this.classList.toggle('open')">
+        <div class="nav-item active"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item active"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
       <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
         <a href="./verify-docs.html" class="nav-item">
           <i data-lucide="shield-check"></i>
@@ -322,70 +334,30 @@
       <!-- Intro -->
       <div style="display:flex;flex-direction:column;gap:2px;">
         <h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary);">Coordination Hub</h2>
-        <p style="font-size:13px;color:var(--text-secondary);">Tech Summit 2026 – Real-time collaboration</p>
+        <p class="ch-intro-sub" style="font-size:13px;color:var(--text-secondary);">Select an event — Staff Channel</p>
       </div>
 
       <!-- Section switcher -->
       <div class="ch-section-tabs">
         <a href="coordination.html"        class="ch-section-tab">
-          <i data-lucide="store"></i>
-          Vendor – Vendor
+          <i data-lucide="message-square"></i>
+          All Channels
         </a>
         <a href="coordination-staff.html"  class="ch-section-tab active">
           <i data-lucide="hard-hat"></i>
-          Vendor – Staff
+          Staff Channel
         </a>
         <a href="coordination-client.html" class="ch-section-tab">
           <i data-lucide="user-round"></i>
-          Vendor – Client
+          Client Channel
         </a>
       </div>
 
-      <!-- Participants -->
+      <!-- Participants (dynamic) -->
       <div class="ch-participants">
         <h4>Staff Members</h4>
         <div class="ch-participant-list">
-
-          <div class="ch-participant active-user">
-            <div class="ch-avatar ch-avatar--sw">SW<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Sarah Williams</div>
-              <div class="ch-participant-role"><span class="role-badge-staff">Vendor</span> Audio Vendor</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--jt">JT<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">James Turner</div>
-              <div class="ch-participant-role">Sound Technician</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--lm">LM<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Lisa Moore</div>
-              <div class="ch-participant-role">Lighting Tech</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--rk">RK<span class="ch-online-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Ryan Kim</div>
-              <div class="ch-participant-role">Stage Manager</div>
-            </div>
-          </div>
-
-          <div class="ch-participant">
-            <div class="ch-avatar ch-avatar--np">NP<span class="ch-offline-dot"></span></div>
-            <div class="ch-participant-info">
-              <div class="ch-participant-name">Nina Patel</div>
-              <div class="ch-participant-role">AV Support</div>
-            </div>
-          </div>
-
+          <!-- Populated by coordination.js -->
         </div>
       </div>
 
@@ -400,97 +372,17 @@
           </div>
 
           <div class="ch-channel-tabs">
-            <button class="ch-tab active">All</button>
-            <button class="ch-tab">Audio</button>
-            <button class="ch-tab">Lighting</button>
-            <button class="ch-tab">Stage</button>
+            <button class="ch-tab active" data-ch="staff">Staff</button>
+            <button class="ch-tab" data-ch="all">All</button>
+            <button class="ch-tab" data-ch="issues">Issues</button>
           </div>
 
           <div class="ch-messages" id="messagesArea">
-
-            <div class="ch-sys-msg info">
-              <i data-lucide="zap" style="width:13px;height:13px"></i>
-              Staff briefing session started for Tech Summit 2026
-              <span class="sys-time">9:00 AM</span>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--sw">SW</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Sarah Williams</span>
-                  <span class="ch-msg__role-tag">Event Coordinator</span>
-                  <span class="ch-msg__time">9:05 AM</span>
-                </div>
-                <div class="ch-msg__bubble">James, please ensure the main stage speakers are tested before 10 AM.</div>
-              </div>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--jt">JT</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">James Turner</span>
-                  <span class="ch-msg__role-tag">Sound Technician</span>
-                  <span class="ch-msg__time">9:08 AM</span>
-                </div>
-                <div class="ch-msg__bubble">On it! Running the soundcheck now. Mics are up and balanced.</div>
-              </div>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--lm">LM</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Lisa Moore</span>
-                  <span class="ch-msg__role-tag">Lighting Tech</span>
-                  <span class="ch-msg__time">9:15 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Stage lighting is configured. Backup LED panels are on standby in Hall B.</div>
-              </div>
-            </div>
-
-            <div class="ch-sys-msg alert">
-              <i data-lucide="alert-triangle" style="width:13px;height:13px"></i>
-              Shift gap detected: No staff assigned to Hall C from 11 AM – 1 PM
-              <span class="sys-time">9:20 AM</span>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--sw">SW</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Sarah Williams</span>
-                  <span class="ch-msg__role-tag">Event Coordinator</span>
-                  <span class="ch-msg__time">9:22 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Ryan, can you cover Hall C during that window? We need someone on the monitors.</div>
-              </div>
-            </div>
-
-            <div class="ch-msg">
-              <div class="ch-msg__avatar ch-avatar--rk">RK</div>
-              <div class="ch-msg__body">
-                <div class="ch-msg__meta">
-                  <span class="ch-msg__name">Ryan Kim</span>
-                  <span class="ch-msg__role-tag">Stage Manager</span>
-                  <span class="ch-msg__time">9:25 AM</span>
-                </div>
-                <div class="ch-msg__bubble">Sure, I'll shift my break to later and cover Hall C. No problem.</div>
-              </div>
-            </div>
-
-            <div class="ch-sys-msg success">
-              <i data-lucide="check-circle" style="width:13px;height:13px"></i>
-              Shift gap resolved – Ryan Kim assigned to Hall C
-              <span class="sys-time">9:26 AM</span>
-            </div>
-
-          </div><!-- /messages -->
+            <!-- Populated by coordination.js -->
+          </div>
 
           <div class="ch-input-bar">
             <button class="ch-input-icon-btn" title="Attach"><i data-lucide="paperclip" style="width:16px;height:16px;display:block"></i></button>
-            <button class="ch-input-icon-btn" title="Emoji"><i data-lucide="smile" style="width:16px;height:16px;display:block"></i></button>
             <input class="ch-input" id="msgInput" type="text" placeholder="Type a message..." />
             <button class="ch-send-btn" id="sendBtn"><i data-lucide="send" style="width:16px;height:16px;display:block"></i></button>
           </div>
@@ -499,99 +391,20 @@
         <!-- ── Right ── -->
         <div class="ch-right">
 
-          <!-- Staff Roster -->
+          <!-- Staff Roster (dynamic) -->
           <div class="cs-roster">
             <div class="cs-roster__header">
               <div>
                 <h4>Staff Roster</h4>
-                <div class="cs-roster__sub">4 on duty · 1 offline</div>
+                <div class="cs-roster__sub">Assigned to this event</div>
               </div>
             </div>
             <div class="cs-roster-list">
-
-              <div class="cs-staff-item">
-                <div class="cs-staff-avatar ch-avatar--jt">JT<span class="online"></span></div>
-                <div class="cs-staff-info">
-                  <div class="cs-staff-name">James Turner</div>
-                  <div class="cs-staff-role">Sound Technician · Main Stage</div>
-                </div>
-                <span class="cs-staff-status on-duty">On Duty</span>
-              </div>
-
-              <div class="cs-staff-item">
-                <div class="cs-staff-avatar ch-avatar--lm">LM<span class="online"></span></div>
-                <div class="cs-staff-info">
-                  <div class="cs-staff-name">Lisa Moore</div>
-                  <div class="cs-staff-role">Lighting Tech · Hall A</div>
-                </div>
-                <span class="cs-staff-status on-duty">On Duty</span>
-              </div>
-
-              <div class="cs-staff-item">
-                <div class="cs-staff-avatar ch-avatar--rk">RK<span class="online"></span></div>
-                <div class="cs-staff-info">
-                  <div class="cs-staff-name">Ryan Kim</div>
-                  <div class="cs-staff-role">Stage Manager · Hall C</div>
-                </div>
-                <span class="cs-staff-status on-duty">On Duty</span>
-              </div>
-
-              <div class="cs-staff-item">
-                <div class="cs-staff-avatar ch-avatar--np">NP<span class="offline"></span></div>
-                <div class="cs-staff-info">
-                  <div class="cs-staff-name">Nina Patel</div>
-                  <div class="cs-staff-role">AV Support</div>
-                </div>
-                <span class="cs-staff-status off-duty">Offline</span>
-              </div>
-
+              <!-- Populated by coordination.js -->
             </div>
           </div>
 
-          <!-- Shift Schedule -->
-          <div class="cs-schedule">
-            <div class="cs-schedule__header">
-              <i data-lucide="calendar-clock"></i>
-              <h4>Today's Shifts</h4>
-            </div>
-            <div class="cs-schedule-list">
-
-              <div class="cs-shift">
-                <div class="cs-shift__left">
-                  <div class="cs-shift__name">James Turner</div>
-                  <div class="cs-shift__time">8:00 AM – 4:00 PM</div>
-                </div>
-                <span class="cs-shift__zone">Main Stage</span>
-              </div>
-
-              <div class="cs-shift">
-                <div class="cs-shift__left">
-                  <div class="cs-shift__name">Lisa Moore</div>
-                  <div class="cs-shift__time">9:00 AM – 5:00 PM</div>
-                </div>
-                <span class="cs-shift__zone">Hall A</span>
-              </div>
-
-              <div class="cs-shift">
-                <div class="cs-shift__left">
-                  <div class="cs-shift__name">Ryan Kim</div>
-                  <div class="cs-shift__time">10:00 AM – 6:00 PM</div>
-                </div>
-                <span class="cs-shift__zone">Hall C</span>
-              </div>
-
-              <div class="cs-shift" style="opacity:0.5;">
-                <div class="cs-shift__left">
-                  <div class="cs-shift__name">Nina Patel</div>
-                  <div class="cs-shift__time">2:00 PM – 10:00 PM</div>
-                </div>
-                <span class="cs-shift__zone" style="background:rgba(107,93,126,0.2);color:var(--text-muted);">Pending</span>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Tasks Widget (Moved from Vendor-Vendor) -->
+          <!-- Tasks Widget -->
           <div class="ch-tasks">
             <div class="ch-tasks__header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)">
               <div>
@@ -621,23 +434,15 @@
       <button class="modal-close" id="btnCloseTaskModal" style="background:none;border:none;color:var(--text-muted);cursor:pointer;"><i data-lucide="x"></i></button>
     </div>
     <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
-      
       <div>
         <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Task Description</label>
         <input type="text" id="taskDescInput" placeholder="E.g. Confirm LED screen allocation" style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
       </div>
-      
       <div>
         <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Assign To Staff</label>
         <select id="taskStaffSelect" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
-          <!-- Dynamically populated -->
         </select>
-        <div style="margin-top:8px;font-size:12px;">
-          <span style="color:var(--text-muted);">Staff not listed?</span> 
-          <a href="manage-staff.html" style="color:var(--pink);text-decoration:none;font-weight:500;">Add New Staff</a>
-        </div>
       </div>
-      
       <div>
         <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Priority</label>
         <select id="taskPrioritySelect" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;">
@@ -646,7 +451,6 @@
           <option value="low">Low</option>
         </select>
       </div>
-
     </div>
     <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:rgba(255,255,255,0.01);">
       <button id="btnCancelTask" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;">Cancel</button>
@@ -655,15 +459,17 @@
   </div>
 </div>
 
-
-  <script data-cfa
-sync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/coordination-hub.js"></script>
   <script src="../../scripts/message-system.js"></script>
   <script src="../../scripts/notification-system.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/coordination.js"></script>
   <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

@@ -44,42 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.style.transition = 'opacity 0.4s ease';
   requestAnimationFrame(() => document.body.style.opacity = '1');
 
-  // 2. Light Mode Toggle Logic
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
-    document.body.classList.add('light-mode');
-  }
-
-  // Bind to any button that says "Light Mode" or "Dark Mode"
-  const buttons = document.querySelectorAll('.sb-btn, button');
-  buttons.forEach(btn => {
-    if (btn.textContent.includes('Light Mode') || btn.textContent.includes('Dark Mode')) {
-      // Remove inline onclick if it exists to prevent double firing
-      if (btn.hasAttribute('onclick') && btn.getAttribute('onclick').includes('toggle')) {
-        btn.removeAttribute('onclick');
-      }
-      
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.body.classList.toggle('light-mode');
-        const isLight = document.body.classList.contains('light-mode');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        
-        // Optionally swap text inside the button
-        if(isLight) {
-          btn.innerHTML = btn.innerHTML.replace('Light Mode', 'Dark Mode');
-        } else {
-          btn.innerHTML = btn.innerHTML.replace('Dark Mode', 'Light Mode');
-        }
-      });
-      
-      // Init text
-      if (savedTheme === 'light' && btn.textContent.includes('Light Mode')) {
-         btn.innerHTML = btn.innerHTML.replace('Light Mode', 'Dark Mode');
-      }
-    }
-  });
-
   // 3. Hover Glow interactions
   document.querySelectorAll('.card, .stat-card, .event-card').forEach(el => {
     el.addEventListener('mouseenter', () => el.classList.add('hover-glow'));

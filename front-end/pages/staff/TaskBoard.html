@@ -68,7 +68,6 @@
   <div class="sb-footer">
     <div class="sb-uname">Mike Staff</div>
     <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')">Light Mode</button>
     <a href="../LandingPage/index.html" class="sb-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Logout
@@ -81,10 +80,9 @@
   <div id="taskBoardHeader">
     <div>
       <div class="page-title">Task Board</div>
-      <div class="page-sub">Double-click on columns to quickly add sub-tasks to your accepted events</div>
+      <div class="page-sub">Drag and drop tasks across columns to update their status</div>
     </div>
     <div style="display:flex; gap:10px;">
-       <button class="btn-primary" onclick="openModal()" id="mainAddTaskBtn" disabled>+ Add Custom Task</button>
     </div>
   </div>
 
@@ -160,30 +158,43 @@
 
 <script src="../../scripts/vendor_js/data.js"></script>
 <script>
-const STORE_KEY = 'eventpro_staffAssignments';
-const MY_STAFF_ID = 'S001'; 
-const MY_NAME = 'Mike Staff';
+const STORE_KEY = 'staffAssignments';
+
+let MY_STAFF_ID = null;
+let MY_NAME = 'Staff Member';
+let MY_EMAIL = '';
+
+function initIdentity() {
+  if (typeof DB !== 'undefined') {
+    const s = DB.getSession();
+    MY_NAME = s.user || 'Staff Member';
+    MY_EMAIL = (s.email || '').toLowerCase();
+    
+    // Try matching by name first, then by email
+    const staffList = DB.getAll('staff');
+    let me = staffList.find(st => st.name === MY_NAME);
+    if (!me && MY_EMAIL) {
+      me = staffList.find(st => (st.email || '').toLowerCase() === MY_EMAIL);
+    }
+    if (me) MY_STAFF_ID = me.id;
+  }
+}
 
 function loadAssignments() {
-  const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-  // Match by ID or Name for consistency in demo
-  return all.filter(a => (a.staffId === MY_STAFF_ID || a.staffName === MY_NAME || a.staffName === 'Alex Johnson') && a.status === 'accepted');
+  const all = (typeof DB !== 'undefined') ? (DB.getAll('staffAssignments') || []) : [];
+  const safeName = (MY_NAME || '').trim().toLowerCase();
+  return all.filter(a => {
+    const isMe = (MY_STAFF_ID && a.staffId === MY_STAFF_ID) || (a.staffName && a.staffName.trim().toLowerCase() === safeName);
+    return isMe && a.status === 'accepted';
+  });
 }
 
 function saveAssignments(arr) {
-  // 1. Get the absolute complete list from localStorage
-  const all = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-  
-  // 2. Map through the complete list and replace matching IDs from our local 'arr'
-  const updatedAll = all.map(globalItem => {
-    const localMatch = arr.find(localItem => localItem.id === globalItem.id);
-    return localMatch ? localMatch : globalItem;
-  });
-
-  // 3. Save back to both localStorage and DB state
-  localStorage.setItem(STORE_KEY, JSON.stringify(updatedAll));
   if (typeof DB !== 'undefined') {
-    DB.save('staffAssignments', updatedAll);
+    // Update each assignment individually via PATCH /staff-assignments/:id
+    arr.forEach(a => {
+      DB.update('staffAssignments', a.id, { tasks: a.tasks });
+    });
   }
 }
 
@@ -241,8 +252,7 @@ function renderBoard() {
      `).join('');
   });
 
-  // Enable/Disable main add btn
-  document.getElementById('mainAddTaskBtn').disabled = (accepted.length === 0);
+  // Task board rendered successfully
 }
 
 // Drag & Drop
@@ -273,18 +283,23 @@ function drop(e, newStatus) {
   assignments.forEach(a => {
     const task = a.tasks.find(t => t.id === taskId);
     if (task && task.status !== newStatus) {
+      const oldStatus = task.status;
       task.status = newStatus;
       changed = true;
       
-      // Update data.js DB directly for instant reactivity if possible
-      if (typeof DB !== 'undefined') {
-        DB.add('issues', {
-          id: 'TICK_' + Date.now(),
-          type: 'Task Update',
-          title: `Task "${task.desc}" moved to ${newStatus.toUpperCase()}`,
-          eventId: a.eventId,
-          createdAt: new Date().toISOString()
-        });
+      // Adjust workload when tasks move to/from done
+      if (typeof DB !== 'undefined' && MY_STAFF_ID) {
+        const me = DB.find('staff', MY_STAFF_ID);
+        if (me) {
+          let wl = me.workload || 0;
+          if (newStatus === 'done' && oldStatus !== 'done') {
+            wl = Math.max(wl - 20, 0);
+            DB.update('staff', MY_STAFF_ID, { workload: wl });
+          } else if (oldStatus === 'done' && newStatus !== 'done') {
+            wl = Math.min(wl + 20, 100);
+            DB.update('staff', MY_STAFF_ID, { workload: wl });
+          }
+        }
       }
     }
   });
@@ -343,7 +358,15 @@ function deleteTask(aId, tId) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', renderBoard);
+document.addEventListener('DOMContentLoaded', () => {
+    initIdentity();
+    renderBoard();
+    setInterval(renderBoard, 5000);
+});
 </script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

@@ -11,63 +11,85 @@ export const seedData: AppData = {
   ],
   events: [
     { id: 'EVT001', name: 'Tech Summit 2026', type: 'Conference', date: '2026-05-10', time: '09:00', venue: 'Convention Center', people: 500, guests: 500, status: 'pending', client: 'Tech Corp', vendor: 'Dream Events Ltd.', createdBy: 'client', budget: 45000 },
-    { id: 'EVT002', name: 'Sarah and Mike Wedding', type: 'Wedding', date: '2026-05-18', time: '18:00', venue: 'Grand Hotel', people: 150, guests: 150, status: 'confirmed', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', createdBy: 'client', budget: 25000 },
-    { id: 'EVT003', name: 'Annual Corporate Gala', type: 'Corporate', date: '2026-05-21', time: '19:30', venue: 'Skyline Ballroom', people: 320, guests: 320, status: 'live', client: 'Business Inc.', vendor: 'Elite Events Co.', createdBy: 'client', budget: 18000 },
-    { id: 'EVT004', name: 'Music Festival', type: 'Conference', date: '2026-06-05', time: '12:00', venue: 'City Park', people: 800, guests: 800, status: 'pending', client: 'City Arts Trust', vendor: 'Sound & Lighting Pro', createdBy: 'client', budget: 52000 },
+    { id: 'EVT002', name: 'Sarah and Mike Wedding', type: 'Wedding', date: '2026-05-18', time: '18:00', venue: 'Grand Hotel Ballroom', people: 150, guests: 150, status: 'confirmed', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', createdBy: 'client', budget: 25000 },
+    { id: 'EVT003', name: 'Annual Corporate Gala', type: 'Corporate', date: '2026-05-21', time: '19:30', venue: 'Skyline Ballroom', people: 320, guests: 320, status: 'live', client: 'Emily Carter', vendor: 'Elite Events Co.', createdBy: 'client', budget: 18000 },
+    { id: 'EVT004', name: 'Music Festival', type: 'Conference', date: '2026-06-05', time: '12:00', venue: 'City Park Amphitheatre', people: 800, guests: 800, status: 'pending', client: 'City Arts Trust', vendor: 'Sound & Lighting Pro', createdBy: 'client', budget: 52000 },
   ],
   resources: [
-    { id: 'R001', name: 'Audio System Premium', category: 'Equipment', cat: 'Audio', vendor: 'Dream Events Ltd.', quantity: 12, total: 12, avail: 12, price: 500, unit: 'day', available: true, condition: 'Ready' },
-    { id: 'R002', name: 'LED Screen 4K', category: 'Equipment', cat: 'Visual', vendor: 'Elite Events Co.', quantity: 8, total: 8, avail: 8, price: 300, unit: 'day', available: true, condition: 'Ready' },
-    { id: 'R003', name: 'Round Banquet Tables', category: 'Furniture', cat: 'Furniture', vendor: 'Elite Events Co.', quantity: 40, total: 40, avail: 40, price: 25, unit: 'day', available: true, condition: 'Ready' },
-    { id: 'R004', name: 'Stage Lighting Rig', category: 'Equipment', cat: 'Visual', vendor: 'Sound & Lighting Pro', quantity: 5, total: 5, avail: 0, price: 800, unit: 'day', available: false, condition: 'Maintenance' },
-    { id: 'R005', name: 'Floral Centrepieces', category: 'Decor', cat: 'Decoration', vendor: 'Elite Events Co.', quantity: 60, total: 60, avail: 60, price: 15, unit: 'day', available: true, condition: 'Ready' },
+    { id: 'R001', name: 'Audio System Premium', category: 'Equipment', cat: 'Audio', vendor: 'Dream Events Ltd.', quantity: 12, total: 12, avail: 12, quantityAvailable: 12, price: 500, unit: 'day', available: true, condition: 'Ready', conditionStatus: 'Ready' },
+    { id: 'R002', name: 'LED Screen 4K', category: 'Equipment', cat: 'Visual', vendor: 'Elite Events Co.', quantity: 8, total: 8, avail: 8, quantityAvailable: 8, price: 300, unit: 'day', available: true, condition: 'Ready', conditionStatus: 'Ready' },
+    { id: 'R003', name: 'Round Banquet Tables', category: 'Furniture', cat: 'Furniture', vendor: 'Elite Events Co.', quantity: 40, total: 40, avail: 40, quantityAvailable: 40, price: 25, unit: 'day', available: true, condition: 'Ready', conditionStatus: 'Ready' },
+    { id: 'R004', name: 'Stage Lighting Rig', category: 'Equipment', cat: 'Visual', vendor: 'Sound & Lighting Pro', quantity: 5, total: 5, avail: 0, quantityAvailable: 0, price: 800, unit: 'day', available: false, condition: 'Maintenance', conditionStatus: 'Maintenance' },
+    { id: 'R005', name: 'Floral Centrepieces', category: 'Decor', cat: 'Decoration', vendor: 'Elite Events Co.', quantity: 60, total: 60, avail: 60, quantityAvailable: 60, price: 15, unit: 'day', available: true, condition: 'Ready', conditionStatus: 'Ready' },
   ],
-  staff: [
-    { id: 'S001', name: 'Alex Johnson', initials: 'AJ', role: 'Event Coordinator', vendor: 'Elite Events Co.', phone: '+1 234-567-8901', email: 'alex@eliteevents.com', workload: 75, status: 'available', avail: 'Available', events: 3, avatar: 'pink' },
-    { id: 'S002', name: 'Sarah Williams', initials: 'SW', role: 'Event Coordinator', vendor: 'Elite Events Co.', phone: '+1 234-567-8902', email: 'sarah@eliteevents.com', workload: 60, status: 'available', avail: 'Available', events: 2, avatar: 'teal' },
-    { id: 'S003', name: 'Michael Brown', initials: 'MB', role: 'Security Chief', vendor: 'Dream Events Ltd.', phone: '+1 234-567-8903', email: 'michael@dreamevents.com', workload: 90, status: 'busy', avail: 'Busy', events: 4, avatar: 'purple' },
-    { id: 'S004', name: 'Lisa Chen', initials: 'LC', role: 'Catering Manager', vendor: 'Elite Events Co.', phone: '+1 234-567-8904', email: 'lisa@eliteevents.com', workload: 40, status: 'available', avail: 'Available', events: 1, avatar: 'green' },
-  ],
+  staff: [],
   packages: [
     { id: 'P001', name: 'Elegant Wedding Package', category: 'Wedding', price: 4500, duration: 8, capacity: '100-300', desc: 'Complete wedding package with premium decorations, catering, and full day event support.', resources: ['Banquet Chairs (250)', 'Round Tables (30)', 'Floral Arrangements', 'Lighting Rig', 'Audio System'], staff: ['Event Coordinator', 'Photographer'] },
     { id: 'P002', name: 'Birthday Celebration Special', category: 'Birthday', price: 1200, duration: 5, capacity: '30-80', desc: 'Vibrant birthday party setup with decorations, catering, and sound support.', resources: ['Banquet Chairs (80)', 'Party Tables (10)', 'Balloon Decorations', 'Sound System'], staff: ['Event Coordinator', 'DJ'] },
     { id: 'P003', name: 'Professional Conference Setup', category: 'Conference', price: 3800, duration: 10, capacity: '100-500', desc: 'Conference package with AV equipment, seating, registration, and catering support.', resources: ['Conference Chairs (500)', 'LED Screens (3)', 'Registration Desk', 'Projectors'], staff: ['Event Manager', 'Audio/Visual Technicians (3)'] },
     { id: 'P004', name: 'Corporate Gala Evening', category: 'Corporate', price: 6200, duration: 12, capacity: '100-300', desc: 'Premium corporate event package with elegant setup, gourmet catering, and entertainment.', resources: ['Premium Seating (300)', 'Ambient Lighting', 'Executive Tables (40)', 'Stage'], staff: ['Event Director', 'Professional MC', 'Security'] },
   ],
-  issues: [],
+  issues: [
+    { id: 'ISS001', eventId: 'EVT003', event: 'Annual Corporate Gala', title: 'Lighting rig power fluctuation', category: 'Equipment', priority: 'High', severity: 'high', description: 'Main stage lights flicker when the LED wall is active.', reporter: 'Sarah Williams', reporterRole: 'Vendor', email: 'sarah@eliteevents.com', target: 'admin', status: 'open', createdAt: '2026-05-21T10:00:00.000Z' }
+  ],
   staffAssignments: [],
   vendorApplications: [
     { id: 'VAPP001', vendorName: 'Priya Nair', businessName: 'Aurora Event Studio', email: 'priya@auroraevents.com', phone: '+1 555-0101', category: 'Event Planning', categoryClass: 'active', documents: [{ name: 'business-license.pdf', type: 'license' }, { name: 'insurance-certificate.pdf', type: 'insurance' }], status: 'pending', submittedAt: '2026-04-25T10:15:00.000Z' },
     { id: 'VAPP002', vendorName: 'Daniel Reyes', businessName: 'Reyes Catering Collective', email: 'daniel@reyescatering.com', phone: '+1 555-0115', category: 'Catering', categoryClass: 'blue', documents: [{ name: 'food-safety-license.pdf', type: 'license' }], status: 'pending', submittedAt: '2026-04-27T14:40:00.000Z' },
   ],
   vendors: [
-    { id: 'V001', name: 'Elite Events Co.', status: 'Approved' },
-    { id: 'V002', name: 'Dream Events Ltd.', status: 'Approved' },
-    { id: 'V003', name: 'Premium Catering', status: 'Pending' },
-    { id: 'V004', name: 'Sound & Lighting Pro', status: 'Approved' },
+    { id: 'V001', userId: 'U002', name: 'Elite Events Co.', businessName: 'Elite Events Co.', category: 'Full-Service Planning', status: 'Approved', rating: 4.9 },
+    { id: 'V002', name: 'Dream Events Ltd.', businessName: 'Dream Events Ltd.', category: 'Audio & Staging', status: 'Approved', rating: 4.8 },
+    { id: 'V003', name: 'Premium Catering', businessName: 'Premium Catering', category: 'Catering & Hospitality', status: 'Pending', rating: 4.5 },
+    { id: 'V004', name: 'Sound & Lighting Pro', businessName: 'Sound & Lighting Pro', category: 'AV Equipment', status: 'Approved', rating: 4.7 },
+  ],
+  venues: [
+    { id: 'VN001', vendorId: 'V002', name: 'Convention Center', location: 'Downtown Metro', capacity: 1500, pricePerDay: 5000, status: 'AVAILABLE' },
+    { id: 'VN002', vendorId: 'V001', name: 'Grand Hotel Ballroom', location: 'City Center', capacity: 300, pricePerDay: 3500, status: 'AVAILABLE' },
+    { id: 'VN003', vendorId: 'V001', name: 'Skyline Ballroom', location: 'Uptown Tower', capacity: 400, pricePerDay: 4200, status: 'AVAILABLE' },
+    { id: 'VN004', vendorId: 'V004', name: 'City Park Amphitheatre', location: 'North Park', capacity: 2000, pricePerDay: 6000, status: 'AVAILABLE' },
   ],
   bookings: [
-    { id: 'BK001', eventName: 'Sarah and Mike Wedding', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', status: 'Confirmed', cost: 25000, created: '2026-03-01' },
-    { id: 'BK002', eventName: 'Annual Corporate Gala', client: 'Business Inc.', vendor: 'Elite Events Co.', status: 'In Progress', cost: 18000, created: '2026-03-20' },
-    { id: 'BK003', eventName: 'Tech Summit 2026', client: 'Tech Corp', vendor: 'Dream Events Ltd.', status: 'Pending', cost: 45000, created: '2026-04-01' },
+    { id: 'BK001', eventName: 'Sarah and Mike Wedding', client: 'Sarah Ahmed', vendor: 'Elite Events Co.', status: 'Confirmed', cost: 25000, advancePaid: 10000, paymentStatus: 'partially_paid', created: '2026-03-01' },
+    { id: 'BK002', eventName: 'Annual Corporate Gala', client: 'Emily Carter', vendor: 'Elite Events Co.', status: 'In Progress', cost: 18000, advancePaid: 18000, paymentStatus: 'paid', created: '2026-03-20' },
+    { id: 'BK003', eventName: 'Tech Summit 2026', client: 'Tech Corp', vendor: 'Dream Events Ltd.', status: 'Pending', cost: 45000, advancePaid: 0, paymentStatus: 'unpaid', created: '2026-04-01' },
   ],
   messages: {
     'vendor-vendor': [
-      { id: 'm1', threadId: 'vendor-vendor', sender: 'Alex Johnson', initials: 'AJ', self: false, text: 'Tech Summit setup is confirmed for tomorrow at 7:30 AM.', time: '10:32 AM', avatar: 'pink' },
-      { id: 'm2', threadId: 'vendor-vendor', sender: 'Sarah Williams', initials: 'SW', self: true, text: 'Great. I will confirm the resource allocation now.', time: '10:40 AM', avatar: 'teal' },
+      { id: 'MSG001', threadId: 'vendor-vendor', sender: 'Alex Johnson', initials: 'AJ', self: false, text: 'Tech Summit setup is confirmed for tomorrow at 7:30 AM.', time: '10:32 AM', avatar: 'pink' },
+      { id: 'MSG002', threadId: 'vendor-vendor', sender: 'Sarah Williams', initials: 'SW', self: true, text: 'Great. I will confirm the resource allocation now.', time: '10:40 AM', avatar: 'teal' },
     ],
     'vendor-client': [
-      { id: 'c1', threadId: 'vendor-client', sender: 'Emily Carter', initials: 'EC', self: false, text: 'Can we add two more registration desks?', time: '8:10 AM', avatar: 'blue' },
+      { id: 'MSG003', threadId: 'vendor-client', sender: 'Emily Carter', initials: 'EC', self: false, text: 'Can we add two more registration desks?', time: '8:10 AM', avatar: 'blue' },
+      { id: 'MSG004', threadId: 'vendor-client', sender: 'Sarah Williams', initials: 'SW', self: true, text: 'Yes, adding 2 registration tables and badges now.', time: '8:25 AM', avatar: 'teal' },
     ],
     'vendor-staff': [],
   },
   resourceAllocations: {},
   monitorProgress: {
     EVT001: { setup: 85, registration: 65, event: 40, breakdown: 0 },
+    EVT002: { setup: 0, registration: 0, event: 0, breakdown: 0 },
     EVT003: { setup: 100, registration: 100, event: 90, breakdown: 10 },
+    EVT004: { setup: 0, registration: 0, event: 0, breakdown: 0 },
   },
   staffRequests: [],
   staffTasks: [],
   vendorDocSubmission: null,
   session: { user: 'Sarah Williams', email: 'sarah@eliteevents.com', role: 'Event Coordinator' },
+  liveEvents: [],
+  contingencyPlans: {
+    '_default': [
+      { id: 'CP_DEF_001', problem: 'Weather Emergency', trigger: 'Severe weather alert', solution: 'Move to indoor backup venue', status: 'ready' },
+      { id: 'CP_DEF_002', problem: 'Power Outage', trigger: 'Electrical failure', solution: 'Activate backup generators', status: 'ready' },
+      { id: 'CP_DEF_003', problem: 'Staff No-Show', trigger: 'Staff absence >30min', solution: 'Deploy backup staff from reserve pool', status: 'ready' },
+    ]
+  },
+  adminChatMessages: [],
+  coordinationMessages: [],
+  notifications: [
+    { id: 'NOTIF001', userId: 'U001', title: 'System Initialized', message: 'EMS Database & Backend synchronizer active.', type: 'info', isRead: true, createdAt: '2026-05-01T00:00:00.000Z' }
+  ],
+  activityLogs: [
+    { id: 'LOG001', userId: 'U001', userRole: 'Admin', action: 'SYSTEM_INITIALIZED', entityType: 'SYSTEM', entityId: 'SYS_INIT', details: { version: '2.0.0', status: 'SUCCESS' }, createdAt: '2026-05-01T00:00:00.000Z' }
+  ]
 };

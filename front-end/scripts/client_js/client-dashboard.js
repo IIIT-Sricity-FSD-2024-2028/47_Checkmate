@@ -25,8 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 3. Load Stats
-        const events    = DB.getAll('events');
-        const myEvents  = events.filter(e => e.createdBy === 'client');
+        const myEvents  = DB.getMyEvents();
 
         const stats = {
             active:    myEvents.filter(e => ['confirmed', 'live', 'approved'].includes(e.status)).length,

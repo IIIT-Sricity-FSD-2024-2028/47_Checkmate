@@ -46,7 +46,6 @@
   <div class="sb-footer">
     <div class="sb-uname">Mike Staff</div>
     <div class="sb-uemail">staff@demo.com</div>
-    <button class="sb-btn" onclick="document.body.classList.toggle('light-mode')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>Light Mode</button>
     <a href="../LandingPage/index.html"> <button class="sb-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button> </a>
   </div>
 </aside>
@@ -147,6 +146,87 @@
   </div>
 </main>
 </div>
-<script type="module" src="../js/main.js"></script>
+<script src="../../scripts/vendor_js/data.js"></script>
+<script src="../../scripts/coordination-hub.js"></script>
+<script>
+function submitIssue() {
+  const titleEl = document.querySelector('.form-input');
+  const descEl = document.querySelector('.form-textarea');
+  const selects = document.querySelectorAll('.form-select');
+  const priorityEl = selects[0];
+  const categoryEl = selects[1];
+  const eventEl = selects[2];
+
+  const title = titleEl?.value.trim();
+  const desc = descEl?.value.trim();
+  if (!title) { alert('Please enter an issue title.'); return; }
+  if (!desc) { alert('Please enter a description.'); return; }
+  if (!priorityEl?.value) { alert('Please select a priority.'); return; }
+
+  const session = window.CoordHub ? CoordHub.getSession() : { name: 'Staff', role: 'Staff' };
+
+  // Find the event ID from events matching event name
+  let eventId = null;
+  if (eventEl?.value) {
+    const events = DB.getAll('events') || [];
+    const ev = events.find(e => e.name === eventEl.value || e.id === eventEl.value);
+    if (ev) eventId = ev.id;
+  }
+
+  const issue = {
+    id: 'ISS_' + Date.now(),
+    title: title,
+    desc: desc,
+    priority: priorityEl.value,
+    category: categoryEl?.value || 'Other',
+    event: eventId,
+    eventId: eventId,
+    reporter: session.name,
+    reporterRole: session.role,
+    createdAt: new Date().toISOString(),
+    status: 'open'
+  };
+
+  const savedIssue = DB.add('issues', issue);
+
+  // Post to coordination hub
+  if (window.CoordHub && eventId) {
+    CoordHub.postIssueToChat(eventId, savedIssue);
+  }
+
+  alert('Issue submitted successfully!');
+  if (titleEl) titleEl.value = '';
+  if (descEl) descEl.value = '';
+  if (priorityEl) priorityEl.selectedIndex = 0;
+  if (categoryEl) categoryEl.selectedIndex = 0;
+  if (eventEl) eventEl.selectedIndex = 0;
+}
+
+// Populate event dropdown dynamically
+function populateStaffEvents() {
+  const selects = document.querySelectorAll('.form-select');
+  const eventEl = selects[2];
+  if (eventEl) {
+    const events = window.CoordHub ? window.CoordHub.getEventsForUser() : DB.getAll('events').filter(e => e.status === 'live');
+    eventEl.innerHTML = '<option value="" disabled selected>Select event if applicable</option>' +
+      events.map(e => '<option value="' + e.id + '">' + e.name + '</option>').join('');
+  }
+
+  // Update reporter info from session
+  const session = window.CoordHub ? CoordHub.getSession() : { name: 'Staff', role: 'Staff', email: '' };
+  const reporterItems = document.querySelectorAll('.ri-reporter-item span');
+  if (reporterItems[0]) reporterItems[0].textContent = session.name;
+  if (reporterItems[1]) reporterItems[1].textContent = session.role;
+  if (reporterItems[2]) reporterItems[2].textContent = session.email || '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(populateStaffEvents, 500);
+});
+</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

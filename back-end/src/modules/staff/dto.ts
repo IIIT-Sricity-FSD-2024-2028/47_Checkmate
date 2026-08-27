@@ -23,9 +23,18 @@ export class CreateStaffAssignmentDto {
   @ApiPropertyOptional({ example: 'A001' }) @IsOptional() @IsString() id?: string;
   @ApiProperty({ example: 'S001' }) @IsString() staffId: string;
   @ApiProperty({ example: 'Alex Johnson' }) @IsString() staffName: string;
+  @ApiPropertyOptional({ example: 'Event Coordinator' }) @IsOptional() @IsString() staffRole?: string;
   @ApiProperty({ example: 'EVT001' }) @IsString() eventId: string;
   @ApiProperty({ example: 'Tech Summit 2026' }) @IsString() eventName: string;
   @ApiProperty({ example: 'Event Coordinator' }) @IsString() role: string;
+  @ApiPropertyOptional({ example: '2026-05-10' }) @IsOptional() @IsString() eventDate?: string;
+  @ApiPropertyOptional({ example: 'Convention Center' }) @IsOptional() @IsString() eventVenue?: string;
+  @ApiPropertyOptional({ example: 500 }) @IsOptional() @IsNumber() eventPeople?: number;
+  @ApiPropertyOptional({ example: 'Assigned as Event Coordinator' }) @IsOptional() @IsString() taskDesc?: string;
+  @ApiPropertyOptional({ example: 'Medium' }) @IsOptional() @IsString() priority?: string;
   @ApiPropertyOptional({ example: 'assigned' }) @IsOptional() @IsString() status?: string;
+  @ApiPropertyOptional() @IsOptional() @IsArray() tasks?: any[];
+  @ApiPropertyOptional() @IsOptional() @IsString() assignedAt?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() respondedAt?: string;
 }
 export class UpdateStaffAssignmentDto extends PartialType(CreateStaffAssignmentDto) {}

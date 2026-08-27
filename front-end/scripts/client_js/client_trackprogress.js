@@ -150,7 +150,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const tag  = document.getElementById('tlApprovedTag');
         if (item) item.className = 'tl-item';
         if (icon) icon.innerHTML = '<i class="ph ph-x" style="color:var(--red)"></i>';
-        if (tag)  tag.outerHTML = `<div id="tlApprovedTag" class="tag" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:#fca5a5;"><i class="ph ph-x-circle"></i> Request rejected</div>`;
+        const reason = ev.rejectionReason || 'Rejected by vendor';
+        const conflicts = ev.conflicts || [];
+        let conflictHtml = '';
+        if (conflicts.length) {
+            conflictHtml = '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">' +
+                conflicts.map(c => `<div style="padding:8px 12px;border:1px solid rgba(239,68,68,0.2);border-radius:8px;background:rgba(239,68,68,0.05);font-size:12px;">
+                    <span style="font-weight:600;color:#fca5a5;">${c.type}</span>
+                    <span style="color:var(--text-muted);margin-left:6px;">${c.desc}</span>
+                </div>`).join('') + '</div>';
+        }
+        if (tag) tag.outerHTML = `<div id="tlApprovedTag" class="tag" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:#fca5a5;">
+            <i class="ph ph-x-circle"></i> Rejected due to conflict
+        </div>${conflictHtml}`;
     } else {
         setInProgress('tlApproved', 'tlApprovedIcon', 'tlApprovedTag', 'Awaiting vendor approval');
     }
@@ -227,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatus('statusApproval', null, 'statusApprovalText',
         isApproved,
         isLive ? 'Approved — Event is LIVE' : isCompleted ? 'Approved — Event completed' : 'Approved by vendor coordinator',
-        isRejected ? 'Request was rejected' : 'Pending vendor approval'
+        isRejected ? 'Rejected due to resource/staff conflict' : 'Pending vendor approval'
     );
 
     setStatus('statusResources', null, 'statusResourcesText',

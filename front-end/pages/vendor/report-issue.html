@@ -247,8 +247,20 @@
       <a href="manage-resource.html" class="nav-item"><i data-lucide="package"></i><span>Manage Resource</span></a>
       <a href="manage-staff.html"    class="nav-item"><i data-lucide="users"></i><span>Manage Staff</span></a>
       <a href="preset-package.html"  class="nav-item"><i data-lucide="box"></i><span>Preset Package</span></a>
-      <a href="report-issue.html"    class="nav-item active"><i data-lucide="flag"></i><span>Report Issue</span></a>
-      <a href="coordination.html"    class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span></a>
+      <div class="nav-group open" onclick="this.classList.toggle('open')">
+        <div class="nav-item active"><i data-lucide="flag"></i><span>Report Issue</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="report-issue.html" class="nav-item active"><i data-lucide="alert-circle"></i><span>Issue on Event</span></a>
+          <a href="report-issue-admin.html" class="nav-item"><i data-lucide="shield-alert"></i><span>Issue to Admin</span></a>
+        </div>
+      </div>
+      <div class="nav-group" onclick="this.classList.toggle('open')">
+        <div class="nav-item"><i data-lucide="message-square"></i><span>Coordination Hub</span><i data-lucide="chevron-down" class="nav-chevron"></i></div>
+        <div class="nav-sub">
+          <a href="coordination.html" class="nav-item"><i data-lucide="radio"></i><span>Event Coordination</span></a>
+          <a href="coordination-admin.html" class="nav-item"><i data-lucide="shield"></i><span>Admin Coordination</span></a>
+        </div>
+      </div>
       <a href="monitoring.html"      class="nav-item"><i data-lucide="radio"></i><span>Monitor Live Events</span></a>
         <a href="./verify-docs.html" class="nav-item">
           <i data-lucide="shield-check"></i>
@@ -316,10 +328,10 @@
                 <div class="ri-select-wrap">
                   <select class="ri-select">
                     <option value="" disabled selected>Select Priority</option>
-                    <option>🔴 Critical</option>
-                    <option>🟠 High</option>
-                    <option>🟡 Medium</option>
-                    <option>🟢 Low</option>
+                    <option value="Critical">🔴 Critical</option>
+                    <option value="High">🟠 High</option>
+                    <option value="Medium">🟡 Medium</option>
+                    <option value="Low">🟢 Low</option>
                   </select>
                   <i data-lucide="chevron-down"></i>
                 </div>
@@ -391,8 +403,13 @@ d successfully!
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="../../scripts/vendor_js/data.js"></script>
+  <script src="../../scripts/coordination-hub.js"></script>
   <script src="../../scripts/vendor_js/vendor.js"></script>
   <script src="../../scripts/vendor_js/report.js"></script>
   <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

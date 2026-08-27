@@ -89,10 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = input.value.trim();
         const isRequired = input.hasAttribute('required') || input.classList.contains('required');
 
+        // Detect if we are on the signin form — skip strict pattern validation for login
+        const parentForm = input.closest('form');
+        const isSigninForm = parentForm && parentForm.id === 'signin-form';
+
         if (isRequired && value === '') {
             isValid = false;
             errorMessage = 'This field is required.';
-        } else if (value !== '') {
+        } else if (value !== '' && !isSigninForm) {
+            // Only apply strict pattern validation on signup/registration forms, NOT signin
             const customType = getInputType(input);
             if (customType) {
                 if (customType === 'email') {

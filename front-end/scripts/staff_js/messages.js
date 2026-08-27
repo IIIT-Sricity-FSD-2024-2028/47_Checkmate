@@ -1,234 +1,233 @@
 /* ═══════════════════════════════════════════
    messages.js  —  Staff Messages & Requests
- ═══════════════════════════════════════════ */
+   Uses CoordHub for event-wise real-time messaging
+═══════════════════════════════════════════ */
 
-// Global state
-window.currentChatConversationId = 'Vendor-Staff';
-window.currentChatHeaderName = 'Elite Events Co.';
-
-// ── 1. Render Chat Messages ──
 function initMessages() {
-    function renderChat() {
-       const chatEl = document.getElementById('chat-messages');
-       if(!chatEl || !window.MsgService) return;
-       
-       const msgs = window.MsgService.getMessagesByConversation(window.currentChatConversationId);
-       
-       let html = msgs.map(m => {
-           // Staff perspective: self is when senderRole is Staff
-           const isVendor = m.senderRole !== 'Staff'; 
-           
-           if(m.message && m.message.startsWith('[SYSTEM]')) {
-               return `<div class="msg-enter-anim" style="text-align:center;font-size:11px;color:var(--pink);padding:12px 20px;margin:10px auto;max-width:80%;background:rgba(233,30,140,0.1);border-radius:12px;border:1px solid rgba(233,30,140,0.2);font-weight:600;">${m.message}</div>`;
-           }
+  if (!window.CoordHub) { console.error('CoordHub not loaded'); return; }
+  const Hub = window.CoordHub;
+  const session = Hub.getSession();
 
-           const timeStr = window.MsgService.formatTime(m.timestamp);
-           const statusTick = m.senderRole === 'Staff' ? `<span style="font-size:10px;margin-left:5px;opacity:0.7">✓ ${m.status}</span>` : '';
+  let selectedEventId = null;
+  let _lastCount = -1;
 
-           if(isVendor) {
-               return `
-                 <div class="msg-bubble-wrap them msg-enter-anim">
-                   <div class="msg-sender">${m.senderName || m.senderRole} <span class="sender-badge" style="background:rgba(6,182,212,0.15);color:var(--cyan);padding:1px 5px;border-radius:8px;font-size:9px;font-weight:700">${m.senderRole}</span></div>
-                   <div class="msg-bubble">${m.message}</div>
-                   <div class="msg-time">${timeStr}</div>
-                 </div>`;
-           } else {
-               return `
-                 <div class="msg-bubble-wrap me msg-enter-anim">
-                   <div class="msg-bubble">${m.message}</div>
-                   <div class="msg-time">${timeStr} ${statusTick}</div>
-                 </div>`;
-           }
-       }).join('');
-       
-       if (chatEl.innerHTML !== html) {
-          chatEl.innerHTML = html;
-          chatEl.scrollTop = chatEl.scrollHeight;
-       }
+  /* ── Build event list in sidebar ────── */
+  function buildEventList() {
+    const events = Hub.getEventsForUser();
+    const convList = document.querySelector('.msg-conv-list');
+    if (!convList) return;
 
-       // Mark as read since we are viewing
-       window.MsgService.markConversationAsRead(window.currentChatConversationId, 'Staff');
+    if (events.length === 0) {
+      convList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3,#94a3b8);font-size:13px;">No live events assigned to you.</div>';
+      const cName = document.querySelector('.chat-name');
+      const cStatus = document.querySelector('.chat-status');
+      if (cName) cName.innerHTML = 'No active event';
+      if (cStatus) cStatus.innerHTML = '';
+      if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:var(--text3,#94a3b8);padding:60px;font-size:13px;">You have no live events to coordinate.</div>';
+      return;
     }
 
-    renderChat();
-    
-    // Listen for events from MsgService instead of polling blindly
-    window.addEventListener('messageStorageUpdated', renderChat);
-    window.addEventListener('newMessage', renderChat);
-    window.addEventListener('messageStatusUpdated', renderChat);
+    convList.innerHTML = events.map((e, i) => {
+      const init = Hub.initials(e.name);
+      const colors = ['linear-gradient(135deg,#e91e8c,#c2185b)', 'linear-gradient(135deg,#06b6d4,#0891b2)', 'linear-gradient(135deg,#a855f7,#7c3aed)', 'linear-gradient(135deg,#22c55e,#16a34a)'];
+      return `
+        <div class="msg-conv-item ${i === 0 ? 'active' : ''}" data-event-id="${e.id}">
+          <div class="msg-conv-avatar" style="background:${colors[i % colors.length]}">${init}<div class="online-dot"></div></div>
+          <div class="msg-conv-body">
+            <div class="msg-conv-name">${e.name}<span class="msg-conv-time">${e.status}</span></div>
+            <div class="msg-conv-preview">${e.vendor || 'Event Coordinator'}</div>
+          </div>
+        </div>`;
+    }).join('');
 
-    // ── 2. Handle Sending New Chat ──
-    window.sendMsg = function() {
-       const input = document.getElementById('msg-input');
-       if(!input || !input.value.trim() || !window.MsgService) return;
-       
-       const text = input.value.trim();
-       
-       // Handle sending based on which tab is open
-       if (window.currentChatConversationId === 'Vendor-Client-Staff' || window.currentChatConversationId.includes('Client')) {
-           window.MsgService.sendMessage('Staff', 'Mike Staff', 'Client', window.currentChatHeaderName, text, window.currentChatConversationId);
-       } else {
-           window.MsgService.sendMessage('Staff', 'Mike Staff', 'Vendor', window.currentChatHeaderName, text, window.currentChatConversationId);
-       }
-       
-       input.value = '';
-       renderChat();
-    };
-
-    // Attach listeners defensively
-    const sendBtn = document.querySelector('.chat-send-btn');
-    if (sendBtn) {
-        sendBtn.addEventListener('click', window.sendMsg);
-    }
-    const msgInput = document.getElementById('msg-input');
-    if (msgInput) {
-        msgInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                window.sendMsg();
-            }
-        });
-    }
-
-    // ── 2.5 Handle UI selections ──
-    window.selectConv = function(elem, name, avatar, text) {
-       document.querySelectorAll('.msg-conv-item').forEach(el => el.classList.remove('active'));
-       elem.classList.add('active');
-       
-       const cName = document.querySelector('.chat-name');
-       const cAvatar = document.querySelector('.chat-avatar');
-       
-       if(cName) cName.innerHTML = name + ' <span style="font-size:10px;background:var(--cyan-dim);color:var(--cyan);padding:1px 6px;border-radius:10px;font-weight:700;vertical-align:middle">' + (name.includes('Corporate') ? 'Client' : 'Vendor') + '</span>';
-       if(cAvatar) cAvatar.innerHTML = avatar + '<div class="online-dot"></div>';
-       
-       window.currentChatHeaderName = name;
-       
-       if (name === 'Premium Catering') window.currentChatConversationId = 'Vendor-Staff-Premium';
-       else if (name === 'Sound & Lighting Pro') window.currentChatConversationId = 'Vendor-Staff-Sound';
-       else if (name === 'Corporate Tech') window.currentChatConversationId = 'Vendor-Client';
-       else window.currentChatConversationId = 'Vendor-Staff';
-
-       renderChat();
-    };
-
-    window.switchTab = function(type) {
-       document.querySelectorAll('.msg-tab').forEach(e => e.style.opacity = '0.5');
-       const tab = document.getElementById('tab-' + type);
-       if(tab) tab.style.opacity = '1';
-       // Mock UI update for tabs
-       const list = document.querySelector('.msg-conv-list');
-       if(type === 'client' && list) {
-          list.innerHTML = `
-            <div class="msg-conv-item" onclick="selectConv(this,'Corporate Tech','C','Thanks for the update')">
-              <div class="msg-conv-avatar" style="background:var(--blue)">C</div>
-              <div class="msg-conv-body">
-                <div class="msg-conv-name">Corporate Tech</div>
-                <div class="msg-conv-preview">Thanks for the update</div>
-              </div>
-            </div>`;
-       } else if (list) {
-          list.innerHTML = `
-            <div class="msg-conv-item active" onclick="selectConv(this,'Elite Events Co.','E','Equipment is ready for pickup')">
-              <div class="msg-conv-avatar">E<div class="online-dot"></div></div>
-              <div class="msg-conv-body">
-                <div class="msg-conv-name">Elite Events Co.</div>
-                <div class="msg-conv-preview">Equipment is ready for pickup</div>
-              </div>
-            </div>`;
-          window.currentChatConversationId = 'Vendor-Staff';
-          renderChat();
-       }
-    };
-    
-    // ── 3. Handle Request Modal ──
-    const btnCreateRequest = document.getElementById('btnCreateRequest');
-    const requestModal = document.getElementById('requestModal');
-    const reqClose = document.getElementById('reqClose');
-    const reqCancel = document.getElementById('reqCancel');
-    const reqSubmit = document.getElementById('reqSubmit');
-    const reqEventId = document.getElementById('reqEventId');
-
-    function populateLiveEvents() {
-        if(!reqEventId || !window.DB) return;
-        const events = window.DB.getAll('events').filter(e => e.status === 'live' || e.status === 'confirmed');
-        if (events.length === 0) {
-            reqEventId.innerHTML = '<option value="">No Active Events Found</option>';
-        } else {
-            reqEventId.innerHTML = events.map(e => `<option value="${e.id}">${e.name} (${e.status.toUpperCase()})</option>`).join('');
-        }
-    }
-
-    function openModal() {
-        if(!requestModal) return;
-        populateLiveEvents();
-        document.getElementById('reqItem').value = '';
-        document.getElementById('reqQty').value = '1';
-        requestModal.style.display = 'flex';
-    }
-
-    function closeModal() {
-        if(requestModal) requestModal.style.display = 'none';
-    }
-
-    if(btnCreateRequest) btnCreateRequest.addEventListener('click', openModal);
-    if(reqClose) reqClose.addEventListener('click', closeModal);
-    if(reqCancel) reqCancel.addEventListener('click', closeModal);
-
-    if(requestModal) {
-        requestModal.addEventListener('click', (e) => {
-            if (e.target === requestModal) closeModal();
-        });
-    }
-
-    if(reqSubmit) {
-        reqSubmit.addEventListener('click', () => {
-            if(!window.DB) return;
-            const evId = reqEventId.value;
-            const type = document.getElementById('reqType').value;
-            const item = document.getElementById('reqItem').value.trim();
-            const qty = parseInt(document.getElementById('reqQty').value, 10);
-
-            if (!evId) { alert("Please select a target event."); return; }
-            if (!item) { alert("Please specify the requested item or staff role."); return; }
-            if (!qty || qty < 1) { alert("Please enter a valid quantity."); return; }
-
-            const newReq = {
-                id: 'sr_' + Date.now(),
-                eventId: evId,
-                type: type,
-                item: item,
-                qty: qty,
-                status: 'pending',
-                requestedBy: 'Mike Staff',
-                createdAt: new Date().toISOString()
-            };
-
-            if(!window.DB.get('staffRequests')) window.DB.set('staffRequests', []);
-            window.DB.add('staffRequests', newReq);
-
-            if(window.showToast) {
-                window.showToast("Request successfully dispatched to the Event Coordinator!");
-            } else {
-                alert("Request successfully dispatched to the Event Coordinator!");
-            }
-            
-            closeModal();
-            
-            // System message to chat
-            window.sendMsgText(`[SYSTEM] Dispatch Request: ${qty}x ${item} for event ${evId}`);
-        });
-    }
-
-    // Helper for system messages
-    window.sendMsgText = function(text) {
-        if(!window.MsgService) return;
-        window.MsgService.sendMessage('Staff', 'System', 'Vendor', window.currentChatHeaderName, text, window.currentChatConversationId);
+    convList.querySelectorAll('.msg-conv-item').forEach(item => {
+      item.addEventListener('click', () => {
+        convList.querySelectorAll('.msg-conv-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        selectedEventId = item.dataset.eventId;
+        _lastCount = -1;
+        updateChatHeader();
         renderChat();
+      });
+    });
+
+    selectedEventId = events[0].id;
+    updateChatHeader();
+  }
+
+  function updateChatHeader() {
+    if (!selectedEventId) return;
+    const event = DB.find('events', selectedEventId);
+    const cName = document.querySelector('.chat-name');
+    const cStatus = document.querySelector('.chat-status');
+    if (cName && event) cName.innerHTML = `${event.name} <span style="font-size:10px;background:var(--cyan-dim,rgba(6,182,212,0.15));color:var(--cyan,#06b6d4);padding:1px 6px;border-radius:10px;font-weight:700;vertical-align:middle">Event</span>`;
+    if (cStatus && event) cStatus.textContent = `● ${event.status} — ${event.vendor || 'Coordinator'}`;
+  }
+
+  /* ── Render chat ──────────────────── */
+  function renderChat() {
+    const chatEl = document.getElementById('chat-messages');
+    if (!chatEl || !selectedEventId) return;
+
+    let msgs = Hub.getMessagesForEvent(selectedEventId, 'all');
+
+    // Also show issues
+    const issues = Hub.getIssuesForEvent(selectedEventId);
+    issues.forEach(iss => {
+      if (!msgs.some(m => m.id === 'ISS_' + iss.id) && iss.title) {
+        msgs.push({
+          id: 'ISS_' + iss.id, eventId: selectedEventId, channel: 'all',
+          sender: 'System', senderRole: 'System', senderInitials: '⚠',
+          text: `${iss.title}${iss.desc ? ' — ' + iss.desc : ''}`,
+          type: 'issue', issueId: iss.id, createdAt: iss.createdAt || new Date().toISOString()
+        });
+      }
+    });
+
+    msgs.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    if (msgs.length === _lastCount) return;
+    _lastCount = msgs.length;
+
+    if (msgs.length === 0) {
+      chatEl.innerHTML = '<div style="text-align:center;color:var(--text3,#94a3b8);padding:60px 20px;font-size:13px;">No messages yet. Send a message to start the conversation.</div>';
+      return;
+    }
+
+    chatEl.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
+
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    // Bind View Report buttons
+    chatEl.querySelectorAll('.ch-view-report-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const issueId = btn.dataset.issueId;
+        if (issueId) Hub.showIssueModal(issueId);
+      });
+    });
+  }
+
+  /* ── Send message ────────────────── */
+  window.sendMsg = function() {
+    const input = document.getElementById('msg-input');
+    if (!input || !input.value.trim() || !selectedEventId) return;
+
+    Hub.sendMsg(selectedEventId, input.value.trim(), 'staff');
+    input.value = '';
+    _lastCount = -1;
+    renderChat();
+  };
+
+  // Attach listeners
+  const sendBtn = document.querySelector('.chat-send-btn');
+  if (sendBtn) sendBtn.addEventListener('click', window.sendMsg);
+  const msgInput = document.getElementById('msg-input');
+  if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); window.sendMsg(); } });
+
+  /* ── Tab switching (vendor/client) ── */
+  window.switchTab = function(type) {
+    document.querySelectorAll('.msg-tab').forEach(e => e.style.opacity = '0.5');
+    const tab = document.getElementById('tab-' + type);
+    if (tab) tab.style.opacity = '1';
+    // Both tabs show the same event list now
+    buildEventList();
+  };
+
+  /* ── Request Modal ────────────────── */
+  const btnCreateRequest = document.getElementById('btnCreateRequest');
+  const requestModal = document.getElementById('requestModal');
+  const reqClose = document.getElementById('reqClose');
+  const reqCancel = document.getElementById('reqCancel');
+  const reqSubmit = document.getElementById('reqSubmit');
+  const reqEventId = document.getElementById('reqEventId');
+
+  function populateLiveEvents() {
+    if (!reqEventId) return;
+    const events = Hub.getEventsForUser();
+    reqEventId.innerHTML = events.length === 0
+      ? '<option value="">No Active Events Found</option>'
+      : events.map(e => `<option value="${e.id}">${e.name} (${e.status.toUpperCase()})</option>`).join('');
+  }
+
+  function openModal() {
+    if (!requestModal) return;
+    populateLiveEvents();
+    if (document.getElementById('reqItem')) document.getElementById('reqItem').value = '';
+    if (document.getElementById('reqQty')) document.getElementById('reqQty').value = '1';
+    requestModal.style.display = 'flex';
+  }
+  function closeModal() { if (requestModal) requestModal.style.display = 'none'; }
+
+  if (btnCreateRequest) btnCreateRequest.addEventListener('click', openModal);
+  if (reqClose) reqClose.addEventListener('click', closeModal);
+  if (reqCancel) reqCancel.addEventListener('click', closeModal);
+  if (requestModal) requestModal.addEventListener('click', e => { if (e.target === requestModal) closeModal(); });
+
+  if (reqSubmit) {
+    reqSubmit.onclick = () => {
+      const evId = reqEventId?.value;
+      const type = document.getElementById('reqType')?.value;
+      const item = document.getElementById('reqItem')?.value.trim();
+      const qty = parseInt(document.getElementById('reqQty')?.value, 10);
+      const desc = document.getElementById('reqDesc')?.value?.trim() || '';
+
+      if (!evId) { alert("Please select a target event."); return; }
+      if (!item) { alert("Please specify the requested item."); return; }
+      if (!qty || qty < 1) { alert("Enter a valid quantity."); return; }
+
+      const ev = DB.find('events', evId);
+      const evName = ev ? ev.name : evId;
+
+      const newReq = {
+        id: 'sr_' + Date.now(),
+        eventId: evId,
+        eventName: evName,
+        type,
+        item,
+        qty,
+        desc,
+        status: 'pending',
+        requestedBy: session.name,
+        createdAt: new Date().toISOString()
+      };
+
+      const reqs = DB.get('staffRequests') || [];
+      reqs.push(newReq);
+      DB.set('staffRequests', reqs);
+
+      // Post to coordination chat
+      const descNote = desc ? ` — "${desc}"` : '';
+      Hub.sendMsg(evId, `📋 Dispatch Request: ${qty}x ${item} (${type})${descNote}`, 'staff');
+
+      // Signal vendor monitoring page
+      try { localStorage.setItem('eventpro_staffRequestsUpdated', Date.now().toString()); } catch(e) {}
+
+      // Custom in-app popup instead of alert
+      const popup = document.createElement('div');
+      popup.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--pink,#e91e8c);color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 10px 25px rgba(233,30,140,0.4);font-size:14px;font-weight:600;z-index:9999;animation:fadeIn 0.3s ease-out;';
+      popup.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Request dispatched to vendor</div>';
+      document.body.appendChild(popup);
+      setTimeout(() => {
+        popup.style.animation = 'fadeOut 0.3s ease-in forwards';
+        setTimeout(() => popup.remove(), 300);
+      }, 3000);
+
+      closeModal();
+      _lastCount = -1;
+      renderChat();
     };
-} // end initMessages
+  }
+
+  /* ── Boot ──────────────────────────── */
+  buildEventList();
+  renderChat();
+
+  // Poll
+  setInterval(() => { _lastCount = -1; renderChat(); }, Hub.POLL_MS);
+}
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMessages);
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initMessages, 500));
 } else {
-    initMessages();
+  setTimeout(initMessages, 500);
 }

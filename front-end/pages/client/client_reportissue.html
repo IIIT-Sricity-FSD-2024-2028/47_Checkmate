@@ -120,10 +120,69 @@
         </main>
     </div>
     
+    <script src="../../scripts/vendor_js/data.js"></script>
+    <script src="../../scripts/coordination-hub.js"></script>
     <script>
+      // Populate event dropdown dynamically
+      function populateClientEvents() {
+        const eventSelect = document.querySelector('.form-grid .form-group:last-child select');
+        if (eventSelect) {
+          const events = window.CoordHub ? window.CoordHub.getEventsForUser() : DB.getAll('events').filter(e => e.status === 'live');
+          eventSelect.innerHTML = '<option value="" disabled selected>Select Event</option>' +
+            events.map(e => '<option value="' + e.id + '">' + e.name + '</option>').join('');
+        }
+
+        // Update reporter info from session
+        const session = window.CoordHub ? CoordHub.getSession() : { name: 'Client', role: 'Client', email: '' };
+        const reporterSpans = document.querySelectorAll('[style*="color:var(--text-primary)"][style*="font-weight:500"]');
+        if (reporterSpans[0]) reporterSpans[0].textContent = session.name;
+        if (reporterSpans[1]) reporterSpans[1].textContent = session.role;
+        if (reporterSpans[2]) reporterSpans[2].textContent = session.email || '';
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(populateClientEvents, 500);
+      });
+
       document.getElementById('reportIssueForm').addEventListener('submit', function(e) {
           e.preventDefault();
           const btn = document.getElementById('btnSubmit');
+          
+          const titleEl = document.querySelector('.form-control[type="text"]');
+          const descEl = document.querySelector('textarea.form-control');
+          const priorityEl = document.querySelector('.form-grid .form-group:first-child select');
+          const eventSelect = document.querySelector('.form-grid .form-group:last-child select');
+          
+          const title = titleEl?.value.trim();
+          const desc = descEl?.value.trim();
+          if (!title) { alert('Please enter an issue title.'); return; }
+          if (!desc) { alert('Please enter a description.'); return; }
+
+          const session = window.CoordHub ? CoordHub.getSession() : { name: 'Client', role: 'Client' };
+          const eventId = eventSelect?.value || null;
+
+          console.log('Issue form submitted with:', { title, desc, eventId, eventSelect: eventSelect?.value });
+
+          const issue = {
+            id: 'ISS_' + Date.now(),
+            title: title,
+            desc: desc,
+            priority: priorityEl?.value || 'Medium',
+            event: eventId,
+            eventId: eventId,
+            reporter: session.name,
+            reporterRole: session.role,
+            createdAt: new Date().toISOString(),
+            status: 'open'
+          };
+
+          const savedIssue = DB.add('issues', issue);
+
+          // Post to coordination hub
+          if (window.CoordHub && eventId) {
+            CoordHub.postIssueToChat(eventId, savedIssue);
+          }
+
           btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Submitting...';
           btn.disabled = true;
           
@@ -135,9 +194,13 @@
               setTimeout(() => {
                   window.location.href = 'client-dashboard.html';
               }, 1500);
-          }, 1500);
+          }, 1000);
       });
     </script>
     <script src="../../scripts/client_js/client_utils.js"></script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

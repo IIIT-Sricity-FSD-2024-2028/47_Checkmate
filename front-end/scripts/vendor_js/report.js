@@ -19,17 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelBtn  = document.querySelector('.ri-cancel');
 
   /* ── Populate related-event dropdown from DB ── */
-  if (eventEl) {
-    const events = DB.getAll('events').filter(e => e.status === 'confirmed');
-    // Keep the first disabled option, add live events
-    eventEl.innerHTML = `<option value="" disabled selected>Select related event *</option>`;
-    events.forEach(ev => {
-      const opt = document.createElement('option');
-      opt.value = ev.id;
-      opt.textContent = ev.name;
-      eventEl.appendChild(opt);
-    });
+  function populateEvents() {
+    if (eventEl) {
+      const events = window.CoordHub ? window.CoordHub.getEventsForUser() : DB.getMyEvents().filter(e => e.status === 'live' || e.status === 'confirmed');
+      eventEl.innerHTML = `<option value="" disabled selected>Select related event *</option>`;
+      events.forEach(ev => {
+        const opt = document.createElement('option');
+        opt.value = ev.id;
+        opt.textContent = ev.name;
+        eventEl.appendChild(opt);
+      });
+    }
   }
+  
+  // Wait for DB to be initialized
+  setTimeout(populateEvents, 500);
 
   /* ── Character counter ──────────────── */
   if (descEl) {
@@ -101,23 +105,35 @@ document.addEventListener('DOMContentLoaded', () => {
       priority:  priorityEl.value,
       category:  categoryEl.value,
       event:     eventEl?.value || '',
+      eventId:   eventEl?.value || '',
       reporter:  DB.getSession().user,
+      reporterRole: DB.getSession().role,
       email:     DB.getSession().email,
       role:      DB.getSession().role,
       createdAt: new Date().toISOString(),
       status:    'open',
     };
 
-    DB.add('issues', issue);
+    const savedIssue = DB.add('issues', issue);
 
     /* Broadcast to Coordination Hub */
-    const evName = DB.find('events', issue.event)?.name || issue.event;
-    
-    if (window.MsgService) {
-        window.MsgService.sendMessage('System', 'System Alert', 'Vendor', 'Vendors', 
-            `[SYSTEM] 🚨 New Issue Reported: "${issue.title}" for event "${evName}". Priority: ${issue.priority.toUpperCase()}.\nReason: ${issue.desc}`, 
-            'Vendor-Vendor');
+    if (window.CoordHub && (savedIssue.event || savedIssue.eventId)) {
+      CoordHub.postIssueToChat(savedIssue.eventId || savedIssue.event, savedIssue);
     }
+    // Legacy messages channel broadcast (keep for backward compat)
+    const allMsgs = DB.get('messages') || {};
+    if (!allMsgs['vendor-vendor']) allMsgs['vendor-vendor'] = [];
+    const evName = DB.find('events', issue.event)?.name || issue.event;
+    allMsgs['vendor-vendor'].push({
+      id:       uid('MSG'),
+      sender:   'System Alert',
+      initials: '!',
+      self:     false,
+      text:     `🚨 New Issue Reported: "${issue.title}" for event "${evName}". Priority: ${issue.priority.toUpperCase()}.\nReason: ${issue.desc}`,
+      time:     new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }),
+      avatar:   'orange',
+    });
+    DB.set('messages', allMsgs);
 
     /* Built-in HTML toast */
     const builtIn = document.getElementById('toast');

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../../styles/global.css">
   <link rel="stylesheet" href="../../styles/admin_styles/admin.css">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="app">
@@ -85,139 +86,125 @@
             <div class="filter-grid">
                 <div class="input-group">
                     <label>Report Type</label>
-                    <select class="form-control">
-                        <option>Select report type</option>
+                    <select class="form-control" id="filterReportType">
+                        <option value="all">Comprehensive (All Reports)</option>
+                        <option value="financial">Financial (Revenue Only)</option>
+                        <option value="operational">Operational (Events & Staff)</option>
+                        <option value="resources">Logistics (Resources Only)</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>Start Date</label>
-                    <input type="date" class="form-control" />
+                    <input type="date" id="filterStartDate" class="form-control" />
                 </div>
                 <div class="input-group">
                     <label>End Date</label>
-                    <input type="date" class="form-control" />
+                    <input type="date" id="filterEndDate" class="form-control" />
                 </div>
                 <div class="input-group">
-                    <label>Event</label>
-                    <select class="form-control">
-                        <option>Select Event</option>
+                    <label>Event Type</label>
+                    <select class="form-control" id="filterEventType">
+                        <option value="all">All Event Types</option>
+                        <option value="conference">Conference</option>
+                        <option value="wedding">Wedding</option>
+                        <option value="corporate">Corporate</option>
                     </select>
                 </div>
             </div>
-            <button class="export-btn" style="display:inline-flex;">Generate Report</button>
+            <button class="export-btn" id="applyFiltersBtn" style="display:inline-flex;">Generate Report</button>
         </div>
 
-        <!-- Stats Grid -->
         <section class="stats-grid" style="margin-top: -8px;">
             <div class="stat-card">
                 <p class="stat-label">Total Events</p>
-                <h2 class="stat-value stat-value-pink">12</h2>
+                <h2 class="stat-value stat-value-pink" id="statTotalEvents">0</h2>
             </div>
             <div class="stat-card">
                 <p class="stat-label">Completed Events</p>
-                <h2 class="stat-value stat-value-pink">9</h2>
+                <h2 class="stat-value stat-value-pink" id="statCompletedEvents">0</h2>
             </div>
             <div class="stat-card">
                 <p class="stat-label">Total Revenue</p>
-                <h2 class="stat-value stat-value-pink">$25,000</h2>
+                <h2 class="stat-value stat-value-pink" id="statTotalRevenue">$0</h2>
             </div>
             <div class="stat-card">
-                <p class="stat-label">Resources Used</p>
-                <h2 class="stat-value stat-value-pink">45</h2>
+                <p class="stat-label">Resources Allocated</p>
+                <h2 class="stat-value stat-value-pink" id="statResourcesUsed">0</h2>
+            </div>
+        </section>
+
+        <!-- Charts Grid -->
+        <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="data-table-wrapper" style="padding: 20px;">
+                <div class="table-header-title" style="margin-bottom: 16px;">Revenue Breakdown</div>
+                <canvas id="revenueChart" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="data-table-wrapper" style="padding: 20px;">
+                <div class="table-header-title" style="margin-bottom: 16px;">Event Status Distribution</div>
+                <canvas id="statusChart" style="max-height: 250px;"></canvas>
             </div>
         </section>
 
         <!-- Event Summary Report -->
-        <div class="table-container" style="margin-bottom: 24px;">
+        <div class="table-container report-section" id="reportOperational" style="margin-bottom: 24px;">
             <div class="data-table-wrapper">
                 <div class="table-header-title">Event Summary Report</div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Event ID</th>
-                            <th>Event Type</th>
+                            <th>Event Name</th>
+                            <th>Type</th>
                             <th>Date</th>
                             <th>Guests</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td>EVT003</td><td>Conference</td><td>10 May 2026</td><td>500</td><td>Completed</td></tr>
-                        <tr><td>EVT004</td><td>Wedding</td><td>12 May 2026</td><td>300</td><td>Confirmed</td></tr>
-                        <tr><td>EVT005</td><td>Corporate</td><td>15 May 2026</td><td>150</td><td>Confirmed</td></tr>
+                    <tbody id="eventSummaryTbody">
+                        <!-- Dynamic Content -->
                     </tbody>
                 </table>
-                <div class="pagination-controls">
-                    <button class="page-btn"><i data-lucide="chevron-left"></i></button>
-                    <button class="page-btn"><i data-lucide="chevron-right"></i></button>
-                </div>
             </div>
         </div>
 
         <!-- Resource Usage Report -->
-        <div class="table-container" style="margin-bottom: 24px;">
+        <div class="table-container report-section" id="reportResources" style="margin-bottom: 24px;">
             <div class="data-table-wrapper">
-                <div class="table-header-title">Resource Usage Report</div>
+                <div class="table-header-title">Resource Inventory & Usage</div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Resource Name</th>
-                            <th>Event ID</th>
-                            <th>Quantity Used</th>
-                            <th>Status</th>
+                            <th>Category</th>
+                            <th>Total Inventory</th>
+                            <th>Available</th>
+                            <th>Allocated</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td>Sound System</td><td>EVT003</td><td>2</td><td>Used</td></tr>
-                        <tr><td>Lighting Setup</td><td>EVT003</td><td>5</td><td>Used</td></tr>
-                        <tr><td>Chairs</td><td>EVT004</td><td>300</td><td>Reserved</td></tr>
-                        <tr><td>Projectors</td><td>EVT003</td><td>3</td><td>Used</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Staff Allocation Report -->
-        <div class="table-container" style="margin-bottom: 24px;">
-            <div class="data-table-wrapper">
-                <div class="table-header-title">Staff Allocation Report</div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Staff Name</th>
-                            <th>Role</th>
-                            <th>Event</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Mike Staff</td><td>Event Coordinator</td><td>EVT003</td><td>Completed</td></tr>
-                        <tr><td>Emily Johnson</td><td>Photographer</td><td>EVT003</td><td>Completed</td></tr>
-                        <tr><td>Tom Wilson</td><td>Audio Technician</td><td>EVT004</td><td>Assigned</td></tr>
-                        <tr><td>Anna Martinez</td><td>Event Assistant</td><td>EVT005</td><td>Assigned</td></tr>
+                    <tbody id="resourceUsageTbody">
+                        <!-- Dynamic Content -->
                     </tbody>
                 </table>
             </div>
         </div>
 
         <!-- Revenue Report -->
-        <div class="table-container" style="margin-bottom: 24px;">
+        <div class="table-container report-section" id="reportFinancial" style="margin-bottom: 24px;">
             <div class="data-table-wrapper">
-                <div class="table-header-title">Revenue Report</div>
+                <div class="table-header-title">Financial Report (Bookings & Payouts)</div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
-                            <th>Event ID</th>
+                            <th>Event Name</th>
                             <th>Client</th>
+                            <th>Vendor</th>
                             <th>Total Cost</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td>BK101</td><td>EVT003</td><td>John</td><td>$5,000</td><td>Completed</td></tr>
-                        <tr><td>BK102</td><td>EVT004</td><td>Alice</td><td>$3,000</td><td>Confirmed</td></tr>
-                        <tr><td>BK103</td><td>EVT005</td><td>Robert</td><td>$1,500</td><td>Confirmed</td></tr>
+                    <tbody id="revenueReportTbody">
+                        <!-- Dynamic Content -->
                     </tbody>
                 </table>
             </div>
@@ -227,9 +214,8 @@
         <div class="data-table-wrapper">
             <div class="table-header-title" style="margin-bottom: 12px;">Export Report</div>
             <div class="export-btn-group">
-                <button class="export-btn"><i data-lucide="download"></i> Download PDF</button>
-                <button class="export-btn"><i data-lucide="file-spreadsheet"></i> Export CSV</button>
-                <button class="export-btn"><i data-lucide="printer"></i> Print Report</button>
+                <button class="export-btn" id="exportCsvBtn"><i data-lucide="file-spreadsheet"></i> Export Financial CSV</button>
+                <button class="export-btn" onclick="window.print()"><i data-lucide="printer"></i> Print Report</button>
             </div>
         </div>
 
@@ -270,7 +256,13 @@
       </div>
     </div>
   </div>
+  <script src="../../scripts/vendor_js/data.js"></script>
   <script src="../../scripts/admin_js/admin-alerts.js"></script>
+  <script src="../../scripts/admin_js/admin-reports.js"></script>
   <script>lucide.createIcons();</script>
+
+    <!-- Global Injections -->
+    <script src="../../scripts/profile-modal.js"></script>
+    <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>
