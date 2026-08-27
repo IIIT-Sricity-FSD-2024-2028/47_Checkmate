@@ -69,6 +69,16 @@
       "status": "Active",
       "created": "2026-08-21",
       "passwordHash": "2724e980172031a3232ede9bd338a160d35600784d312a2cacc23cc24f1e167e"
+    },
+    {
+      "id": "U008",
+      "name": "thols gb",
+      "email": "thols123@gmail.com",
+      "phone": "1234567890",
+      "role": "Vendor",
+      "status": "Active",
+      "created": "2026-08-27",
+      "passwordHash": "4b348fea888baaf4c00b55b3902ba44b024c316a05e0b67a6a76cd118e989d6c"
     }
   ],
   "events": [
@@ -131,6 +141,121 @@
       "vendor": "Sound & Lighting Pro",
       "createdBy": "client",
       "budget": 52000
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT005"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT006"
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT007"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT008"
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT009"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT010"
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT011"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT012"
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT013"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT014"
     }
   ],
   "resources": [
@@ -230,6 +355,78 @@
       "events": 0,
       "avatar": "pink",
       "assignedEvents": []
+    },
+    {
+      "name": "Jordan Lee",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 25,
+      "events": 1,
+      "avatar": "purple",
+      "id": "S002",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001"
+      ]
+    },
+    {
+      "name": "Jordan Lee",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 50,
+      "events": 2,
+      "avatar": "purple",
+      "id": "S003",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001",
+        "EVT001"
+      ]
+    },
+    {
+      "name": "Jordan Unique Test",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 25,
+      "events": 1,
+      "avatar": "purple",
+      "id": "S004",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001"
+      ]
+    },
+    {
+      "name": "Jordan Unique Test",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 50,
+      "events": 2,
+      "avatar": "purple",
+      "id": "S005",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001",
+        "EVT001"
+      ]
+    },
+    {
+      "name": "Test Tech 1787847908043",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 25,
+      "events": 1,
+      "avatar": "purple",
+      "id": "S006",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001"
+      ]
     }
   ],
   "packages": [
@@ -326,11 +523,67 @@
       "reporterRole": "Vendor",
       "email": "sarah@eliteevents.com",
       "target": "admin",
-      "status": "open",
+      "status": "investigating",
       "createdAt": "2026-05-21T10:00:00.000Z"
     }
   ],
-  "staffAssignments": [],
+  "staffAssignments": [
+    {
+      "staffId": "S002",
+      "staffName": "Jordan Lee",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-08-27T16:23:20.455Z",
+      "id": "A001"
+    },
+    {
+      "staffId": "S003",
+      "staffName": "Jordan Lee",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-08-27T16:23:51.819Z",
+      "id": "A002"
+    },
+    {
+      "staffId": "S004",
+      "staffName": "Jordan Unique Test",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-08-27T16:24:27.981Z",
+      "id": "A003"
+    },
+    {
+      "staffId": "S005",
+      "staffName": "Jordan Unique Test",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-08-27T16:24:37.402Z",
+      "id": "A004"
+    },
+    {
+      "staffId": "S006",
+      "staffName": "Test Tech 1787847908043",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-08-27T16:25:08.043Z",
+      "id": "A005"
+    }
+  ],
   "vendorApplications": [
     {
       "id": "VAPP001",
@@ -391,6 +644,28 @@
       "passwordHash": "2724e980172031a3232ede9bd338a160d35600784d312a2cacc23cc24f1e167e",
       "id": "VAPP003",
       "decidedAt": "2026-08-21T05:48:37.613Z"
+    },
+    {
+      "status": "approved",
+      "submittedAt": "2026-08-27T16:57:00.665Z",
+      "vendorName": "thols gb",
+      "businessName": "washing man",
+      "email": "thols123@gmail.com",
+      "phone": "1234567890",
+      "category": "General",
+      "documents": [
+        {
+          "name": "medvqa.jpg",
+          "type": "license"
+        },
+        {
+          "name": "imagesjepa.jpg",
+          "type": "tax_id"
+        }
+      ],
+      "passwordHash": "4b348fea888baaf4c00b55b3902ba44b024c316a05e0b67a6a76cd118e989d6c",
+      "id": "VAPP004",
+      "decidedAt": "2026-08-27T16:58:02.599Z"
     }
   ],
   "vendors": [
@@ -443,6 +718,15 @@
       "status": "Approved",
       "rating": 5,
       "created": "2026-08-21"
+    },
+    {
+      "id": "V007",
+      "name": "washing man",
+      "businessName": "washing man",
+      "category": "General",
+      "status": "Approved",
+      "rating": 5,
+      "created": "2026-08-27"
     }
   ],
   "venues": [
@@ -516,6 +800,18 @@
       "advancePaid": 0,
       "paymentStatus": "unpaid",
       "created": "2026-04-01"
+    },
+    {
+      "id": "BK004",
+      "eventId": "EVT006",
+      "eventName": "Booking Auto-Gen Test",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "status": "Confirmed",
+      "cost": 35000,
+      "advancePaid": 0,
+      "paymentStatus": "unpaid",
+      "created": "2026-08-27"
     }
   ],
   "messages": {
@@ -590,30 +886,90 @@
       "registration": 0,
       "event": 0,
       "breakdown": 0
+    },
+    "EVT005": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT006": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT007": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT008": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT009": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT010": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT011": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT012": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT013": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT014": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
     }
   },
   "staffRequests": [],
   "staffTasks": [],
   "vendorDocSubmission": {
     "status": "pending",
-    "submittedAt": "2026-08-21T05:48:06.144Z",
-    "vendorName": "Mouli Rd",
-    "businessName": "Catering SERVICE",
-    "email": "moulidharan.r24@iiits.in",
-    "phone": "9361010704",
+    "submittedAt": "2026-08-27T16:57:00.665Z",
+    "vendorName": "thols gb",
+    "businessName": "washing man",
+    "email": "thols123@gmail.com",
+    "phone": "1234567890",
     "category": "General",
     "documents": [
       {
-        "name": "Kvasir-VQA-x1_reference_paper.pdf",
+        "name": "medvqa.jpg",
         "type": "license"
       },
       {
-        "name": "2309.11080v1 (1).pdf",
+        "name": "imagesjepa.jpg",
         "type": "tax_id"
       }
     ],
-    "passwordHash": "Mouli@008",
-    "id": "VAPP003"
+    "passwordHash": "Thols@008",
+    "id": "VAPP004"
   },
   "session": {
     "user": "Sarah Williams",
@@ -646,7 +1002,27 @@
       }
     ]
   },
-  "adminChatMessages": [],
+  "adminChatMessages": [
+    {
+      "id": "msg_1787849937750",
+      "sender": "thols gb",
+      "senderRole": "vendor",
+      "senderEmail": "thols123@gmail.com",
+      "text": "hi",
+      "timestamp": "2026-08-27T16:58:57.750Z",
+      "type": "message"
+    },
+    {
+      "id": "msg_1787849951965",
+      "sender": "System",
+      "senderRole": "Admin",
+      "senderEmail": "admin@eventpro.com",
+      "recipientEmail": "sarah@eliteevents.com",
+      "text": "🔧 Issue \"Lighting rig power fluctuation\" status updated to: Investigating",
+      "timestamp": "2026-08-27T16:59:11.965Z",
+      "type": "system"
+    }
+  ],
   "coordinationMessages": [],
   "notifications": [
     {
@@ -739,6 +1115,239 @@
         "vendorName": "Mouli Rd"
       },
       "createdAt": "2026-08-21T05:48:37.613Z"
+    },
+    {
+      "id": "LOG007",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT005",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-08-27T16:23:20.451Z"
+    },
+    {
+      "id": "LOG008",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT006",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-08-27T16:23:20.453Z"
+    },
+    {
+      "id": "LOG009",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT006",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-08-27T16:23:20.453Z"
+    },
+    {
+      "id": "LOG010",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT007",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-08-27T16:23:51.814Z"
+    },
+    {
+      "id": "LOG011",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT008",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-08-27T16:23:51.817Z"
+    },
+    {
+      "id": "LOG012",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT008",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-08-27T16:23:51.817Z"
+    },
+    {
+      "id": "LOG013",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT009",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-08-27T16:24:27.976Z"
+    },
+    {
+      "id": "LOG014",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT010",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-08-27T16:24:27.978Z"
+    },
+    {
+      "id": "LOG015",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT010",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-08-27T16:24:27.979Z"
+    },
+    {
+      "id": "LOG016",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT011",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-08-27T16:24:37.397Z"
+    },
+    {
+      "id": "LOG017",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-08-27T16:24:37.399Z"
+    },
+    {
+      "id": "LOG018",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-08-27T16:24:37.400Z"
+    },
+    {
+      "id": "LOG019",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-08-27T16:25:08.039Z"
+    },
+    {
+      "id": "LOG020",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT014",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-08-27T16:25:08.041Z"
+    },
+    {
+      "id": "LOG021",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT014",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-08-27T16:25:08.041Z"
+    },
+    {
+      "id": "LOG022",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "VENDOR_APPLICATION_APPROVED",
+      "entityType": "VENDOR_APPLICATION",
+      "entityId": "VAPP004",
+      "details": {
+        "businessName": "washing man",
+        "vendorName": "thols gb"
+      },
+      "createdAt": "2026-08-27T16:58:02.599Z"
     }
   ]
 }

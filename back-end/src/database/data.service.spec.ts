@@ -60,8 +60,9 @@ describe('DataService Persistence & Trigger Integrity', () => {
   });
 
   it('should calculate workload when staff assignment changes', () => {
+    const uniqueName = `Test Tech ${Date.now()}`;
     const staff = service.create('staff', 'S', {
-      name: 'Jordan Lee',
+      name: uniqueName,
       role: 'Lighting Tech',
       phone: '+1 555-9988',
       status: 'available',

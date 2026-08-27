@@ -31,9 +31,12 @@ export class CreateEventDto {
   @ApiPropertyOptional({ description: 'Resources requested by client' }) @IsOptional() @Allow() requestedResources?: any[];
   @ApiPropertyOptional({ description: 'Staff requested by client' }) @IsOptional() @Allow() requestedStaff?: any[];
   @ApiPropertyOptional({ example: 5000 }) @IsOptional() @IsNumber() estimatedCost?: number;
-  @ApiPropertyOptional({ example: '$5,000 - $10,000' }) @IsOptional() @IsString() budgetRange?: string;
   @ApiPropertyOptional({ description: 'Reason for rejection' }) @IsOptional() @IsString() rejectionReason?: string;
   @ApiPropertyOptional({ example: '2026-05-01T12:00:00.000Z' }) @IsOptional() @IsString() rejectedAt?: string;
+  @ApiPropertyOptional({ example: ['V001', 'V002'] }) @IsOptional() @IsArray() vendorIds?: string[];
+  @ApiPropertyOptional({ description: 'Array of involved vendor names or objects' }) @IsOptional() @Allow() vendors?: any[];
+  @ApiPropertyOptional({ example: ['Lighting', 'Catering'] }) @IsOptional() @IsArray() categories?: string[];
+  @ApiPropertyOptional({ description: 'Per-vendor response states' }) @IsOptional() @Allow() vendorResponses?: any[];
   @ApiPropertyOptional({ description: 'Detected conflicts' }) @IsOptional() @Allow() conflicts?: any[];
 }
 export class UpdateEventDto extends PartialType(CreateEventDto) {}

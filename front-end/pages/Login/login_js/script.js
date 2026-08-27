@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const step3Btn = document.querySelector('#signup-form-3 .btn-submit');
+  const step3Btn = document.querySelector('#signup-form-3 .btn-submit') || document.querySelector('.btn-submit');
   if (step3Btn) {
     step3Btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -204,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = e.currentTarget;
       submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
       try {
-        const payload = api('POST', 'auth/register', {
+        const endpoint = data.role === 'Staff' ? 'auth/register' : 'auth/register';
+        const payload = api('POST', endpoint, {
           name: `${data.firstName} ${data.lastName}`.trim(),
           email: data.email,
           phone: data.phone,
@@ -289,7 +290,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     try {
-      const payload = api('POST', 'auth/login', { email, password });
+      let payload;
+      try {
+        payload = api('POST', 'staff/login', { email, password });
+      } catch (error) {
+        payload = api('POST', 'auth/login', { email, password });
+      }
       setSession(payload);
       localStorage.removeItem('checkmate_admin_baseline');
       window.location.href = redirectByRole[payload.role] || '../LandingPage/index.html';
