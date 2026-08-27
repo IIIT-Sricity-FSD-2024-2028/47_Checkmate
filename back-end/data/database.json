@@ -69,6 +69,16 @@
       "status": "Active",
       "created": "2026-08-21",
       "passwordHash": "2724e980172031a3232ede9bd338a160d35600784d312a2cacc23cc24f1e167e"
+    },
+    {
+      "id": "U008",
+      "name": "thols gb",
+      "email": "thols123@gmail.com",
+      "phone": "1234567890",
+      "role": "Vendor",
+      "status": "Active",
+      "created": "2026-08-27",
+      "passwordHash": "4b348fea888baaf4c00b55b3902ba44b024c316a05e0b67a6a76cd118e989d6c"
     }
   ],
   "events": [
@@ -513,7 +523,7 @@
       "reporterRole": "Vendor",
       "email": "sarah@eliteevents.com",
       "target": "admin",
-      "status": "open",
+      "status": "investigating",
       "createdAt": "2026-05-21T10:00:00.000Z"
     }
   ],
@@ -634,6 +644,28 @@
       "passwordHash": "2724e980172031a3232ede9bd338a160d35600784d312a2cacc23cc24f1e167e",
       "id": "VAPP003",
       "decidedAt": "2026-08-21T05:48:37.613Z"
+    },
+    {
+      "status": "approved",
+      "submittedAt": "2026-08-27T16:57:00.665Z",
+      "vendorName": "thols gb",
+      "businessName": "washing man",
+      "email": "thols123@gmail.com",
+      "phone": "1234567890",
+      "category": "General",
+      "documents": [
+        {
+          "name": "medvqa.jpg",
+          "type": "license"
+        },
+        {
+          "name": "imagesjepa.jpg",
+          "type": "tax_id"
+        }
+      ],
+      "passwordHash": "4b348fea888baaf4c00b55b3902ba44b024c316a05e0b67a6a76cd118e989d6c",
+      "id": "VAPP004",
+      "decidedAt": "2026-08-27T16:58:02.599Z"
     }
   ],
   "vendors": [
@@ -686,6 +718,15 @@
       "status": "Approved",
       "rating": 5,
       "created": "2026-08-21"
+    },
+    {
+      "id": "V007",
+      "name": "washing man",
+      "businessName": "washing man",
+      "category": "General",
+      "status": "Approved",
+      "rating": 5,
+      "created": "2026-08-27"
     }
   ],
   "venues": [
@@ -911,24 +952,24 @@
   "staffTasks": [],
   "vendorDocSubmission": {
     "status": "pending",
-    "submittedAt": "2026-08-21T05:48:06.144Z",
-    "vendorName": "Mouli Rd",
-    "businessName": "Catering SERVICE",
-    "email": "moulidharan.r24@iiits.in",
-    "phone": "9361010704",
+    "submittedAt": "2026-08-27T16:57:00.665Z",
+    "vendorName": "thols gb",
+    "businessName": "washing man",
+    "email": "thols123@gmail.com",
+    "phone": "1234567890",
     "category": "General",
     "documents": [
       {
-        "name": "Kvasir-VQA-x1_reference_paper.pdf",
+        "name": "medvqa.jpg",
         "type": "license"
       },
       {
-        "name": "2309.11080v1 (1).pdf",
+        "name": "imagesjepa.jpg",
         "type": "tax_id"
       }
     ],
-    "passwordHash": "Mouli@008",
-    "id": "VAPP003"
+    "passwordHash": "Thols@008",
+    "id": "VAPP004"
   },
   "session": {
     "user": "Sarah Williams",
@@ -961,7 +1002,27 @@
       }
     ]
   },
-  "adminChatMessages": [],
+  "adminChatMessages": [
+    {
+      "id": "msg_1787849937750",
+      "sender": "thols gb",
+      "senderRole": "vendor",
+      "senderEmail": "thols123@gmail.com",
+      "text": "hi",
+      "timestamp": "2026-08-27T16:58:57.750Z",
+      "type": "message"
+    },
+    {
+      "id": "msg_1787849951965",
+      "sender": "System",
+      "senderRole": "Admin",
+      "senderEmail": "admin@eventpro.com",
+      "recipientEmail": "sarah@eliteevents.com",
+      "text": "🔧 Issue \"Lighting rig power fluctuation\" status updated to: Investigating",
+      "timestamp": "2026-08-27T16:59:11.965Z",
+      "type": "system"
+    }
+  ],
   "coordinationMessages": [],
   "notifications": [
     {
@@ -1274,6 +1335,19 @@
         "eventName": "Booking Auto-Gen Test"
       },
       "createdAt": "2026-08-27T16:25:08.041Z"
+    },
+    {
+      "id": "LOG022",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "VENDOR_APPLICATION_APPROVED",
+      "entityType": "VENDOR_APPLICATION",
+      "entityId": "VAPP004",
+      "details": {
+        "businessName": "washing man",
+        "vendorName": "thols gb"
+      },
+      "createdAt": "2026-08-27T16:58:02.599Z"
     }
   ]
 }
