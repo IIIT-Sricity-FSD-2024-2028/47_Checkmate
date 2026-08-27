@@ -93,7 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     issues.slice(-2).forEach(iss => items.push({ title:'Issue reported', sub:iss.title }));
 
     const shown = items.slice(0, 4);
-    if (!shown.length) return;
+    if (!shown.length) {
+      actEl.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:13px">No recent activity.</div>`;
+      return;
+    }
 
     const timeLabels = ['Just now', '10 mins ago','30 mins ago','2 hours ago'];
     actEl.innerHTML = shown.map((a, i) => `

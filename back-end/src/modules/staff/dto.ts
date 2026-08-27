@@ -8,6 +8,10 @@ export class CreateStaffDto {
   @ApiPropertyOptional({ example: 'AJ' }) @IsOptional() @IsString() initials?: string;
   @ApiProperty({ example: 'Event Coordinator' }) @IsString() role: string;
   @ApiPropertyOptional({ example: 'Elite Events Co.' }) @IsOptional() @IsString() vendor?: string;
+  @ApiPropertyOptional({ example: 'V001' }) @IsOptional() @IsString() vendorId?: string;
+  @ApiPropertyOptional({ example: 'vendor@eliteevents.com' }) @IsOptional() @IsString() vendorEmail?: string;
+  @ApiPropertyOptional({ example: 'U002' }) @IsOptional() @IsString() userId?: string;
+  @ApiPropertyOptional({ example: 'vendor@eliteevents.com' }) @IsOptional() @IsString() createdBy?: string;
   @ApiProperty({ example: '+1 234-567-8901' }) @IsString() phone: string;
   @ApiPropertyOptional({ example: 'alex@eliteevents.com' }) @IsOptional() @IsString() email?: string;
   @ApiPropertyOptional({ example: 60 }) @IsOptional() @IsNumber() @Min(0) workload?: number;

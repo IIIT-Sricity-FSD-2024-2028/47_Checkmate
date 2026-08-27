@@ -8,6 +8,9 @@ export class CreateResourceDto {
   @ApiProperty({ example: 'Equipment' }) @IsString() category: string;
   @ApiPropertyOptional({ example: 'Visual' }) @IsOptional() @IsString() cat?: string;
   @ApiPropertyOptional({ example: 'Elite Events Co.' }) @IsOptional() @IsString() vendor?: string;
+  @ApiPropertyOptional({ example: 'V001' }) @IsOptional() @IsString() vendorId?: string;
+  @ApiPropertyOptional({ example: 'vendor@eliteevents.com' }) @IsOptional() @IsString() vendorEmail?: string;
+  @ApiPropertyOptional({ example: 'vendor@eliteevents.com' }) @IsOptional() @IsString() createdBy?: string;
   @ApiProperty({ example: 8 }) @IsNumber() @Min(0) quantity: number;
   @ApiPropertyOptional({ example: 8 }) @IsOptional() @IsNumber() @Min(0) total?: number;
   @ApiPropertyOptional({ example: 8 }) @IsOptional() @IsNumber() @Min(0) avail?: number;

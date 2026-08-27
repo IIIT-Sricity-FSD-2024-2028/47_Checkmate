@@ -548,11 +548,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const price = parseFloat(document.getElementById('resPrice').value);
     const available = document.getElementById('resAvail').value === 'true';
 
+    const s = DB.getSession();
+    const vendorData = {
+      vendor: s.businessName || s.vendorName || s.user || 'Vendor',
+      vendorId: s.vendorId || s.id || '',
+      vendorEmail: s.email || '',
+      createdBy: s.email || s.userId || ''
+    };
+
     if (editingId) {
       DB.update('resources', editingId, { name, category, quantity, price, available });
       Toast.show('Resource updated!', 'success');
     } else {
-      DB.add('resources', { id: uid('R'), name, category, quantity, price, unit: 'day', available });
+      DB.add('resources', { id: uid('R'), name, category, quantity, price, unit: 'day', available, ...vendorData });
       Toast.show('Resource added!', 'success');
     }
 

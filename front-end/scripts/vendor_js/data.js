@@ -172,6 +172,9 @@ window.DB = (() => {
     if (ctx.isAdmin) return all;
 
     if (ctx.isVendor) {
+      const myResIds = new Set(getMyResources().map(r => r.id));
+      const myStaffIds = new Set(getMyStaff().map(s => s.id));
+
       return all.filter(ev => {
         const evVId = (ev.vendorId || '').toLowerCase();
         const evVName = (ev.vendor || '').toLowerCase();
@@ -182,14 +185,55 @@ window.DB = (() => {
         const ctxUName = (ctx.userName || '').toLowerCase();
         const ctxUEmail = (ctx.userEmail || '').toLowerCase();
 
-        return (
+        // 1. Direct vendor match
+        if (
           (ctxVId && evVId === ctxVId) ||
           (ctxVName && evVName === ctxVName) ||
           (ctxBName && evVName === ctxBName) ||
           (ctxUName && evVName === ctxUName) ||
           (ctxUEmail && evVEmail === ctxUEmail) ||
-          (ev.createdBy === ctx.userEmail || ev.createdBy === ctx.userId)
-        );
+          (ev.createdBy && (ev.createdBy.toLowerCase() === ctxUEmail || ev.createdBy === ctx.userId))
+        ) {
+          return true;
+        }
+
+        // 2. Multi-vendor arrays (vendorIds / vendors)
+        if (Array.isArray(ev.vendorIds) && ctxVId && ev.vendorIds.map(v => String(v).toLowerCase()).includes(ctxVId)) return true;
+        if (Array.isArray(ev.vendors)) {
+          const match = ev.vendors.some(v => 
+            (typeof v === 'string' && (v.toLowerCase() === ctxVName || v.toLowerCase() === ctxBName)) ||
+            (v && typeof v === 'object' && (
+              (v.id && String(v.id).toLowerCase() === ctxVId) ||
+              (v.name && String(v.name).toLowerCase() === ctxVName) ||
+              (v.businessName && String(v.businessName).toLowerCase() === ctxBName)
+            ))
+          );
+          if (match) return true;
+        }
+
+        // 3. Requested resources belonging to this vendor
+        if (Array.isArray(ev.requestedResources) && ev.requestedResources.length > 0) {
+          const hasMyRes = ev.requestedResources.some(r => 
+            (r.resourceId && myResIds.has(r.resourceId)) ||
+            (r.vendorId && String(r.vendorId).toLowerCase() === ctxVId) ||
+            (r.vendor && (r.vendor.toLowerCase() === ctxVName || r.vendor.toLowerCase() === ctxBName)) ||
+            (r.vendorEmail && r.vendorEmail.toLowerCase() === ctxUEmail)
+          );
+          if (hasMyRes) return true;
+        }
+
+        // 4. Requested staff belonging to this vendor
+        if (Array.isArray(ev.requestedStaff) && ev.requestedStaff.length > 0) {
+          const hasMyStaff = ev.requestedStaff.some(s => 
+            (s.staffId && myStaffIds.has(s.staffId)) ||
+            (s.vendorId && String(s.vendorId).toLowerCase() === ctxVId) ||
+            (s.vendor && (s.vendor.toLowerCase() === ctxVName || s.vendor.toLowerCase() === ctxBName)) ||
+            (s.vendorEmail && s.vendorEmail.toLowerCase() === ctxUEmail)
+          );
+          if (hasMyStaff) return true;
+        }
+
+        return false;
       });
     }
 
@@ -206,7 +250,7 @@ window.DB = (() => {
           (ctxUId && evCId === ctxUId) ||
           (ctxUEmail && evCEmail === ctxUEmail) ||
           (ctxUName && (evCName === ctxUName || evCName.includes(ctxUName) || ctxUName.includes(evCName))) ||
-          (ev.createdBy === ctx.userEmail || ev.createdBy === ctx.userId)
+          (ev.createdBy && (ev.createdBy.toLowerCase() === ctxUEmail || ev.createdBy === ctx.userId))
         );
       });
     }
@@ -237,16 +281,22 @@ window.DB = (() => {
       return all.filter(r => {
         const rVId = (r.vendorId || '').toLowerCase();
         const rVName = (r.vendor || '').toLowerCase();
+        const rVEmail = (r.vendorEmail || '').toLowerCase();
+        const rCreated = (r.createdBy || '').toLowerCase();
         const ctxVId = (ctx.vendorId || '').toLowerCase();
         const ctxVName = (ctx.vendorName || '').toLowerCase();
         const ctxBName = (ctx.businessName || '').toLowerCase();
         const ctxUName = (ctx.userName || '').toLowerCase();
+        const ctxUEmail = (ctx.userEmail || '').toLowerCase();
 
         return (
           (ctxVId && rVId === ctxVId) ||
           (ctxVName && rVName === ctxVName) ||
           (ctxBName && rVName === ctxBName) ||
-          (ctxUName && rVName === ctxUName)
+          (ctxUName && rVName === ctxUName) ||
+          (ctxUEmail && rVEmail === ctxUEmail) ||
+          (ctxUEmail && rCreated === ctxUEmail) ||
+          (ctx.userId && r.createdBy === ctx.userId)
         );
       });
     }
@@ -264,16 +314,22 @@ window.DB = (() => {
       return all.filter(s => {
         const sVId = (s.vendorId || '').toLowerCase();
         const sVName = (s.vendor || '').toLowerCase();
+        const sVEmail = (s.vendorEmail || '').toLowerCase();
+        const sCreated = (s.createdBy || '').toLowerCase();
         const ctxVId = (ctx.vendorId || '').toLowerCase();
         const ctxVName = (ctx.vendorName || '').toLowerCase();
         const ctxBName = (ctx.businessName || '').toLowerCase();
         const ctxUName = (ctx.userName || '').toLowerCase();
+        const ctxUEmail = (ctx.userEmail || '').toLowerCase();
 
         return (
           (ctxVId && sVId === ctxVId) ||
           (ctxVName && sVName === ctxVName) ||
           (ctxBName && sVName === ctxBName) ||
-          (ctxUName && sVName === ctxUName)
+          (ctxUName && sVName === ctxUName) ||
+          (ctxUEmail && sVEmail === ctxUEmail) ||
+          (ctxUEmail && sCreated === ctxUEmail) ||
+          (ctx.userId && s.createdBy === ctx.userId)
         );
       });
     }
@@ -415,11 +471,10 @@ window.DB = (() => {
     // Auto-attach tenant context if creating entities
     if (name === 'resources' || name === 'packages' || name === 'staff') {
       if (ctx.isVendor) {
-        if (!itemToSave.vendor && !itemToSave.vendorId) {
-          itemToSave.vendor = ctx.vendorName || ctx.businessName || ctx.userName;
-          itemToSave.vendorId = ctx.vendorId;
-          itemToSave.createdBy = ctx.userEmail || ctx.userId;
-        }
+        itemToSave.vendor = itemToSave.vendor || ctx.vendorName || ctx.businessName || ctx.userName;
+        itemToSave.vendorId = itemToSave.vendorId || ctx.vendorId;
+        itemToSave.vendorEmail = itemToSave.vendorEmail || ctx.userEmail;
+        itemToSave.createdBy = itemToSave.createdBy || ctx.userEmail || ctx.userId;
       }
     } else if (name === 'events') {
       if (ctx.isClient) {

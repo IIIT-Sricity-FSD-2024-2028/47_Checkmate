@@ -1007,6 +1007,86 @@
         ]
       }
     },
+    "/api/staff/signup": {
+      "post": {
+        "operationId": "StaffController_signup",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/login": {
+      "post": {
+        "operationId": "StaffController_login",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/profile/{email}": {
+      "get": {
+        "operationId": "StaffController_getProfile",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/staff-assignments": {
       "get": {
         "operationId": "StaffController_assignments",
@@ -2643,9 +2723,25 @@
             "type": "string",
             "example": "Acme Inc."
           },
+          "clientId": {
+            "type": "string",
+            "example": "U004"
+          },
+          "clientEmail": {
+            "type": "string",
+            "example": "client@example.com"
+          },
           "vendor": {
             "type": "string",
             "example": "Elite Events Co."
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "V001"
+          },
+          "vendorEmail": {
+            "type": "string",
+            "example": "vendor@example.com"
           },
           "createdBy": {
             "type": "string",

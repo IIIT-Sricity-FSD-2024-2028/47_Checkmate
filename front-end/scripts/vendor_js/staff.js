@@ -483,7 +483,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const existIdx  = staffList.findIndex(s => s.id === editingId);
     const av        = existIdx >= 0 ? staffList[existIdx].avatar : avatarCol(staffList.length);
 
-    const patch = { name, role, phone, email, workload, initials: toInitials(name), avatar: av };
+    const s = DB.getSession();
+    const patch = { 
+      name, 
+      role, 
+      phone, 
+      email, 
+      workload, 
+      initials: toInitials(name), 
+      avatar: av,
+      vendor: s.businessName || s.vendorName || s.user || 'Vendor',
+      vendorId: s.vendorId || s.id || '',
+      vendorEmail: s.email || '',
+      createdBy: s.email || s.userId || ''
+    };
 
     if (editingId) {
       DB.update('staff', editingId, patch);
