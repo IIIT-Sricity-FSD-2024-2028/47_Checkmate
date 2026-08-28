@@ -657,6 +657,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let targetVendor = vendors.length > 0 ? vendors.join(', ') : 'Elite Events Co.';
         let targetVendorId = vendorIds.length > 0 ? vendorIds[0] : 'V001';
 
+        let numericBudget = undefined;
+        if (budget) {
+            const num = parseInt(budget.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(num)) numericBudget = num;
+        }
+
         const newEvent = {
             id:         generateId(),
             name,
@@ -664,19 +670,21 @@ document.addEventListener('DOMContentLoaded', () => {
             date,
             time:       fmtTime(time),
             venue,
-            people,
+            people:     people > 0 ? people : 1,
+            guests:     people > 0 ? people : 1,
             status:     'pending',
-            notes,
+            notes:      notes || undefined,
             createdBy:  'client',
-            client:     session.user || session.name || 'Client',
-            clientId:   session.id || session.userId || '',
-            clientEmail: session.email || '',
+            client:     session.user || session.name || 'Emily Carter',
+            clientId:   session.id || session.userId || 'U004',
+            clientEmail: session.email || 'emily.client@example.com',
             vendor:     targetVendor,
             vendorId:   targetVendorId,
             vendorIds:  vendorIds.length > 0 ? vendorIds : undefined,
             vendors:    vendors.length > 0 ? vendors : undefined,
             categories: [type, ...new Set(reqResources.map(r => r.category))].filter(Boolean),
-            budgetRange: budget,
+            budget:     numericBudget,
+            budgetRange: budget || (numericBudget ? `$${numericBudget.toLocaleString()}` : undefined),
             requestedResources: reqResources.length > 0 ? reqResources : undefined,
             requestedStaff: reqStaff.length > 0 ? reqStaff : undefined,
             estimatedCost: estimatedCost > 0 ? estimatedCost : undefined,

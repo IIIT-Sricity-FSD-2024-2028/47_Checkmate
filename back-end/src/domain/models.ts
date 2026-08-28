@@ -133,12 +133,18 @@ export interface EventRecord {
   status: EventStatus | string;
   client?: string;
   clientId?: string;
+  clientEmail?: string;
   vendor?: string;
   vendorId?: string;
+  vendorEmail?: string;
+  vendorIds?: string[];
+  vendors?: any[];
+  categories?: string[];
   createdBy?: string;
   packageId?: string;
-  budget?: number;
-  estimatedCost?: number;
+  presetPackageId?: string;
+  budget?: any;
+  estimatedCost?: any;
   budgetRange?: string;
   notes?: string;
   rejectionReason?: string;
@@ -147,8 +153,9 @@ export interface EventRecord {
   startedAt?: string;
   endedAt?: string;
   rejectedAt?: string;
-  requestedResources?: Array<{ resourceId: string; resourceName: string; category: string; quantity: number; pricePerDay: number }>;
+  requestedResources?: Array<{ resourceId: string; resourceName: string; category?: string; quantity: number; pricePerDay: number }>;
   requestedStaff?: Array<{ staffId: string; staffName: string; role: string }>;
+  vendorResponses?: any[];
   conflicts?: any[];
 }
 
@@ -178,7 +185,7 @@ export interface StaffAssignment {
   taskDesc?: string;
   priority?: string;
   status: string;
-  assignedAt: string;
+  assignedAt?: string;
   respondedAt?: string;
   completedAt?: string;
   tasks?: Array<StaffTask>;
@@ -328,7 +335,7 @@ export interface AppData {
   staffRequests: Array<Record<string, unknown>>;
   staffTasks: Array<StaffTask>;
   vendorDocSubmission: VendorApplication | null;
-  session: { user: string; email: string; role: string };
+  session: { id?: string; user: string; name?: string; email: string; role: string; vendorId?: string; vendorName?: string; businessName?: string; staffId?: string };
   liveEvents: Array<Record<string, unknown>>;
   contingencyPlans: Record<string, ContingencyPlan[]>;
   adminChatMessages: Array<Record<string, unknown>>;

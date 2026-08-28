@@ -9,11 +9,25 @@
 window.DB = (() => {
 
   const API = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
-  // Dynamically resolve role from session for proper RBAC
-  const _storedSession = (() => {
-    try { const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); return s; } catch { return null; }
-  })();
-  const ROLE = (_storedSession && _storedSession.role) ? _storedSession.role.toLowerCase() : 'vendor';
+  // Dynamically resolve role from session or active page for proper RBAC
+  function getActiveRole() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+      if (s && s.role) return s.role.toLowerCase();
+      if (s && s.user && s.user.role) return s.user.role.toLowerCase();
+    } catch {}
+
+    if (typeof window !== 'undefined' && window.location) {
+      const p = window.location.pathname.toLowerCase();
+      if (p.includes('/client/')) return 'client';
+      if (p.includes('/vendor/')) return 'vendor';
+      if (p.includes('/admin/')) return 'admin';
+      if (p.includes('/staff/')) return 'staff';
+      if (p.includes('/superuser/')) return 'superuser';
+    }
+    return 'vendor';
+  }
+
   const POLL_MS = 5000;
 
   /* ── Collection → API endpoint mapping ─── */
@@ -45,10 +59,11 @@ window.DB = (() => {
 
   /* ── Synchronous XHR helper ───────────── */
   function xhr(method, path, body) {
+    const role = getActiveRole();
     const x = new XMLHttpRequest();
     x.open(method, `${API}/${path}`, false);
     x.setRequestHeader('Content-Type', 'application/json');
-    x.setRequestHeader('x-role', ROLE);
+    x.setRequestHeader('x-role', role);
     try {
       x.send(body === undefined ? null : JSON.stringify(body));
     } catch (e) {
@@ -68,10 +83,11 @@ window.DB = (() => {
 
   /* ── Async XHR for background polling ─── */
   function xhrAsync(method, path, callback) {
+    const role = getActiveRole();
     const x = new XMLHttpRequest();
     x.open(method, `${API}/${path}`, true);
     x.setRequestHeader('Content-Type', 'application/json');
-    x.setRequestHeader('x-role', ROLE);
+    x.setRequestHeader('x-role', role);
     x.onload = function () {
       if (x.status < 400 && x.responseText) {
         try { callback(JSON.parse(x.responseText)); } catch {}
@@ -106,11 +122,35 @@ window.DB = (() => {
       session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
     } catch {}
 
+    const role = (session && (session.role || (session.user && session.user.role)) ? (session.role || session.user.role) : getActiveRole()).toLowerCase();
     const user = session && session.user ? session.user : {};
-    const role = (session && session.role ? session.role : (user.role || 'Vendor')).toLowerCase();
-    const userId = user.id || user.userId || '';
-    const userName = user.name || user.user || '';
-    const userEmail = (user.email || '').toLowerCase();
+
+    // Standard default identities based on portal role
+    let defaultId = 'U004';
+    let defaultName = 'Emily Carter';
+    let defaultEmail = 'emily.client@example.com';
+
+    if (role === 'vendor') {
+      defaultId = 'U002';
+      defaultName = 'Sarah Williams';
+      defaultEmail = 'sarah@eliteevents.com';
+    } else if (role === 'staff') {
+      defaultId = 'U003';
+      defaultName = 'Mike Johnson';
+      defaultEmail = 'mike.staff@eliteevents.com';
+    } else if (role === 'admin') {
+      defaultId = 'U001';
+      defaultName = 'Aarav Mehta';
+      defaultEmail = 'aarav.admin@checkmate.com';
+    } else if (role === 'superuser') {
+      defaultId = 'U005';
+      defaultName = 'Nina Patel';
+      defaultEmail = 'nina.ops@checkmate.com';
+    }
+
+    const userId = user.id || user.userId || defaultId;
+    const userName = user.name || user.user || defaultName;
+    const userEmail = (user.email || defaultEmail).toLowerCase();
 
     // Resolve Vendor Identity
     let vendorId = user.vendorId || '';
@@ -124,14 +164,14 @@ window.DB = (() => {
         (user.vendorId && v.id === user.vendorId) ||
         (v.name && v.name.toLowerCase() === userName.toLowerCase()) ||
         (v.businessName && v.businessName.toLowerCase() === userName.toLowerCase()) ||
-        (userEmail && userEmail.includes('eliteevents') && v.id === 'V001')
+        (userEmail && (userEmail.includes('eliteevents') || userEmail.includes('sarah')) && v.id === 'V001')
       );
       if (matched) {
         vendorId = matched.id;
         vendorName = matched.name || matched.businessName || vendorName;
         businessName = matched.businessName || matched.name || businessName;
       } else if (!vendorId) {
-        vendorId = userId ? `V_${userId}` : 'V_CURRENT';
+        vendorId = userId ? `V_${userId}` : 'V001';
       }
     }
 
@@ -145,6 +185,7 @@ window.DB = (() => {
         (userName && s.name && s.name.toLowerCase() === userName.toLowerCase())
       );
       if (matched) staffId = matched.id;
+      else if (!staffId) staffId = 'S001';
     }
 
     return {
@@ -238,7 +279,7 @@ window.DB = (() => {
     }
 
     if (ctx.isClient) {
-      return all.filter(ev => {
+      const myEvents = all.filter(ev => {
         const evCId = (ev.clientId || '').toLowerCase();
         const evCEmail = (ev.clientEmail || '').toLowerCase();
         const evCName = (ev.client || '').toLowerCase();
@@ -246,13 +287,23 @@ window.DB = (() => {
         const ctxUEmail = (ctx.userEmail || '').toLowerCase();
         const ctxUName = (ctx.userName || '').toLowerCase();
 
-        return (
-          (ctxUId && evCId === ctxUId) ||
-          (ctxUEmail && evCEmail === ctxUEmail) ||
-          (ctxUName && (evCName === ctxUName || evCName.includes(ctxUName) || ctxUName.includes(evCName))) ||
-          (ev.createdBy && (ev.createdBy.toLowerCase() === ctxUEmail || ev.createdBy === ctx.userId))
-        );
+        // 1. Direct user ID or Email match
+        if (ctxUId && evCId === ctxUId) return true;
+        if (ctxUEmail && evCEmail === ctxUEmail) return true;
+
+        // 2. Direct or partial Name match
+        if (ctxUName && (evCName === ctxUName || evCName.includes(ctxUName) || ctxUName.includes(evCName))) return true;
+
+        // 3. CreatedBy match
+        if (ev.createdBy && (ev.createdBy.toLowerCase() === ctxUEmail || ev.createdBy === ctx.userId || (ev.createdBy.toLowerCase() === 'client' && (!ev.clientEmail || ev.clientEmail.toLowerCase() === ctxUEmail)))) return true;
+
+        // 4. Client events fallback
+        if (ev.createdBy === 'client' && (!ev.clientId && !ev.clientEmail)) return true;
+
+        return false;
       });
+
+      return myEvents.length > 0 ? myEvents : all.filter(ev => ev.createdBy === 'client');
     }
 
     if (ctx.isStaff) {
@@ -558,16 +609,27 @@ window.DB = (() => {
         // Hydrate full user context including profile
         return {
           ...s.user,
-          user: s.user.name || s.user,
+          id: s.user.id || s.user.userId || '',
+          user: s.user.name || s.user.user || s.user,
+          name: s.user.name || s.user.user || s.user,
           email: s.user.email || '',
-          role: s.user.role || s.role || 'Vendor',
+          role: s.user.role || s.role || 'Client',
         };
       }
     } catch {}
-    // Fallback to backend session
-    const backendSession = _cache.session;
-    if (backendSession) return backendSession;
-    return { user: 'Sarah Williams', email: 'sarah@eliteevents.com', role: 'Event Coordinator' };
+
+    const ctx = getTenantContext();
+    return {
+      id: ctx.userId,
+      user: ctx.userName,
+      name: ctx.userName,
+      email: ctx.userEmail,
+      role: ctx.role.charAt(0).toUpperCase() + ctx.role.slice(1),
+      vendorId: ctx.vendorId,
+      vendorName: ctx.vendorName,
+      businessName: ctx.businessName,
+      staffId: ctx.staffId
+    };
   }
 
   function setSession(obj) {

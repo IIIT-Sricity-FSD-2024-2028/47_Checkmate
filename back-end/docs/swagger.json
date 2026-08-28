@@ -2752,8 +2752,12 @@
             "example": "P004"
           },
           "budget": {
-            "type": "number",
+            "type": "object",
             "example": 12000
+          },
+          "budgetRange": {
+            "type": "string",
+            "example": "$1,000 - $5,000"
           },
           "notes": {
             "type": "string",
@@ -2798,7 +2802,7 @@
             }
           },
           "estimatedCost": {
-            "type": "number",
+            "type": "object",
             "example": 5000
           },
           "rejectionReason": {
