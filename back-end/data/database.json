@@ -1000,6 +1000,52 @@
         "solution": "Deploy backup staff from reserve pool",
         "status": "ready"
       }
+    ],
+    "EVT003": [
+      {
+        "id": "CP_EVT003_1787895995537_0",
+        "problem": "Weather Emergency",
+        "trigger": "Severe weather alert",
+        "solution": "Move to indoor backup venue",
+        "status": "ready"
+      },
+      {
+        "id": "CP_EVT003_1787895995537_1",
+        "problem": "Power Outage",
+        "trigger": "Electrical failure",
+        "solution": "Activate backup generators",
+        "status": "ready"
+      },
+      {
+        "id": "CP_EVT003_1787895995537_2",
+        "problem": "Staff No-Show",
+        "trigger": "Staff absence >30min",
+        "solution": "Deploy backup staff from reserve pool",
+        "status": "ready"
+      }
+    ],
+    "EVT008": [
+      {
+        "id": "CP_EVT008_1788067813134_0",
+        "problem": "Weather Emergency",
+        "trigger": "Severe weather alert",
+        "solution": "Move to indoor backup venue",
+        "status": "ready"
+      },
+      {
+        "id": "CP_EVT008_1788067813134_1",
+        "problem": "Power Outage",
+        "trigger": "Electrical failure",
+        "solution": "Activate backup generators",
+        "status": "ready"
+      },
+      {
+        "id": "CP_EVT008_1788067813134_2",
+        "problem": "Staff No-Show",
+        "trigger": "Staff absence >30min",
+        "solution": "Deploy backup staff from reserve pool",
+        "status": "ready"
+      }
     ]
   },
   "adminChatMessages": [
