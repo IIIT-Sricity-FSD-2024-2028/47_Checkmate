@@ -190,18 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const getSessionHeaders = () => {
-    // 1. Try DB object if it exists (for vendor, client, staff)
+    // Always read fresh from sessionStorage/localStorage — do NOT rely on DB cache
+    // which may not be initialised yet when profile-modal.js runs.
+    try {
+      const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.user && s.user.email) {
+          const role = (s.role || s.user.role || 'vendor').toLowerCase();
+          return { 'x-role': role, 'x-email': s.user.email };
+        }
+      }
+    } catch (e) {}
+    // Fallback: try DB if available (for pages that initialise DB before this script)
     if (typeof DB !== 'undefined' && typeof DB.getSession === 'function') {
       const s = DB.getSession();
-      if (s && s.email) return { 'x-role': s.role, 'x-email': s.email };
+      if (s && s.email) return { 'x-role': (s.role || 'vendor').toLowerCase(), 'x-email': s.email };
     }
-    // 2. Fallback to direct sessionStorage parsing (for admin)
-    try {
-      const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session'));
-      if (s && s.user && s.user.email) {
-        return { 'x-role': s.role || s.user.role, 'x-email': s.user.email };
-      }
-    } catch(e) {}
     return null;
   };
 
@@ -359,23 +364,37 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const updatedProfile = await apiCall('PUT', 'users/profile', payload);
       
-      // Update local storage session cache if needed
+      // Update session cache with latest name — preserve the full user object structure
       if (typeof DB !== 'undefined') {
-        const session = DB.getSession();
-        session.user = updatedProfile.name;
-        DB.setSession(session);
+        try {
+          const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+          if (raw) {
+            const stored = JSON.parse(raw);
+            if (stored && stored.user) {
+              stored.user.name = updatedProfile.name;
+              const key = sessionStorage.getItem('checkmate_session') ? 'checkmate_session' : 'checkmate_session';
+              sessionStorage.setItem('checkmate_session', JSON.stringify(stored));
+            }
+          }
+        } catch(e) {}
       }
       
       populateUI(updatedProfile);
       syncSidebarDOM(updatedProfile);
       
-      if (typeof window.showToast === 'function') {
+      if (typeof Toast !== 'undefined') {
+        Toast.show('Profile updated successfully!', 'success');
+      } else if (typeof window.showToast === 'function') {
         window.showToast('Profile updated successfully!', 'success');
       }
       setViewMode();
     } catch (e) {
       console.error(e);
-      alert('Failed to update profile. Please try again.');
+      if (typeof Toast !== 'undefined') {
+        Toast.show('Failed to update profile. Please try again.', 'error');
+      } else {
+        alert('Failed to update profile. Please try again.');
+      }
     } finally {
       saveBtn.innerHTML = originalText;
       saveBtn.disabled = false;
@@ -385,7 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
   avatarUpload.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return alert("File too large. Maximum 5MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      if (typeof Toast !== 'undefined') { Toast.show('File too large. Maximum 5MB.', 'error'); } else { alert('File too large. Maximum 5MB.'); }
+      return;
+    }
     
     // Optimistic UI preview
     const reader = new FileReader();
@@ -405,43 +427,91 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       console.error('Avatar upload failed:', e);
-      alert('Failed to upload avatar.');
+      if (typeof Toast !== 'undefined') { Toast.show('Failed to upload avatar.', 'error'); } else { alert('Failed to upload avatar.'); }
       if (currentProfileData) populateUI(currentProfileData); // revert
     }
   });
 
   // --- Sidebar DOM Sync ---
   const syncSidebarDOM = (data) => {
+    if (!data) return;
+    const name = data.name || data.user || '';
+    const email = data.email || '';
+
     // Sync names
     document.querySelectorAll('.user-name, .sb-uname').forEach(el => {
-      el.textContent = data.name;
+      if (name) el.textContent = name;
+    });
+    // Sync emails
+    document.querySelectorAll('.user-email').forEach(el => {
+      if (email) el.textContent = email;
     });
     // Sync avatars
-    document.querySelectorAll('.user-avatar').forEach(el => {
+    document.querySelectorAll('.user-avatar, .sb-uavatar').forEach(el => {
       if (data.profile_picture_url) {
         el.innerHTML = `<img src="http://localhost:3000${data.profile_picture_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
         el.style.background = 'transparent';
-      } else {
-        el.textContent = getInitials(data.name);
+      } else if (name) {
+        el.textContent = getInitials(name);
         el.style.background = 'var(--pink, #e91e8c)';
       }
     });
   };
 
+  // Auto-sync sidebar with active logged-in session data on page load
+  const initSidebarFromSession = () => {
+    try {
+      const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s) {
+          let u = {};
+          if (typeof s.user === 'object' && s.user !== null) {
+            u = {
+              name: s.user.name || s.user.user || '',
+              email: s.user.email || s.email || '',
+              profile_picture_url: s.user.profile_picture_url || ''
+            };
+          } else if (typeof s.user === 'string') {
+            u = {
+              name: s.user,
+              email: s.email || ''
+            };
+          }
+          if (!u.name && s.name) u.name = s.name;
+          if (!u.email && s.email) u.email = s.email;
+
+          if (u.name || u.email) {
+            syncSidebarDOM(u);
+          }
+        }
+      }
+    } catch(e) {}
+  };
+
+  initSidebarFromSession();
+  setTimeout(initSidebarFromSession, 50);
+  setTimeout(initSidebarFromSession, 200);
+  setTimeout(initSidebarFromSession, 600);
+
   // --- Attach Triggers to Sidebar Elements ---
   const attachTriggers = () => {
-    const triggers = document.querySelectorAll('.user-name, .sb-uname, .user-info');
+    const triggers = document.querySelectorAll('.user-name, .sb-uname, .user-info, .user-email, .user-avatar');
     triggers.forEach(el => {
+      if (el.dataset.pmBound) return;
+      el.dataset.pmBound = 'true';
       el.style.cursor = 'pointer';
-      // Prevent multiple listeners
-      const newEl = el.cloneNode(true);
-      if (el.parentNode) el.parentNode.replaceChild(newEl, el);
-      newEl.addEventListener('click', (e) => {
+      el.addEventListener('click', (e) => {
         e.preventDefault();
         openProfileModal();
       });
     });
+    // Re-run sidebar sync after binding triggers to ensure content is fresh
+    initSidebarFromSession();
   };
 
+  setTimeout(attachTriggers, 100);
   setTimeout(attachTriggers, 500);
 });
+
+

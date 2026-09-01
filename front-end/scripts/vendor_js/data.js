@@ -209,23 +209,28 @@ window.DB = (() => {
   }
 
   function getSession() {
-    // Read from login-set session (sessionStorage per-tab, fallback to localStorage)
+    // Always prefer live sessionStorage/localStorage first — avoids stale cache returning wrong user
     try {
-      const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
-      if (s && s.user) {
-        // Hydrate full user context including profile
-        return {
-          ...s.user,
-          user: s.user.name || s.user,
-          email: s.user.email || '',
-          role: s.user.role || s.role || 'Vendor',
-        };
+      const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.user && typeof s.user === 'object' && s.user.email) {
+          // Hydrate full user context including profile
+          return {
+            ...s.user,
+            user: s.user.name || '',
+            name: s.user.name || '',
+            email: s.user.email || '',
+            role: (s.role || s.user.role || 'vendor').toLowerCase(),
+          };
+        }
       }
     } catch {}
-    // Fallback to backend session
+    // Fallback to backend session cache (set after login API call)
     const backendSession = _cache.session;
-    if (backendSession) return backendSession;
-    return { user: 'Sarah Williams', email: 'sarah@eliteevents.com', role: 'Event Coordinator' };
+    if (backendSession && backendSession.email) return backendSession;
+    // No session found — return empty so the profile modal shows the correct error
+    return { user: '', name: '', email: '', role: '' };
   }
 
   function setSession(obj) {

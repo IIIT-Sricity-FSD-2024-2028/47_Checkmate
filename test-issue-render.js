@@ -1,5 +1,6 @@
 const fs = require('fs');
-const html = fs.readFileSync('/home/mouli/FFSD1/47_Checkmate/front-end/pages/admin/issue-tracking.html', 'utf8');
+const path = require('path');
+const html = fs.readFileSync(path.join(__dirname, 'front-end/pages/admin/issue-tracking.html'), 'utf8');
 
 // evaluate the script block
 const scriptMatch = html.match(/<script>\s*document\.addEventListener\('DOMContentLoaded', \(\) => \{([\s\S]*?)\}\);\s*<\/script>/);
