@@ -30,6 +30,45 @@ Seed login accounts:
 | Client | `emily.client@example.com` | `Emily@2026` |
 | Staff | `mike.staff@eliteevents.com` | `Mike@2026` |
 
+## Middleware and Environment Configuration
+
+Copy `back-end/.env.example` to `back-end/.env` before starting. `.env` is
+gitignored; `.env.example` is the committed template.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3000` | HTTP port |
+| `NODE_ENV` | `development` | Enables the console log transport; `production` turns on HSTS |
+| `CORS_ORIGINS` | see `.env.example` | Comma-separated origin allowlist. `null` is the literal string sent as the Origin by pages opened via `file://` |
+| `LOG_DIR` | `logs` | Log directory, resolved under `back-end/`. Deliberately outside `public/`, so logs are not web-reachable |
+| `LOG_LEVEL` | `info` | Console verbosity only; per-file levels are set per transport |
+| `LOG_DATE_PATTERN` | `YYYY-MM-DD` | Rotation interval |
+| `LOG_MAX_SIZE` | `20m` | Rotate early once a file reaches this size |
+| `LOG_MAX_FILES` | `14d` | Retention window |
+| `UPLOAD_MAX_BYTES` | `5242880` | Avatar upload ceiling, enforced twice (declared `Content-Length`, then Multer) |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rate-limit window |
+| `RATE_LIMIT_LOGIN_MAX` | `20` | Login attempts per window per IP |
+| `RATE_LIMIT_SIGNUP_MAX` | `5` | Registrations per window per IP |
+
+### Log files
+
+Written to `back-end/logs/`, rotated daily and gzip-archived:
+
+| File | Contents |
+| --- | --- |
+| `access-%DATE%.log` | One line per HTTP request (morgan) |
+| `app-%DATE%.log` | Application and lifecycle events, upload attempts, mutation audit |
+| `error-%DATE%.log` | 4xx warnings and 5xx errors, with stack traces |
+| `combined-%DATE%.log` | Unfiltered catch-all |
+
+To demonstrate rotation without waiting a day:
+
+```bash
+LOG_DATE_PATTERN=YYYY-MM-DD-HH-mm LOG_MAX_FILES=20 npm --prefix back-end run start:dev
+```
+
+Rotation then happens every minute. Revert both variables for normal use.
+
 ## Problem Statement
 
 **Venue, Resources and Staff Allocation System**

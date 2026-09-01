@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# Rotated log files (written by winston-daily-rotate-file)
+back-end/logs/
+!back-end/logs/.gitkeep

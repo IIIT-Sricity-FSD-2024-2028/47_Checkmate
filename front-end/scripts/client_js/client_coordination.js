@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     chatWindow.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
+    if (window.lucide) lucide.createIcons();
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
 

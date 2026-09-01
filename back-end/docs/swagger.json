@@ -1021,6 +1021,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffSignupDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -1045,6 +1055,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffLoginDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -3045,6 +3065,49 @@
       "UpdateStaffDto": {
         "type": "object",
         "properties": {}
+      },
+      "StaffSignupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alex Johnson"
+          },
+          "email": {
+            "type": "string",
+            "example": "alex@eliteevents.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 234-567-8901"
+          },
+          "password": {
+            "type": "string",
+            "example": "Alex@2026"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "StaffLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "mike.staff@eliteevents.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Mike@2026"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "CreateStaffAssignmentDto": {
         "type": "object",

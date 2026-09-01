@@ -1,12 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Headers, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { UsersService } from './users.service';
+import { avatarMulterOptions } from '../../common/upload/multer.config';
 
 @ApiTags('users')
 @ApiHeader({ name: 'x-role', description: 'Required role: admin or superuser', required: true })
@@ -39,17 +38,9 @@ export class UsersController {
 
   @Post('profile/avatar')
   @ApiHeader({ name: 'x-email', description: 'User email for profile lookup', required: true })
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './public/uploads',
-      filename: (req: any, file: any, cb: any) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        cb(null, `${uniqueSuffix}${ext}`);
-      }
-    })
-  }))
-  uploadAvatar(@Headers('x-email') email: string, @UploadedFile() file: any) {
+  @UseInterceptors(FileInterceptor('file', avatarMulterOptions))
+  uploadAvatar(@Headers('x-email') email: string, @UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('A file is required under the "file" field.');
     return this.service.updateAvatar(email, `/uploads/${file.filename}`);
   }
 
