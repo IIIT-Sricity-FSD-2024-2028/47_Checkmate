@@ -247,6 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         resourceId: resource.id,
                         resourceName: resource.name,
                         category: resource.category,
+                        vendor: resource.vendor || 'Elite Events Co.',
+                        vendorId: resource.vendorId || 'V001',
+                        vendorEmail: resource.vendorEmail || '',
                         quantity: current,
                         pricePerDay: resource.price,
                         qty: current
@@ -437,7 +440,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedStaff[staffId] = {
                         staffId: staff.id,
                         staffName: staff.name,
-                        role: staff.role
+                        role: staff.role,
+                        vendor: staff.vendor || 'Elite Events Co.',
+                        vendorId: staff.vendorId || 'V001',
+                        vendorEmail: staff.vendorEmail || '',
                     };
                     card.classList.add('selected');
                 }
@@ -611,25 +617,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const budget  = budgetVal;
         const notes   = document.getElementById('fieldNotes')?.value.trim()       || '';
 
-        // Build resource and staff arrays
+        // Build resource and staff arrays with vendor metadata
         const reqResources = Object.values(selectedResources).map(r => ({
             resourceId: r.resourceId,
             resourceName: r.resourceName,
             category: r.category,
             quantity: r.qty,
-            pricePerDay: r.pricePerDay
+            pricePerDay: r.pricePerDay,
+            vendor: r.vendor,
+            vendorId: r.vendorId,
+            vendorEmail: r.vendorEmail,
         }));
 
         const reqStaff = Object.values(selectedStaff).map(s => ({
             staffId: s.staffId,
             staffName: s.staffName,
-            role: s.role
+            role: s.role,
+            vendor: s.vendor,
+            vendorId: s.vendorId,
+            vendorEmail: s.vendorEmail,
         }));
 
         let estimatedCost = 0;
         reqResources.forEach(r => { estimatedCost += r.quantity * r.pricePerDay; });
 
         const session = typeof DB !== 'undefined' ? DB.getSession() : {};
+
+        const vendorIdSet = new Set();
+        const vendorNameSet = new Set();
+
+        reqResources.forEach(r => {
+            if (r.vendorId) vendorIdSet.add(r.vendorId);
+            if (r.vendor) vendorNameSet.add(r.vendor);
+        });
+        reqStaff.forEach(s => {
+            if (s.vendorId) vendorIdSet.add(s.vendorId);
+            if (s.vendor) vendorNameSet.add(s.vendor);
+        });
+
+        const vendorIds = Array.from(vendorIdSet);
+        const vendors = Array.from(vendorNameSet);
+
+        let targetVendor = vendors.length > 0 ? vendors.join(', ') : 'Elite Events Co.';
+        let targetVendorId = vendorIds.length > 0 ? vendorIds[0] : 'V001';
+
+        let numericBudget = undefined;
+        if (budget) {
+            const num = parseInt(budget.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(num)) numericBudget = num;
+        }
 
         const newEvent = {
             id:         generateId(),
@@ -638,12 +674,21 @@ document.addEventListener('DOMContentLoaded', () => {
             date,
             time:       fmtTime(time),
             venue,
-            people,
+            people:     people > 0 ? people : 1,
+            guests:     people > 0 ? people : 1,
             status:     'pending',
-            notes,
+            notes:      notes || undefined,
             createdBy:  'client',
-            client:     session.user || 'Client',
-            budgetRange: budget,
+            client:     session.user || session.name || 'Emily Carter',
+            clientId:   session.id || session.userId || 'U004',
+            clientEmail: session.email || 'emily.client@example.com',
+            vendor:     targetVendor,
+            vendorId:   targetVendorId,
+            vendorIds:  vendorIds.length > 0 ? vendorIds : undefined,
+            vendors:    vendors.length > 0 ? vendors : undefined,
+            categories: [type, ...new Set(reqResources.map(r => r.category))].filter(Boolean),
+            budget:     numericBudget,
+            budgetRange: budget || (numericBudget ? `$${numericBudget.toLocaleString()}` : undefined),
             requestedResources: reqResources.length > 0 ? reqResources : undefined,
             requestedStaff: reqStaff.length > 0 ? reqStaff : undefined,
             estimatedCost: estimatedCost > 0 ? estimatedCost : undefined,

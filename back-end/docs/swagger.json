@@ -1007,6 +1007,86 @@
         ]
       }
     },
+    "/api/staff/signup": {
+      "post": {
+        "operationId": "StaffController_signup",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/login": {
+      "post": {
+        "operationId": "StaffController_login",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/profile/{email}": {
+      "get": {
+        "operationId": "StaffController_getProfile",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendors/admins/superusers manage staff. Staff may read assignments.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/staff-assignments": {
       "get": {
         "operationId": "StaffController_assignments",
@@ -2643,9 +2723,25 @@
             "type": "string",
             "example": "Acme Inc."
           },
+          "clientId": {
+            "type": "string",
+            "example": "U004"
+          },
+          "clientEmail": {
+            "type": "string",
+            "example": "client@example.com"
+          },
           "vendor": {
             "type": "string",
             "example": "Elite Events Co."
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "V001"
+          },
+          "vendorEmail": {
+            "type": "string",
+            "example": "vendor@example.com"
           },
           "createdBy": {
             "type": "string",
@@ -2656,8 +2752,12 @@
             "example": "P004"
           },
           "budget": {
-            "type": "number",
+            "type": "object",
             "example": 12000
+          },
+          "budgetRange": {
+            "type": "string",
+            "example": "$1,000 - $5,000"
           },
           "notes": {
             "type": "string",
@@ -2702,12 +2802,8 @@
             }
           },
           "estimatedCost": {
-            "type": "number",
+            "type": "object",
             "example": 5000
-          },
-          "budgetRange": {
-            "type": "string",
-            "example": "$5,000 - $10,000"
           },
           "rejectionReason": {
             "type": "string",
@@ -2716,6 +2812,40 @@
           "rejectedAt": {
             "type": "string",
             "example": "2026-05-01T12:00:00.000Z"
+          },
+          "vendorIds": {
+            "example": [
+              "V001",
+              "V002"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vendors": {
+            "description": "Array of involved vendor names or objects",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "categories": {
+            "example": [
+              "Lighting",
+              "Catering"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vendorResponses": {
+            "description": "Per-vendor response states",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "conflicts": {
             "description": "Detected conflicts",
@@ -2742,6 +2872,10 @@
           "status": {
             "type": "string",
             "example": "approved"
+          },
+          "note": {
+            "type": "string",
+            "example": "Approval remarks or rejection reason"
           }
         },
         "required": [
@@ -2770,6 +2904,18 @@
           "vendor": {
             "type": "string",
             "example": "Elite Events Co."
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "V001"
+          },
+          "vendorEmail": {
+            "type": "string",
+            "example": "vendor@eliteevents.com"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "vendor@eliteevents.com"
           },
           "quantity": {
             "type": "number",
@@ -2834,6 +2980,22 @@
           "vendor": {
             "type": "string",
             "example": "Elite Events Co."
+          },
+          "vendorId": {
+            "type": "string",
+            "example": "V001"
+          },
+          "vendorEmail": {
+            "type": "string",
+            "example": "vendor@eliteevents.com"
+          },
+          "userId": {
+            "type": "string",
+            "example": "U002"
+          },
+          "createdBy": {
+            "type": "string",
+            "example": "vendor@eliteevents.com"
           },
           "phone": {
             "type": "string",

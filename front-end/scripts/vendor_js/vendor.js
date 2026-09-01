@@ -228,9 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Live notification badge & Dropdown */
   function updateNotifications() {
     const s = DB.getSession();
-    const vendorEmail = s.email;
+    const vendorEmail = (s.email || '').toLowerCase();
+    const vendorId = s.vendorId || s.id || '';
 
-    const events = DB.getAll('events') || [];
+    const events = DB.getMyEvents() || [];
     const pendingEvents = events.filter(e => e.status === 'pending');
     
     // Live events with unresolved issues
@@ -240,18 +241,22 @@ document.addEventListener('DOMContentLoaded', () => {
       e.issues.some(i => i.status !== 'resolved')
     );
 
-    // Unread Admin messages
+    // Unread Admin messages for this vendor
     let adminMsgs = DB.get('adminChatMessages') || [];
     if (!Array.isArray(adminMsgs)) adminMsgs = [];
     const unreadAdminMsgs = adminMsgs.filter(m => 
-      m.recipientEmail === vendorEmail && 
+      ((m.recipientEmail && m.recipientEmail.toLowerCase() === vendorEmail) || (vendorId && m.recipientId === vendorId)) && 
       (m.senderRole === 'Admin' || m.senderRole === 'admin') && 
       !m.read
     );
     
     let notifs = DB.get('vendorNotifications') || [];
     if (!Array.isArray(notifs)) notifs = [];
-    const unreadNotifs = notifs.filter(n => !n.read);
+    const scopedNotifs = notifs.filter(n => 
+      (!n.vendorEmail || n.vendorEmail.toLowerCase() === vendorEmail) &&
+      (!n.vendorId || n.vendorId === vendorId)
+    );
+    const unreadNotifs = scopedNotifs.filter(n => !n.read);
     
     const totalPending = pendingEvents.length + liveIssueEvents.length + unreadAdminMsgs.length + unreadNotifs.length;
     
@@ -260,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.display = totalPending > 0 ? 'flex' : 'none';
     });
     
-    return { pendingEvents, liveIssueEvents, adminMsgs, unreadAdminMsgs, notifs, unreadNotifs };
+    return { pendingEvents, liveIssueEvents, adminMsgs, unreadAdminMsgs, notifs: scopedNotifs, unreadNotifs };
   }
 
   updateNotifications();

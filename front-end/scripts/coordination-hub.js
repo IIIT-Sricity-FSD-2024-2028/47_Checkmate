@@ -62,38 +62,13 @@ window.CoordHub = (() => {
 
   /* ── Events for current user ─────────── */
   function getEventsForUser() {
+    if (window.DB && typeof DB.getMyEvents === 'function') {
+      return DB.getMyEvents().filter(e => e.status === 'live');
+    }
     const session = getSession();
-    const role = session.role.toLowerCase();
-    const events = DB.getAll('events') || [];
-
-    // Vendor / Event Coordinator — only live events in coordination hub
-    if (role.includes('vendor') || role.includes('coordinator') || role.includes('event')) {
-      return events.filter(e => e.status === 'live');
-    }
-
-    if (role === 'staff') {
-      // Staff sees events they are assigned to
-      const assignments = DB.getAll('staffAssignments') || [];
-      const staff = (DB.getAll('staff') || []).find(s =>
-        s.email?.toLowerCase() === session.email?.toLowerCase() ||
-        s.name?.toLowerCase() === session.name?.toLowerCase()
-      );
-      if (!staff) return [];
-      const assignedEventIds = assignments.filter(a => a.staffId === staff.id).map(a => a.eventId);
-      return events.filter(e => assignedEventIds.includes(e.id) && e.status === 'live');
-    }
-
-    if (role === 'client') {
-      // Client sees events they booked
-      const bookings = DB.getAll('bookings') || [];
-      const clientBookings = bookings.filter(b =>
-        b.client?.toLowerCase() === session.name?.toLowerCase()
-      );
-      const eventNames = clientBookings.map(b => b.eventName);
-      return events.filter(e => (eventNames.includes(e.name) || e.client?.toLowerCase() === session.name?.toLowerCase()) && e.status === 'live');
-    }
-
-    return events;
+    const role = (session.role || '').toLowerCase();
+    const events = (window.DB && typeof DB.getAll === 'function') ? DB.getAll('events') : [];
+    return events.filter(e => e.status === 'live');
   }
 
   /* ── Participants for event ──────────── */

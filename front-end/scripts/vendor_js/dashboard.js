@@ -10,18 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Stat Cards ─────────────────────── */
   function updateStats() {
-    const events     = DB.getAll('events');
-    const resources  = DB.getAll('resources');
-    const staff      = DB.getAll('staff');
+    const events     = DB.getMyEvents();
+    const resources  = DB.getMyResources();
+    const staff      = DB.getMyStaff();
     const assignments = DB.getAll('staffAssignments') || [];
 
     const pending    = events.filter(e => e.status === 'pending').length;
-    const active     = events.filter(e => e.status === 'confirmed').length;
-    const availRes   = resources.reduce((s, r) => s + (r.available ? r.quantity : 0), 0);
+    const active     = events.filter(e => e.status === 'confirmed' || e.status === 'live').length;
+    const availRes   = resources.reduce((s, r) => s + (r.available ? (r.quantity || r.avail || 0) : 0), 0);
     
     // Available Staff: staff without high workload assignments
     const busyStaffIds = assignments.filter(a => a.status === 'accepted').map(a => a.staffId);
-    const availStaff = staff.filter(s => s.status === 'available' && !busyStaffIds.includes(s.id)).length;
+    const availStaff = staff.filter(s => (s.status === 'available' || s.avail === 'Available') && !busyStaffIds.includes(s.id)).length;
 
     document.querySelectorAll('.stat-card').forEach(card => {
       const label = card.querySelector('.stat-label')?.textContent?.trim();
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventListEl = document.querySelector('.event-list');
     if (!eventListEl) return;
 
-    const events = DB.getAll('events');
+    const events = DB.getMyEvents();
     const sorted = [...events]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .slice(0, 5);
@@ -69,28 +69,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const actEl = document.querySelector('.activity-list');
     if (!actEl) return;
 
-    const events = DB.getAll('events');
-    const issues = DB.getAll('issues');
+    const events = DB.getMyEvents();
+    const issues = DB.getMyIssues();
     const assignments = DB.getAll('staffAssignments') || [];
+    const myStaffIds = new Set(DB.getMyStaff().map(s => s.id));
 
     const items = [];
     
-    // Sort assignments by time (if possible) or just show recent
+    // Sort assignments for my staff
     assignments.reverse().forEach(a => {
-        if (a.status === 'accepted') items.push({ title: 'Staff accepted assignment', sub: `${a.staffName} -> ${a.eventName}` });
-        if (a.status === 'rejected') items.push({ title: 'Staff rejected assignment', sub: `${a.staffName} -> ${a.eventName}` });
-        if (a.status === 'pending')  items.push({ title: 'Staff assigned to event', sub: `${a.staffName} -> ${a.eventName}` });
+        if (myStaffIds.has(a.staffId)) {
+          if (a.status === 'accepted') items.push({ title: 'Staff accepted assignment', sub: `${a.staffName} -> ${a.eventName}` });
+          if (a.status === 'rejected') items.push({ title: 'Staff rejected assignment', sub: `${a.staffName} -> ${a.eventName}` });
+          if (a.status === 'pending')  items.push({ title: 'Staff assigned to event', sub: `${a.staffName} -> ${a.eventName}` });
+        }
     });
 
     events.forEach(ev => {
-      if (ev.status === 'confirmed') items.push({ title:'Event approved',   sub:ev.name });
+      if (ev.status === 'confirmed' || ev.status === 'live') items.push({ title:'Event active/approved', sub:ev.name });
       if (ev.status === 'pending')   items.push({ title:'New event request', sub:ev.name });
     });
     
     issues.slice(-2).forEach(iss => items.push({ title:'Issue reported', sub:iss.title }));
 
     const shown = items.slice(0, 4);
-    if (!shown.length) return;
+    if (!shown.length) {
+      actEl.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:13px">No recent activity.</div>`;
+      return;
+    }
 
     const timeLabels = ['Just now', '10 mins ago','30 mins ago','2 hours ago'];
     actEl.innerHTML = shown.map((a, i) => `
@@ -110,9 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertListEl = document.querySelector('.alert-list');
     if (!alertListEl) return;
 
-    const resources = DB.getAll('resources');
-    const staff     = DB.getAll('staff');
-    const events    = DB.getAll('events');
+    const resources = DB.getMyResources();
+    const staff     = DB.getMyStaff();
+    const events    = DB.getMyEvents();
     const alerts    = [];
 
     const unavailable = resources.filter(r => !r.available);

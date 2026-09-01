@@ -35,12 +35,13 @@ export class AuthService {
       passwordHash: hashPassword(dto.password),
     });
 
-    // Auto-create a staff record so the vendor Manage Staff page sees them
+    // Auto-create a staff record so the staff portal and vendor Manage Staff page see them
     if (dto.role === 'Staff') {
       const initials = dto.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
       const avatars = ['pink', 'teal', 'purple', 'green', 'orange'];
       const staffList = this.data.collection('staff');
       this.data.create('staff', 'S', {
+        userId: user.id,
         name: dto.name,
         initials,
         role: 'Staff Member',
@@ -55,15 +56,55 @@ export class AuthService {
       });
     }
 
+    // Auto-provision a Vendor entity if a Vendor signs up directly
+    if (dto.role === 'Vendor') {
+      const vendors = this.data.collection('vendors');
+      const vendorExists = vendors.some((v) => v.userId === user.id || v.name.toLowerCase() === dto.name.toLowerCase());
+      if (!vendorExists) {
+        this.data.create('vendors', 'V', {
+          userId: user.id,
+          name: dto.name,
+          businessName: dto.name,
+          category: 'Event Services',
+          status: 'Approved',
+          rating: 5.0,
+          created: new Date().toISOString().slice(0, 10),
+        });
+      }
+    }
+
     return this.session(user);
   }
 
   private session(user: User) {
     const { passwordHash, ...safeUser } = user;
+    const enrichedUser: any = { ...safeUser };
+
+    if (user.role === 'Vendor') {
+      const vendors = this.data.collection('vendors');
+      const vendor = vendors.find((v) => v.userId === user.id || v.name.toLowerCase() === user.name.toLowerCase() || (user.email && user.email.toLowerCase().includes(v.name.toLowerCase().split(' ')[0])));
+      if (vendor) {
+        enrichedUser.vendorId = vendor.id;
+        enrichedUser.vendorName = vendor.name;
+        enrichedUser.businessName = vendor.businessName || vendor.name;
+      } else {
+        // Link default or generate
+        enrichedUser.vendorId = `V_${user.id}`;
+        enrichedUser.vendorName = user.name;
+        enrichedUser.businessName = user.name;
+      }
+    } else if (user.role === 'Staff') {
+      const staff = this.data.collection('staff').find((s) => s.userId === user.id || (s.email && s.email.toLowerCase() === user.email.toLowerCase()));
+      if (staff) {
+        enrichedUser.staffId = staff.id;
+      }
+    }
+
     return {
-      user: safeUser,
+      user: enrichedUser,
       role: String(user.role).toLowerCase(),
       token: `session-${user.id}-${Date.now()}`,
     };
   }
 }
+

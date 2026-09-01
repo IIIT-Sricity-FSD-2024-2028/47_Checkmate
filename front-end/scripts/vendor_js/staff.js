@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Render cards ───────────────────── */
   function render() {
-    const staffList = DB.getAll('staff');
+    const staffList = DB.getMyStaff();
     const grid = document.querySelector('.staff-grid');
     if (!grid) return;
 
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function scheduleStaff(id) {
     const s = DB.find('staff', id);
     if (!s) return;
-    const confirmed = DB.getAll('events').filter(e => e.status === 'confirmed');
+    const confirmed = DB.getMyEvents().filter(e => e.status === 'confirmed');
     Toast.show(
       `${s.name} (${s.role}) — ${confirmed.length} confirmed event(s) available. Workload: ${s.workload}%`,
       'info', 5000
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Broaden filter to any actionable status
     const validStatuses = ['approved', 'confirmed', 'live'];
-    let actionableEvents = DB.getAll('events').filter(e => validStatuses.includes((e.status || '').toLowerCase()));
+    let actionableEvents = DB.getMyEvents().filter(e => validStatuses.includes((e.status || '').toLowerCase()));
     
     // If staff is already assigned to an event, restrict to only that event
     let restrictedToEvent = null;
@@ -483,7 +483,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const existIdx  = staffList.findIndex(s => s.id === editingId);
     const av        = existIdx >= 0 ? staffList[existIdx].avatar : avatarCol(staffList.length);
 
-    const patch = { name, role, phone, email, workload, initials: toInitials(name), avatar: av };
+    const s = DB.getSession();
+    const patch = { 
+      name, 
+      role, 
+      phone, 
+      email, 
+      workload, 
+      initials: toInitials(name), 
+      avatar: av,
+      vendor: s.businessName || s.vendorName || s.user || 'Vendor',
+      vendorId: s.vendorId || s.id || '',
+      vendorEmail: s.email || '',
+      createdBy: s.email || s.userId || ''
+    };
 
     if (editingId) {
       DB.update('staff', editingId, patch);

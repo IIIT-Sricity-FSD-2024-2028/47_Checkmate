@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let searchQuery = '';
   let activeFilters = { category: 'All', condition: 'All', stock: 'All' };
-  let editingId   = null;
+  let editingId = null;
 
   /* ── Inject Add/Edit modal HTML ──────────────── */
   document.body.insertAdjacentHTML('beforeend', `
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   lucide.createIcons();
 
-  const overlay     = document.getElementById('resModalOverlay');
+  const overlay = document.getElementById('resModalOverlay');
   const allocOverlay = document.getElementById('allocModalOverlay');
 
   wireModalClose(overlay, document.getElementById('resModalClose'), document.getElementById('resCancelBtn'));
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Category badge ─────────────────── */
   function catBadge(cat) {
-    const map = { Equipment:'equipment', Furniture:'furniture', Decor:'decor' };
+    const map = { Equipment: 'equipment', Furniture: 'furniture', Decor: 'decor' };
     return `<span class="badge--${map[cat] || 'equipment'}">${cat}</span>`;
   }
 
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalStock = db.total || db.quantity || 0;
     const allocs = DB.get('resourceAllocations') || {};
     const allEvents = DB.getAll('events') || [];
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -209,11 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.status !== 'live' && e.status !== 'confirmed') return false;
       if (e.id === currentEvId) return false;
       if (!e.date) return false;
-      
+
       if (targetDate) {
         return e.date === targetDate;
       }
-      
+
       const evDate = new Date(e.date + 'T00:00:00');
       return evDate <= today;
     });
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Render table ───────────────────── */
   function render() {
-    const resources = DB.getAll('resources');
+    const resources = DB.getMyResources();
     const tbody = document.querySelector('.mr-table tbody');
     if (!tbody) return;
 
@@ -238,15 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const searchMatch = !searchQuery ||
         r.name.toLowerCase().includes(searchQuery) ||
         r.category.toLowerCase().includes(searchQuery);
-        
+
       const catMatch = activeFilters.category === 'All' || r.category === activeFilters.category;
-      
+
       let conditionMatch = true;
       if (activeFilters.condition !== 'All') {
         const cond = (r.condition || 'Good');
         conditionMatch = cond === activeFilters.condition;
       }
-      
+
       let stockMatch = true;
       if (activeFilters.stock !== 'All') {
         const qty = getEffectiveAvail(r.id, null, null);
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeFilters.stock === 'LowStock') stockMatch = qty > 0 && qty <= 10;
         else if (activeFilters.stock === 'OutStock') stockMatch = qty === 0;
       }
-      
+
       return searchMatch && catMatch && conditionMatch && stockMatch;
     });
 
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       </tr>`;
     }).join('')
-    : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No resources found.</td></tr>`;
+      : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No resources found.</td></tr>`;
 
     const countEl = document.querySelector('.mr-showing');
     if (countEl) countEl.textContent = `Showing ${filtered.length} Resource${filtered.length !== 1 ? 's' : ''}`;
@@ -296,8 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async () => {
         const { action, id } = btn.dataset;
         if (action === 'allocate') allocateResource(id);
-        if (action === 'edit')     editResource(id);
-        if (action === 'delete')   deleteResource(id);
+        if (action === 'edit') editResource(id);
+        if (action === 'delete') deleteResource(id);
       });
     });
   }
@@ -305,8 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ══════════════════════════════════════════
      ALLOCATE MODAL — 2-phase flow
   ══════════════════════════════════════════ */
-  let _allocResId  = null;
-  let _allocEvId   = null;
+  let _allocResId = null;
+  let _allocEvId = null;
 
   function allocateResource(id) {
     const r = DB.find('resources', id);
@@ -320,16 +320,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     _allocResId = id;
-    _allocEvId  = null;
+    _allocEvId = null;
 
     // Populate resource info bar (show global available across all dates)
-    document.getElementById('allocResName').textContent  = r.name;
-    document.getElementById('allocResMeta').textContent  = `${r.category} · ${globalAvail} unit${globalAvail !== 1 ? 's' : ''} available`;
+    document.getElementById('allocResName').textContent = r.name;
+    document.getElementById('allocResMeta').textContent = `${r.category} · ${globalAvail} unit${globalAvail !== 1 ? 's' : ''} available`;
     document.getElementById('allocAvailCount').textContent = globalAvail;
 
     // Populate event dropdown
     const evSelect = document.getElementById('allocEventSelect');
-    const approvedEvents = DB.getAll('events').filter(e => e.status === 'confirmed' || e.status === 'approved');
+    const approvedEvents = DB.getMyEvents().filter(e => e.status === 'confirmed' || e.status === 'approved');
 
     evSelect.innerHTML = `<option value="">Choose an event…</option>`;
     if (approvedEvents.length) {
@@ -339,12 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
         opt.textContent = `${ev.name} (${fmtDate(ev.date)})`;
         evSelect.appendChild(opt);
       });
-      document.getElementById('allocNoEventsMsg').style.display  = 'none';
-      document.getElementById('allocEventSelect').style.display  = '';
+      document.getElementById('allocNoEventsMsg').style.display = 'none';
+      document.getElementById('allocEventSelect').style.display = '';
       document.getElementById('allocNextBtn').disabled = false;
     } else {
-      document.getElementById('allocNoEventsMsg').style.display  = 'flex';
-      document.getElementById('allocEventSelect').style.display  = 'none';
+      document.getElementById('allocNoEventsMsg').style.display = 'flex';
+      document.getElementById('allocEventSelect').style.display = 'none';
       document.getElementById('allocNextBtn').disabled = true;
     }
 
@@ -359,11 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Phase switcher ─────────────────── */
   function showPhase(n) {
-    document.getElementById('allocPhase1').style.display       = n === 1 ? 'flex' : 'none';
+    document.getElementById('allocPhase1').style.display = n === 1 ? 'flex' : 'none';
     document.getElementById('allocPhase1Footer').style.display = n === 1 ? 'flex' : 'none';
-    document.getElementById('allocPhase2').style.display       = n === 2 ? 'flex' : 'none';
+    document.getElementById('allocPhase2').style.display = n === 2 ? 'flex' : 'none';
     document.getElementById('allocPhase2Footer').style.display = n === 2 ? 'flex' : 'none';
-    document.getElementById('allocModalTitle').textContent     = n === 1 ? 'Allocate Resource — Step 1 of 2' : 'Allocate Resource — Step 2 of 2';
+    document.getElementById('allocModalTitle').textContent = n === 1 ? 'Allocate Resource — Step 1 of 2' : 'Allocate Resource — Step 2 of 2';
   }
 
   /* ── Event select → show info ─────── */
@@ -373,8 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!evId) { infoPanel.style.display = 'none'; return; }
     const ev = DB.find('events', evId);
     if (!ev) { infoPanel.style.display = 'none'; return; }
-    document.getElementById('allocInfoVenue').textContent  = ev.venue  || '—';
-    document.getElementById('allocInfoDate').textContent   = fmtDate(ev.date);
+    document.getElementById('allocInfoVenue').textContent = ev.venue || '—';
+    document.getElementById('allocInfoDate').textContent = fmtDate(ev.date);
     document.getElementById('allocInfoPeople').textContent = ev.people != null ? ev.people.toLocaleString() : '—';
     infoPanel.style.display = 'flex';
     showErr('allocEventErr', false);
@@ -392,18 +392,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     _allocEvId = evId;
     const ev = DB.find('events', evId);
-    const r  = DB.find('resources', _allocResId);
+    const r = DB.find('resources', _allocResId);
 
     // Compute effective availability for this event's date
     const effAvail = r ? getEffectiveAvail(r.id, ev ? ev.date : null, evId) : 0;
 
     // Fill Phase 2 info
     document.getElementById('allocSelectedEventName').textContent = ev ? ev.name : evId;
-    document.getElementById('allocPeopleCount').textContent       = ev?.people != null ? ev.people.toLocaleString() : '—';
-    document.getElementById('allocAvailCount').textContent        = effAvail;
-    document.getElementById('allocQtyInput').value                = '';
-    document.getElementById('allocQtyInput').max                  = effAvail;
-    document.getElementById('allocQtyHint').textContent           = `Max available: ${effAvail} units`;
+    document.getElementById('allocPeopleCount').textContent = ev?.people != null ? ev.people.toLocaleString() : '—';
+    document.getElementById('allocAvailCount').textContent = effAvail;
+    document.getElementById('allocQtyInput').value = '';
+    document.getElementById('allocQtyInput').max = effAvail;
+    document.getElementById('allocQtyHint').textContent = `Max available: ${effAvail} units`;
 
     resetAllocErrors();
     showPhase(2);
@@ -419,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Qty live validation ─────────────── */
   document.getElementById('allocQtyInput').addEventListener('input', () => {
-    const ev  = _allocEvId ? DB.find('events', _allocEvId) : null;
+    const ev = _allocEvId ? DB.find('events', _allocEvId) : null;
     const max = getEffectiveAvail(_allocResId, ev ? ev.date : null, _allocEvId);
     const val = parseInt(document.getElementById('allocQtyInput').value, 10);
     const hasErr = isNaN(val) || val < 1 || val > max;
@@ -433,8 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Confirm allocation ──────────────── */
   document.getElementById('allocConfirmBtn').addEventListener('click', () => {
-    const r   = DB.find('resources', _allocResId);
-    const ev  = DB.find('events', _allocEvId);
+    const r = DB.find('resources', _allocResId);
+    const ev = DB.find('events', _allocEvId);
     if (!r || !ev) { Toast.show('Something went wrong. Please try again.', 'warn'); return; }
 
     const qty = parseInt(document.getElementById('allocQtyInput').value, 10);
@@ -460,11 +460,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const allocs = DB.get('resourceAllocations') || {};
     if (!allocs[ev.id]) allocs[ev.id] = [];
     allocs[ev.id].push({
-      resourceId:   r.id,
+      resourceId: r.id,
       resourceName: r.name,
-      category:     r.category,
+      category: r.category,
       qty,
-      allocatedAt:  new Date().toISOString(),
+      allocatedAt: new Date().toISOString(),
     });
     DB.set('resourceAllocations', allocs);
 
@@ -486,11 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!r) return;
     editingId = id;
     document.getElementById('resModalTitle').textContent = 'Edit Resource';
-    document.getElementById('resName').value     = r.name;
+    document.getElementById('resName').value = r.name;
     document.getElementById('resCategory').value = r.category;
-    document.getElementById('resQuantity').value  = r.quantity;
-    document.getElementById('resPrice').value     = r.price;
-    document.getElementById('resAvail').value     = String(r.available);
+    document.getElementById('resQuantity').value = r.quantity;
+    document.getElementById('resPrice').value = r.price;
+    document.getElementById('resAvail').value = String(r.available);
     clearErrors();
     openModal(overlay);
   }
@@ -498,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function deleteResource(id) {
     const r = DB.find('resources', id);
     if (!r) return;
-    const ok = await Confirm.ask({ title:'Delete Resource?', msg:`"${r.name}" will be permanently removed.` });
+    const ok = await Confirm.ask({ title: 'Delete Resource?', msg: `"${r.name}" will be permanently removed.` });
     if (!ok) return;
     DB.remove('resources', id);
     render();
@@ -507,10 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Validate (add/edit form) ───────────────────────── */
   function validate() {
-    const name     = document.getElementById('resName').value.trim();
+    const name = document.getElementById('resName').value.trim();
     const category = document.getElementById('resCategory').value;
     const quantity = document.getElementById('resQuantity').value;
-    const price    = document.getElementById('resPrice').value;
+    const price = document.getElementById('resPrice').value;
 
     let valid = true;
 
@@ -534,25 +534,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function clearErrors() {
-    ['resNameErr','resCatErr','resQtyErr','resPriceErr'].forEach(id => showErr(id, false));
-    ['resName','resCategory','resQuantity','resPrice'].forEach(id => markField(id, false));
+    ['resNameErr', 'resCatErr', 'resQtyErr', 'resPriceErr'].forEach(id => showErr(id, false));
+    ['resName', 'resCategory', 'resQuantity', 'resPrice'].forEach(id => markField(id, false));
   }
 
   /* ── Save (add/edit) ───────────────────────── */
   document.getElementById('resSaveBtn').addEventListener('click', () => {
     if (!validate()) { Toast.show('Please fix the errors above.', 'warn'); return; }
 
-    const name      = document.getElementById('resName').value.trim();
-    const category  = document.getElementById('resCategory').value;
-    const quantity  = parseInt(document.getElementById('resQuantity').value, 10);
-    const price     = parseFloat(document.getElementById('resPrice').value);
+    const name = document.getElementById('resName').value.trim();
+    const category = document.getElementById('resCategory').value;
+    const quantity = parseInt(document.getElementById('resQuantity').value, 10);
+    const price = parseFloat(document.getElementById('resPrice').value);
     const available = document.getElementById('resAvail').value === 'true';
+
+    const s = DB.getSession();
+    const vendorData = {
+      vendor: s.businessName || s.vendorName || s.user || 'Vendor',
+      vendorId: s.vendorId || s.id || '',
+      vendorEmail: s.email || '',
+      createdBy: s.email || s.userId || ''
+    };
 
     if (editingId) {
       DB.update('resources', editingId, { name, category, quantity, price, available });
       Toast.show('Resource updated!', 'success');
     } else {
-      DB.add('resources', { id:uid('R'), name, category, quantity, price, unit:'day', available });
+      DB.add('resources', { id: uid('R'), name, category, quantity, price, unit: 'day', available, ...vendorData });
       Toast.show('Resource added!', 'success');
     }
 
@@ -565,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.mr-add-btn')?.addEventListener('click', () => {
     editingId = null;
     document.getElementById('resModalTitle').textContent = 'Add Resource';
-    ['resName','resQuantity','resPrice'].forEach(id => document.getElementById(id).value = '');
+    ['resName', 'resQuantity', 'resPrice'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('resCategory').value = '';
     document.getElementById('resAvail').value = 'true';
     clearErrors();
@@ -592,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isShowing = mrFilterDropdown.style.display === 'block';
       mrFilterDropdown.style.display = isShowing ? 'none' : 'block';
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#mrFilterWrapper')) {
@@ -604,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeFilters.category = document.getElementById('filterMrCategory').value;
       activeFilters.condition = document.getElementById('filterMrCondition').value;
       activeFilters.stock = document.getElementById('filterMrStock').value;
-      
+
       mrFilterDropdown.style.display = 'none';
       render();
       Toast.show('Filters applied!', 'success');

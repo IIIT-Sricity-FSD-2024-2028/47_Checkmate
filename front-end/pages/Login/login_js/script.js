@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       particle.style.left = `${Math.random() * 100}%`;
       particle.style.top = `${Math.random() * 100}%`;
       particle.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      particle.style.animationDelay = `${Math.random() * 2}s`;
+      particle.animationDelay = `${Math.random() * 2}s`;
       rightPanel.appendChild(particle);
     }
   }
@@ -242,41 +242,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const step4Btn = document.querySelector('#signup-form-4 .btn-submit');
-  if (step4Btn) {
-    step4Btn.addEventListener('click', (e) => {
+  const signupForm4 = document.getElementById('signup-form-4');
+  const step4Btn = document.querySelector('#signup-form-4 .btn-submit') || document.getElementById('btnSubmitStep4');
+  
+  function handleStep4Submit(e) {
+    if (e) {
       e.preventDefault();
-      const data = draft();
-      const businessName = document.getElementById('businessName').value.trim();
-      
-      if (!businessName) {
-        showError('Business Name is required.');
-        return;
-      }
-      
-      const submitBtn = e.currentTarget;
-      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Submitting...</span>';
-      try {
-        const payload = api('POST', 'vendor-applications', {
-          vendorName: `${data.firstName} ${data.lastName}`.trim(),
-          businessName: businessName,
-          email: data.email,
-          phone: data.phone || '',
-          category: 'General',
-          documents: [],
-          // NOTE: Password is intentionally NOT sent here.
-          // The vendor account is created by admin on approval.
-        });
-        localStorage.removeItem(SIGNUP_KEY);
-        // Alert user and redirect to landing page
-        alert('Application submitted successfully! Please wait for admin approval.');
-        document.querySelector('.container').classList.add('page-exit');
-        setTimeout(() => { window.location.href = '../LandingPage/index.html'; }, 450);
-      } catch (error) {
-        submitBtn.innerHTML = 'Submit Application &rarr;';
-        showError(error.message);
+      e.stopPropagation();
+    }
+    const data = draft();
+    const businessName = document.getElementById('businessName') ? document.getElementById('businessName').value.trim() : '';
+    
+    if (!businessName) {
+      showError('Business Name is required.');
+      return;
+    }
+
+    // Capture actual file names from file inputs
+    const fileInputs = document.querySelectorAll('#signup-form-4 input[type="file"]');
+    const documents = [];
+    const docTypes = ['license', 'tax_id'];
+    const docLabels = ['Business License', 'Tax ID / GST'];
+    fileInputs.forEach((input, idx) => {
+      if (input.files && input.files.length > 0) {
+        documents.push({ name: input.files[0].name, type: docTypes[idx] || 'document' });
+      } else {
+        // Even if no file chosen, record the expected document type
+        documents.push({ name: docLabels[idx] || 'Document', type: docTypes[idx] || 'document' });
       }
     });
+    
+    const submitBtn = document.querySelector('#signup-form-4 .btn-submit') || document.getElementById('btnSubmitStep4');
+    if (submitBtn) {
+      submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Submitting application...</span>';
+      submitBtn.disabled = true;
+    }
+
+    try {
+      api('POST', 'vendor-applications', {
+        vendorName: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Vendor Partner',
+        businessName: businessName,
+        email: data.email || '',
+        phone: data.phone || '',
+        category: 'General',
+        documents: documents,
+        passwordHash: data.password || 'Vendor@2026' // Raw password; will be hashed on approval by backend
+      });
+      localStorage.removeItem(SIGNUP_KEY);
+      alert('Application submitted successfully! Please wait for admin approval.');
+      window.location.href = '../LandingPage/index.html';
+    } catch (error) {
+      if (submitBtn) {
+        submitBtn.innerHTML = 'Submit Application &rarr;';
+        submitBtn.disabled = false;
+      }
+      showError(error.message);
+    }
+  }
+
+  if (signupForm4) {
+    signupForm4.addEventListener('submit', handleStep4Submit);
+  }
+  if (step4Btn) {
+    step4Btn.addEventListener('click', handleStep4Submit);
   }
 
   document.querySelectorAll('.btn-secondary').forEach((btn) => {
@@ -297,7 +325,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     try {
-      const payload = api('POST', 'auth/login', { email, password });
+      let payload;
+      try {
+        payload = api('POST', 'staff/login', { email, password });
+      } catch (error) {
+        payload = api('POST', 'auth/login', { email, password });
+      }
       setSession(payload);
       localStorage.removeItem('checkmate_admin_baseline');
       window.location.href = redirectByRole[payload.role] || '../LandingPage/index.html';

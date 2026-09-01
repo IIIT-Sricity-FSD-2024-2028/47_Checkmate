@@ -64,10 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get client's events from DB
     function getClientEvents() {
         if (typeof DB === 'undefined') return [];
-        const all = DB.getAll('events');
-        // Show events created by the client (tagged) OR all events if none tagged yet
-        const clientOwned = all.filter(ev => ev.createdBy === 'client');
-        return clientOwned;
+        return DB.getMyEvents();
     }
 
     let allEvents = getClientEvents();
