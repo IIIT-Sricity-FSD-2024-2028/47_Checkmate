@@ -1,22 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
 
+// The revenue model + dashboard KPIs. Everything here is derived live from the
+// bookings/events/resources collections -- nothing is stored pre-computed.
 @Injectable()
 export class AnalyticsService {
   constructor(private readonly data: DataService) {}
 
   summary() {
     const snapshot = this.data.snapshot();
+
+    // Bookings are the billable records. One is created automatically whenever an
+    // event flips to confirmed/approved (see DataService.triggerEventUpdated),
+    // so revenue follows the event lifecycle without any manual bookkeeping.
     const confirmedStatuses = ['Confirmed', 'Completed', 'confirmed', 'completed', 'In Progress', 'live'];
+
+    // Total = every booking. Confirmed = only the ones that actually count as earned.
     const totalRevenue = snapshot.bookings.reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
     const confirmedRevenue = snapshot.bookings
       .filter((booking) => confirmedStatuses.includes(booking.status))
       .reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
+    // Whatever is booked but not yet in a confirmed state.
     const pendingRevenue = totalRevenue - confirmedRevenue;
 
+    // Resource utilisation = what share of stock is currently checked out.
+    // `??` picks the first value that is not null/undefined, because different
+    // seed rows use different field names for the same idea.
     const totalResources = snapshot.resources.reduce((sum, r) => sum + Number(r.total ?? r.quantity ?? 0), 0);
     const availableResources = snapshot.resources.reduce((sum, r) => sum + Number(r.avail ?? r.quantityAvailable ?? r.quantity ?? 0), 0);
     const resourceUtilizationRate = totalResources > 0 ? Number((((totalResources - availableResources) / totalResources) * 100).toFixed(2)) : 0;
+
+    // The platform's cut, driven by the rate an admin sets on the Global Settings
+    // page. Stored under the generic state store, so fall back to 10% if unset.
+    const settings: any = (snapshot as any).platformSettings || {};
+    const commissionPct = Number.isFinite(Number(settings.commissionPct)) ? Number(settings.commissionPct) : 10;
+    const platformCommission = Number(((confirmedRevenue * commissionPct) / 100).toFixed(2));
+    // What vendors are owed once the platform takes its share.
+    const vendorPayout = Number((confirmedRevenue - platformCommission).toFixed(2));
 
     return {
       users: snapshot.users.length,
@@ -31,27 +51,66 @@ export class AnalyticsService {
       totalRevenue,
       confirmedRevenue,
       pendingRevenue,
+      // Guard the divide -- with zero bookings this would otherwise be NaN.
       averageBookingValue: snapshot.bookings.length > 0 ? Number((totalRevenue / snapshot.bookings.length).toFixed(2)) : 0,
       resourceUtilizationRate,
+      commissionPct,
+      platformCommission,
+      vendorPayout,
     };
   }
 
+  // The whole database in one response. The frontend DB layer (vendor_js/data.js)
+  // calls this once on page load and caches it, instead of hitting 10 endpoints.
+  // Credentials are stripped first -- this response goes to every signed-in role.
   snapshot() {
-    return this.data.snapshot();
+    return this.stripCredentials(this.data.snapshot());
   }
 
+  // Generic key/value read+write, used for the loosely-structured collections
+  // (chat threads, progress bars, allocations) that have no dedicated module.
   stateKey(key: string) {
-    return this.data.getValue(this.normalizeKey(key));
+    const name = this.normalizeKey(key);
+    return this.scrubCollection(name, this.data.getValue(name));
   }
 
   setStateKey(key: string, value: unknown) {
     return this.data.setValue(this.normalizeKey(key), value);
   }
 
+  // The frontend asks for one key under an older name; map it to the real one.
   private normalizeKey(key: string): string {
     const aliases: Record<string, string> = {
       vendorApplicationsList: 'vendorApplications',
     };
     return aliases[key] || key;
+  }
+
+  // Collections that carry credentials. `users` holds the password hash, and a
+  // vendorApplication holds the applicant's password in PLAIN TEXT until an admin
+  // approves it (see VendorsService), so neither may ever leave the server as-is.
+  private static readonly SECRET_FIELDS = ['passwordHash', 'password'];
+
+  private stripCredentials(snapshot: any) {
+    return {
+      ...snapshot,
+      users: (snapshot.users || []).map((row: any) => this.omitSecrets(row)),
+      vendorApplications: (snapshot.vendorApplications || []).map((row: any) => this.omitSecrets(row)),
+    };
+  }
+
+  // stateKey can address any collection by name, including the two above.
+  private scrubCollection(name: string, value: unknown) {
+    if ((name === 'users' || name === 'vendorApplications') && Array.isArray(value)) {
+      return value.map((row) => this.omitSecrets(row));
+    }
+    return value;
+  }
+
+  private omitSecrets<T extends Record<string, any>>(row: T) {
+    if (!row || typeof row !== 'object') return row;
+    const clean: Record<string, any> = { ...row };
+    AnalyticsService.SECRET_FIELDS.forEach((field) => delete clean[field]);
+    return clean;
   }
 }

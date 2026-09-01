@@ -83,26 +83,26 @@
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--blue"><i data-lucide="dollar-sign"></i></div>
-                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+12% vs yesterday</span>
+                    <span class="status-badge" id="payRevNote" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;"></span>
                 </div>
                 <div class="stat-label">Platform Revenue (YTD)</div>
-                <div class="stat-value">$145,200.00</div>
+                <div class="stat-value" id="payPlatformRev">&mdash;</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
-                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px;">-5% vs yesterday</span>
+                    <span class="status-badge" id="payPendingNote" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px;"></span>
                 </div>
                 <div class="stat-label">Pending Payouts Check</div>
-                <div class="stat-value" style="color: var(--pink);">$18,450.00</div>
+                <div class="stat-value" style="color: var(--pink);" id="payPending">&mdash;</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--green"><i data-lucide="check-circle"></i></div>
-                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+8% vs yesterday</span>
+                    <span class="status-badge" id="payPaidNote" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;"></span>
                 </div>
                 <div class="stat-label">Total Paid to Vendors</div>
-                <div class="stat-value">$890,000.00</div>
+                <div class="stat-value" id="payPaid">&mdash;</div>
             </div>
         </section>
         <div class="table-container" style="margin-bottom: 32px;">
@@ -112,34 +112,15 @@
                     <thead>
                         <tr>
                             <th>Vendor Name</th>
-                            <th>Completed Events</th>
-                            <th>Total Earned</th>
-                            <th>Platform Fee (10%)</th>
+                            <th>Bookings</th>
+                            <th>Collected</th>
+                            <th id="feeHeadPending">Platform Fee</th>
                             <th>Net Payout</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="pendingPayoutsBody">
-                        <tr style="transition: opacity 0.3s;">
-                            <td class="vendor-name-col">Dream Events Ltd.</td>
-                            <td>4</td>
-                            <td class="earned-col">$15,000.00</td>
-                            <td class="fee-col"><span style="color: #ef4444;">-$1,500.00</span></td>
-                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$13,500.00</td>
-                            <td class="actions-cell">
-                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
-                            </td>
-                        </tr>
-                        <tr style="transition: opacity 0.3s;">
-                            <td class="vendor-name-col">Melody Music</td>
-                            <td>12</td>
-                            <td class="earned-col">$5,500.00</td>
-                            <td class="fee-col"><span style="color: #ef4444;">-$550.00</span></td>
-                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$4,950.00</td>
-                            <td class="actions-cell">
-                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
-                            </td>
-                        </tr>
+                        <!-- filled by renderPending() -->
                     </tbody>
                 </table>
             </div>
@@ -167,9 +148,9 @@
                     <thead>
                         <tr>
                             <th>Vendor Name</th>
-                            <th>Events Count</th>
-                            <th>Total Earned</th>
-                            <th>Platform Fee (10%)</th>
+                            <th>Bookings</th>
+                            <th>Collected</th>
+                            <th id="feeHeadDone">Platform Fee</th>
                             <th>Payout Amount</th>
                             <th>Payout Date</th>
                             <th>Status</th>
@@ -221,107 +202,195 @@
   <script src="../../scripts/admin_js/admin-alerts.js"></script>
   <script>lucide.createIcons();</script>
   <script>
+  /* ── Vendor payouts ────────────────────────────────────────────────────────
+     Every figure here is computed from real bookings. A vendor can only be paid
+     what the client has actually handed over, so earnings are based on
+     `advancePaid` (money collected), not the full booking value.
+
+       collected  = sum of advancePaid across that vendor's bookings
+       fee        = collected x the commission rate set in Global Settings
+       net payout = collected - fee - anything already released
+
+     Released payouts persist under the state/payouts key, so the split between
+     "pending" and "paid" survives a reload. */
   document.addEventListener('DOMContentLoaded', () => {
-      const completedBody = document.getElementById('completedPayoutsBody');
-      const searchInput = document.getElementById('completedSearch');
-      const sortSelect = document.getElementById('completedSort');
-      
-      const generateFakePayouts = () => {
-          const vendors = ['Starlight Events', 'Audio AllStars', 'Classic Catering', 'Floral Fantasies', 'DJ Beats', 'Party Planners Inc', 'SecureGuard', 'Elegant Edibles', 'Photo Memories', 'LightShow Pro'];
-          const payouts = [];
-          
-          let date = new Date();
-          for(let i=0; i<10; i++) {
-              const events = Math.floor(Math.random() * 15) + 1;
-              const earned = Math.floor(Math.random() * 20000) + 1000;
-              const fee = earned * 0.1;
-              date.setDate(date.getDate() - Math.floor(Math.random() * 3));
-              
-              payouts.push({
-                  vendor: vendors[i],
-                  events: events,
-                  earned: earned,
-                  fee: fee,
-                  net: earned - fee,
-                  timestamp: new Date(date),
-                  dateStr: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-              });
-          }
-          return payouts;
-      };
+    const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+    let session = null;
+    try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch (e) {}
 
-      let completedData = generateFakePayouts();
+    function api(method, path, body) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, API_BASE + '/' + path, false);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('x-role', (session && session.role) || 'admin');
+      if (session && session.token) xhr.setRequestHeader('Authorization', 'Bearer ' + session.token);
+      try { xhr.send(body === undefined ? null : JSON.stringify(body)); } catch (e) { return null; }
+      if (xhr.status === 401) { location.href = '../Login/signin.html'; return null; }
+      if (xhr.status >= 400) return null;
+      try { return xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch (e) { return null; }
+    }
 
-      const formatMoney = (amt) => {
-          return '$' + amt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      };
+    const money = (n) => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-      const renderCompletedTable = () => {
-          const query = searchInput.value.toLowerCase();
-          const sortVal = sortSelect.value;
-          
-          let filtered = completedData.filter(p => p.vendor.toLowerCase().includes(query));
-          
-          filtered.sort((a, b) => {
-              if(sortVal === 'date-desc') return b.timestamp - a.timestamp;
-              if(sortVal === 'date-asc') return a.timestamp - b.timestamp;
-              if(sortVal === 'amt-desc') return b.net - a.net;
-              if(sortVal === 'amt-asc') return a.net - b.net;
-              return 0;
-          });
+    const completedBody = document.getElementById('completedPayoutsBody');
+    const pendingBody = document.getElementById('pendingPayoutsBody');
+    const searchInput = document.getElementById('completedSearch');
+    const sortSelect = document.getElementById('completedSort');
 
-          completedBody.innerHTML = filtered.map(p => `
-              <tr>
-                  <td class="vendor-name-col">${p.vendor}</td>
-                  <td>${p.events}</td>
-                  <td>${formatMoney(p.earned)}</td>
-                  <td><span style="color: #ef4444;">-${formatMoney(p.fee)}</span></td>
-                  <td style="font-weight: 700; color: #22c55e;">${formatMoney(p.net)}</td>
-                  <td><span style="color: var(--text-muted); font-size: 13px;">${p.dateStr}</span></td>
-                  <td><span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;"><i data-lucide="check-circle-2" style="width:12px; margin-right:4px;"></i>Paid</span></td>
-              </tr>
-          `).join('');
-          lucide.createIcons();
-      };
+    // ── load ──
+    const snapshot = api('GET', 'snapshot') || {};
+    const bookings = snapshot.bookings || [];
+    const settings = api('GET', 'state/platformSettings') || {};
+    const commissionPct = Number.isFinite(Number(settings.commissionPct)) ? Number(settings.commissionPct) : 10;
+    const minPayout = Number.isFinite(Number(settings.minPayoutThreshold)) ? Number(settings.minPayoutThreshold) : 0;
+    let released = api('GET', 'state/payouts');
+    if (!Array.isArray(released)) released = [];
 
-      renderCompletedTable();
+    document.getElementById('feeHeadPending').textContent = 'Platform Fee (' + commissionPct + '%)';
+    document.getElementById('feeHeadDone').textContent = 'Platform Fee (' + commissionPct + '%)';
 
-      searchInput.addEventListener('input', renderCompletedTable);
-      sortSelect.addEventListener('change', renderCompletedTable);
+    /* Bookings identify their vendor by id when they have one and by name
+       otherwise, so group on whichever is present. */
+    function vendorKey(b) { return b.vendorId || b.vendor || 'Unassigned'; }
 
-      const pendingBody = document.getElementById('pendingPayoutsBody');
-      if (pendingBody) {
-          pendingBody.addEventListener('click', (e) => {
-              const btn = e.target.closest('.release-funds-btn');
-              if (btn) {
-                  const tr = btn.closest('tr');
-                  const vendorName = tr.querySelector('.vendor-name-col').textContent;
-                  const events = parseInt(tr.cells[1].textContent);
-                  
-                  const parseMoney = (str) => parseFloat(str.replace(/[^0-9.-]+/g,""));
-                  const earned = parseMoney(tr.querySelector('.earned-col').textContent);
-                  const fee = parseMoney(tr.querySelector('.fee-col').textContent);
-                  const net = parseMoney(tr.querySelector('.net-col').textContent);
+    function buildVendorRows() {
+      const byVendor = {};
+      bookings.forEach((b) => {
+        const key = vendorKey(b);
+        if (!byVendor[key]) byVendor[key] = { key, name: b.vendor || key, bookings: 0, collected: 0 };
+        byVendor[key].bookings += 1;
+        byVendor[key].collected += Number(b.advancePaid || 0);
+      });
 
-                  completedData.unshift({
-                      vendor: vendorName,
-                      events: events,
-                      earned: earned,
-                      fee: Math.abs(fee),
-                      net: net,
-                      timestamp: new Date(),
-                      dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                  });
+      return Object.values(byVendor).map((v) => {
+        const fee = (v.collected * commissionPct) / 100;
+        const gross = v.collected - fee;
+        // Whatever has already gone out to this vendor.
+        const paid = released
+          .filter((r) => r.vendorKey === v.key)
+          .reduce((sum, r) => sum + Number(r.net || 0), 0);
+        return Object.assign({}, v, { fee, net: gross - paid, paidToDate: paid });
+      });
+    }
 
-                  tr.style.opacity = '0';
-                  setTimeout(() => {
-                      tr.remove();
-                      renderCompletedTable();
-                      // We don't strictly need to alert, visual removal is enough feedback.
-                  }, 300);
-              }
-          });
+    function renderPending() {
+      const rows = buildVendorRows().filter((v) => v.net > 0.005);
+
+      if (!rows.length) {
+        pendingBody.innerHTML = '<tr><td colspan="6" style="padding:22px 6px;color:var(--text-muted);font-size:13px;">No vendor balances outstanding.</td></tr>';
+      } else {
+        pendingBody.innerHTML = rows.map((v) => {
+          // The Global Settings threshold decides whether a balance can be released.
+          const blocked = v.net < minPayout;
+          const btn = blocked
+            ? '<button class="action-btn" disabled title="Below the ' + money(minPayout) + ' minimum payout threshold" style="opacity:.45;cursor:not-allowed;">Below minimum</button>'
+            : '<button class="action-btn approve-btn release-funds-btn" data-key="' + esc(v.key) + '"><i data-lucide="send"></i> Release Funds</button>';
+          return '<tr>'
+            + '<td class="vendor-name-col">' + esc(v.name) + '</td>'
+            + '<td>' + v.bookings + '</td>'
+            + '<td class="earned-col">' + money(v.collected) + '</td>'
+            + '<td class="fee-col"><span style="color:#ef4444;">-' + money(v.fee) + '</span></td>'
+            + '<td class="net-col" style="font-weight:700;color:#22c55e;">' + money(v.net) + '</td>'
+            + '<td class="actions-cell">' + btn + '</td>'
+            + '</tr>';
+        }).join('');
       }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderCompleted() {
+      const query = (searchInput ? searchInput.value : '').toLowerCase();
+      const sortVal = sortSelect ? sortSelect.value : 'date-desc';
+
+      let list = released.filter((r) => String(r.vendorName || '').toLowerCase().includes(query));
+      list = list.slice().sort((a, b) => {
+        if (sortVal === 'date-desc') return String(b.releasedAt).localeCompare(String(a.releasedAt));
+        if (sortVal === 'date-asc') return String(a.releasedAt).localeCompare(String(b.releasedAt));
+        if (sortVal === 'amt-desc') return Number(b.net) - Number(a.net);
+        if (sortVal === 'amt-asc') return Number(a.net) - Number(b.net);
+        return 0;
+      });
+
+      if (!list.length) {
+        completedBody.innerHTML = '<tr><td colspan="7" style="padding:22px 6px;color:var(--text-muted);font-size:13px;">No payouts released yet.</td></tr>';
+      } else {
+        completedBody.innerHTML = list.map((r) => {
+          const when = new Date(r.releasedAt);
+          const dateStr = isNaN(when.getTime()) ? '—' : when.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          return '<tr>'
+            + '<td class="vendor-name-col">' + esc(r.vendorName) + '</td>'
+            + '<td>' + (r.bookings != null ? r.bookings : '—') + '</td>'
+            + '<td>' + money(r.collected) + '</td>'
+            + '<td><span style="color:#ef4444;">-' + money(r.fee) + '</span></td>'
+            + '<td style="font-weight:700;color:#22c55e;">' + money(r.net) + '</td>'
+            + '<td><span style="color:var(--text-muted);font-size:13px;">' + dateStr + '</span></td>'
+            + '<td><span class="status-badge" style="background:rgba(0,230,118,.15);color:#00e676;font-weight:600;">Paid</span></td>'
+            + '</tr>';
+        }).join('');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderTotals() {
+      const rows = buildVendorRows();
+      // The platform's own revenue is its commission on money actually collected.
+      const platformRevenue = rows.reduce((sum, v) => sum + v.fee, 0);
+      const pending = rows.reduce((sum, v) => sum + Math.max(0, v.net), 0);
+      const paid = released.reduce((sum, r) => sum + Number(r.net || 0), 0);
+      const collected = rows.reduce((sum, v) => sum + v.collected, 0);
+
+      document.getElementById('payPlatformRev').textContent = money(platformRevenue);
+      document.getElementById('payPending').textContent = money(pending);
+      document.getElementById('payPaid').textContent = money(paid);
+
+      document.getElementById('payRevNote').textContent = commissionPct + '% of ' + money(collected);
+      document.getElementById('payPendingNote').textContent = rows.filter((v) => v.net > 0.005).length + ' vendor(s) awaiting';
+      document.getElementById('payPaidNote').textContent = released.length + ' payout(s) released';
+    }
+
+    function renderAll() { renderTotals(); renderPending(); renderCompleted(); }
+    renderAll();
+
+    if (searchInput) searchInput.addEventListener('input', renderCompleted);
+    if (sortSelect) sortSelect.addEventListener('change', renderCompleted);
+
+    // ── Release funds: writes a real record, then re-derives everything ──
+    if (pendingBody) {
+      pendingBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.release-funds-btn');
+        if (!btn) return;
+
+        const key = btn.getAttribute('data-key');
+        const vendor = buildVendorRows().find((v) => v.key === key);
+        if (!vendor || vendor.net <= 0) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Releasing…';
+
+        const record = {
+          id: 'PO' + Date.now(),
+          vendorKey: vendor.key,
+          vendorName: vendor.name,
+          bookings: vendor.bookings,
+          collected: Number(vendor.collected.toFixed(2)),
+          fee: Number(vendor.fee.toFixed(2)),
+          net: Number(vendor.net.toFixed(2)),
+          releasedAt: new Date().toISOString(),
+          releasedBy: (session && session.user && session.user.name) || 'Admin'
+        };
+
+        const next = released.concat([record]);
+        if (api('PUT', 'state/payouts', { value: next }) === null) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="send"></i> Release Funds';
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+        released = next;
+        renderAll();
+      });
+    }
   });
   </script>
 

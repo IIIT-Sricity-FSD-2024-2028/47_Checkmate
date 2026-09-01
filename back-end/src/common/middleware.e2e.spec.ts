@@ -1,4 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import helmet from 'helmet';
@@ -12,6 +13,10 @@ import { corsOptions } from './security/cors.config';
 
 describe('middleware stack (e2e)', () => {
   let app: INestApplication;
+  // Routes sit behind JwtAuthGuard now, so these middleware checks need a real
+  // token. Signing one directly avoids spending the login rate-limit budget that
+  // one of the tests below deliberately exhausts.
+  let auth: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -27,6 +32,10 @@ describe('middleware stack (e2e)', () => {
     app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
+
+    auth = `Bearer ${moduleRef
+      .get(JwtService)
+      .sign({ sub: 'U001', email: 'aarav.admin@checkmate.com', role: 'admin' })}`;
   });
 
   afterAll(async () => {
@@ -34,7 +43,7 @@ describe('middleware stack (e2e)', () => {
   });
 
   it('sets X-Request-Id and the CSP header on a normal request', async () => {
-    const res = await request(app.getHttpServer()).get('/api/snapshot').set('x-role', 'admin').expect(200);
+    const res = await request(app.getHttpServer()).get('/api/snapshot').set('Authorization', auth).expect(200);
 
     expect(res.headers['x-request-id']).toMatch(/^[A-Za-z0-9-]{1,64}$/);
     expect(res.headers['content-security-policy']).toContain("default-src 'self'");
@@ -46,7 +55,7 @@ describe('middleware stack (e2e)', () => {
   it('replaces a malformed inbound request id rather than echoing it', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/snapshot')
-      .set('x-role', 'admin')
+      .set('Authorization', auth)
       .set('x-request-id', 'forged id with spaces')
       .expect(200);
 
@@ -66,19 +75,22 @@ describe('middleware stack (e2e)', () => {
     expect(res.body.stack).toBeUndefined();
   });
 
-  it('rate limits the 21st login while leaving an unscoped route at 200', async () => {
-    for (let i = 0; i < 20; i++) {
+  it('rate limits login past the configured budget while leaving an unscoped route at 200', async () => {
+    // Read the same env var the limiter does, so raising the limit in .env for a
+    // demo does not turn this into a false failure.
+    const limit = Number(process.env.RATE_LIMIT_LOGIN_MAX) || 20;
+    for (let i = 0; i < limit; i++) {
       await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'a@b.c', password: 'x' });
     }
 
     await request(app.getHttpServer()).post('/api/auth/login').send({ email: 'a@b.c', password: 'x' }).expect(429);
-    await request(app.getHttpServer()).get('/api/vendors').set('x-role', 'admin').expect(200);
+    await request(app.getHttpServer()).get('/api/vendors').set('Authorization', auth).expect(200);
   });
 
   it('returns 400, not 500, when the avatar POST carries no file', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/users/profile/avatar')
-      .set('x-email', 'aarav.admin@checkmate.com')
+      .set('Authorization', auth)
       .expect(400);
 
     expect(res.body.message).toContain('file');

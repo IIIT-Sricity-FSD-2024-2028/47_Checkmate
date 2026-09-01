@@ -1,3 +1,11 @@
+// The data model for the entire app -- the equivalent of a schema file.
+// These are TypeScript types only: they are erased at compile time and never
+// validate anything at runtime. Request bodies are checked by the DTO classes
+// in each module; these interfaces describe what is held in database.json.
+//
+// Many fields are optional or duplicated (people/guests, total/quantity,
+// desc/description) because different portals were built against slightly
+// different field names and both are still accepted.
 export type EventStatus = 'pending' | 'confirmed' | 'approved' | 'rejected' | 'live' | 'completed' | 'cancelled';
 export type UserRole = 'Admin' | 'Superuser' | 'Vendor' | 'Staff' | 'Client';
 export type AccountStatus = 'Active' | 'Inactive' | 'Pending' | 'Suspended' | 'active' | 'inactive' | 'pending';

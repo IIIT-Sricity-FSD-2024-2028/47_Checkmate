@@ -263,7 +263,9 @@
         xhr.open(method, API_BASE + '/' + path, false);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('x-role', (session && session.role) || 'admin');
+        if (session && session.token) xhr.setRequestHeader('Authorization', 'Bearer ' + session.token);
         try { xhr.send(body ? JSON.stringify(body) : null); } catch(e) { return null; }
+        if (xhr.status === 401) { location.href = '../Login/signin.html'; return null; }
         if (xhr.status >= 400) return null;
         return xhr.responseText ? JSON.parse(xhr.responseText) : null;
       }

@@ -21,7 +21,7 @@ export function createSwaggerDocument(app: Parameters<typeof SwaggerModule.creat
     .setTitle('Checkmate Event Management API')
     .setDescription('REST APIs for event requests, vendors, resources, staff allocation, issues, messaging, bookings, and superuser management. Pass the active user role in the x-role header.')
     .setVersion('1.0.0')
-    .addApiKey({ type: 'apiKey', name: 'x-role', in: 'header', description: 'Role used for RBAC. Supported values: admin, superuser, vendor, client, staff.' }, 'role')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT', description: 'Paste the token returned by POST /api/auth/login.' }, 'bearer')
     .build();
   return SwaggerModule.createDocument(app, config);
 }
@@ -63,7 +63,8 @@ export async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   const document = createSwaggerDocument(app);
-  SwaggerModule.setup('api/docs', app, document);
+  // persistAuthorization keeps the pasted token across page reloads in Swagger UI.
+  SwaggerModule.setup('api/docs', app, document, { swaggerOptions: { persistAuthorization: true } });
   writeFileSync(join(process.cwd(), 'docs', 'swagger.json'), JSON.stringify(document, null, 2));
 
   // Lets LoggerFlushService drain winston before the process exits.

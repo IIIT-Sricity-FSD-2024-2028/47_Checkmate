@@ -9,6 +9,7 @@ import { IssuesModule } from './modules/issues/issues.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { PackagesModule } from './modules/packages/packages.module';
 import { ResourcesModule } from './modules/resources/resources.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { StaffModule } from './modules/staff/staff.module';
 import { UsersModule } from './modules/users/users.module';
@@ -50,6 +51,10 @@ import { VendorsController } from './modules/vendors/vendors.controller';
     AnalyticsModule,
   ],
   providers: [
+    // Guard ORDER matters and follows registration order. Authentication must run
+    // before authorization: JwtAuthGuard proves who you are and sets req.user,
+    // then RolesGuard decides whether that user may call this route.
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     FileLoggerService,
     LoggerFlushService,

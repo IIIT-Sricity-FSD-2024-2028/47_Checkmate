@@ -53,7 +53,7 @@ function setupCanvas(id) {
   return { ctx, W, H };
 }
 
-/* â”€â”€ LINE CHART â”€â”€ */
+/* ── LINE CHART ── */
 function drawLine() {
   const canvasObj = setupCanvas('lineChart');
   if(!canvasObj) return;

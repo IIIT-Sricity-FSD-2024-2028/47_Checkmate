@@ -3,32 +3,48 @@ import { DataService } from '../../database/data.service';
 import { StatusDto } from '../../common/dto/action.dto';
 import { CreateEventDto, UpdateEventDto } from './dto';
 
+// Controllers handle HTTP; services hold the business rules. This one owns the
+// event lifecycle: pending -> approved/confirmed -> live -> completed.
 @Injectable()
 export class EventsService {
   constructor(private readonly data: DataService) {}
+
   findAll() { return this.data.collection('events'); }
   findOne(id: string) { return this.data.find('events', id); }
+
   create(dto: CreateEventDto) {
+    // Pull presetPackageId out of the payload; `...event` is everything else.
     const { presetPackageId, ...event } = dto;
     return this.data.create('events', 'EVT', {
+      // These defaults are listed BEFORE ...event on purpose: a value the client
+      // actually sent overwrites the default, because later keys win.
       status: 'pending',
       createdBy: 'client',
       submittedAt: new Date().toISOString(),
       ...event,
+      // Accept either field name for the package the event was booked from.
       packageId: event.packageId || presetPackageId,
     });
   }
+
   update(id: string, dto: UpdateEventDto) { return this.data.update('events', id, dto); }
+
+  // Status changes also stamp the matching timestamp, so the timeline shown on
+  // the monitoring pages is recorded rather than guessed.
   updateStatus(id: string, dto: StatusDto) {
     const patch: Record<string, unknown> = { status: dto.status };
     const now = new Date().toISOString();
+    // Lowercase once: different portals send 'Confirmed' vs 'confirmed'.
     const s = String(dto.status).toLowerCase();
 
     if (s === 'approved' || s === 'confirmed') {
+      // Reaching this state is what makes DataService auto-create a booking,
+      // which is what makes revenue appear on the analytics dashboards.
       patch.approvedAt = now;
     } else if (s === 'live') {
       patch.startedAt = now;
     } else if (s === 'completed') {
+      // Completing also releases the event's resources and staff (see DataService).
       patch.endedAt = now;
     } else if (s === 'rejected') {
       patch.rejectedAt = now;
@@ -37,5 +53,6 @@ export class EventsService {
 
     return this.data.update('events', id, patch as any);
   }
+
   remove(id: string) { return this.data.remove('events', id); }
 }

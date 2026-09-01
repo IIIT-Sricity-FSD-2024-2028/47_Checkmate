@@ -198,14 +198,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const s = JSON.parse(raw);
         if (s && s.user && s.user.email) {
           const role = (s.role || s.user.role || 'vendor').toLowerCase();
-          return { 'x-role': role, 'x-email': s.user.email };
+          // The server identifies the profile owner from the token, not x-email.
+          const h = { 'x-role': role, 'x-email': s.user.email };
+          if (s.token) h['Authorization'] = 'Bearer ' + s.token;
+          return h;
         }
       }
     } catch (e) {}
     // Fallback: try DB if available (for pages that initialise DB before this script)
     if (typeof DB !== 'undefined' && typeof DB.getSession === 'function') {
       const s = DB.getSession();
-      if (s && s.email) return { 'x-role': (s.role || 'vendor').toLowerCase(), 'x-email': s.email };
+      if (s && s.email) {
+        const h = { 'x-role': (s.role || 'vendor').toLowerCase(), 'x-email': s.email };
+        if (s.token) h['Authorization'] = 'Bearer ' + s.token;
+        return h;
+      }
     }
     return null;
   };
@@ -515,3 +522,62 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+/* ── Logout ─────────────────────────────
+   Every portal page renders Logout as a plain <a> to the landing page, which
+   navigates away but leaves the signed token sitting in sessionStorage — so
+   hitting Back, or typing a dashboard URL, silently signs you straight back in.
+   Bind once here and clear the session for real before following the link.
+   The flag makes this safe to load from more than one shared script. */
+(function bindLogout() {
+  if (window.__ckLogoutBound) return;
+  window.__ckLogoutBound = true;
+
+  document.addEventListener('click', function (e) {
+    var link = e.target && e.target.closest
+      ? e.target.closest('.logout-btn, .sb-out, a[href*="LandingPage"]')
+      : null;
+    if (!link) return;
+    // Only treat it as a logout if the control actually says so.
+    if (!/logout|sign\s*out/i.test(link.textContent || '') && !link.classList.contains('logout-btn') && !link.classList.contains('sb-out')) return;
+
+    try {
+      sessionStorage.removeItem('checkmate_session');
+      sessionStorage.removeItem('accountType');
+      localStorage.removeItem('checkmate_session');
+    } catch (err) { /* storage blocked -- navigation still proceeds */ }
+  }, true);
+})();
+
+
+/* ── Sidebar identity ───────────────────
+   Most portal pages hardcode a placeholder name/email in the sidebar markup
+   ("Mike Staff / staff@demo.com"). Fill it from the real session so every page
+   shows whoever is actually signed in. Pages that already do this themselves
+   just get the same value written twice, which is harmless. */
+(function fillIdentity() {
+  if (window.__ckIdentityBound) return;
+  window.__ckIdentityBound = true;
+
+  function apply() {
+    var s = null;
+    try {
+      s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+    } catch (e) { return; }
+    var u = s && s.user;
+    if (!u) return;
+
+    document.querySelectorAll('.sb-uname, .sb-un').forEach(function (el) {
+      if (u.name) el.textContent = u.name;
+    });
+    document.querySelectorAll('.sb-uemail, .sb-ue').forEach(function (el) {
+      if (u.email) el.textContent = u.email;
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+})();

@@ -11,7 +11,7 @@
 <body>
 <div class="shell">
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
 <aside class="sidebar">
   <div class="sb-brand">
     <div class="sb-logo">
@@ -51,13 +51,13 @@
   </div>
 </aside>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══════════════════════ MAIN ══════════════════════ -->
 <main class="main">
 
   <div class="page-title">My Performance</div>
   <div class="page-sub">Track your progress and achievements</div>
 
-  <!-- â”€â”€ STAT CARDS â”€â”€ -->
+  <!-- ── STAT CARDS ── -->
   <div class="stats-grid">
 
     <!-- Events Completed -->
@@ -71,27 +71,27 @@
           </svg>
         </div>
       </div>
-      <div class="stat-val pink">94</div>
+      <div class="stat-val pink" id="perfEvents">&mdash;</div>
       <div class="stat-chg">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 7 L5 3 L9 7" stroke="#e0157a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        +12% from last month
+        <span id="perfEventsSub"></span>
       </div>
     </div>
 
     <!-- Average Rating -->
     <div class="stat-card">
       <div class="stat-top">
-        <div class="stat-lbl">Average Rating</div>
+        <div class="stat-lbl">Acceptance Rate</div>
         <div class="stat-badge gold">
           <svg viewBox="0 0 24 24" stroke="#f5c842" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
         </div>
       </div>
-      <div class="stat-val gold">4.8</div>
+      <div class="stat-val gold" id="perfAccept">&mdash;</div>
       <div class="stat-chg">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 7 L5 3 L9 7" stroke="#e0157a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        +0.3 from last month
+        <span id="perfAcceptSub"></span>
       </div>
     </div>
 
@@ -106,10 +106,10 @@
           </svg>
         </div>
       </div>
-      <div class="stat-val teal">328</div>
+      <div class="stat-val teal" id="perfTasks">&mdash;</div>
       <div class="stat-chg">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 7 L5 3 L9 7" stroke="#e0157a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        +24 from last month
+        <span id="perfTasksSub"></span>
       </div>
     </div>
 
@@ -125,16 +125,16 @@
           </svg>
         </div>
       </div>
-      <div class="stat-val blue">45</div>
+      <div class="stat-val blue" id="perfIssues">&mdash;</div>
       <div class="stat-chg">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 7 L5 3 L9 7" stroke="#e0157a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        +8 from last month
+        <span id="perfIssuesSub"></span>
       </div>
     </div>
 
   </div>
 
-  <!-- â”€â”€ CHARTS ROW â”€â”€ -->
+  <!-- ── CHARTS ROW ── -->
   <div class="charts-row">
 
     <!-- Monthly Performance Line Chart -->
@@ -168,7 +168,7 @@
 
   </div>
 
-  <!-- â”€â”€ BOTTOM ROW â”€â”€ -->
+  <!-- ── BOTTOM ROW ── -->
   <div class="bottom-row">
 
     <!-- Achievements -->
@@ -179,117 +179,249 @@
         </svg>
         Achievements
       </div>
-      <div class="ach-list">
-
-        <div class="ach-item">
-          <div class="ach-ico">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#e0157a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <polyline points="16 11 18 13 22 9"/>
-            </svg>
-          </div>
-          <div>
-            <div class="ach-name">Perfect Attendance <span class="earned">Earned</span></div>
-            <div class="ach-desc">Never missed an assigned event</div>
-          </div>
-        </div>
-
-        <div class="ach-item">
-          <div class="ach-ico">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#e0157a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div>
-            <div class="ach-name">Quick Responder <span class="earned">Earned</span></div>
-            <div class="ach-desc">Average response time under 15 minutes</div>
-          </div>
-        </div>
-
-        <div class="ach-item">
-          <div class="ach-ico">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#e0157a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div>
-            <div class="ach-name">Team Player <span class="earned">Earned</span></div>
-            <div class="ach-desc">Helped complete 50+ collaborative tasks</div>
-          </div>
-        </div>
-
-        <div class="ach-item">
-          <div class="ach-ico dim">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#9890b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-          </div>
-          <div>
-            <div class="ach-name locked">Top Performer</div>
-            <div class="ach-desc">Maintain 4.8+ rating for 3 months</div>
-          </div>
-        </div>
-
-      </div>
+      <div class="ach-list" id="achList"></div>
     </div>
 
-    <!-- Rating Breakdown -->
+    <!-- Assignment Breakdown (replaces the old hardcoded star ratings: the data
+         model stores no ratings or reviews, so this shows real assignment states) -->
     <div class="card">
       <div class="card-head">
         <svg viewBox="0 0 24 24" fill="none" stroke="#e0157a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
-        Rating Breakdown
+        Assignment Breakdown
       </div>
 
       <div class="rating-hero">
-        <div class="r-num">4.8</div>
-        <div class="r-stars">
-          <span class="s-on">â˜…â˜…â˜…â˜…</span><span class="s-off">â˜†</span>
-        </div>
-        <div class="r-lbl">Overall Rating</div>
+        <div class="r-num" id="abTotal">&mdash;</div>
+        <div class="r-lbl">Total assignments</div>
       </div>
 
-      <div class="rb-rows">
-        <div class="rb-row">
-          <span class="rb-lbl">Punctuality</span>
-          <div class="rb-track"><div class="rb-fill" style="width:96%"></div></div>
-          <span class="rb-score">4.8/5.0</span>
-        </div>
-        <div class="rb-row">
-          <span class="rb-lbl">Communication</span>
-          <div class="rb-track"><div class="rb-fill" style="width:90%"></div></div>
-          <span class="rb-score">4.5/5.0</span>
-        </div>
-        <div class="rb-row">
-          <span class="rb-lbl">Professionalism</span>
-          <div class="rb-track"><div class="rb-fill" style="width:94%"></div></div>
-          <span class="rb-score">4.7/5.0</span>
-        </div>
-        <div class="rb-row">
-          <span class="rb-lbl">Problem Solving</span>
-          <div class="rb-track"><div class="rb-fill" style="width:96%"></div></div>
-          <span class="rb-score">4.8/5.0</span>
-        </div>
-      </div>
-
-      <div class="review-box">
-        <div class="rv-text">"Excellent work ethic and always goes above and beyond!"</div>
-        <div class="rv-by">- Admin, 2 days ago</div>
-      </div>
+      <div class="rb-rows" id="abRows"></div>
     </div>
 
   </div>
 </main>
 
-<script type="module" src="../js/main.js"></script>
+<script src="../../scripts/vendor_js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </div>
 
     <!-- Global Injections -->
+
+<script>
+/* ── My Performance ────────────────────────────────────────────────────────
+   Everything on this page is derived from the signed-in staff member's own
+   records: their staffAssignments, the tasks inside them, and the issues they
+   reported. The page previously showed fixed numbers (94 / 4.8 / 328 / 45).
+
+   Note there is no rating anywhere in the data model, so the second card shows
+   Acceptance Rate instead of an invented star score. */
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof DB === 'undefined') return;
+
+  var session = DB.getSession ? DB.getSession() : null;
+  var myName = (session && (session.user || session.name)) || '';
+  var myEmail = ((session && session.email) || '').toLowerCase();
+
+  // Match the staff record by id, then email, then name.
+  var staffRows = DB.getAll('staff') || [];
+  var me = staffRows.find(function (s) {
+    return (session && session.staffId && s.id === session.staffId)
+      || (myEmail && (s.email || '').toLowerCase() === myEmail)
+      || (myName && (s.name || '').toLowerCase() === String(myName).toLowerCase());
+  }) || null;
+
+  var mine = (DB.getAll('staffAssignments') || []).filter(function (a) {
+    return (me && a.staffId === me.id)
+      || (myName && String(a.staffName || '').toLowerCase() === String(myName).toLowerCase());
+  });
+
+  var st = function (a) { return String(a.status || '').toLowerCase(); };
+  var completed = mine.filter(function (a) { return st(a) === 'completed'; });
+  var accepted = mine.filter(function (a) { return st(a) === 'accepted' || st(a) === 'in_progress'; });
+  var pending = mine.filter(function (a) { return st(a) === 'pending' || st(a) === 'assigned'; });
+  var declined = mine.filter(function (a) { return st(a) === 'declined' || st(a) === 'rejected'; });
+
+  // Tasks live inside each assignment.
+  var allTasks = [];
+  mine.forEach(function (a) { (a.tasks || []).forEach(function (task) { allTasks.push(task); }); });
+  var tasksDone = allTasks.filter(function (task) { return String(task.status || '').toLowerCase() === 'done'; });
+
+  // Issues this person raised that have since been resolved.
+  var myIssues = (DB.getAll('issues') || []).filter(function (i) {
+    return myName && String(i.reporter || '').toLowerCase() === String(myName).toLowerCase();
+  });
+  var issuesResolved = myIssues.filter(function (i) {
+    var s = String(i.status || '').toLowerCase();
+    return s === 'resolved' || s === 'closed';
+  });
+
+  // "Answered" = anything the staff member has actually responded to.
+  var answered = accepted.length + completed.length + declined.length;
+  var acceptRate = mine.length ? Math.round(((accepted.length + completed.length) / mine.length) * 100) : 0;
+
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  setText('perfEvents', completed.length);
+  setText('perfEventsSub', 'of ' + mine.length + ' assigned');
+  setText('perfAccept', mine.length ? acceptRate + '%' : '—');
+  setText('perfAcceptSub', answered + ' of ' + mine.length + ' responded to');
+  setText('perfTasks', tasksDone.length);
+  setText('perfTasksSub', allTasks.length ? tasksDone.length + ' of ' + allTasks.length + ' tasks' : 'no tasks assigned yet');
+  setText('perfIssues', issuesResolved.length);
+  setText('perfIssuesSub', myIssues.length ? 'of ' + myIssues.length + ' reported' : 'none reported');
+
+  /* ── Achievements: earned or not, judged against the real record ── */
+  var achievements = [
+    { name: 'First Assignment', desc: 'Took on your first event', earned: mine.length >= 1 },
+    { name: 'Perfect Attendance', desc: 'No declined assignments', earned: mine.length >= 1 && declined.length === 0 },
+    { name: 'Quick Responder', desc: 'Responded to every request', earned: mine.length >= 1 && pending.length === 0 },
+    { name: 'Team Player', desc: 'Worked 3 or more events', earned: mine.length >= 3 },
+    { name: 'Top Performer', desc: 'Completed 5 or more events', earned: completed.length >= 5 }
+  ];
+
+  var achList = document.getElementById('achList');
+  if (achList) {
+    achList.innerHTML = achievements.map(function (a) {
+      var tick = a.earned
+        ? '<polyline points="20 6 9 17 4 12"/>'
+        : '<circle cx="12" cy="12" r="9"/>';
+      return '<div class="ach-item">'
+        + '<div class="ach-ico' + (a.earned ? '' : ' dim') + '">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="' + (a.earned ? '#e0157a' : '#9890b8') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + tick + '</svg>'
+        + '</div><div>'
+        + '<div class="ach-name' + (a.earned ? '' : ' locked') + '">' + a.name
+        + (a.earned ? ' <span class="earned">Earned</span>' : '') + '</div>'
+        + '<div class="ach-desc">' + a.desc + '</div>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  /* ── Assignment breakdown bars ── */
+  setText('abTotal', mine.length);
+  var abRows = document.getElementById('abRows');
+  if (abRows) {
+    var breakdown = [
+      ['Completed', completed.length],
+      ['Accepted', accepted.length],
+      ['Awaiting response', pending.length],
+      ['Declined', declined.length]
+    ];
+    abRows.innerHTML = breakdown.map(function (row) {
+      var pct = mine.length ? Math.round((row[1] / mine.length) * 100) : 0;
+      return '<div class="rb-row">'
+        + '<span class="rb-lbl">' + row[0] + '</span>'
+        + '<div class="rb-track"><div class="rb-fill" style="width:' + pct + '%"></div></div>'
+        + '<span class="rb-score">' + row[1] + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* ── Charts ──────────────────────────────────────────────────────────
+     Same month-bucketing idea as the superuser dashboard. */
+  function ymKey(v) {
+    if (!v) return null;
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function axisFrom(keys) {
+    var valid = keys.filter(Boolean).sort();
+    if (!valid.length) return [];
+    var s = valid[0].split('-').map(Number), e = valid[valid.length - 1].split('-').map(Number);
+    var out = [], y = s[0], m = s[1];
+    while (y < e[0] || (y === e[0] && m <= e[1])) {
+      out.push(y + '-' + String(m).padStart(2, '0'));
+      m++; if (m > 12) { m = 1; y++; }
+    }
+    return out.slice(-12);
+  }
+
+  function countPerMonth(dates, axis) {
+    var totals = {};
+    axis.forEach(function (k) { totals[k] = 0; });
+    dates.forEach(function (d) { var k = ymKey(d); if (k in totals) totals[k] += 1; });
+    return axis.map(function (k) { return totals[k]; });
+  }
+
+  // A canvas with nothing to plot gets a message instead of a blank rectangle.
+  function emptyState(canvasId, message) {
+    var c = document.getElementById(canvasId);
+    if (!c || !c.parentNode) return;
+    var note = document.createElement('div');
+    note.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;min-height:150px;color:var(--text3,#9890b8);font-size:12px;text-align:center;padding:0 12px;';
+    note.textContent = message;
+    c.parentNode.replaceChild(note, c);
+  }
+
+  var GRID = { color: 'rgba(255,255,255,.05)' };
+  var TICK = { color: '#9890b8', font: { size: 10 }, precision: 0 };
+
+  // 1. Tasks completed per month.
+  var taskDates = tasksDone.map(function (task) { return task.completedAt || task.doneAt || task.updatedAt || task.createdAt; }).filter(Boolean);
+  if (typeof Chart === 'undefined') {
+    emptyState('lineChart', 'Chart library unavailable offline.');
+    emptyState('barChart', 'Chart library unavailable offline.');
+  } else if (!taskDates.length) {
+    emptyState('lineChart', tasksDone.length
+      ? 'Completed tasks carry no completion date yet.'
+      : 'No completed tasks yet.');
+  } else {
+    var tAxis = axisFrom(taskDates.map(ymKey));
+    new Chart(document.getElementById('lineChart'), {
+      type: 'line',
+      data: {
+        labels: tAxis.map(function (k) { return MONTHS[Number(k.split('-')[1]) - 1]; }),
+        datasets: [{
+          data: countPerMonth(taskDates, tAxis),
+          borderColor: '#e0157a',
+          backgroundColor: 'rgba(224,21,122,.08)',
+          tension: 0.35, fill: true, pointBackgroundColor: '#e0157a', pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, min: 0 } }
+      }
+    });
+  }
+
+  // 2. Events attended per month, by the event's own date.
+  var eventDates = mine.map(function (a) { return a.eventDate; }).filter(Boolean);
+  if (typeof Chart === 'undefined') {
+    /* already handled above */
+  } else if (!eventDates.length) {
+    emptyState('barChart', 'No assigned events yet.');
+  } else {
+    var eAxis = axisFrom(eventDates.map(ymKey));
+    new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: eAxis.map(function (k) { return MONTHS[Number(k.split('-')[1]) - 1]; }),
+        datasets: [{
+          data: countPerMonth(eventDates, eAxis),
+          backgroundColor: 'rgba(0,230,195,.65)',
+          borderRadius: 4, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, min: 0 } }
+      }
+    });
+  }
+});
+</script>
+
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
 </body>

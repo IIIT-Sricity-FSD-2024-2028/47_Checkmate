@@ -1,11 +1,23 @@
 import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { DataService } from '../../database/data.service';
 import { hashPassword, verifyPassword } from '../../common/security/password';
 import { CreateStaffAssignmentDto, CreateStaffDto, UpdateStaffAssignmentDto, UpdateStaffDto } from './dto';
 
+// Staff are stored twice on purpose: a `users` row (so they can log in) and a
+// `staff` row (the operational record vendors assign work to). Both are
+// created together at signup and linked by email.
 @Injectable()
 export class StaffService {
-  constructor(private readonly data: DataService) {}
+  constructor(
+    private readonly data: DataService,
+    private readonly jwt: JwtService,
+  ) {}
+
+  /** Same signed-token shape AuthService issues, so one guard validates both. */
+  private issueToken(user: { id: string; email: string }) {
+    return this.jwt.sign({ sub: user.id, email: user.email, role: 'staff' });
+  }
   findAll() { return this.data.collection('staff'); }
   findOne(id: string) { return this.data.find('staff', id); }
   create(dto: CreateStaffDto) { return this.data.create('staff', 'S', dto); }
@@ -37,9 +49,11 @@ export class StaffService {
     });
 
     const { passwordHash, ...safeUser } = user;
-    return { user: safeUser, role: 'staff', token: `session-${user.id}-${Date.now()}` };
+    return { user: safeUser, role: 'staff', token: this.issueToken(user) };
   }
 
+  // Separate from /auth/login so a non-staff account cannot sign in through the
+  // staff portal -- note the explicit role !== 'Staff' check below.
   login(dto: any) {
     const user = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
     if (!user || user.role !== 'Staff' || !verifyPassword(dto.password, user.passwordHash)) {
@@ -48,7 +62,7 @@ export class StaffService {
     if (!['Active', 'active'].includes(user.status)) throw new UnauthorizedException('This account is not active.');
 
     const { passwordHash, ...safeUser } = user;
-    return { user: safeUser, role: 'staff', token: `session-${user.id}-${Date.now()}` };
+    return { user: safeUser, role: 'staff', token: this.issueToken(user) };
   }
 
   getProfile(email: string) {
@@ -57,6 +71,8 @@ export class StaffService {
     return profile;
   }
 
+  // staffAssignments is the join between a staff member and an event. Creating or
+  // changing one makes DataService recompute that person's workload automatically.
   assignments() { return this.data.collection('staffAssignments'); }
   createAssignment(dto: CreateStaffAssignmentDto) {
     return this.data.create('staffAssignments', 'A', { status: 'assigned', assignedAt: new Date().toISOString(), ...dto });

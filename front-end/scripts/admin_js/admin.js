@@ -1,11 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+
+  /* ── Auth token ─────────────────────────
+     Login stores a signed JWT in the session. Every API call must carry it as
+     "Authorization: Bearer <token>"; the server reads the caller's role out of
+     that token, so no request works without it. */
+  function ckToken() {
+    try {
+      var raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return (s && s.token) || null;
+    } catch (e) { return null; }
+  }
+
+  /* A 401 means no token or an expired one. Send the user back to sign in once,
+     rather than letting the page render as though it simply has no data. */
+  var _ckRedirected = false;
+  function ckHandleUnauthorized(status) {
+    if (status !== 401 || _ckRedirected) return;
+    if (/\/Login\//i.test(location.pathname) || /LandingPage/i.test(location.pathname)) return;
+    _ckRedirected = true;
+    try { sessionStorage.removeItem('checkmate_session'); } catch (e) {}
+    location.href = '../Login/signin.html';
+  }
+
     const api = (method, path, body) => {
         const session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
         const xhr = new XMLHttpRequest();
         xhr.open(method, `${API_BASE}/${path}`, false);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('x-role', session?.role || 'admin');
+        const token = session?.token || ckToken();
+        if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
         try {
             xhr.send(body === undefined ? null : JSON.stringify(body));
         } catch (error) {
@@ -14,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (xhr.status >= 400) {
             console.error(`API ${method} ${path} failed`, xhr.status, xhr.responseText);
+            ckHandleUnauthorized(xhr.status);
             return null;
         }
         return xhr.responseText ? JSON.parse(xhr.responseText) : null;

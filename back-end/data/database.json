@@ -81,16 +81,6 @@
       "passwordHash": "23f51cef4f24ffa2d7f5d3a378e2204e20f99d78f27d2215b140bf6af34602eb"
     },
     {
-      "id": "U009",
-      "name": "Test Vendor",
-      "email": "test@vendor.com",
-      "phone": "+1 555-9999",
-      "role": "Vendor",
-      "status": "Active",
-      "created": "2026-08-28",
-      "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976"
-    },
-    {
       "name": "Jane Client",
       "email": "jane@client.com",
       "phone": "+1 555-8888",
@@ -408,29 +398,6 @@
       "id": "EVT008"
     },
     {
-      "name": "Automated Test Gala 2026",
-      "type": "Gala",
-      "date": "2026-08-30",
-      "venue": "Skyline Ballroom",
-      "budget": 20000,
-      "status": "pending",
-      "client": "Emily Carter",
-      "createdBy": "client",
-      "id": "EVT009"
-    },
-    {
-      "name": "Booking Auto-Gen Test",
-      "type": "Corporate",
-      "date": "2026-09-15",
-      "venue": "Convention Center",
-      "budget": 35000,
-      "status": "confirmed",
-      "client": "Acme Corp",
-      "vendor": "Elite Events Co.",
-      "createdBy": "client",
-      "id": "EVT010"
-    },
-    {
       "status": "pending",
       "createdBy": "client",
       "submittedAt": "2026-08-28T06:11:56.495Z",
@@ -619,8 +586,8 @@
       "vendorId": "V001",
       "quantity": 400,
       "total": 400,
-      "avail": 300,
-      "quantityAvailable": 300,
+      "avail": 400,
+      "quantityAvailable": 400,
       "price": 8,
       "unit": "day",
       "available": true,
@@ -636,8 +603,8 @@
       "vendorId": "V003",
       "quantity": 10,
       "total": 10,
-      "avail": 8,
-      "quantityAvailable": 8,
+      "avail": 10,
+      "quantityAvailable": 10,
       "price": 250,
       "unit": "day",
       "available": true,
@@ -653,8 +620,8 @@
       "vendorId": "V004",
       "quantity": 15,
       "total": 15,
-      "avail": 12,
-      "quantityAvailable": 12,
+      "avail": 15,
+      "quantityAvailable": 15,
       "price": 120,
       "unit": "day",
       "available": true,
@@ -670,8 +637,8 @@
       "vendorId": "V001",
       "quantity": 30,
       "total": 30,
-      "avail": 24,
-      "quantityAvailable": 24,
+      "avail": 30,
+      "quantityAvailable": 30,
       "price": 35,
       "unit": "day",
       "available": true,
@@ -687,8 +654,8 @@
       "vendorId": "V001",
       "quantity": 5,
       "total": 5,
-      "avail": 3,
-      "quantityAvailable": 3,
+      "avail": 5,
+      "quantityAvailable": 5,
       "price": 450,
       "unit": "day",
       "available": true,
@@ -704,8 +671,8 @@
       "vendorId": "V001",
       "quantity": 35,
       "total": 35,
-      "avail": 28,
-      "quantityAvailable": 28,
+      "avail": 35,
+      "quantityAvailable": 35,
       "price": 20,
       "unit": "day",
       "available": true,
@@ -721,8 +688,8 @@
       "vendorId": "V004",
       "quantity": 14,
       "total": 14,
-      "avail": 10,
-      "quantityAvailable": 10,
+      "avail": 14,
+      "quantityAvailable": 14,
       "price": 180,
       "unit": "day",
       "available": true,
@@ -741,9 +708,9 @@
       "vendorId": "V001",
       "phone": "+1 555-1003",
       "email": "mike.staff@eliteevents.com",
-      "workload": 40,
-      "status": "available",
-      "avail": "Available",
+      "workload": 50,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 2,
       "avatar": "pink",
       "assignedEvents": [
@@ -761,9 +728,9 @@
       "vendorId": "V001",
       "phone": "+1 555-1007",
       "email": "elena.staff@eliteevents.com",
-      "workload": 60,
-      "status": "busy",
-      "avail": "Busy",
+      "workload": 25,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "purple",
       "assignedEvents": [
@@ -779,15 +746,12 @@
       "vendorId": "V004",
       "phone": "+1 555-1012",
       "email": "david.kim@soundpro.com",
-      "workload": 50,
+      "workload": 0,
       "status": "available",
       "avail": "Available",
-      "events": 1,
+      "events": 0,
       "avatar": "teal",
-      "assignedEvents": [
-        "EVT003",
-        "EVT011"
-      ]
+      "assignedEvents": []
     },
     {
       "id": "S004",
@@ -798,16 +762,13 @@
       "vendorId": "V001",
       "phone": "+1 555-1014",
       "email": "marcus@eliteevents.com",
-      "workload": 100,
-      "status": "busy",
-      "avail": "Available",
+      "workload": 25,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "orange",
       "assignedEvents": [
-        "EVT002",
-        "EVT011",
-        "EVT011",
-        "EVT011"
+        "EVT002"
       ]
     },
     {
@@ -819,14 +780,13 @@
       "vendorId": "V001",
       "phone": "+1 555-1016",
       "email": "chloe@eliteevents.com",
-      "workload": 45,
-      "status": "available",
-      "avail": "Available",
+      "workload": 25,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "green",
       "assignedEvents": [
-        "EVT003",
-        "EVT011"
+        "EVT003"
       ]
     },
     {
@@ -844,20 +804,6 @@
       "events": 0,
       "avatar": "purple",
       "assignedEvents": []
-    },
-    {
-      "name": "Test Tech 1787897289338",
-      "role": "Lighting Tech",
-      "phone": "+1 555-9988",
-      "status": "assigned",
-      "workload": 25,
-      "events": 1,
-      "avatar": "purple",
-      "id": "S007",
-      "avail": "Assigned",
-      "assignedEvents": [
-        "EVT001"
-      ]
     }
   ],
   "packages": [
@@ -1065,17 +1011,6 @@
       "eventPeople": 320,
       "role": "Guest Relations Lead",
       "status": "accepted"
-    },
-    {
-      "staffId": "S007",
-      "staffName": "Test Tech 1787897289338",
-      "eventId": "EVT001",
-      "eventName": "Tech Summit 2026",
-      "role": "Lighting Tech",
-      "status": "assigned",
-      "priority": "Medium",
-      "assignedAt": "2026-08-28T06:08:09.339Z",
-      "id": "A006"
     }
   ],
   "vendorApplications": [
@@ -1116,28 +1051,6 @@
       ],
       "status": "pending",
       "submittedAt": "2026-04-27T14:40:00.000Z"
-    },
-    {
-      "status": "approved",
-      "submittedAt": "2026-08-28T06:06:41.800Z",
-      "vendorName": "Test Vendor",
-      "businessName": "Test Events LLC",
-      "email": "test@vendor.com",
-      "phone": "+1 555-9999",
-      "category": "General",
-      "documents": [
-        {
-          "name": "business-license.pdf",
-          "type": "license"
-        },
-        {
-          "name": "tax-id.pdf",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976",
-      "id": "VAPP003",
-      "decidedAt": "2026-08-28T06:06:41.802Z"
     },
     {
       "status": "approved",
@@ -1225,15 +1138,6 @@
       "category": "Catering & Hospitality",
       "status": "Approved",
       "rating": 4.6
-    },
-    {
-      "id": "V006",
-      "name": "Test Events LLC",
-      "businessName": "Test Events LLC",
-      "category": "General",
-      "status": "Approved",
-      "rating": 5,
-      "created": "2026-08-28"
     },
     {
       "id": "V007",
@@ -1353,18 +1257,6 @@
       "advancePaid": 22000,
       "paymentStatus": "paid",
       "created": "2026-04-20"
-    },
-    {
-      "id": "BK005",
-      "eventId": "EVT010",
-      "eventName": "Booking Auto-Gen Test",
-      "client": "Acme Corp",
-      "vendor": "Elite Events Co.",
-      "status": "Confirmed",
-      "cost": 35000,
-      "advancePaid": 0,
-      "paymentStatus": "unpaid",
-      "created": "2026-08-28"
     }
   ],
   "messages": {
@@ -1504,18 +1396,6 @@
       "breakdown": 100
     },
     "EVT008": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
-    },
-    "EVT009": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
-    },
-    "EVT010": {
       "setup": 0,
       "registration": 0,
       "event": 0,
@@ -1782,6 +1662,521 @@
         "vendorName": "seafood rr"
       },
       "createdAt": "2026-08-28T06:18:13.426Z"
+    },
+    {
+      "id": "LOG009",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "name": "E2E Test Gala",
+        "type": "Gala",
+        "date": "2026-12-01",
+        "budget": 75000
+      },
+      "createdAt": "2026-09-01T13:09:43.243Z"
+    },
+    {
+      "id": "LOG010",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "E2E Test Gala"
+      },
+      "createdAt": "2026-09-01T13:09:43.667Z"
+    },
+    {
+      "id": "LOG011",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "POST /api/users",
+      "entityType": "HTTP",
+      "entityId": "27edb4c0-a90c-44f3-bf05-7584fb3e8e3f",
+      "details": {
+        "method": "POST",
+        "url": "/api/users",
+        "statusCode": 400,
+        "role": "admin",
+        "email": "-",
+        "requestId": "27edb4c0-a90c-44f3-bf05-7584fb3e8e3f",
+        "durationMs": 5
+      },
+      "createdAt": "2026-09-01T13:09:58.775Z"
+    },
+    {
+      "id": "LOG012",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "PATCH /api/users/197609",
+      "entityType": "HTTP",
+      "entityId": "c0363ac0-5771-4cd6-bee6-2468faea96bf",
+      "details": {
+        "method": "PATCH",
+        "url": "/api/users/197609",
+        "statusCode": 400,
+        "role": "admin",
+        "email": "-",
+        "requestId": "c0363ac0-5771-4cd6-bee6-2468faea96bf",
+        "durationMs": 4
+      },
+      "createdAt": "2026-09-01T13:09:59.229Z"
+    },
+    {
+      "id": "LOG013",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/users/197609",
+      "entityType": "HTTP",
+      "entityId": "8ab61bcc-d8cd-4700-b84c-1d060dba894f",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/users/197609",
+        "statusCode": 404,
+        "role": "admin",
+        "email": "-",
+        "requestId": "8ab61bcc-d8cd-4700-b84c-1d060dba894f",
+        "durationMs": 3
+      },
+      "createdAt": "2026-09-01T13:09:59.330Z"
+    },
+    {
+      "id": "LOG014",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "POST /api/vendor-applications",
+      "entityType": "HTTP",
+      "entityId": "97fb0b3e-4d11-4639-b5ab-978386405ae6",
+      "details": {
+        "method": "POST",
+        "url": "/api/vendor-applications",
+        "statusCode": 400,
+        "role": "-",
+        "email": "-",
+        "requestId": "97fb0b3e-4d11-4639-b5ab-978386405ae6",
+        "durationMs": 2
+      },
+      "createdAt": "2026-09-01T13:09:59.541Z"
+    },
+    {
+      "id": "LOG015",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "POST /api/vendor-applications",
+      "entityType": "HTTP",
+      "entityId": "76ba230d-f241-480e-a889-7377eb3ec68f",
+      "details": {
+        "method": "POST",
+        "url": "/api/vendor-applications",
+        "statusCode": 400,
+        "role": "-",
+        "email": "-",
+        "requestId": "76ba230d-f241-480e-a889-7377eb3ec68f",
+        "durationMs": 2
+      },
+      "createdAt": "2026-09-01T13:10:10.155Z"
+    },
+    {
+      "id": "LOG016",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "POST /api/users",
+      "entityType": "HTTP",
+      "entityId": "98627f9f-f1af-49d0-b161-87ba541c3aa5",
+      "details": {
+        "method": "POST",
+        "url": "/api/users",
+        "statusCode": 201,
+        "role": "admin",
+        "email": "-",
+        "requestId": "98627f9f-f1af-49d0-b161-87ba541c3aa5",
+        "durationMs": 5
+      },
+      "createdAt": "2026-09-01T13:10:26.886Z"
+    },
+    {
+      "id": "LOG017",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "PATCH /api/users/U012",
+      "entityType": "HTTP",
+      "entityId": "b269b1c0-a29c-4515-a69a-83a1cfa199a1",
+      "details": {
+        "method": "PATCH",
+        "url": "/api/users/U012",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "b269b1c0-a29c-4515-a69a-83a1cfa199a1",
+        "durationMs": 7
+      },
+      "createdAt": "2026-09-01T13:10:27.313Z"
+    },
+    {
+      "id": "LOG018",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/users/U012",
+      "entityType": "HTTP",
+      "entityId": "f1f8e3bd-0cba-414e-bbf2-21d9348ff5cd",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/users/U012",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "f1f8e3bd-0cba-414e-bbf2-21d9348ff5cd",
+        "durationMs": 4
+      },
+      "createdAt": "2026-09-01T13:10:27.599Z"
+    },
+    {
+      "id": "LOG019",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "POST /api/vendor-applications",
+      "entityType": "HTTP",
+      "entityId": "b57abb4f-11e9-4577-9ef7-98367d12cd12",
+      "details": {
+        "method": "POST",
+        "url": "/api/vendor-applications",
+        "statusCode": 201,
+        "role": "-",
+        "email": "-",
+        "requestId": "b57abb4f-11e9-4577-9ef7-98367d12cd12",
+        "durationMs": 10
+      },
+      "createdAt": "2026-09-01T13:10:27.745Z"
+    },
+    {
+      "id": "LOG020",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "PATCH /api/vendor-applications/VAPP006/decision",
+      "entityType": "HTTP",
+      "entityId": "d42d9516-8757-449f-b53f-69d1daf96c30",
+      "details": {
+        "method": "PATCH",
+        "url": "/api/vendor-applications/VAPP006/decision",
+        "statusCode": 400,
+        "role": "admin",
+        "email": "-",
+        "requestId": "d42d9516-8757-449f-b53f-69d1daf96c30",
+        "durationMs": 5
+      },
+      "createdAt": "2026-09-01T13:10:28.187Z"
+    },
+    {
+      "id": "LOG021",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "VENDOR_APPLICATION_APPROVED",
+      "entityType": "VENDOR_APPLICATION",
+      "entityId": "VAPP006",
+      "details": {
+        "businessName": "E2E Decor Co",
+        "vendorName": "Test Vendor"
+      },
+      "createdAt": "2026-09-01T13:10:39.019Z"
+    },
+    {
+      "id": "LOG022",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "PATCH /api/vendor-applications/VAPP006/decision",
+      "entityType": "HTTP",
+      "entityId": "543e0711-99e0-4e18-abd2-4e627829bf25",
+      "details": {
+        "method": "PATCH",
+        "url": "/api/vendor-applications/VAPP006/decision",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "543e0711-99e0-4e18-abd2-4e627829bf25",
+        "durationMs": 5
+      },
+      "createdAt": "2026-09-01T13:10:39.023Z"
+    },
+    {
+      "id": "LOG023",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_DELETED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "eventId": "EVT012"
+      },
+      "createdAt": "2026-09-01T13:48:09.964Z"
+    },
+    {
+      "id": "LOG024",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/vendor-applications/VAPP006",
+      "entityType": "HTTP",
+      "entityId": "341e05ff-a61d-44b6-8449-4f1d8f72a099",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/vendor-applications/VAPP006",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "341e05ff-a61d-44b6-8449-4f1d8f72a099",
+        "durationMs": 3
+      },
+      "createdAt": "2026-09-01T13:48:10.047Z"
+    },
+    {
+      "id": "LOG025",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/vendors/V008",
+      "entityType": "HTTP",
+      "entityId": "1b88dd62-a933-4d15-b295-1dbf3aae0ede",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/vendors/V008",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "1b88dd62-a933-4d15-b295-1dbf3aae0ede",
+        "durationMs": 3
+      },
+      "createdAt": "2026-09-01T13:48:46.656Z"
+    },
+    {
+      "id": "LOG026",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-09-01T13:53:51.540Z"
+    },
+    {
+      "id": "LOG027",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-09-01T13:53:51.544Z"
+    },
+    {
+      "id": "LOG028",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-09-01T13:53:51.545Z"
+    },
+    {
+      "id": "LOG029",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_DELETED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "eventId": "EVT012"
+      },
+      "createdAt": "2026-09-01T13:55:35.419Z"
+    },
+    {
+      "id": "LOG030",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_DELETED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "eventId": "EVT013"
+      },
+      "createdAt": "2026-09-01T13:55:35.494Z"
+    },
+    {
+      "id": "LOG031",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/vendor-applications/VAPP003",
+      "entityType": "HTTP",
+      "entityId": "2d23c660-65fc-4c6a-9d06-54f6aa312525",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/vendor-applications/VAPP003",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "2d23c660-65fc-4c6a-9d06-54f6aa312525",
+        "durationMs": 4
+      },
+      "createdAt": "2026-09-01T15:20:13.015Z"
+    },
+    {
+      "id": "LOG032",
+      "userId": "SYS",
+      "userRole": "admin",
+      "action": "DELETE /api/vendors/V006",
+      "entityType": "HTTP",
+      "entityId": "3e27d4e8-c2cf-46d7-89f7-78d648ec6a0e",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/vendors/V006",
+        "statusCode": 200,
+        "role": "admin",
+        "email": "-",
+        "requestId": "3e27d4e8-c2cf-46d7-89f7-78d648ec6a0e",
+        "durationMs": 1
+      },
+      "createdAt": "2026-09-01T15:20:13.096Z"
+    },
+    {
+      "id": "LOG033",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_DELETED",
+      "entityType": "EVENT",
+      "entityId": "EVT009",
+      "details": {
+        "eventId": "EVT009"
+      },
+      "createdAt": "2026-09-01T18:27:31.107Z"
+    },
+    {
+      "id": "LOG034",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_DELETED",
+      "entityType": "EVENT",
+      "entityId": "EVT010",
+      "details": {
+        "eventId": "EVT010"
+      },
+      "createdAt": "2026-09-01T18:27:31.188Z"
+    },
+    {
+      "id": "LOG035",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "POST /api/vendor-applications",
+      "entityType": "HTTP",
+      "entityId": "3759b17b-f2e9-42af-88ea-a0e128da5df4",
+      "details": {
+        "method": "POST",
+        "url": "/api/vendor-applications",
+        "statusCode": 201,
+        "role": "-",
+        "email": "-",
+        "requestId": "3759b17b-f2e9-42af-88ea-a0e128da5df4",
+        "durationMs": 2
+      },
+      "createdAt": "2026-09-01T18:42:43.616Z"
+    },
+    {
+      "id": "LOG036",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "DELETE /api/users/U012",
+      "entityType": "HTTP",
+      "entityId": "ccc12216-47ab-4fbb-b5d7-545d362fc4bf",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/users/U012",
+        "statusCode": 200,
+        "role": "-",
+        "email": "-",
+        "requestId": "ccc12216-47ab-4fbb-b5d7-545d362fc4bf",
+        "durationMs": 2
+      },
+      "createdAt": "2026-09-01T18:43:20.715Z"
+    },
+    {
+      "id": "LOG037",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "DELETE /api/users/U013",
+      "entityType": "HTTP",
+      "entityId": "03a249db-a803-4867-82dc-45309f326981",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/users/U013",
+        "statusCode": 200,
+        "role": "-",
+        "email": "-",
+        "requestId": "03a249db-a803-4867-82dc-45309f326981",
+        "durationMs": 3
+      },
+      "createdAt": "2026-09-01T18:43:20.810Z"
+    },
+    {
+      "id": "LOG038",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "DELETE /api/vendor-applications/VAPP006",
+      "entityType": "HTTP",
+      "entityId": "cf5b959d-0e9d-4b53-a467-08c3b3f61031",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/vendor-applications/VAPP006",
+        "statusCode": 200,
+        "role": "-",
+        "email": "-",
+        "requestId": "cf5b959d-0e9d-4b53-a467-08c3b3f61031",
+        "durationMs": 2
+      },
+      "createdAt": "2026-09-01T18:43:20.885Z"
+    },
+    {
+      "id": "LOG039",
+      "userId": "SYS",
+      "userRole": "-",
+      "action": "DELETE /api/users/U012",
+      "entityType": "HTTP",
+      "entityId": "e2401e92-8e05-4315-b2b8-1054bb814ad8",
+      "details": {
+        "method": "DELETE",
+        "url": "/api/users/U012",
+        "statusCode": 200,
+        "role": "-",
+        "email": "-",
+        "requestId": "e2401e92-8e05-4315-b2b8-1054bb814ad8",
+        "durationMs": 3
+      },
+      "createdAt": "2026-09-01T19:04:06.340Z"
     }
-  ]
+  ],
+  "platformSettings": {
+    "commissionPct": 10,
+    "taxWithholdingPct": 0,
+    "minPayoutThreshold": 500,
+    "vendorAutoApproval": false,
+    "maintenanceMode": false,
+    "publicEventDirectory": true
+  },
+  "payouts": []
 }

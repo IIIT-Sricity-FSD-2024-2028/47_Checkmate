@@ -20,6 +20,10 @@ export type ArrayCollectionName =
   | 'activityLogs'
   | 'staffTasks';
 
+// The whole "database". There is no SQL server: every collection lives in one
+// JSON file (back-end/data/database.json) that is read once at startup, kept in
+// memory, and rewritten after each change. OnModuleInit is a Nest lifecycle hook
+// that Nest calls automatically once this provider is ready.
 @Injectable()
 export class DataService implements OnModuleInit {
   private readonly logger = new Logger(DataService.name);
@@ -34,8 +38,18 @@ export class DataService implements OnModuleInit {
   }
 
   onModuleInit() {
+    // Derived fields are recomputed from their source records at every boot, so a
+    // hand-edited or stale database.json cannot leave the app showing a workload
+    // or an availability count that its own rules disagree with.
+    this.recomputeDerivedFields();
     this.save();
     this.logger.log(`EMS Persistence Engine active. Database file: ${this.dbFilePath}`);
+  }
+
+  /** Rebuilds every value the app calculates rather than stores. */
+  private recomputeDerivedFields() {
+    this.data.staff.forEach((member) => this.triggerStaffAssignmentChanged(member.id));
+    this.triggerAllResourceAllocations();
   }
 
   /**
@@ -50,6 +64,9 @@ export class DataService implements OnModuleInit {
       if (existsSync(this.dbFilePath)) {
         const raw = readFileSync(this.dbFilePath, 'utf8');
         const parsed = JSON.parse(raw);
+        // Spread the seed first, then the saved file on top. That way a collection
+        // added to seed.ts later still appears for users whose database.json
+        // predates it, instead of coming back undefined and crashing a page.
         const merged: AppData = {
           ...structuredClone(seedData),
           ...parsed,
@@ -210,6 +227,8 @@ export class DataService implements OnModuleInit {
     return (this.data as any)[name];
   }
 
+  // Builds the next id like EVT012 / U007: strip non-digits from every existing
+  // id, take the highest, add one, pad to 3 digits.
   public nextId(list: Array<{ id: string }>, prefix: string): string {
     const max = list.reduce((acc, item) => {
       const numeric = Number(String(item.id).replace(/\D/g, ''));
@@ -221,6 +240,10 @@ export class DataService implements OnModuleInit {
   // ==========================================================================
   // AUTOMATED DATABASE TRIGGERS & REFERENTIAL INTEGRITY IMPLEMENTATION
   // ==========================================================================
+  // These stand in for what a real SQL database would do with triggers and
+  // foreign keys. create()/update()/remove() above call into them, so a single
+  // API call can cascade: confirming an event creates a booking, which is what
+  // makes revenue move on the dashboards.
 
   private triggerEventCreated(event: EventRecord) {
     if (!this.data.monitorProgress[event.id]) {
@@ -235,6 +258,9 @@ export class DataService implements OnModuleInit {
     });
   }
 
+  // THE REVENUE RULE. When an event crosses into confirmed/approved for the first
+  // time, bill it: create the matching booking row. Guarded so re-saving an
+  // already-confirmed event does not double-charge.
   private triggerEventUpdated(oldEvent: EventRecord, newEvent: EventRecord) {
     const confirmedStatuses = ['confirmed', 'approved', 'Confirmed', 'Approved'];
 
@@ -272,6 +298,8 @@ export class DataService implements OnModuleInit {
     }
   }
 
+  // Approving a vendor application promotes it into two real records: a vendor
+  // entity, and a user account so they can actually log in.
   private triggerVendorApplicationUpdated(oldApp: VendorApplication, newApp: VendorApplication) {
     if (newApp.status === 'approved' && oldApp.status !== 'approved') {
       const vendorExists = this.data.vendors.some((v) => v.name.toLowerCase() === newApp.businessName.toLowerCase());
@@ -310,6 +338,8 @@ export class DataService implements OnModuleInit {
     }
   }
 
+  // Recomputes a staff member's workload from their live assignments, so the
+  // number on the vendor's Manage Staff page is always derived, never typed in.
   public triggerStaffAssignmentChanged(staffId: string) {
     if (!staffId) return;
     const staff = this.data.staff.find((s) => s.id === staffId || s.name === staffId);
@@ -327,6 +357,8 @@ export class DataService implements OnModuleInit {
     staff.assignedEvents = activeAssignments.map((a) => a.eventId || a.eventName);
   }
 
+  // Recomputes availability for every resource: total stock minus whatever is
+  // currently allocated to an event. Damaged/maintenance stock is never available.
   public triggerAllResourceAllocations() {
     const allocatedTotals: Record<string, number> = {};
 
@@ -349,6 +381,8 @@ export class DataService implements OnModuleInit {
     });
   }
 
+  // Post-event cleanup: hand resources back to the pool, close out staff
+  // assignments, and mark the progress bars complete.
   public releaseEventAllocations(eventId: string) {
     if (this.data.resourceAllocations[eventId]) {
       this.data.resourceAllocations[eventId].forEach((item) => {
@@ -371,6 +405,8 @@ export class DataService implements OnModuleInit {
     }
   }
 
+  // Deleting an event must not leave assignments/tasks/bookings pointing at an id
+  // that no longer exists -- this is the manual equivalent of ON DELETE CASCADE.
   private cascadeDeleteEvent(eventId: string) {
     delete this.data.resourceAllocations[eventId];
     delete this.data.monitorProgress[eventId];

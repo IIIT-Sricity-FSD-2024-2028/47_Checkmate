@@ -7,8 +7,17 @@ Backend:
 ```bash
 cd back-end
 npm install
+cp .env.example .env    # required — see below
+npm run build
 npm run start
 ```
+
+**The `cp .env.example .env` step is required.** `.env` is gitignored, so a fresh
+clone does not have one. Without it the CORS allowlist is empty and the app
+rejects browser requests with no visible error, and `JWT_SECRET` falls back to a
+default that must not be used outside local development.
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
 API base URL: `http://localhost:3000/api`
 
@@ -18,7 +27,13 @@ Generated Swagger JSON: `back-end/docs/swagger.json`
 
 Frontend:
 
-Open the HTML pages under `front-end/pages/` in a browser while the backend is running. The shared frontend stores call the NestJS APIs with an `x-role` header and no authentication.
+The backend serves the frontend, so there is no second server to start. Sign in at
+`http://localhost:3000/front-end/pages/Login/signin.html`.
+
+Authentication uses JWTs. Logging in returns a signed token that the frontend
+stores in `sessionStorage` and sends as `Authorization: Bearer <token>` on every
+later request. The user's role is read from the token, so it cannot be changed by
+the client.
 
 Seed login accounts:
 
