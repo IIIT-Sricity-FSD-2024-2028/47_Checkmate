@@ -9,6 +9,7 @@
 window.DB = (() => {
 
   const API = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+
   // Dynamically resolve role from session or active page for proper RBAC
   function getActiveRole() {
     try {
@@ -604,19 +605,26 @@ window.DB = (() => {
   function getSession() {
     // Read from login-set session (sessionStorage per-tab, fallback to localStorage)
     try {
-      const s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
-      if (s && s.user) {
-        // Hydrate full user context including profile
-        return {
-          ...s.user,
-          id: s.user.id || s.user.userId || '',
-          user: s.user.name || s.user.user || s.user,
-          name: s.user.name || s.user.user || s.user,
-          email: s.user.email || '',
-          role: s.user.role || s.role || 'Client',
-        };
+      const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.user && typeof s.user === 'object' && (s.user.email || s.user.name)) {
+          // Hydrate full user context including profile
+          return {
+            ...s.user,
+            id: s.user.id || s.user.userId || '',
+            user: s.user.name || s.user.user || s.user,
+            name: s.user.name || s.user.user || s.user,
+            email: s.user.email || '',
+            role: s.user.role || s.role || 'vendor',
+          };
+        }
       }
     } catch {}
+
+    // Fallback to backend session cache if available
+    const backendSession = _cache.session;
+    if (backendSession && backendSession.email) return backendSession;
 
     const ctx = getTenantContext();
     return {
@@ -668,4 +676,4 @@ window.DB = (() => {
     get _cache() { return _cache; },
   };
 
-})();
+})();

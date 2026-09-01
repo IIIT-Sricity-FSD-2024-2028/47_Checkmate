@@ -27,7 +27,8 @@ global.XMLHttpRequest = class {
     }
   }
 };
-const dataJs = fs.readFileSync('/home/mouli/FFSD1/47_Checkmate/front-end/scripts/vendor_js/data.js', 'utf8');
+const path = require('path');
+const dataJs = fs.readFileSync(path.join(__dirname, 'scripts/vendor_js/data.js'), 'utf8');
 eval(dataJs);
 
 console.log("Session:", DB.getSession());

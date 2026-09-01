@@ -233,6 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let current = selectedResources[resId]?.qty || 0;
 
                 if (action === 'inc') {
+                    if (current >= avail.available) {
+                        if (typeof Toast !== 'undefined') Toast.show(`Only ${avail.available} unit(s) available for this resource.`, 'warn');
+                        return;
+                    }
                     current++;
                 } else if (action === 'dec' && current > 0) {
                     current--;

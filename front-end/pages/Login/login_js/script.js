@@ -50,7 +50,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showError(message) {
-    alert(message);
+    // Remove any existing error banner first
+    document.querySelectorAll('.checkmate-login-error').forEach(el => el.remove());
+    const errDiv = document.createElement('div');
+    errDiv.className = 'checkmate-login-error';
+    errDiv.style.cssText = 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px;animation:fadeIn 0.3s ease;';
+    errDiv.innerHTML = `<span style="font-size:16px;">&#9888;</span> <span>${message}</span>`;
+    // Insert before the first button inside the active form
+    const activeForm = document.querySelector('form') || document.querySelector('.form-card');
+    if (activeForm) {
+      const firstBtn = activeForm.querySelector('button, .btn-continue, .btn-submit');
+      if (firstBtn) {
+        firstBtn.parentNode.insertBefore(errDiv, firstBtn);
+      } else {
+        activeForm.appendChild(errDiv);
+      }
+    } else {
+      // Last resort: top of body
+      document.body.insertAdjacentElement('afterbegin', errDiv);
+    }
+    // Auto-remove after 6 seconds
+    setTimeout(() => errDiv.remove(), 6000);
   }
 
   const cursorGlow = document.createElement('div');
@@ -82,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       particle.style.left = `${Math.random() * 100}%`;
       particle.style.top = `${Math.random() * 100}%`;
       particle.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      particle.style.animationDelay = `${Math.random() * 2}s`;
+      particle.animationDelay = `${Math.random() * 2}s`;
       rightPanel.appendChild(particle);
     }
   }
@@ -204,8 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = e.currentTarget;
       submitBtn.innerHTML = '<span style="animation: pulse 1s infinite;">Creating account...</span>';
       try {
-        const endpoint = data.role === 'Staff' ? 'auth/register' : 'auth/register';
-        const payload = api('POST', endpoint, {
+        const payload = api('POST', 'auth/register', {
           name: `${data.firstName} ${data.lastName}`.trim(),
           email: data.email,
           phone: data.phone,

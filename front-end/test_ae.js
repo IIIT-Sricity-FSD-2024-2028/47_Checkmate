@@ -1,8 +1,9 @@
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const fs = require('fs');
+const path = require('path');
 
-const html = fs.readFileSync('/home/mouli/FFSD1/47_Checkmate/front-end/pages/staff/AssignedEvents.html', 'utf8');
+const html = fs.readFileSync(path.join(__dirname, 'pages/staff/AssignedEvents.html'), 'utf8');
 const dom = new JSDOM(html, { runScripts: "dangerously", resources: "usable" });
 
 // We need to inject data.js before the scripts run, or mock DB.
