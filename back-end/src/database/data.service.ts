@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException, Logger, OnModuleInit } from '@nestjs/common';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { AppData, ActivityLog, EventRecord, Resource, StaffMember, VendorApplication } from '../domain/models';
+import { AppData, ActivityLog, Booking, EventRecord, Resource, StaffMember, VendorApplication } from '../domain/models';
 import { seedData } from './seed';
+import { calculateCommissionSplit, DEFAULT_COMMISSION_RATE } from '../common/constants/finance.constants';
 
 export type ArrayCollectionName =
   | 'users'
@@ -35,6 +36,7 @@ export class DataService implements OnModuleInit {
   constructor() {
     this.data = this.loadPersistentData();
     this.ensureStaffAccounts();
+    this.normalizeBookingCommissions();
   }
 
   onModuleInit() {
@@ -85,6 +87,24 @@ export class DataService implements OnModuleInit {
     }
 
     return structuredClone(seedData);
+  }
+
+  /**
+   * Ensures all bookings in storage have valid 10%/90% commission split data
+   */
+  private normalizeBookingCommissions(): void {
+    if (!this.data.bookings) return;
+    this.data.bookings.forEach((b: Booking) => {
+      if (b.commissionAmount === undefined || b.vendorPayoutAmount === undefined) {
+        const split = calculateCommissionSplit(b.cost, b.commissionRate || DEFAULT_COMMISSION_RATE);
+        b.commissionRate = split.commissionRate;
+        b.commissionAmount = split.commissionAmount;
+        b.vendorPayoutAmount = split.vendorPayoutAmount;
+      }
+      if (!b.payoutStatus) {
+        b.payoutStatus = String(b.status).toLowerCase() === 'completed' && b.paymentStatus === 'paid' ? 'settled' : 'pending';
+      }
+    });
   }
 
   /**
@@ -267,7 +287,8 @@ export class DataService implements OnModuleInit {
     if (confirmedStatuses.includes(String(newEvent.status)) && !confirmedStatuses.includes(String(oldEvent.status))) {
       const existingBooking = this.data.bookings.find((b) => b.eventName === newEvent.name || (b as any).eventId === newEvent.id);
       if (!existingBooking) {
-        const cost = newEvent.budget || newEvent.estimatedCost || 0;
+        const cost = Number(newEvent.budget || newEvent.estimatedCost || 0);
+        const split = calculateCommissionSplit(cost, DEFAULT_COMMISSION_RATE);
         this.data.bookings.push({
           id: this.nextId(this.data.bookings, 'BK'),
           eventId: newEvent.id,
@@ -280,6 +301,10 @@ export class DataService implements OnModuleInit {
           cost,
           advancePaid: 0,
           paymentStatus: 'unpaid',
+          commissionRate: split.commissionRate,
+          commissionAmount: split.commissionAmount,
+          vendorPayoutAmount: split.vendorPayoutAmount,
+          payoutStatus: 'pending',
           created: new Date().toISOString().slice(0, 10),
         });
       }

@@ -108,16 +108,16 @@
         </div>
 
         <!-- Stat Cards -->
-        <div class="stats-grid">
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
           <div class="stat-card">
             <div class="stat-card__top">
               <div class="stat-icon stat-icon--blue">
                 <i data-lucide="calendar"></i>
               </div>
-              <span class="stat-trend up">↗ +12%</span>
+              <span class="stat-trend up">↗ Active</span>
             </div>
             <div class="stat-label">Pending Requests</div>
-            <div class="stat-value">12</div>
+            <div class="stat-value">0</div>
           </div>
 
           <div class="stat-card">
@@ -125,10 +125,10 @@
               <div class="stat-icon stat-icon--green">
                 <i data-lucide="trending-up"></i>
               </div>
-              <span class="stat-trend up">↗ +12%</span>
+              <span class="stat-trend up">↗ Live</span>
             </div>
             <div class="stat-label">Active Events</div>
-            <div class="stat-value">8</div>
+            <div class="stat-value">0</div>
           </div>
 
           <div class="stat-card">
@@ -136,10 +136,10 @@
               <div class="stat-icon stat-icon--purple">
                 <i data-lucide="gift"></i>
               </div>
-              <span class="stat-trend up">↗ +12%</span>
+              <span class="stat-trend up">Ready</span>
             </div>
             <div class="stat-label">Available Resources</div>
-            <div class="stat-value">156</div>
+            <div class="stat-value">0</div>
           </div>
 
           <div class="stat-card">
@@ -147,10 +147,21 @@
               <div class="stat-icon stat-icon--orange">
                 <i data-lucide="user-check"></i>
               </div>
-              <span class="stat-trend up">↗ +12%</span>
+              <span class="stat-trend up">Roster</span>
             </div>
             <div class="stat-label">Available Staff</div>
-            <div class="stat-value">24</div>
+            <div class="stat-value">0</div>
+          </div>
+
+          <div class="stat-card" style="background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(16,185,129,0.02) 100%); border-color: rgba(34,197,94,0.25);">
+            <div class="stat-card__top">
+              <div class="stat-icon stat-icon--green" style="background: rgba(34,197,94,0.2); color: #22c55e;">
+                <i data-lucide="dollar-sign"></i>
+              </div>
+              <span class="stat-trend up" style="background: rgba(34,197,94,0.15); color: #22c55e; font-weight:600;">90% Net Payout</span>
+            </div>
+            <div class="stat-label">Net Earnings (After 10% Fee)</div>
+            <div class="stat-value" style="color: #22c55e;" id="vendorNetEarnings">$0.00</div>
           </div>
         </div>
 

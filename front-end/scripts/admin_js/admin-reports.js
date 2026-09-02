@@ -86,18 +86,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const revTbody = document.getElementById('revenueReportTbody');
         if(revTbody) {
             if(bookings.length === 0) {
-                revTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No bookings match the filters.</td></tr>`;
+                revTbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No bookings match the filters.</td></tr>`;
             } else {
                 revTbody.innerHTML = bookings.map(b => {
                     const evtName = b.eventName || rawEvents.find(e => e.id === b.eventId)?.name || b.eventId || '-';
+                    const cost = Number(b.cost) || 0;
+                    const fee = Number(b.commissionAmount !== undefined ? b.commissionAmount : cost * 0.10);
+                    const net = Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : cost - fee);
+                    const pStatus = (b.payoutStatus || 'pending').toLowerCase();
+                    const pBadge = pStatus === 'settled' 
+                        ? `<span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size:11px;"><i data-lucide="check" style="width:10px; height:10px; margin-right:2px;"></i>Settled</span>`
+                        : `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size:11px;">Pending</span>`;
+
                     return `
                     <tr>
                         <td style="font-family: monospace;">${b.id}</td>
                         <td style="font-weight: 500;">${evtName}</td>
                         <td>${b.client || '-'}</td>
                         <td>${b.vendor || '-'}</td>
-                        <td style="color: var(--pink); font-weight: bold;">$${(Number(b.cost) || 0).toLocaleString()}</td>
+                        <td style="color: var(--text-primary); font-weight: 600;">$${cost.toLocaleString()}</td>
+                        <td style="color: #ef4444; font-weight: 600;">-$${fee.toLocaleString()}</td>
+                        <td style="color: #22c55e; font-weight: 700;">$${net.toLocaleString()}</td>
                         <td><span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676;">${b.status || 'Confirmed'}</span></td>
+                        <td>${pBadge}</td>
                     </tr>
                 `}).join('');
             }
@@ -252,12 +263,15 @@ document.addEventListener('DOMContentLoaded', () => {
         exportBtn.addEventListener('click', () => {
             if (rawBookings.length === 0) return alert('No data to export.');
             
-            let csv = 'Booking ID,Event Name,Client Name,Vendor Name,Total Cost ($),Status\\n';
+            let csv = 'Booking ID,Event Name,Client Name,Vendor Name,Gross Cost ($),Platform Fee 10% ($),Vendor Net Payout 90% ($),Booking Status,Payout Status\n';
             rawBookings.forEach(b => {
-                const cost = b.cost || 0;
+                const cost = Number(b.cost) || 0;
+                const fee = Number(b.commissionAmount !== undefined ? b.commissionAmount : cost * 0.10);
+                const net = Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : cost - fee);
                 const evtName = b.eventName || rawEvents.find(e => e.id === b.eventId)?.name || b.eventId || '';
+                const pStatus = b.payoutStatus || 'pending';
                 // Quote values to safely escape commas
-                csv += `"${b.id}","${evtName}","${b.client || ''}","${b.vendor || ''}","${cost}","${b.status || ''}"\\n`;
+                csv += `"${b.id}","${evtName}","${b.client || ''}","${b.vendor || ''}","${cost}","${fee}","${net}","${b.status || ''}","${pStatus}"\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv' });

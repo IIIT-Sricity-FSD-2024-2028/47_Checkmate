@@ -1,5 +1,5 @@
 -- ============================================================================
--- Event Management System (EMS) - Fully Normalized Database Schema (3NF / BCNF)
+-- Event Management System (EMS) - Fully Normalized Relational Database Schema (3NF / BCNF)
 -- Engine: MySQL 8.0+ / MariaDB 10.5+ / InnoDB
 -- Character Set: utf8mb4 / utf8mb4_unicode_ci
 -- ============================================================================
@@ -503,6 +503,12 @@ CREATE TABLE bookings (
     cost DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     advance_paid DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     payment_status ENUM('unpaid', 'partially_paid', 'paid', 'refunded') NOT NULL DEFAULT 'unpaid',
+    commission_rate DECIMAL(5, 4) NOT NULL DEFAULT 0.1000,
+    commission_amount DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    vendor_payout_amount DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    payout_status ENUM('pending', 'processing', 'settled', 'cancelled') NOT NULL DEFAULT 'pending',
+    settled_at TIMESTAMP NULL,
+    settled_by VARCHAR(50) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (booking_id),
@@ -510,12 +516,15 @@ CREATE TABLE bookings (
     INDEX idx_bookings_client (client_id),
     INDEX idx_bookings_vendor (vendor_id),
     INDEX idx_bookings_status (status),
+    INDEX idx_bookings_payout_status (payout_status),
     CONSTRAINT fk_bookings_event FOREIGN KEY (event_id) 
         REFERENCES events (event_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_bookings_client FOREIGN KEY (client_id) 
         REFERENCES users (user_id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_bookings_vendor FOREIGN KEY (vendor_id) 
-        REFERENCES vendors (vendor_id) ON DELETE SET NULL ON UPDATE CASCADE
+        REFERENCES vendors (vendor_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_bookings_settled_by FOREIGN KEY (settled_by) 
+        REFERENCES users (user_id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -841,12 +850,25 @@ FOR EACH ROW
 BEGIN
     DECLARE new_booking_id VARCHAR(50);
     DECLARE existing_booking_count INT;
+    DECLARE event_cost DECIMAL(12, 2);
+    DECLARE comm_rate DECIMAL(5, 4);
+    DECLARE comm_amt DECIMAL(12, 2);
+    DECLARE vendor_payout DECIMAL(12, 2);
 
     IF NEW.status IN ('confirmed', 'approved') AND OLD.status = 'pending' THEN
         SELECT COUNT(*) INTO existing_booking_count FROM bookings WHERE event_id = NEW.event_id;
         IF existing_booking_count = 0 THEN
+            SET event_cost = IF(NEW.budget > 0, NEW.budget, NEW.estimated_cost);
+            SET comm_rate = 0.1000;
+            SET comm_amt = ROUND(event_cost * comm_rate, 2);
+            SET vendor_payout = ROUND(event_cost - comm_amt, 2);
             SET new_booking_id = CONCAT('BK', LPAD((SELECT IFNULL(MAX(CAST(SUBSTRING(booking_id, 3) AS UNSIGNED)), 0) + 1 FROM bookings), 3, '0'));
-            INSERT INTO bookings (booking_id, event_id, event_name, client, client_id, vendor, vendor_id, status, cost, advance_paid, payment_status)
+
+            INSERT INTO bookings (
+                booking_id, event_id, event_name, client, client_id, vendor, vendor_id, 
+                status, cost, advance_paid, payment_status,
+                commission_rate, commission_amount, vendor_payout_amount, payout_status
+            )
             VALUES (
                 new_booking_id,
                 NEW.event_id,
@@ -856,9 +878,13 @@ BEGIN
                 IFNULL(NEW.vendor_name, 'Vendor'),
                 NEW.vendor_id,
                 'Confirmed',
-                IF(NEW.budget > 0, NEW.budget, NEW.estimated_cost),
+                event_cost,
                 0.00,
-                'unpaid'
+                'unpaid',
+                comm_rate,
+                comm_amt,
+                vendor_payout,
+                'pending'
             );
         END IF;
     END IF;
@@ -999,6 +1025,9 @@ SELECT
     IFNULL(SUM(b.cost), 0.00) AS total_gross_revenue,
     IFNULL(SUM(CASE WHEN b.status IN ('Confirmed', 'Completed', 'In Progress') THEN b.cost ELSE 0 END), 0.00) AS confirmed_revenue,
     IFNULL(SUM(CASE WHEN b.status IN ('Pending', 'Requested') THEN b.cost ELSE 0 END), 0.00) AS pending_revenue,
+    IFNULL(SUM(b.commission_amount), 0.00) AS platform_commission_earned,
+    IFNULL(SUM(CASE WHEN b.payout_status = 'pending' THEN b.vendor_payout_amount ELSE 0.00 END), 0.00) AS pending_vendor_payouts,
+    IFNULL(SUM(CASE WHEN b.payout_status = 'settled' THEN b.vendor_payout_amount ELSE 0.00 END), 0.00) AS settled_vendor_payouts,
     IFNULL(AVG(b.cost), 0.00) AS average_booking_value,
     (SELECT COUNT(*) FROM events WHERE status = 'completed') AS completed_events_count,
     (SELECT COUNT(*) FROM events WHERE status = 'live') AS live_events_count,
@@ -1175,10 +1204,11 @@ INSERT INTO venue_allocations (event_id, venue_id, start_time, end_time, allocat
 ON DUPLICATE KEY UPDATE allocation_status=VALUES(allocation_status);
 
 -- 12. Seed Bookings
-INSERT INTO bookings (booking_id, event_id, event_name, client, client_id, vendor, vendor_id, status, cost, advance_paid, payment_status, created_at) VALUES
-('BK001', 'EVT002', 'Sarah and Mike Wedding', 'Sarah Ahmed', 'U004', 'Elite Events Co.', 'V001', 'Confirmed', 25000.00, 10000.00, 'partially_paid', '2026-03-01 00:00:00'),
-('BK002', 'EVT003', 'Annual Corporate Gala', 'Emily Carter', 'U004', 'Elite Events Co.', 'V001', 'In Progress', 18000.00, 18000.00, 'paid', '2026-03-20 00:00:00'),
-('BK003', 'EVT001', 'Tech Summit 2026', 'Tech Corp', 'U004', 'Dream Events Ltd.', 'V002', 'Pending', 45000.00, 0.00, 'unpaid', '2026-04-01 00:00:00')
+INSERT INTO bookings (booking_id, event_id, event_name, client, client_id, vendor, vendor_id, status, cost, advance_paid, payment_status, commission_rate, commission_amount, vendor_payout_amount, payout_status, settled_at, settled_by, created_at) VALUES
+('BK001', 'EVT002', 'Sarah and Mike Wedding', 'Sarah Ahmed', 'U004', 'Elite Events Co.', 'V001', 'Confirmed', 25000.00, 10000.00, 'partially_paid', 0.1000, 2500.00, 22500.00, 'pending', NULL, NULL, '2026-03-01 00:00:00'),
+('BK002', 'EVT003', 'Annual Corporate Gala', 'Emily Carter', 'U004', 'Elite Events Co.', 'V001', 'In Progress', 18000.00, 18000.00, 'paid', 0.1000, 1800.00, 16200.00, 'pending', NULL, NULL, '2026-03-20 00:00:00'),
+('BK003', 'EVT001', 'Tech Summit 2026', 'Tech Corp', 'U004', 'Dream Events Ltd.', 'V002', 'Pending', 45000.00, 0.00, 'unpaid', 0.1000, 4500.00, 40500.00, 'pending', NULL, NULL, '2026-04-01 00:00:00'),
+('BK004', 'EVT006', '25th Anniversary Banquet', 'Emily Carter', 'U004', 'Elite Events Co.', 'V001', 'Completed', 22000.00, 22000.00, 'paid', 0.1000, 2200.00, 19800.00, 'settled', '2026-05-02 14:30:00', 'U001', '2026-04-20 00:00:00')
 ON DUPLICATE KEY UPDATE event_name=VALUES(event_name);
 
 -- 13. Seed Vendor Applications

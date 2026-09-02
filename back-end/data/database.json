@@ -79,26 +79,6 @@
       "status": "Active",
       "created": "2026-04-15",
       "passwordHash": "23f51cef4f24ffa2d7f5d3a378e2204e20f99d78f27d2215b140bf6af34602eb"
-    },
-    {
-      "name": "Jane Client",
-      "email": "jane@client.com",
-      "phone": "+1 555-8888",
-      "role": "Client",
-      "status": "Active",
-      "created": "2026-08-28",
-      "passwordHash": "92f471091a5f0daa7ccde99f0383a9bbb286f9c05341dea3dedf4d5ede2cb361",
-      "id": "U010"
-    },
-    {
-      "id": "U011",
-      "name": "seafood rr",
-      "email": "cefan123@gmail.com",
-      "phone": "1234567890",
-      "role": "Vendor",
-      "status": "Active",
-      "created": "2026-08-28",
-      "passwordHash": "e09ceaa1cc8c05c5119600dbfbb379c02bd3901a62c2c5d91cb2691418d79e81"
     }
   ],
   "events": [
@@ -355,140 +335,18 @@
       ]
     },
     {
-      "status": "pending",
-      "createdBy": "client",
-      "submittedAt": "2026-08-28T06:07:16.402Z",
-      "name": "Global Sustainability Summit 2026",
+      "name": "International Tech Expo 2026",
       "type": "Conference",
-      "date": "2026-08-25",
-      "time": "10:00 AM",
-      "venue": "Skyline Ballroom",
-      "people": 250,
-      "guests": 250,
-      "notes": "Green catering and digital badges required.",
-      "client": "Emily Carter",
+      "date": "2026-09-15",
+      "venue": "Grand Ballroom",
+      "budget": 60000,
+      "status": "confirmed",
+      "client": "Global Tech Inc",
       "clientId": "U004",
-      "clientEmail": "emily.client@example.com",
       "vendor": "Elite Events Co.",
       "vendorId": "V001",
-      "budget": 35000,
-      "budgetRange": "$30,000 - $50,000",
-      "requestedResources": [
-        {
-          "resourceId": "R001",
-          "resourceName": "Audio System Premium",
-          "quantity": 2,
-          "pricePerDay": 500
-        },
-        {
-          "resourceId": "R002",
-          "resourceName": "LED Screen 4K Wall",
-          "quantity": 2,
-          "pricePerDay": 300
-        }
-      ],
-      "requestedStaff": [
-        {
-          "staffId": "S001",
-          "staffName": "Mike Johnson",
-          "role": "Event Coordinator"
-        }
-      ],
-      "estimatedCost": 1600,
-      "id": "EVT008"
-    },
-    {
-      "status": "pending",
       "createdBy": "client",
-      "submittedAt": "2026-08-28T06:11:56.495Z",
-      "id": "EVT011",
-      "name": "sai wedding",
-      "type": "Wedding",
-      "date": "2026-08-12",
-      "time": "9:00 AM",
-      "venue": "pub",
-      "people": 1000,
-      "guests": 1000,
-      "notes": "wfrwerfrfevev",
-      "client": "Emily Carter",
-      "clientId": "U004",
-      "clientEmail": "emily.client@example.com",
-      "vendor": "Sound & Lighting Pro, Elite Events Co.",
-      "vendorId": "V004",
-      "vendorIds": [
-        "V004",
-        "V001"
-      ],
-      "vendors": [
-        "Sound & Lighting Pro",
-        "Elite Events Co."
-      ],
-      "categories": [
-        "Wedding",
-        "Equipment",
-        "Furniture"
-      ],
-      "budget": 10005000,
-      "budgetRange": "$1,000 - $5,000",
-      "requestedResources": [
-        {
-          "resourceId": "R004",
-          "resourceName": "Stage Lighting Rig Pro",
-          "category": "Equipment",
-          "quantity": 1,
-          "pricePerDay": 800,
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        },
-        {
-          "resourceId": "R008",
-          "resourceName": "Wireless Microphone Set (4x)",
-          "category": "Equipment",
-          "quantity": 1,
-          "pricePerDay": 120,
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        },
-        {
-          "resourceId": "R006",
-          "resourceName": "Ergonomic Banquet Chairs",
-          "category": "Furniture",
-          "quantity": 5,
-          "pricePerDay": 8,
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        }
-      ],
-      "requestedStaff": [
-        {
-          "staffId": "S004",
-          "staffName": "Marcus Sterling",
-          "role": "AV Specialist",
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        },
-        {
-          "staffId": "S005",
-          "staffName": "Chloe Bennett",
-          "role": "Guest Relations Lead",
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        },
-        {
-          "staffId": "S003",
-          "staffName": "David Kim",
-          "role": "Lead Sound Engineer",
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        }
-      ],
-      "estimatedCost": 960
+      "id": "EVT008"
     }
   ],
   "resources": [
@@ -1051,49 +909,6 @@
       ],
       "status": "pending",
       "submittedAt": "2026-04-27T14:40:00.000Z"
-    },
-    {
-      "status": "approved",
-      "submittedAt": "2026-08-28T06:16:47.157Z",
-      "vendorName": "seafood rr",
-      "businessName": "food provider",
-      "email": "cefan123@gmail.com",
-      "phone": "1234567890",
-      "category": "General",
-      "documents": [
-        {
-          "name": "medvqa.jpg",
-          "type": "license"
-        },
-        {
-          "name": "DSC_0286.JPG",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "e09ceaa1cc8c05c5119600dbfbb379c02bd3901a62c2c5d91cb2691418d79e81",
-      "id": "VAPP004",
-      "decidedAt": "2026-08-28T06:18:13.426Z"
-    },
-    {
-      "status": "pending",
-      "submittedAt": "2026-08-28T06:25:39.743Z",
-      "vendorName": "md rr",
-      "businessName": "washing man",
-      "email": "mdr123@gmail.com",
-      "phone": "1234567890",
-      "category": "General",
-      "documents": [
-        {
-          "name": "imagesjepa.jpg",
-          "type": "license"
-        },
-        {
-          "name": "DSC_0321.JPG",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "Mouli@008",
-      "id": "VAPP005"
     }
   ],
   "vendors": [
@@ -1138,15 +953,6 @@
       "category": "Catering & Hospitality",
       "status": "Approved",
       "rating": 4.6
-    },
-    {
-      "id": "V007",
-      "name": "food provider",
-      "businessName": "food provider",
-      "category": "General",
-      "status": "Approved",
-      "rating": 5,
-      "created": "2026-08-28"
     }
   ],
   "venues": [
@@ -1213,10 +1019,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Confirmed",
       "cost": 25000,
       "advancePaid": 12500,
       "paymentStatus": "partially_paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 2500,
+      "vendorPayoutAmount": 22500,
+      "payoutStatus": "pending",
       "created": "2026-04-10"
     },
     {
@@ -1226,10 +1037,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "In Progress",
       "cost": 18000,
       "advancePaid": 18000,
       "paymentStatus": "paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 1800,
+      "vendorPayoutAmount": 16200,
+      "payoutStatus": "pending",
       "created": "2026-04-15"
     },
     {
@@ -1239,10 +1055,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Confirmed",
       "cost": 32000,
       "advancePaid": 16000,
       "paymentStatus": "partially_paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 3200,
+      "vendorPayoutAmount": 28800,
+      "payoutStatus": "pending",
       "created": "2026-04-18"
     },
     {
@@ -1252,11 +1073,54 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Completed",
       "cost": 22000,
       "advancePaid": 22000,
       "paymentStatus": "paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 2200,
+      "vendorPayoutAmount": 19800,
+      "payoutStatus": "settled",
+      "settledAt": "2026-05-02T14:30:00.000Z",
+      "settledBy": "U001",
       "created": "2026-04-20"
+    },
+    {
+      "id": "BK005",
+      "eventId": "EVT008",
+      "eventName": "International Tech Expo 2026",
+      "client": "Global Tech Inc",
+      "clientId": "U004",
+      "vendor": "Elite Events Co.",
+      "vendorId": "V001",
+      "status": "Confirmed",
+      "cost": 60000,
+      "advancePaid": 0,
+      "paymentStatus": "unpaid",
+      "commissionRate": 0.1,
+      "commissionAmount": 6000,
+      "vendorPayoutAmount": 54000,
+      "payoutStatus": "pending",
+      "created": "2026-09-02"
+    },
+    {
+      "eventName": "Summer Charity Gala",
+      "client": "Emily Carter",
+      "clientId": "U004",
+      "vendor": "Aurora Event Studio",
+      "vendorId": "V002",
+      "cost": 35000,
+      "status": "Confirmed",
+      "commissionRate": 0.1,
+      "commissionAmount": 3500,
+      "vendorPayoutAmount": 31500,
+      "payoutStatus": "settled",
+      "paymentStatus": "unpaid",
+      "created": "2026-09-02",
+      "id": "BK006",
+      "settledAt": "2026-09-02T12:43:08.504Z",
+      "settledBy": "U001"
     }
   ],
   "messages": {
@@ -1400,37 +1264,11 @@
       "registration": 0,
       "event": 0,
       "breakdown": 0
-    },
-    "EVT011": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
     }
   },
   "staffRequests": [],
   "staffTasks": [],
-  "vendorDocSubmission": {
-    "status": "pending",
-    "submittedAt": "2026-08-28T06:25:39.743Z",
-    "vendorName": "md rr",
-    "businessName": "washing man",
-    "email": "mdr123@gmail.com",
-    "phone": "1234567890",
-    "category": "General",
-    "documents": [
-      {
-        "name": "imagesjepa.jpg",
-        "type": "license"
-      },
-      {
-        "name": "DSC_0321.JPG",
-        "type": "tax_id"
-      }
-    ],
-    "passwordHash": "Mouli@008",
-    "id": "VAPP005"
-  },
+  "vendorDocSubmission": null,
   "session": {
     "id": "U004",
     "user": "Emily Carter",
@@ -1462,42 +1300,9 @@
         "solution": "Deploy backup staff from reserve pool",
         "status": "ready"
       }
-    ],
-    "EVT011": [
-      {
-        "id": "CP_EVT011_1787897613794_0",
-        "problem": "Weather Emergency",
-        "trigger": "Severe weather alert",
-        "solution": "Move to indoor backup ballroom",
-        "status": "ready"
-      },
-      {
-        "id": "CP_EVT011_1787897613794_1",
-        "problem": "Power Outage",
-        "trigger": "Electrical failure",
-        "solution": "Activate backup generators and battery AV pack",
-        "status": "ready"
-      },
-      {
-        "id": "CP_EVT011_1787897613794_2",
-        "problem": "Staff No-Show",
-        "trigger": "Staff absence >30min",
-        "solution": "Deploy backup staff from reserve pool",
-        "status": "ready"
-      }
     ]
   },
-  "adminChatMessages": [
-    {
-      "id": "msg_1787898004647",
-      "sender": "seafood rr",
-      "senderRole": "vendor",
-      "senderEmail": "cefan123@gmail.com",
-      "text": "hi da boii",
-      "timestamp": "2026-08-28T06:20:04.647Z",
-      "type": "message"
-    }
-  ],
+  "adminChatMessages": [],
   "coordinationMessages": [
     {
       "id": "CM001",
@@ -1567,616 +1372,30 @@
       "id": "LOG002",
       "userId": "SYS",
       "userRole": "System",
-      "action": "VENDOR_APPLICATION_APPROVED",
-      "entityType": "VENDOR_APPLICATION",
-      "entityId": "VAPP003",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT008",
       "details": {
-        "businessName": "Test Events LLC",
-        "vendorName": "Test Vendor"
+        "name": "International Tech Expo 2026",
+        "type": "Conference",
+        "date": "2026-09-15",
+        "budget": 60000
       },
-      "createdAt": "2026-08-28T06:06:41.802Z"
+      "createdAt": "2026-09-02T12:43:08.482Z"
     },
     {
       "id": "LOG003",
       "userId": "SYS",
       "userRole": "System",
-      "action": "EVENT_CREATED",
+      "action": "EVENT_STATUS_CHANGED",
       "entityType": "EVENT",
       "entityId": "EVT008",
       "details": {
-        "name": "Global Sustainability Summit 2026",
-        "type": "Conference",
-        "date": "2026-08-25",
-        "budget": 35000
-      },
-      "createdAt": "2026-08-28T06:07:16.402Z"
-    },
-    {
-      "id": "LOG004",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT009",
-      "details": {
-        "name": "Automated Test Gala 2026",
-        "type": "Gala",
-        "date": "2026-08-30",
-        "budget": 20000
-      },
-      "createdAt": "2026-08-28T06:08:09.333Z"
-    },
-    {
-      "id": "LOG005",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT010",
-      "details": {
-        "name": "Booking Auto-Gen Test",
-        "type": "Corporate",
-        "date": "2026-09-15",
-        "budget": 35000
-      },
-      "createdAt": "2026-08-28T06:08:09.336Z"
-    },
-    {
-      "id": "LOG006",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_STATUS_CHANGED",
-      "entityType": "EVENT",
-      "entityId": "EVT010",
-      "details": {
         "oldStatus": "pending",
         "newStatus": "confirmed",
-        "eventName": "Booking Auto-Gen Test"
+        "eventName": "International Tech Expo 2026"
       },
-      "createdAt": "2026-08-28T06:08:09.337Z"
-    },
-    {
-      "id": "LOG007",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT011",
-      "details": {
-        "name": "sai wedding",
-        "type": "Wedding",
-        "date": "2026-08-12",
-        "budget": 10005000
-      },
-      "createdAt": "2026-08-28T06:11:56.509Z"
-    },
-    {
-      "id": "LOG008",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "VENDOR_APPLICATION_APPROVED",
-      "entityType": "VENDOR_APPLICATION",
-      "entityId": "VAPP004",
-      "details": {
-        "businessName": "food provider",
-        "vendorName": "seafood rr"
-      },
-      "createdAt": "2026-08-28T06:18:13.426Z"
-    },
-    {
-      "id": "LOG009",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT012",
-      "details": {
-        "name": "E2E Test Gala",
-        "type": "Gala",
-        "date": "2026-12-01",
-        "budget": 75000
-      },
-      "createdAt": "2026-09-01T13:09:43.243Z"
-    },
-    {
-      "id": "LOG010",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_STATUS_CHANGED",
-      "entityType": "EVENT",
-      "entityId": "EVT012",
-      "details": {
-        "oldStatus": "pending",
-        "newStatus": "confirmed",
-        "eventName": "E2E Test Gala"
-      },
-      "createdAt": "2026-09-01T13:09:43.667Z"
-    },
-    {
-      "id": "LOG011",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "POST /api/users",
-      "entityType": "HTTP",
-      "entityId": "27edb4c0-a90c-44f3-bf05-7584fb3e8e3f",
-      "details": {
-        "method": "POST",
-        "url": "/api/users",
-        "statusCode": 400,
-        "role": "admin",
-        "email": "-",
-        "requestId": "27edb4c0-a90c-44f3-bf05-7584fb3e8e3f",
-        "durationMs": 5
-      },
-      "createdAt": "2026-09-01T13:09:58.775Z"
-    },
-    {
-      "id": "LOG012",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "PATCH /api/users/197609",
-      "entityType": "HTTP",
-      "entityId": "c0363ac0-5771-4cd6-bee6-2468faea96bf",
-      "details": {
-        "method": "PATCH",
-        "url": "/api/users/197609",
-        "statusCode": 400,
-        "role": "admin",
-        "email": "-",
-        "requestId": "c0363ac0-5771-4cd6-bee6-2468faea96bf",
-        "durationMs": 4
-      },
-      "createdAt": "2026-09-01T13:09:59.229Z"
-    },
-    {
-      "id": "LOG013",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/users/197609",
-      "entityType": "HTTP",
-      "entityId": "8ab61bcc-d8cd-4700-b84c-1d060dba894f",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/users/197609",
-        "statusCode": 404,
-        "role": "admin",
-        "email": "-",
-        "requestId": "8ab61bcc-d8cd-4700-b84c-1d060dba894f",
-        "durationMs": 3
-      },
-      "createdAt": "2026-09-01T13:09:59.330Z"
-    },
-    {
-      "id": "LOG014",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "POST /api/vendor-applications",
-      "entityType": "HTTP",
-      "entityId": "97fb0b3e-4d11-4639-b5ab-978386405ae6",
-      "details": {
-        "method": "POST",
-        "url": "/api/vendor-applications",
-        "statusCode": 400,
-        "role": "-",
-        "email": "-",
-        "requestId": "97fb0b3e-4d11-4639-b5ab-978386405ae6",
-        "durationMs": 2
-      },
-      "createdAt": "2026-09-01T13:09:59.541Z"
-    },
-    {
-      "id": "LOG015",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "POST /api/vendor-applications",
-      "entityType": "HTTP",
-      "entityId": "76ba230d-f241-480e-a889-7377eb3ec68f",
-      "details": {
-        "method": "POST",
-        "url": "/api/vendor-applications",
-        "statusCode": 400,
-        "role": "-",
-        "email": "-",
-        "requestId": "76ba230d-f241-480e-a889-7377eb3ec68f",
-        "durationMs": 2
-      },
-      "createdAt": "2026-09-01T13:10:10.155Z"
-    },
-    {
-      "id": "LOG016",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "POST /api/users",
-      "entityType": "HTTP",
-      "entityId": "98627f9f-f1af-49d0-b161-87ba541c3aa5",
-      "details": {
-        "method": "POST",
-        "url": "/api/users",
-        "statusCode": 201,
-        "role": "admin",
-        "email": "-",
-        "requestId": "98627f9f-f1af-49d0-b161-87ba541c3aa5",
-        "durationMs": 5
-      },
-      "createdAt": "2026-09-01T13:10:26.886Z"
-    },
-    {
-      "id": "LOG017",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "PATCH /api/users/U012",
-      "entityType": "HTTP",
-      "entityId": "b269b1c0-a29c-4515-a69a-83a1cfa199a1",
-      "details": {
-        "method": "PATCH",
-        "url": "/api/users/U012",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "b269b1c0-a29c-4515-a69a-83a1cfa199a1",
-        "durationMs": 7
-      },
-      "createdAt": "2026-09-01T13:10:27.313Z"
-    },
-    {
-      "id": "LOG018",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/users/U012",
-      "entityType": "HTTP",
-      "entityId": "f1f8e3bd-0cba-414e-bbf2-21d9348ff5cd",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/users/U012",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "f1f8e3bd-0cba-414e-bbf2-21d9348ff5cd",
-        "durationMs": 4
-      },
-      "createdAt": "2026-09-01T13:10:27.599Z"
-    },
-    {
-      "id": "LOG019",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "POST /api/vendor-applications",
-      "entityType": "HTTP",
-      "entityId": "b57abb4f-11e9-4577-9ef7-98367d12cd12",
-      "details": {
-        "method": "POST",
-        "url": "/api/vendor-applications",
-        "statusCode": 201,
-        "role": "-",
-        "email": "-",
-        "requestId": "b57abb4f-11e9-4577-9ef7-98367d12cd12",
-        "durationMs": 10
-      },
-      "createdAt": "2026-09-01T13:10:27.745Z"
-    },
-    {
-      "id": "LOG020",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "PATCH /api/vendor-applications/VAPP006/decision",
-      "entityType": "HTTP",
-      "entityId": "d42d9516-8757-449f-b53f-69d1daf96c30",
-      "details": {
-        "method": "PATCH",
-        "url": "/api/vendor-applications/VAPP006/decision",
-        "statusCode": 400,
-        "role": "admin",
-        "email": "-",
-        "requestId": "d42d9516-8757-449f-b53f-69d1daf96c30",
-        "durationMs": 5
-      },
-      "createdAt": "2026-09-01T13:10:28.187Z"
-    },
-    {
-      "id": "LOG021",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "VENDOR_APPLICATION_APPROVED",
-      "entityType": "VENDOR_APPLICATION",
-      "entityId": "VAPP006",
-      "details": {
-        "businessName": "E2E Decor Co",
-        "vendorName": "Test Vendor"
-      },
-      "createdAt": "2026-09-01T13:10:39.019Z"
-    },
-    {
-      "id": "LOG022",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "PATCH /api/vendor-applications/VAPP006/decision",
-      "entityType": "HTTP",
-      "entityId": "543e0711-99e0-4e18-abd2-4e627829bf25",
-      "details": {
-        "method": "PATCH",
-        "url": "/api/vendor-applications/VAPP006/decision",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "543e0711-99e0-4e18-abd2-4e627829bf25",
-        "durationMs": 5
-      },
-      "createdAt": "2026-09-01T13:10:39.023Z"
-    },
-    {
-      "id": "LOG023",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_DELETED",
-      "entityType": "EVENT",
-      "entityId": "EVT012",
-      "details": {
-        "eventId": "EVT012"
-      },
-      "createdAt": "2026-09-01T13:48:09.964Z"
-    },
-    {
-      "id": "LOG024",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/vendor-applications/VAPP006",
-      "entityType": "HTTP",
-      "entityId": "341e05ff-a61d-44b6-8449-4f1d8f72a099",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/vendor-applications/VAPP006",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "341e05ff-a61d-44b6-8449-4f1d8f72a099",
-        "durationMs": 3
-      },
-      "createdAt": "2026-09-01T13:48:10.047Z"
-    },
-    {
-      "id": "LOG025",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/vendors/V008",
-      "entityType": "HTTP",
-      "entityId": "1b88dd62-a933-4d15-b295-1dbf3aae0ede",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/vendors/V008",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "1b88dd62-a933-4d15-b295-1dbf3aae0ede",
-        "durationMs": 3
-      },
-      "createdAt": "2026-09-01T13:48:46.656Z"
-    },
-    {
-      "id": "LOG026",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT012",
-      "details": {
-        "name": "Automated Test Gala 2026",
-        "type": "Gala",
-        "date": "2026-08-30",
-        "budget": 20000
-      },
-      "createdAt": "2026-09-01T13:53:51.540Z"
-    },
-    {
-      "id": "LOG027",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT013",
-      "details": {
-        "name": "Booking Auto-Gen Test",
-        "type": "Corporate",
-        "date": "2026-09-15",
-        "budget": 35000
-      },
-      "createdAt": "2026-09-01T13:53:51.544Z"
-    },
-    {
-      "id": "LOG028",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_STATUS_CHANGED",
-      "entityType": "EVENT",
-      "entityId": "EVT013",
-      "details": {
-        "oldStatus": "pending",
-        "newStatus": "confirmed",
-        "eventName": "Booking Auto-Gen Test"
-      },
-      "createdAt": "2026-09-01T13:53:51.545Z"
-    },
-    {
-      "id": "LOG029",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_DELETED",
-      "entityType": "EVENT",
-      "entityId": "EVT012",
-      "details": {
-        "eventId": "EVT012"
-      },
-      "createdAt": "2026-09-01T13:55:35.419Z"
-    },
-    {
-      "id": "LOG030",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_DELETED",
-      "entityType": "EVENT",
-      "entityId": "EVT013",
-      "details": {
-        "eventId": "EVT013"
-      },
-      "createdAt": "2026-09-01T13:55:35.494Z"
-    },
-    {
-      "id": "LOG031",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/vendor-applications/VAPP003",
-      "entityType": "HTTP",
-      "entityId": "2d23c660-65fc-4c6a-9d06-54f6aa312525",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/vendor-applications/VAPP003",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "2d23c660-65fc-4c6a-9d06-54f6aa312525",
-        "durationMs": 4
-      },
-      "createdAt": "2026-09-01T15:20:13.015Z"
-    },
-    {
-      "id": "LOG032",
-      "userId": "SYS",
-      "userRole": "admin",
-      "action": "DELETE /api/vendors/V006",
-      "entityType": "HTTP",
-      "entityId": "3e27d4e8-c2cf-46d7-89f7-78d648ec6a0e",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/vendors/V006",
-        "statusCode": 200,
-        "role": "admin",
-        "email": "-",
-        "requestId": "3e27d4e8-c2cf-46d7-89f7-78d648ec6a0e",
-        "durationMs": 1
-      },
-      "createdAt": "2026-09-01T15:20:13.096Z"
-    },
-    {
-      "id": "LOG033",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_DELETED",
-      "entityType": "EVENT",
-      "entityId": "EVT009",
-      "details": {
-        "eventId": "EVT009"
-      },
-      "createdAt": "2026-09-01T18:27:31.107Z"
-    },
-    {
-      "id": "LOG034",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_DELETED",
-      "entityType": "EVENT",
-      "entityId": "EVT010",
-      "details": {
-        "eventId": "EVT010"
-      },
-      "createdAt": "2026-09-01T18:27:31.188Z"
-    },
-    {
-      "id": "LOG035",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "POST /api/vendor-applications",
-      "entityType": "HTTP",
-      "entityId": "3759b17b-f2e9-42af-88ea-a0e128da5df4",
-      "details": {
-        "method": "POST",
-        "url": "/api/vendor-applications",
-        "statusCode": 201,
-        "role": "-",
-        "email": "-",
-        "requestId": "3759b17b-f2e9-42af-88ea-a0e128da5df4",
-        "durationMs": 2
-      },
-      "createdAt": "2026-09-01T18:42:43.616Z"
-    },
-    {
-      "id": "LOG036",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "DELETE /api/users/U012",
-      "entityType": "HTTP",
-      "entityId": "ccc12216-47ab-4fbb-b5d7-545d362fc4bf",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/users/U012",
-        "statusCode": 200,
-        "role": "-",
-        "email": "-",
-        "requestId": "ccc12216-47ab-4fbb-b5d7-545d362fc4bf",
-        "durationMs": 2
-      },
-      "createdAt": "2026-09-01T18:43:20.715Z"
-    },
-    {
-      "id": "LOG037",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "DELETE /api/users/U013",
-      "entityType": "HTTP",
-      "entityId": "03a249db-a803-4867-82dc-45309f326981",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/users/U013",
-        "statusCode": 200,
-        "role": "-",
-        "email": "-",
-        "requestId": "03a249db-a803-4867-82dc-45309f326981",
-        "durationMs": 3
-      },
-      "createdAt": "2026-09-01T18:43:20.810Z"
-    },
-    {
-      "id": "LOG038",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "DELETE /api/vendor-applications/VAPP006",
-      "entityType": "HTTP",
-      "entityId": "cf5b959d-0e9d-4b53-a467-08c3b3f61031",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/vendor-applications/VAPP006",
-        "statusCode": 200,
-        "role": "-",
-        "email": "-",
-        "requestId": "cf5b959d-0e9d-4b53-a467-08c3b3f61031",
-        "durationMs": 2
-      },
-      "createdAt": "2026-09-01T18:43:20.885Z"
-    },
-    {
-      "id": "LOG039",
-      "userId": "SYS",
-      "userRole": "-",
-      "action": "DELETE /api/users/U012",
-      "entityType": "HTTP",
-      "entityId": "e2401e92-8e05-4315-b2b8-1054bb814ad8",
-      "details": {
-        "method": "DELETE",
-        "url": "/api/users/U012",
-        "statusCode": 200,
-        "role": "-",
-        "email": "-",
-        "requestId": "e2401e92-8e05-4315-b2b8-1054bb814ad8",
-        "durationMs": 3
-      },
-      "createdAt": "2026-09-01T19:04:06.340Z"
+      "createdAt": "2026-09-02T12:43:08.492Z"
     }
-  ],
-  "platformSettings": {
-    "commissionPct": 10,
-    "taxWithholdingPct": 0,
-    "minPayoutThreshold": 500,
-    "vendorAutoApproval": false,
-    "maintenanceMode": false,
-    "publicEventDirectory": true
-  },
-  "payouts": []
+  ]
 }

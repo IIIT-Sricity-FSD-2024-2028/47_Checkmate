@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resources  = DB.getMyResources();
     const staff      = DB.getMyStaff();
     const assignments = DB.getAll('staffAssignments') || [];
+    const earnings   = typeof DB.getMyEarnings === 'function' ? DB.getMyEarnings() : { netEarnings: 0 };
 
     const pending    = events.filter(e => e.status === 'pending').length;
     const active     = events.filter(e => e.status === 'confirmed' || e.status === 'live').length;
@@ -31,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (label === 'Active Events')       valEl.textContent = active;
       if (label === 'Available Resources') valEl.textContent = availRes;
       if (label === 'Available Staff')     valEl.textContent = availStaff;
+      if (label && label.includes('Net Earnings')) {
+        valEl.textContent = '$' + (Number(earnings.netEarnings) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
     });
   }
 
