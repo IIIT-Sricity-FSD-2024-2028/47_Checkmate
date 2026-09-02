@@ -67,78 +67,71 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h1 class="page-title">Financial Payouts</h1>
-          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Track and release vendor balances</p>
+          <h1 class="page-title">Financial Payouts & Revenue Model</h1>
+          <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Track 10% platform commission revenue and release 90% vendor balances</p>
         </div>
         <div class="topbar__right">
-          <button class="notif-btn">
-            <i data-lucide="bell"></i>
-            <span class="notif-badge">3</span>
+          <button class="notif-btn" id="refreshPayoutsBtn" title="Refresh Financial Data" style="display:flex; align-items:center; gap:6px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); padding:8px 14px; border-radius:6px; font-size:13px; cursor:pointer;">
+            <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Refresh
           </button>
         </div>
       </header>
 
       <div class="content">
-        <section class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <!-- Live Commission & Payout Metric Cards -->
+        <section class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
             <div class="stat-card">
                 <div class="stat-card__top">
-                    <div class="stat-icon stat-icon--blue"><i data-lucide="dollar-sign"></i></div>
-                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+12% vs yesterday</span>
+                    <div class="stat-icon stat-icon--blue"><i data-lucide="pie-chart"></i></div>
+                    <span class="status-badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">10% Platform Commission</span>
                 </div>
-                <div class="stat-label">Platform Revenue (YTD)</div>
-                <div class="stat-value">$145,200.00</div>
+                <div class="stat-label">Platform Revenue Earned</div>
+                <div class="stat-value" id="statPlatformCommission">$0.00</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="statGrossVolume">Across Gross Volume: $0.00</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
-                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px;">-5% vs yesterday</span>
+                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Awaiting Release</span>
                 </div>
-                <div class="stat-label">Pending Payouts Check</div>
-                <div class="stat-value" style="color: var(--pink);">$18,450.00</div>
+                <div class="stat-label">Pending Vendor Balances (90%)</div>
+                <div class="stat-value" style="color: var(--pink);" id="statPendingPayouts">$0.00</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="statPendingCount">0 pending vendor payouts</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--green"><i data-lucide="check-circle"></i></div>
-                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px;">+8% vs yesterday</span>
+                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Settled</span>
                 </div>
-                <div class="stat-label">Total Paid to Vendors</div>
-                <div class="stat-value">$890,000.00</div>
+                <div class="stat-label">Total Paid to Vendors (90%)</div>
+                <div class="stat-value" style="color: #22c55e;" id="statSettledPayouts">$0.00</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="statSettledCount">0 completed transfers</div>
             </div>
         </section>
+
+        <!-- Pending Payouts Section -->
         <div class="table-container" style="margin-bottom: 32px;">
             <div class="data-table-wrapper">
-                <div class="table-header-title">Vendor Balances Pending Payout</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <div>
+                        <div class="table-header-title" style="margin-bottom: 2px;">Vendor Balances Pending Payout</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Net 90% payout calculated automatically after 10% platform commission deduction</div>
+                    </div>
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Vendor Name</th>
-                            <th>Completed Events</th>
-                            <th>Total Earned</th>
+                            <th>Event Name & ID</th>
+                            <th>Total Gross Value</th>
                             <th>Platform Fee (10%)</th>
-                            <th>Net Payout</th>
+                            <th>Net Payout (90%)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="pendingPayoutsBody">
-                        <tr style="transition: opacity 0.3s;">
-                            <td class="vendor-name-col">Dream Events Ltd.</td>
-                            <td>4</td>
-                            <td class="earned-col">$15,000.00</td>
-                            <td class="fee-col"><span style="color: #ef4444;">-$1,500.00</span></td>
-                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$13,500.00</td>
-                            <td class="actions-cell">
-                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
-                            </td>
-                        </tr>
-                        <tr style="transition: opacity 0.3s;">
-                            <td class="vendor-name-col">Melody Music</td>
-                            <td>12</td>
-                            <td class="earned-col">$5,500.00</td>
-                            <td class="fee-col"><span style="color: #ef4444;">-$550.00</span></td>
-                            <td class="net-col" style="font-weight: 700; color: #22c55e;">$4,950.00</td>
-                            <td class="actions-cell">
-                                <button class="action-btn approve-btn release-funds-btn"><i data-lucide="send"></i> Release Funds</button>
-                            </td>
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">Loading pending vendor balances...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -149,17 +142,20 @@
         <div class="table-container">
             <div class="data-table-wrapper">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div class="table-header-title" style="margin-bottom: 0;">Completed Payouts</div>
+                    <div>
+                        <div class="table-header-title" style="margin-bottom: 2px;">Completed & Settled Payouts</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Historical record of all disbursed vendor payouts and retained commission</div>
+                    </div>
                     <div style="display: flex; gap: 12px; align-items: center;">
                         <div style="position: relative;">
                             <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted);"></i>
-                            <input type="text" id="completedSearch" placeholder="Search vendors..." style="padding: 8px 12px 8px 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
+                            <input type="text" id="completedSearch" placeholder="Search vendors or events..." style="padding: 8px 12px 8px 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
                         </div>
                         <select id="completedSort" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer;">
-                            <option value="date-desc">Newest First</option>
-                            <option value="date-asc">Oldest First</option>
-                            <option value="amt-desc">Highest Payout</option>
-                            <option value="amt-asc">Lowest Payout</option>
+                            <option value="date-desc">Newest Settled First</option>
+                            <option value="date-asc">Oldest Settled First</option>
+                            <option value="amt-desc">Highest Payout Amount</option>
+                            <option value="amt-asc">Lowest Payout Amount</option>
                         </select>
                     </div>
                 </div>
@@ -167,16 +163,18 @@
                     <thead>
                         <tr>
                             <th>Vendor Name</th>
-                            <th>Events Count</th>
-                            <th>Total Earned</th>
+                            <th>Event Name</th>
+                            <th>Total Gross</th>
                             <th>Platform Fee (10%)</th>
-                            <th>Payout Amount</th>
-                            <th>Payout Date</th>
+                            <th>Net Payout (90%)</th>
+                            <th>Settlement Date</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="completedPayoutsBody">
-                        <!-- Populated by JS -->
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">Loading completed payouts history...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -184,149 +182,236 @@
       </div>
     </main>
   </div>
-  <div id="globalNotifModal" class="notif-modal-overlay">
-    <div class="notif-window">
-      <div class="notif-header">
-        <h3>Notifications</h3>
-        <button class="notif-close-btn"><i data-lucide="x"></i></button>
-      </div>
-      <div class="notif-body">
-        <div class="notif-item notif-item--blue">
-          <div class="notif-item-icon blue"><i data-lucide="clipboard-check"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">New Vendor Approval</div>
-            <div class="notif-item-desc">Starlight Events has submitted their documents for review.</div>
-            <span class="notif-item-time">10 mins ago</span>
-          </div>
-        </div>
-        <div class="notif-item notif-item--pink">
-          <div class="notif-item-icon pink"><i data-lucide="message-square"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">New Message</div>
-            <div class="notif-item-desc">Melody Music replied in the Coordination Hub.</div>
-            <span class="notif-item-time">1 hour ago</span>
-          </div>
-        </div>
-        <div class="notif-item notif-item--orange">
-          <div class="notif-item-icon orange"><i data-lucide="alert-triangle"></i></div>
-          <div class="notif-item-content">
-            <div class="notif-item-title">Issue Reported</div>
-            <div class="notif-item-desc">Jane Smith reported a payment gateway error.</div>
-            <span class="notif-item-time">2 hours ago</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+
   <script src="../../scripts/admin_js/admin-alerts.js"></script>
-  <script>lucide.createIcons();</script>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
+      const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+      const pendingBody = document.getElementById('pendingPayoutsBody');
       const completedBody = document.getElementById('completedPayoutsBody');
       const searchInput = document.getElementById('completedSearch');
       const sortSelect = document.getElementById('completedSort');
-      
-      const generateFakePayouts = () => {
-          const vendors = ['Starlight Events', 'Audio AllStars', 'Classic Catering', 'Floral Fantasies', 'DJ Beats', 'Party Planners Inc', 'SecureGuard', 'Elegant Edibles', 'Photo Memories', 'LightShow Pro'];
-          const payouts = [];
-          
-          let date = new Date();
-          for(let i=0; i<10; i++) {
-              const events = Math.floor(Math.random() * 15) + 1;
-              const earned = Math.floor(Math.random() * 20000) + 1000;
-              const fee = earned * 0.1;
-              date.setDate(date.getDate() - Math.floor(Math.random() * 3));
-              
-              payouts.push({
-                  vendor: vendors[i],
-                  events: events,
-                  earned: earned,
-                  fee: fee,
-                  net: earned - fee,
-                  timestamp: new Date(date),
-                  dateStr: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-              });
-          }
-          return payouts;
-      };
+      const refreshBtn = document.getElementById('refreshPayoutsBtn');
 
-      let completedData = generateFakePayouts();
+      let allBookingsData = [];
+      let completedData = [];
 
       const formatMoney = (amt) => {
-          return '$' + amt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const num = Number(amt) || 0;
+          return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       };
 
+      const fmtDate = (dStr) => {
+          if (!dStr) return 'Recently';
+          const d = new Date(dStr);
+          if (isNaN(d.getTime())) return dStr;
+          return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      };
+
+      // API Helper
+      const apiCall = async (method, path, body) => {
+          try {
+              const res = await fetch(`${API_BASE}/${path}`, {
+                  method,
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'x-role': 'admin',
+                      'x-user-id': 'U001'
+                  },
+                  body: body ? JSON.stringify(body) : undefined
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return await res.json();
+          } catch (err) {
+              console.warn(`[Payouts API] Error calling ${method} ${path}:`, err.message);
+              return null;
+          }
+      };
+
+      // Load live financial data
+      const loadFinancialData = async () => {
+          // Try /api/bookings/commissions first, fallback to /api/bookings
+          let res = await apiCall('GET', 'bookings/commissions');
+          if (res && res.items) {
+              allBookingsData = res.items;
+          } else {
+              const fallback = await apiCall('GET', 'bookings');
+              allBookingsData = Array.isArray(fallback) ? fallback : [];
+          }
+
+          // Calculate and normalize 10%/90% values
+          allBookingsData = allBookingsData.map(b => {
+              const cost = Number(b.cost || 0);
+              const rate = Number(b.commissionRate !== undefined ? b.commissionRate : 0.10);
+              const fee = Number(b.commissionAmount !== undefined ? b.commissionAmount : cost * rate);
+              const net = Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : cost - fee);
+              const status = (b.payoutStatus || 'pending').toLowerCase();
+
+              return {
+                  ...b,
+                  cost,
+                  commissionRate: rate,
+                  commissionAmount: fee,
+                  vendorPayoutAmount: net,
+                  payoutStatus: status
+              };
+          });
+
+          updateMetricCards();
+          renderPendingTable();
+          renderCompletedTable();
+      };
+
+      // Update stat cards
+      const updateMetricCards = () => {
+          const gross = allBookingsData.reduce((sum, b) => sum + b.cost, 0);
+          const commission = allBookingsData.reduce((sum, b) => sum + b.commissionAmount, 0);
+          
+          const pending = allBookingsData.filter(b => b.payoutStatus === 'pending');
+          const pendingTotal = pending.reduce((sum, b) => sum + b.vendorPayoutAmount, 0);
+          
+          const settled = allBookingsData.filter(b => b.payoutStatus === 'settled');
+          const settledTotal = settled.reduce((sum, b) => sum + b.vendorPayoutAmount, 0);
+
+          document.getElementById('statPlatformCommission').textContent = formatMoney(commission);
+          document.getElementById('statGrossVolume').textContent = `Across Gross Volume: ${formatMoney(gross)}`;
+          
+          document.getElementById('statPendingPayouts').textContent = formatMoney(pendingTotal);
+          document.getElementById('statPendingCount').textContent = `${pending.length} pending vendor payout${pending.length === 1 ? '' : 's'}`;
+          
+          document.getElementById('statSettledPayouts').textContent = formatMoney(settledTotal);
+          document.getElementById('statSettledCount').textContent = `${settled.length} completed transfer${settled.length === 1 ? '' : 's'}`;
+      };
+
+      // Render Pending Table
+      const renderPendingTable = () => {
+          const pending = allBookingsData.filter(b => b.payoutStatus === 'pending');
+          if (pending.length === 0) {
+              pendingBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);"><i data-lucide="check-circle-2" style="width:20px; vertical-align:middle; margin-right:6px; color:#22c55e;"></i> All vendor balances are fully settled. No pending payouts!</td></tr>`;
+              if (window.lucide) lucide.createIcons();
+              return;
+          }
+
+          pendingBody.innerHTML = pending.map(b => `
+              <tr data-booking-id="${b.id}" style="transition: opacity 0.3s;">
+                  <td class="vendor-name-col" style="font-weight:600; color:var(--text-primary);">
+                      <i data-lucide="store" style="width:14px; height:14px; margin-right:6px; color:var(--pink); vertical-align:middle;"></i>${b.vendor || 'Vendor'}
+                  </td>
+                  <td>
+                      <div style="font-weight:500;">${b.eventName || 'Event'}</div>
+                      <div style="font-size:11px; color:var(--text-muted); font-family:monospace;">${b.id} ${b.eventId ? '• ' + b.eventId : ''}</div>
+                  </td>
+                  <td class="earned-col" style="font-weight:500;">${formatMoney(b.cost)}</td>
+                  <td class="fee-col"><span style="color: #ef4444; font-weight:600;">-${formatMoney(b.commissionAmount)}</span> <span style="font-size:11px; color:var(--text-muted);">(10%)</span></td>
+                  <td class="net-col" style="font-weight: 700; color: #22c55e; font-size:14px;">${formatMoney(b.vendorPayoutAmount)}</td>
+                  <td class="actions-cell">
+                      <button class="action-btn approve-btn release-funds-btn" data-id="${b.id}" style="background:var(--pink); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:transform 0.15s, opacity 0.15s;">
+                          <i data-lucide="send" style="width:14px; height:14px;"></i> Release Funds
+                      </button>
+                  </td>
+              </tr>
+          `).join('');
+          if (window.lucide) lucide.createIcons();
+      };
+
+      // Render Completed Table
       const renderCompletedTable = () => {
-          const query = searchInput.value.toLowerCase();
-          const sortVal = sortSelect.value;
-          
-          let filtered = completedData.filter(p => p.vendor.toLowerCase().includes(query));
-          
+          completedData = allBookingsData.filter(b => b.payoutStatus === 'settled');
+          const query = searchInput ? searchInput.value.toLowerCase() : '';
+          const sortVal = sortSelect ? sortSelect.value : 'date-desc';
+
+          let filtered = completedData.filter(p => 
+              (p.vendor || '').toLowerCase().includes(query) || 
+              (p.eventName || '').toLowerCase().includes(query) ||
+              (p.id || '').toLowerCase().includes(query)
+          );
+
           filtered.sort((a, b) => {
-              if(sortVal === 'date-desc') return b.timestamp - a.timestamp;
-              if(sortVal === 'date-asc') return a.timestamp - b.timestamp;
-              if(sortVal === 'amt-desc') return b.net - a.net;
-              if(sortVal === 'amt-asc') return a.net - b.net;
+              const timeA = a.settledAt ? new Date(a.settledAt).getTime() : (a.created ? new Date(a.created).getTime() : 0);
+              const timeB = b.settledAt ? new Date(b.settledAt).getTime() : (b.created ? new Date(b.created).getTime() : 0);
+              if (sortVal === 'date-desc') return timeB - timeA;
+              if (sortVal === 'date-asc') return timeA - timeB;
+              if (sortVal === 'amt-desc') return (b.vendorPayoutAmount || 0) - (a.vendorPayoutAmount || 0);
+              if (sortVal === 'amt-asc') return (a.vendorPayoutAmount || 0) - (b.vendorPayoutAmount || 0);
               return 0;
           });
 
+          if (filtered.length === 0) {
+              completedBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No completed payouts match the search filter.</td></tr>`;
+              if (window.lucide) lucide.createIcons();
+              return;
+          }
+
           completedBody.innerHTML = filtered.map(p => `
               <tr>
-                  <td class="vendor-name-col">${p.vendor}</td>
-                  <td>${p.events}</td>
-                  <td>${formatMoney(p.earned)}</td>
-                  <td><span style="color: #ef4444;">-${formatMoney(p.fee)}</span></td>
-                  <td style="font-weight: 700; color: #22c55e;">${formatMoney(p.net)}</td>
-                  <td><span style="color: var(--text-muted); font-size: 13px;">${p.dateStr}</span></td>
-                  <td><span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600;"><i data-lucide="check-circle-2" style="width:12px; margin-right:4px;"></i>Paid</span></td>
+                  <td class="vendor-name-col" style="font-weight:600;">${p.vendor || 'Vendor'}</td>
+                  <td>${p.eventName || 'Event'}</td>
+                  <td>${formatMoney(p.cost)}</td>
+                  <td><span style="color: #ef4444; font-weight:600;">-${formatMoney(p.commissionAmount)}</span> <span style="font-size:11px; color:var(--text-muted);">(10%)</span></td>
+                  <td style="font-weight: 700; color: #22c55e;">${formatMoney(p.vendorPayoutAmount)}</td>
+                  <td><span style="color: var(--text-muted); font-size: 13px;">${fmtDate(p.settledAt || p.created)}</span></td>
+                  <td><span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 600; display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:4px;"><i data-lucide="check-circle-2" style="width:12px; height:12px;"></i>Paid</span></td>
               </tr>
           `).join('');
-          lucide.createIcons();
+          if (window.lucide) lucide.createIcons();
       };
 
-      renderCompletedTable();
-
-      searchInput.addEventListener('input', renderCompletedTable);
-      sortSelect.addEventListener('change', renderCompletedTable);
-
-      const pendingBody = document.getElementById('pendingPayoutsBody');
+      // Handle Release Funds button click
       if (pendingBody) {
-          pendingBody.addEventListener('click', (e) => {
+          pendingBody.addEventListener('click', async (e) => {
               const btn = e.target.closest('.release-funds-btn');
-              if (btn) {
-                  const tr = btn.closest('tr');
-                  const vendorName = tr.querySelector('.vendor-name-col').textContent;
-                  const events = parseInt(tr.cells[1].textContent);
-                  
-                  const parseMoney = (str) => parseFloat(str.replace(/[^0-9.-]+/g,""));
-                  const earned = parseMoney(tr.querySelector('.earned-col').textContent);
-                  const fee = parseMoney(tr.querySelector('.fee-col').textContent);
-                  const net = parseMoney(tr.querySelector('.net-col').textContent);
+              if (!btn || btn.disabled) return;
 
-                  completedData.unshift({
-                      vendor: vendorName,
-                      events: events,
-                      earned: earned,
-                      fee: Math.abs(fee),
-                      net: net,
-                      timestamp: new Date(),
-                      dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                  });
+              const bookingId = btn.getAttribute('data-id');
+              const tr = btn.closest('tr');
+
+              btn.disabled = true;
+              btn.innerHTML = `<i data-lucide="loader" style="width:14px; height:14px; animation:spin 1s linear infinite;"></i> Releasing...`;
+              if (window.lucide) lucide.createIcons();
+
+              // Send settlement request to NestJS backend
+              const res = await apiCall('PATCH', `bookings/${bookingId}/settle`, {
+                  settledBy: 'U001',
+                  note: 'Payout authorized and released by Admin'
+              });
+
+              if (res) {
+                  // Update local state
+                  const idx = allBookingsData.findIndex(b => b.id === bookingId);
+                  if (idx >= 0) {
+                      allBookingsData[idx].payoutStatus = 'settled';
+                      allBookingsData[idx].settledAt = res.settledAt || new Date().toISOString();
+                      allBookingsData[idx].settledBy = 'U001';
+                  }
 
                   tr.style.opacity = '0';
                   setTimeout(() => {
-                      tr.remove();
+                      updateMetricCards();
+                      renderPendingTable();
                       renderCompletedTable();
-                      // We don't strictly need to alert, visual removal is enough feedback.
-                  }, 300);
+                  }, 250);
+              } else {
+                  btn.disabled = false;
+                  btn.innerHTML = `<i data-lucide="send" style="width:14px; height:14px;"></i> Release Funds`;
+                  alert('Could not settle payout on backend. Please ensure the backend server is running.');
+                  if (window.lucide) lucide.createIcons();
               }
           });
       }
+
+      if (searchInput) searchInput.addEventListener('input', renderCompletedTable);
+      if (sortSelect) sortSelect.addEventListener('change', renderCompletedTable);
+      if (refreshBtn) refreshBtn.addEventListener('click', () => {
+          loadFinancialData();
+      });
+
+      // Initial boot
+      loadFinancialData();
   });
   </script>
 
-    <!-- Global Injections -->
-    <script src="../../scripts/profile-modal.js"></script>
-    <script src="../../scripts/welcome-overlay.js"></script>
+  <!-- Global Injections -->
+  <script src="../../scripts/profile-modal.js"></script>
+  <script src="../../scripts/welcome-overlay.js"></script>
 </body>
 </html>

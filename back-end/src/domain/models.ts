@@ -209,6 +209,8 @@ export interface StaffTask {
   completedAt?: string;
 }
 
+export type PayoutStatus = 'pending' | 'processing' | 'settled' | 'cancelled';
+
 export interface Booking {
   id: string;
   eventId?: string;
@@ -221,7 +223,23 @@ export interface Booking {
   cost: number;
   advancePaid?: number;
   paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
+  // ── Commission Revenue Model (10% platform commission / 90% vendor payout) ──
+  commissionRate?: number;       // e.g. 0.10
+  commissionAmount?: number;     // 10% platform commission
+  vendorPayoutAmount?: number;   // 90% net to vendor
+  payoutStatus?: PayoutStatus;   // 'pending' | 'settled'
+  settledAt?: string;            // Timestamp when payout released
+  settledBy?: string;            // Admin User ID who authorized settlement
   created: string;
+}
+
+export interface FinancialAnalyticsSummary {
+  totalBookings: number;
+  grossBookingVolume: number;
+  platformCommissionEarned: number;
+  pendingVendorPayouts: number;
+  settledVendorPayouts: number;
+  averageBookingValue: number;
 }
 
 export interface EventProgressMonitor {

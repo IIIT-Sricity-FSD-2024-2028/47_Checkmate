@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
-import { ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AnalyticsService } from './analytics.service';
 import { StateValueDto } from './state.dto';
@@ -9,8 +9,36 @@ import { StateValueDto } from './state.dto';
 @Controller()
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
-  @Get('analytics/summary') @Roles('admin', 'superuser', 'vendor') summary() { return this.service.summary(); }
-  @Get('snapshot') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') snapshot() { return this.service.snapshot(); }
-  @Get('state/:key') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') stateKey(@Param('key') key: string) { return this.service.stateKey(key); }
-  @Put('state/:key') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') setStateKey(@Param('key') key: string, @Body() dto: StateValueDto) { return this.service.setStateKey(key, dto.value); }
+
+  @Get('analytics/summary')
+  @Roles('admin', 'superuser', 'vendor')
+  @ApiOperation({ summary: 'Get operational and financial summary metrics' })
+  summary() {
+    return this.service.summary();
+  }
+
+  @Get('analytics/financial-summary')
+  @Roles('admin', 'superuser')
+  @ApiOperation({ summary: 'Get executive financial summary with commission and payout breakdown' })
+  financialSummary() {
+    return this.service.financialSummary();
+  }
+
+  @Get('snapshot')
+  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  snapshot() {
+    return this.service.snapshot();
+  }
+
+  @Get('state/:key')
+  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  stateKey(@Param('key') key: string) {
+    return this.service.stateKey(key);
+  }
+
+  @Put('state/:key')
+  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  setStateKey(@Param('key') key: string, @Body() dto: StateValueDto) {
+    return this.service.setStateKey(key, dto.value);
+  }
 }

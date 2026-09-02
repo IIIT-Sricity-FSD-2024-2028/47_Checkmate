@@ -3,6 +3,7 @@ import { hashPassword } from '../../common/security/password';
 import { DecisionDto } from '../../common/dto/action.dto';
 import { DataService } from '../../database/data.service';
 import { CreateVendorApplicationDto, CreateVendorDto, UpdateVendorApplicationDto, UpdateVendorDto } from './dto';
+import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
 @Injectable()
 export class VendorsService {
@@ -61,4 +62,41 @@ export class VendorsService {
     return app;
   }
   removeApplication(id: string) { return this.data.remove('vendorApplications', id); }
+
+  /**
+   * Retrieves financial earnings, platform commission deductions, and payout history for a vendor
+   */
+  getVendorPayouts(vendorId: string) {
+    const vendor = this.findVendor(vendorId);
+    const allBookings = this.data.collection('bookings');
+    const vendorBookings = allBookings.filter(
+      (b) =>
+        (b.vendorId && b.vendorId.toLowerCase() === vendorId.toLowerCase()) ||
+        (b.vendor && vendor && (b.vendor.toLowerCase() === vendor.name.toLowerCase() || b.vendor.toLowerCase() === (vendor.businessName || '').toLowerCase())),
+    );
+
+    const totalEarnedGross = vendorBookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);
+    const platformFeeDeducted = vendorBookings.reduce((sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE), 0);
+    const netPayoutAmount = vendorBookings.reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
+    const pendingPayouts = vendorBookings
+      .filter((b) => (b.payoutStatus || 'pending') === 'pending')
+      .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
+    const settledPayouts = vendorBookings
+      .filter((b) => b.payoutStatus === 'settled')
+      .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
+
+    return {
+      vendorId: vendor.id,
+      vendorName: vendor.name,
+      businessName: vendor.businessName,
+      commissionRate: DEFAULT_COMMISSION_RATE,
+      totalEarnedGross,
+      platformFeeDeducted,
+      netPayoutAmount,
+      pendingPayouts,
+      settledPayouts,
+      completedEventsCount: vendorBookings.filter((b) => String(b.status).toLowerCase() === 'completed').length,
+      bookings: vendorBookings,
+    };
+  }
 }

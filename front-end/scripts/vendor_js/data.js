@@ -470,6 +470,28 @@ window.DB = (() => {
     return all;
   }
 
+  function getMyEarnings() {
+    const bookings = getMyBookings();
+    const totalGross = bookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);
+    const platformFee = bookings.reduce((sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * 0.10), 0);
+    const netEarnings = bookings.reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * 0.90), 0);
+    const pendingPayouts = bookings
+      .filter(b => (b.payoutStatus || 'pending') === 'pending')
+      .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * 0.90), 0);
+    const settledPayouts = bookings
+      .filter(b => b.payoutStatus === 'settled')
+      .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * 0.90), 0);
+
+    return {
+      totalGross,
+      platformFee,
+      netEarnings,
+      pendingPayouts,
+      settledPayouts,
+      bookingsCount: bookings.length
+    };
+  }
+
   /* ── Public API ──────────────────────── */
 
   function init() {
@@ -672,6 +694,8 @@ window.DB = (() => {
     getMarketplacePackages,
     getMyIssues,
     getMyBookings,
+    getMyEarnings,
+    getMyPayouts: getMyEarnings,
     // Expose _cache for debugging
     get _cache() { return _cache; },
   };

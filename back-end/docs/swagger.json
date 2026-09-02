@@ -1839,6 +1839,40 @@
         ]
       }
     },
+    "/api/vendors/{id}/payouts": {
+      "get": {
+        "operationId": "VendorsController_findVendorPayouts",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Vendor applications are submitted by vendors and approved by admin/superuser. Vendor list is readable by operational roles.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get financial payouts and commission breakdown for a vendor",
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
     "/api/vendors/{id}": {
       "get": {
         "operationId": "VendorsController_findVendor",
@@ -2230,6 +2264,55 @@
         ]
       }
     },
+    "/api/bookings/commissions": {
+      "get": {
+        "operationId": "BookingsController_findCommissions",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "payoutStatus",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "eventId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get commission and payout ledger with financial aggregates",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
     "/api/bookings": {
       "get": {
         "operationId": "BookingsController_findAll",
@@ -2432,6 +2515,58 @@
         ]
       }
     },
+    "/api/bookings/{id}/settle": {
+      "patch": {
+        "operationId": "BookingsController_settlePayout",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Admins/superusers manage bookings; vendors and clients may read.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "EVT001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-user-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlePayoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Settle and release vendor payout for a confirmed booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
     "/api/analytics/summary": {
       "get": {
         "operationId": "AnalyticsController_summary",
@@ -2451,6 +2586,32 @@
             "description": ""
           }
         },
+        "summary": "Get operational and financial summary metrics",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/analytics/financial-summary": {
+      "get": {
+        "operationId": "AnalyticsController_financialSummary",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get executive financial summary with commission and payout breakdown",
         "tags": [
           "analytics"
         ]
@@ -3432,6 +3593,10 @@
       "CreateBookingDto": {
         "type": "object",
         "properties": {
+          "eventId": {
+            "type": "string",
+            "example": "EVT001"
+          },
           "eventName": {
             "type": "string",
             "example": "Tech Summit 2026"
@@ -3440,17 +3605,57 @@
             "type": "string",
             "example": "Tech Corp"
           },
+          "clientId": {
+            "type": "string",
+            "example": "U004"
+          },
           "vendor": {
             "type": "string",
             "example": "Dream Events Ltd."
           },
+          "vendorId": {
+            "type": "string",
+            "example": "V002"
+          },
           "status": {
             "type": "string",
-            "example": "Pending"
+            "example": "Confirmed"
           },
           "cost": {
             "type": "number",
             "example": 45000
+          },
+          "advancePaid": {
+            "type": "number",
+            "example": 10000
+          },
+          "paymentStatus": {
+            "type": "string",
+            "example": "unpaid"
+          },
+          "commissionRate": {
+            "type": "number",
+            "example": 0.1
+          },
+          "commissionAmount": {
+            "type": "number",
+            "example": 4500
+          },
+          "vendorPayoutAmount": {
+            "type": "number",
+            "example": 40500
+          },
+          "payoutStatus": {
+            "type": "string",
+            "example": "pending"
+          },
+          "settledAt": {
+            "type": "string",
+            "example": "2026-05-02T14:30:00.000Z"
+          },
+          "settledBy": {
+            "type": "string",
+            "example": "U001"
           },
           "created": {
             "type": "string",
@@ -3462,13 +3667,27 @@
           "client",
           "vendor",
           "status",
-          "cost",
-          "created"
+          "cost"
         ]
       },
       "UpdateBookingDto": {
         "type": "object",
         "properties": {}
+      },
+      "SettlePayoutDto": {
+        "type": "object",
+        "properties": {
+          "settledBy": {
+            "type": "string",
+            "example": "U001",
+            "description": "Admin User ID authorizing payout"
+          },
+          "note": {
+            "type": "string",
+            "example": "Batch payout released via bank transfer",
+            "description": "Settlement audit note"
+          }
+        }
       },
       "StateValueDto": {
         "type": "object",

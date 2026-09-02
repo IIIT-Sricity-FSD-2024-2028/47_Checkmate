@@ -87,7 +87,7 @@
       "phone": "+1 555-9999",
       "role": "Vendor",
       "status": "Active",
-      "created": "2026-08-28",
+      "created": "2026-09-02",
       "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976"
     },
     {
@@ -96,19 +96,9 @@
       "phone": "+1 555-8888",
       "role": "Client",
       "status": "Active",
-      "created": "2026-08-28",
+      "created": "2026-09-02",
       "passwordHash": "92f471091a5f0daa7ccde99f0383a9bbb286f9c05341dea3dedf4d5ede2cb361",
       "id": "U010"
-    },
-    {
-      "id": "U011",
-      "name": "seafood rr",
-      "email": "cefan123@gmail.com",
-      "phone": "1234567890",
-      "role": "Vendor",
-      "status": "Active",
-      "created": "2026-08-28",
-      "passwordHash": "e09ceaa1cc8c05c5119600dbfbb379c02bd3901a62c2c5d91cb2691418d79e81"
     }
   ],
   "events": [
@@ -363,165 +353,6 @@
           "severity": "high"
         }
       ]
-    },
-    {
-      "status": "pending",
-      "createdBy": "client",
-      "submittedAt": "2026-08-28T06:07:16.402Z",
-      "name": "Global Sustainability Summit 2026",
-      "type": "Conference",
-      "date": "2026-08-25",
-      "time": "10:00 AM",
-      "venue": "Skyline Ballroom",
-      "people": 250,
-      "guests": 250,
-      "notes": "Green catering and digital badges required.",
-      "client": "Emily Carter",
-      "clientId": "U004",
-      "clientEmail": "emily.client@example.com",
-      "vendor": "Elite Events Co.",
-      "vendorId": "V001",
-      "budget": 35000,
-      "budgetRange": "$30,000 - $50,000",
-      "requestedResources": [
-        {
-          "resourceId": "R001",
-          "resourceName": "Audio System Premium",
-          "quantity": 2,
-          "pricePerDay": 500
-        },
-        {
-          "resourceId": "R002",
-          "resourceName": "LED Screen 4K Wall",
-          "quantity": 2,
-          "pricePerDay": 300
-        }
-      ],
-      "requestedStaff": [
-        {
-          "staffId": "S001",
-          "staffName": "Mike Johnson",
-          "role": "Event Coordinator"
-        }
-      ],
-      "estimatedCost": 1600,
-      "id": "EVT008"
-    },
-    {
-      "name": "Automated Test Gala 2026",
-      "type": "Gala",
-      "date": "2026-08-30",
-      "venue": "Skyline Ballroom",
-      "budget": 20000,
-      "status": "pending",
-      "client": "Emily Carter",
-      "createdBy": "client",
-      "id": "EVT009"
-    },
-    {
-      "name": "Booking Auto-Gen Test",
-      "type": "Corporate",
-      "date": "2026-09-15",
-      "venue": "Convention Center",
-      "budget": 35000,
-      "status": "confirmed",
-      "client": "Acme Corp",
-      "vendor": "Elite Events Co.",
-      "createdBy": "client",
-      "id": "EVT010"
-    },
-    {
-      "status": "pending",
-      "createdBy": "client",
-      "submittedAt": "2026-08-28T06:11:56.495Z",
-      "id": "EVT011",
-      "name": "sai wedding",
-      "type": "Wedding",
-      "date": "2026-08-12",
-      "time": "9:00 AM",
-      "venue": "pub",
-      "people": 1000,
-      "guests": 1000,
-      "notes": "wfrwerfrfevev",
-      "client": "Emily Carter",
-      "clientId": "U004",
-      "clientEmail": "emily.client@example.com",
-      "vendor": "Sound & Lighting Pro, Elite Events Co.",
-      "vendorId": "V004",
-      "vendorIds": [
-        "V004",
-        "V001"
-      ],
-      "vendors": [
-        "Sound & Lighting Pro",
-        "Elite Events Co."
-      ],
-      "categories": [
-        "Wedding",
-        "Equipment",
-        "Furniture"
-      ],
-      "budget": 10005000,
-      "budgetRange": "$1,000 - $5,000",
-      "requestedResources": [
-        {
-          "resourceId": "R004",
-          "resourceName": "Stage Lighting Rig Pro",
-          "category": "Equipment",
-          "quantity": 1,
-          "pricePerDay": 800,
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        },
-        {
-          "resourceId": "R008",
-          "resourceName": "Wireless Microphone Set (4x)",
-          "category": "Equipment",
-          "quantity": 1,
-          "pricePerDay": 120,
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        },
-        {
-          "resourceId": "R006",
-          "resourceName": "Ergonomic Banquet Chairs",
-          "category": "Furniture",
-          "quantity": 5,
-          "pricePerDay": 8,
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        }
-      ],
-      "requestedStaff": [
-        {
-          "staffId": "S004",
-          "staffName": "Marcus Sterling",
-          "role": "AV Specialist",
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        },
-        {
-          "staffId": "S005",
-          "staffName": "Chloe Bennett",
-          "role": "Guest Relations Lead",
-          "vendor": "Elite Events Co.",
-          "vendorId": "V001",
-          "vendorEmail": ""
-        },
-        {
-          "staffId": "S003",
-          "staffName": "David Kim",
-          "role": "Lead Sound Engineer",
-          "vendor": "Sound & Lighting Pro",
-          "vendorId": "V004",
-          "vendorEmail": ""
-        }
-      ],
-      "estimatedCost": 960
     }
   ],
   "resources": [
@@ -779,14 +610,13 @@
       "vendorId": "V004",
       "phone": "+1 555-1012",
       "email": "david.kim@soundpro.com",
-      "workload": 50,
+      "workload": 30,
       "status": "available",
       "avail": "Available",
       "events": 1,
       "avatar": "teal",
       "assignedEvents": [
-        "EVT003",
-        "EVT011"
+        "EVT003"
       ]
     },
     {
@@ -798,16 +628,13 @@
       "vendorId": "V001",
       "phone": "+1 555-1014",
       "email": "marcus@eliteevents.com",
-      "workload": 100,
-      "status": "busy",
+      "workload": 40,
+      "status": "available",
       "avail": "Available",
       "events": 1,
       "avatar": "orange",
       "assignedEvents": [
-        "EVT002",
-        "EVT011",
-        "EVT011",
-        "EVT011"
+        "EVT002"
       ]
     },
     {
@@ -819,14 +646,13 @@
       "vendorId": "V001",
       "phone": "+1 555-1016",
       "email": "chloe@eliteevents.com",
-      "workload": 45,
+      "workload": 25,
       "status": "available",
       "avail": "Available",
       "events": 1,
       "avatar": "green",
       "assignedEvents": [
-        "EVT003",
-        "EVT011"
+        "EVT003"
       ]
     },
     {
@@ -844,20 +670,6 @@
       "events": 0,
       "avatar": "purple",
       "assignedEvents": []
-    },
-    {
-      "name": "Test Tech 1787897289338",
-      "role": "Lighting Tech",
-      "phone": "+1 555-9988",
-      "status": "assigned",
-      "workload": 25,
-      "events": 1,
-      "avatar": "purple",
-      "id": "S007",
-      "avail": "Assigned",
-      "assignedEvents": [
-        "EVT001"
-      ]
     }
   ],
   "packages": [
@@ -1065,17 +877,6 @@
       "eventPeople": 320,
       "role": "Guest Relations Lead",
       "status": "accepted"
-    },
-    {
-      "staffId": "S007",
-      "staffName": "Test Tech 1787897289338",
-      "eventId": "EVT001",
-      "eventName": "Tech Summit 2026",
-      "role": "Lighting Tech",
-      "status": "assigned",
-      "priority": "Medium",
-      "assignedAt": "2026-08-28T06:08:09.339Z",
-      "id": "A006"
     }
   ],
   "vendorApplications": [
@@ -1119,7 +920,7 @@
     },
     {
       "status": "approved",
-      "submittedAt": "2026-08-28T06:06:41.800Z",
+      "submittedAt": "2026-09-02T11:59:31.001Z",
       "vendorName": "Test Vendor",
       "businessName": "Test Events LLC",
       "email": "test@vendor.com",
@@ -1137,50 +938,7 @@
       ],
       "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976",
       "id": "VAPP003",
-      "decidedAt": "2026-08-28T06:06:41.802Z"
-    },
-    {
-      "status": "approved",
-      "submittedAt": "2026-08-28T06:16:47.157Z",
-      "vendorName": "seafood rr",
-      "businessName": "food provider",
-      "email": "cefan123@gmail.com",
-      "phone": "1234567890",
-      "category": "General",
-      "documents": [
-        {
-          "name": "medvqa.jpg",
-          "type": "license"
-        },
-        {
-          "name": "DSC_0286.JPG",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "e09ceaa1cc8c05c5119600dbfbb379c02bd3901a62c2c5d91cb2691418d79e81",
-      "id": "VAPP004",
-      "decidedAt": "2026-08-28T06:18:13.426Z"
-    },
-    {
-      "status": "pending",
-      "submittedAt": "2026-08-28T06:25:39.743Z",
-      "vendorName": "md rr",
-      "businessName": "washing man",
-      "email": "mdr123@gmail.com",
-      "phone": "1234567890",
-      "category": "General",
-      "documents": [
-        {
-          "name": "imagesjepa.jpg",
-          "type": "license"
-        },
-        {
-          "name": "DSC_0321.JPG",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "Mouli@008",
-      "id": "VAPP005"
+      "decidedAt": "2026-09-02T11:59:31.009Z"
     }
   ],
   "vendors": [
@@ -1233,16 +991,7 @@
       "category": "General",
       "status": "Approved",
       "rating": 5,
-      "created": "2026-08-28"
-    },
-    {
-      "id": "V007",
-      "name": "food provider",
-      "businessName": "food provider",
-      "category": "General",
-      "status": "Approved",
-      "rating": 5,
-      "created": "2026-08-28"
+      "created": "2026-09-02"
     }
   ],
   "venues": [
@@ -1309,10 +1058,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Confirmed",
       "cost": 25000,
       "advancePaid": 12500,
       "paymentStatus": "partially_paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 2500,
+      "vendorPayoutAmount": 22500,
+      "payoutStatus": "pending",
       "created": "2026-04-10"
     },
     {
@@ -1322,10 +1076,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "In Progress",
       "cost": 18000,
       "advancePaid": 18000,
       "paymentStatus": "paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 1800,
+      "vendorPayoutAmount": 16200,
+      "payoutStatus": "pending",
       "created": "2026-04-15"
     },
     {
@@ -1335,10 +1094,15 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Confirmed",
       "cost": 32000,
       "advancePaid": 16000,
       "paymentStatus": "partially_paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 3200,
+      "vendorPayoutAmount": 28800,
+      "payoutStatus": "pending",
       "created": "2026-04-18"
     },
     {
@@ -1348,23 +1112,18 @@
       "client": "Emily Carter",
       "clientId": "U004",
       "vendor": "Elite Events Co.",
+      "vendorId": "V001",
       "status": "Completed",
       "cost": 22000,
       "advancePaid": 22000,
       "paymentStatus": "paid",
+      "commissionRate": 0.1,
+      "commissionAmount": 2200,
+      "vendorPayoutAmount": 19800,
+      "payoutStatus": "settled",
+      "settledAt": "2026-05-02T14:30:00.000Z",
+      "settledBy": "U001",
       "created": "2026-04-20"
-    },
-    {
-      "id": "BK005",
-      "eventId": "EVT010",
-      "eventName": "Booking Auto-Gen Test",
-      "client": "Acme Corp",
-      "vendor": "Elite Events Co.",
-      "status": "Confirmed",
-      "cost": 35000,
-      "advancePaid": 0,
-      "paymentStatus": "unpaid",
-      "created": "2026-08-28"
     }
   ],
   "messages": {
@@ -1502,54 +1261,30 @@
       "registration": 100,
       "event": 100,
       "breakdown": 100
-    },
-    "EVT008": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
-    },
-    "EVT009": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
-    },
-    "EVT010": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
-    },
-    "EVT011": {
-      "setup": 0,
-      "registration": 0,
-      "event": 0,
-      "breakdown": 0
     }
   },
   "staffRequests": [],
   "staffTasks": [],
   "vendorDocSubmission": {
     "status": "pending",
-    "submittedAt": "2026-08-28T06:25:39.743Z",
-    "vendorName": "md rr",
-    "businessName": "washing man",
-    "email": "mdr123@gmail.com",
-    "phone": "1234567890",
+    "submittedAt": "2026-09-02T11:59:31.001Z",
+    "vendorName": "Test Vendor",
+    "businessName": "Test Events LLC",
+    "email": "test@vendor.com",
+    "phone": "+1 555-9999",
     "category": "General",
     "documents": [
       {
-        "name": "imagesjepa.jpg",
+        "name": "business-license.pdf",
         "type": "license"
       },
       {
-        "name": "DSC_0321.JPG",
+        "name": "tax-id.pdf",
         "type": "tax_id"
       }
     ],
-    "passwordHash": "Mouli@008",
-    "id": "VAPP005"
+    "passwordHash": "MyP@ssw0rd",
+    "id": "VAPP003"
   },
   "session": {
     "id": "U004",
@@ -1582,42 +1317,9 @@
         "solution": "Deploy backup staff from reserve pool",
         "status": "ready"
       }
-    ],
-    "EVT011": [
-      {
-        "id": "CP_EVT011_1787897613794_0",
-        "problem": "Weather Emergency",
-        "trigger": "Severe weather alert",
-        "solution": "Move to indoor backup ballroom",
-        "status": "ready"
-      },
-      {
-        "id": "CP_EVT011_1787897613794_1",
-        "problem": "Power Outage",
-        "trigger": "Electrical failure",
-        "solution": "Activate backup generators and battery AV pack",
-        "status": "ready"
-      },
-      {
-        "id": "CP_EVT011_1787897613794_2",
-        "problem": "Staff No-Show",
-        "trigger": "Staff absence >30min",
-        "solution": "Deploy backup staff from reserve pool",
-        "status": "ready"
-      }
     ]
   },
-  "adminChatMessages": [
-    {
-      "id": "msg_1787898004647",
-      "sender": "seafood rr",
-      "senderRole": "vendor",
-      "senderEmail": "cefan123@gmail.com",
-      "text": "hi da boii",
-      "timestamp": "2026-08-28T06:20:04.647Z",
-      "type": "message"
-    }
-  ],
+  "adminChatMessages": [],
   "coordinationMessages": [
     {
       "id": "CM001",
@@ -1694,94 +1396,7 @@
         "businessName": "Test Events LLC",
         "vendorName": "Test Vendor"
       },
-      "createdAt": "2026-08-28T06:06:41.802Z"
-    },
-    {
-      "id": "LOG003",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT008",
-      "details": {
-        "name": "Global Sustainability Summit 2026",
-        "type": "Conference",
-        "date": "2026-08-25",
-        "budget": 35000
-      },
-      "createdAt": "2026-08-28T06:07:16.402Z"
-    },
-    {
-      "id": "LOG004",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT009",
-      "details": {
-        "name": "Automated Test Gala 2026",
-        "type": "Gala",
-        "date": "2026-08-30",
-        "budget": 20000
-      },
-      "createdAt": "2026-08-28T06:08:09.333Z"
-    },
-    {
-      "id": "LOG005",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT010",
-      "details": {
-        "name": "Booking Auto-Gen Test",
-        "type": "Corporate",
-        "date": "2026-09-15",
-        "budget": 35000
-      },
-      "createdAt": "2026-08-28T06:08:09.336Z"
-    },
-    {
-      "id": "LOG006",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_STATUS_CHANGED",
-      "entityType": "EVENT",
-      "entityId": "EVT010",
-      "details": {
-        "oldStatus": "pending",
-        "newStatus": "confirmed",
-        "eventName": "Booking Auto-Gen Test"
-      },
-      "createdAt": "2026-08-28T06:08:09.337Z"
-    },
-    {
-      "id": "LOG007",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "EVENT_CREATED",
-      "entityType": "EVENT",
-      "entityId": "EVT011",
-      "details": {
-        "name": "sai wedding",
-        "type": "Wedding",
-        "date": "2026-08-12",
-        "budget": 10005000
-      },
-      "createdAt": "2026-08-28T06:11:56.509Z"
-    },
-    {
-      "id": "LOG008",
-      "userId": "SYS",
-      "userRole": "System",
-      "action": "VENDOR_APPLICATION_APPROVED",
-      "entityType": "VENDOR_APPLICATION",
-      "entityId": "VAPP004",
-      "details": {
-        "businessName": "food provider",
-        "vendorName": "seafood rr"
-      },
-      "createdAt": "2026-08-28T06:18:13.426Z"
+      "createdAt": "2026-09-02T11:59:31.010Z"
     }
   ]
 }
