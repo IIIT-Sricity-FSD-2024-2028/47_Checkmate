@@ -164,7 +164,9 @@
           console.log('Issue form submitted with:', { title, desc, eventId, eventSelect: eventSelect?.value });
 
           const issue = {
-            id: 'ISS_' + Date.now(),
+            // No `id` here on purpose -- the backend assigns ISS001, ISS002, ...
+            // A client id like "ISS_1788292665533" breaks DataService.nextId(),
+            // which strips the letters and takes the highest number it finds.
             title: title,
             desc: desc,
             priority: priorityEl?.value || 'Medium',
@@ -177,6 +179,13 @@
           };
 
           const savedIssue = DB.add('issues', issue);
+
+          // DB.add returns null when the API call failed. Say so rather than
+          // showing "Sent Successfully" for an issue that was never saved.
+          if (!savedIssue) {
+            alert('Could not submit the issue. Check that the backend is running on port 3000.');
+            return;
+          }
 
           // Post to coordination hub
           if (window.CoordHub && eventId) {

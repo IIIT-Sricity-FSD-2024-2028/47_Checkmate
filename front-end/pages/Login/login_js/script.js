@@ -327,9 +327,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let payload;
       try {
-        payload = api('POST', 'staff/login', { email, password });
-      } catch (error) {
+        // auth/login handles ALL five roles, staff included, and is the only
+        // one that enriches the session with vendorId / staffId. It is tried
+        // first so a normal sign-in costs ONE rate-limit slot, not two --
+        // both endpoints share the same 20-per-15-minutes budget per IP.
         payload = api('POST', 'auth/login', { email, password });
+      } catch (error) {
+        payload = api('POST', 'staff/login', { email, password });
       }
       setSession(payload);
       localStorage.removeItem('checkmate_admin_baseline');
