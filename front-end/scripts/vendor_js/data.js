@@ -58,13 +58,44 @@ window.DB = (() => {
   let _cache = {};
   let _ready = false;
 
-  /* ── Synchronous XHR helper ───────────── */
+
+  /* ── Auth token ─────────────────────────
+     Login stores a signed JWT in the session. Every API call must carry it as
+     "Authorization: Bearer <token>"; the server reads the caller's role out of
+     that token, so no request works without it. */
+  function ckToken() {
+    try {
+      var raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return (s && s.token) || null;
+    } catch (e) { return null; }
+  }
+
+  /* A 401 means no token or an expired one. Send the user back to sign in once,
+     rather than letting the page render as though it simply has no data. */
+  var _ckRedirected = false;
+  function ckHandleUnauthorized(status) {
+    if (status !== 401 || _ckRedirected) return;
+    if (/\/Login\//i.test(location.pathname) || /LandingPage/i.test(location.pathname)) return;
+    _ckRedirected = true;
+    try { sessionStorage.removeItem('checkmate_session'); } catch (e) {}
+    location.href = '../Login/signin.html';
+  }
+
+  /* ── Synchronous XHR helper ─────────────
+     Note the `false` third argument to x.open(): these calls are SYNCHRONOUS,
+     so the browser blocks until the server answers. That is why every page
+     can write plain `const rows = DB.getAll('events')` with no await or
+     callback. It is simple to read but freezes the tab during each request. */
   function xhr(method, path, body) {
     const role = getActiveRole();
     const x = new XMLHttpRequest();
     x.open(method, `${API}/${path}`, false);
     x.setRequestHeader('Content-Type', 'application/json');
     x.setRequestHeader('x-role', role);
+    var _tok = ckToken();
+    if (_tok) x.setRequestHeader('Authorization', 'Bearer ' + _tok);
     try {
       x.send(body === undefined ? null : JSON.stringify(body));
     } catch (e) {
@@ -73,6 +104,7 @@ window.DB = (() => {
     }
     if (x.status >= 400) {
       console.warn(`[DB] ${method} ${path} → ${x.status}`, x.responseText);
+      ckHandleUnauthorized(x.status);
       return null;
     }
     try {
@@ -89,6 +121,8 @@ window.DB = (() => {
     x.open(method, `${API}/${path}`, true);
     x.setRequestHeader('Content-Type', 'application/json');
     x.setRequestHeader('x-role', role);
+    var _tokA = ckToken();
+    if (_tokA) x.setRequestHeader('Authorization', 'Bearer ' + _tokA);
     x.onload = function () {
       if (x.status < 400 && x.responseText) {
         try { callback(JSON.parse(x.responseText)); } catch {}
@@ -117,6 +151,8 @@ window.DB = (() => {
 
   /* ── Multi-Tenant Context Resolution ─── */
 
+  /* Works out who is logged in and, for vendors/staff, which vendorId or
+     staffId they map to. Every "show me only my data" filter below starts here. */
   function getTenantContext() {
     let session = null;
     try {
@@ -374,7 +410,14 @@ window.DB = (() => {
         const ctxUName = (ctx.userName || '').toLowerCase();
         const ctxUEmail = (ctx.userEmail || '').toLowerCase();
 
+        // Staff who signed up through the staff portal have no vendor attached
+        // yet -- without this they would be invisible to every vendor and could
+        // never be assigned work. Show them to all vendors as an unclaimed pool;
+        // editing one through Manage Staff stamps that vendor onto the record.
+        const unassigned = !sVId && !sVName && !sVEmail && !sCreated;
+
         return (
+          unassigned ||
           (ctxVId && sVId === ctxVId) ||
           (ctxVName && sVName === ctxVName) ||
           (ctxBName && sVName === ctxBName) ||
@@ -580,6 +623,9 @@ window.DB = (() => {
     return itemToSave;
   }
 
+  /* Sends ONLY the changed fields, not the whole record. That matters because
+     the backend DTOs reject unknown properties, and a full object would carry
+     server-added fields the DTO does not list. */
   function update(name, id, patch) {
     const endpoint = COLLECTION_ENDPOINTS[name];
     if (endpoint) {
@@ -700,4 +746,63 @@ window.DB = (() => {
     get _cache() { return _cache; },
   };
 
+})();
+
+/* ── Logout ─────────────────────────────
+   Every portal page renders Logout as a plain <a> to the landing page, which
+   navigates away but leaves the signed token sitting in sessionStorage — so
+   hitting Back, or typing a dashboard URL, silently signs you straight back in.
+   Bind once here and clear the session for real before following the link.
+   The flag makes this safe to load from more than one shared script. */
+(function bindLogout() {
+  if (window.__ckLogoutBound) return;
+  window.__ckLogoutBound = true;
+
+  document.addEventListener('click', function (e) {
+    var link = e.target && e.target.closest
+      ? e.target.closest('.logout-btn, .sb-out, a[href*="LandingPage"]')
+      : null;
+    if (!link) return;
+    // Only treat it as a logout if the control actually says so.
+    if (!/logout|sign\s*out/i.test(link.textContent || '') && !link.classList.contains('logout-btn') && !link.classList.contains('sb-out')) return;
+
+    try {
+      sessionStorage.removeItem('checkmate_session');
+      sessionStorage.removeItem('accountType');
+      localStorage.removeItem('checkmate_session');
+    } catch (err) { /* storage blocked -- navigation still proceeds */ }
+  }, true);
+})();
+
+
+/* ── Sidebar identity ───────────────────
+   Most portal pages hardcode a placeholder name/email in the sidebar markup
+   ("Mike Staff / staff@demo.com"). Fill it from the real session so every page
+   shows whoever is actually signed in. Pages that already do this themselves
+   just get the same value written twice, which is harmless. */
+(function fillIdentity() {
+  if (window.__ckIdentityBound) return;
+  window.__ckIdentityBound = true;
+
+  function apply() {
+    var s = null;
+    try {
+      s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+    } catch (e) { return; }
+    var u = s && s.user;
+    if (!u) return;
+
+    document.querySelectorAll('.sb-uname, .sb-un').forEach(function (el) {
+      if (u.name) el.textContent = u.name;
+    });
+    document.querySelectorAll('.sb-uemail, .sb-ue').forEach(function (el) {
+      if (u.email) el.textContent = u.email;
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
 })();

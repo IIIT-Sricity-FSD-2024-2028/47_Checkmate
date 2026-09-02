@@ -1,12 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Headers, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { UsersService } from './users.service';
+import { avatarMulterOptions } from '../../common/upload/multer.config';
 
 @ApiTags('users')
 @ApiHeader({ name: 'x-role', description: 'Required role: admin or superuser', required: true })
@@ -14,15 +13,15 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly service: UsersService) {}
 
+  // Whose profile? The signed-in user's. Taking the email from the verified token
+  // rather than an x-email header means one account cannot read another's profile.
   @Get('profile')
-  @ApiHeader({ name: 'x-email', description: 'User email for profile lookup', required: true })
-  getProfile(@Headers('x-email') email: string) {
-    return this.service.getProfile(email);
+  getProfile(@Req() req: any) {
+    return this.service.getProfile(req.user?.email);
   }
 
   @Put('profile')
-  @ApiHeader({ name: 'x-email', description: 'User email for profile lookup', required: true })
-  updateProfile(@Headers('x-email') email: string, @Body() dto: { 
+  updateProfile(@Req() req: any, @Body() dto: { 
     name?: string;
     bio?: string; 
     phone?: string;
@@ -34,23 +33,14 @@ export class UsersController {
     website_url?: string;
     linkedin_url?: string;
   }) {
-    return this.service.updateProfile(email, dto);
+    return this.service.updateProfile(req.user?.email, dto);
   }
 
   @Post('profile/avatar')
-  @ApiHeader({ name: 'x-email', description: 'User email for profile lookup', required: true })
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './public/uploads',
-      filename: (req: any, file: any, cb: any) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        cb(null, `${uniqueSuffix}${ext}`);
-      }
-    })
-  }))
-  uploadAvatar(@Headers('x-email') email: string, @UploadedFile() file: any) {
-    return this.service.updateAvatar(email, `/uploads/${file.filename}`);
+  @UseInterceptors(FileInterceptor('file', avatarMulterOptions))
+  uploadAvatar(@Req() req: any, @UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('A file is required under the "file" field.');
+    return this.service.updateAvatar(req.user?.email, `/uploads/${file.filename}`);
   }
 
   @Get() @Roles('admin', 'superuser') @ApiOkResponse({ type: [CreateUserDto] }) findAll() { return this.service.findAll(); }

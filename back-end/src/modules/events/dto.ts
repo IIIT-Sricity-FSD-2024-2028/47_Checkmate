@@ -2,6 +2,14 @@ import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Allow, IsArray, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
+// A DTO describes the shape of an accepted request body. The decorators are the
+// validation rules, enforced by the global ValidationPipe in main.ts:
+//   @IsString()/@IsNumber()  -> type must match
+//   @IsOptional()            -> may be omitted entirely
+//   @Allow()                 -> accept it as-is, no type checking
+//   @ApiProperty()           -> Swagger documentation only
+// The pipe runs with forbidNonWhitelisted, so ANY field not listed here makes
+// the request fail with 400 -- that is why this class is so long.
 export class CreateEventDto {
   @ApiPropertyOptional({ example: 'EVT005' }) @IsOptional() @IsString() id?: string;
   @ApiProperty({ example: 'Investor Meetup' }) @IsString() name: string;
@@ -40,4 +48,6 @@ export class CreateEventDto {
   @ApiPropertyOptional({ description: 'Per-vendor response states' }) @IsOptional() @Allow() vendorResponses?: any[];
   @ApiPropertyOptional({ description: 'Detected conflicts' }) @IsOptional() @Allow() conflicts?: any[];
 }
+// PartialType re-uses CreateEventDto with every field made optional, so an
+// update can send just the one field it wants to change.
 export class UpdateEventDto extends PartialType(CreateEventDto) {}

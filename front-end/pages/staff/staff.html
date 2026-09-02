@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="../../styles/staff_css/staff.css"/>
 <link rel="stylesheet" href="../../styles/staff_css/animations.css"/>
 <style>
-/* â”€â”€ DASHBOARD-ONLY STYLES â”€â”€ */
+/* ── DASHBOARD-ONLY STYLES ── */
 .db-grid{display:grid;grid-template-columns:1fr 240px;gap:16px;margin-bottom:16px}
 .db-bottom{display:grid;grid-template-columns:1fr 240px;gap:16px}
 .db-bottom-right{display:flex;flex-direction:column;gap:16px}
@@ -62,7 +62,6 @@
 .ts-sub{font-size:10.5px;color:var(--text3)}
 .ts-count{width:26px;height:26px;border-radius:var(--rx);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 </style>
-<link rel="stylesheet" href="../CSS/animations.css"/>
 </head>
 <body>
 <div class="shell">
@@ -123,7 +122,7 @@
   <!-- Stats -->
   <div class="stats-grid col4" style="margin-bottom:20px">
     <div class="stat-card"><div class="stat-top"><span class="stat-label">Active Events</span><div class="stat-ico ico-pink"><span class="live-dot"></span></div></div><div class="stat-val c-red">0</div><div style="font-size:11px;color:var(--text3)">Currently active</div></div>
-    <div class="stat-card"><div class="stat-top"><span class="stat-label">Upcoming Assignments</span><div class="stat-ico ico-orange">ðŸ•</div></div><div class="stat-val c-red">0</div><div style="font-size:11px;color:var(--text3)">Scheduled soon</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Upcoming Assignments</span><div class="stat-ico ico-orange">🕐</div></div><div class="stat-val c-red">0</div><div style="font-size:11px;color:var(--text3)">Scheduled soon</div></div>
     <div class="stat-card"><div class="stat-top"><span class="stat-label">Completed Today</span><div class="stat-ico ico-green">✓</div></div><div class="stat-val c-green">0</div><div style="font-size:11px;color:var(--text3)">Tasks finished</div></div>
     <div class="stat-card"><div class="stat-top"><span class="stat-label">Pending Issues</span><div class="stat-ico ico-orange">⚠</div></div><div class="stat-val c-red">0</div><div style="font-size:11px;color:var(--text3)">Need attention</div></div>
   </div>
@@ -133,25 +132,10 @@
     <!-- Today's Schedule -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">📅 Today's Schedule</div>
+        <div class="card-title">📅 Upcoming Schedule</div>
         <a href="Schedule.html" style="font-size:11.5px;color:var(--pink);font-weight:500">View All ↗</a>
       </div>
-      <div class="sch-item">
-        <div class="sch-item-top"><span class="sch-item-name">Johnson Wedding</span><span class="badge badge-pink">In Progress</span></div>
-        <div class="sch-item-meta">
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Event Coordinator</span>
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>4/15/2026</span>
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Grand Ballroom, Downtown</span>
-        </div>
-      </div>
-      <div class="sch-item">
-        <div class="sch-item-top"><span class="sch-item-name">Johnson Wedding</span><span class="badge badge-pink">In Progress</span></div>
-        <div class="sch-item-meta">
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Event Coordinator</span>
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>4/15/2026</span>
-          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Grand Ballroom, Downtown</span>
-        </div>
-      </div>
+      <div id="schedList"></div>
     </div>
     <!-- Real-time Updates -->
     <div class="card">
@@ -159,10 +143,10 @@
         <div class="card-title">⚡ Real-time Updates <span style="font-size:9px;background:var(--pink-dim);color:var(--pink);padding:2px 6px;border-radius:10px;font-weight:700;margin-left:4px">2 new</span></div>
       </div>
       <div class="rt-list">
-        <div class="rt-item"><div class="rt-ico ico-pink">🔔</div><div class="rt-body"><div class="rt-text">New task assigned:</div><div class="rt-meta"><span class="rt-src c-pink">Admin</span><span class="rt-time">â€¢ 2 min ago</span></div></div><div class="rt-dot"></div></div>
-        <div class="rt-item"><div class="rt-ico ico-purple">💬</div><div class="rt-body"><div class="rt-text">Message from Vendor:</div><div class="rt-meta"><span class="rt-src c-purple">Vendor</span><span class="rt-time">â€¢ 5 min ago</span></div></div></div>
-        <div class="rt-item"><div class="rt-ico ico-cyan">📋</div><div class="rt-body"><div class="rt-text">Event starts in 30 minutes</div><div class="rt-meta"><span class="rt-src c-cyan">System</span><span class="rt-time">â€¢ 10 min ago</span></div></div></div>
-        <div class="rt-item"><div class="rt-ico ico-green">⚡</div><div class="rt-body"><div class="rt-text">Resource updated: Sound</div><div class="rt-meta"><span class="rt-src c-green">Vendor</span><span class="rt-time">â€¢ 15 min ago</span></div></div></div>
+        <div class="rt-item"><div class="rt-ico ico-pink">🔔</div><div class="rt-body"><div class="rt-text">New task assigned:</div><div class="rt-meta"><span class="rt-src c-pink">Admin</span><span class="rt-time">• 2 min ago</span></div></div><div class="rt-dot"></div></div>
+        <div class="rt-item"><div class="rt-ico ico-purple">💬</div><div class="rt-body"><div class="rt-text">Message from Vendor:</div><div class="rt-meta"><span class="rt-src c-purple">Vendor</span><span class="rt-time">• 5 min ago</span></div></div></div>
+        <div class="rt-item"><div class="rt-ico ico-cyan">📋</div><div class="rt-body"><div class="rt-text">Event starts in 30 minutes</div><div class="rt-meta"><span class="rt-src c-cyan">System</span><span class="rt-time">• 10 min ago</span></div></div></div>
+        <div class="rt-item"><div class="rt-ico ico-green">⚡</div><div class="rt-body"><div class="rt-text">Resource updated: Sound</div><div class="rt-meta"><span class="rt-src c-green">Vendor</span><span class="rt-time">• 15 min ago</span></div></div></div>
       </div>
     </div>
   </div>
@@ -174,7 +158,7 @@
       <div class="card-head"><div class="card-title">⚡ Performance Snapshot</div></div>
       <div class="perf-list">
         <div><div class="perf-row-top"><div class="perf-label">🎯 Task Completion Rate</div><span class="perf-val c-pink">0/2 (0%)</span></div><div class="prog"><div class="prog-fill pf-pink" style="width:0%"></div></div></div>
-        <div><div class="perf-row-top"><div class="perf-label">â± Avg Response Time</div><span class="perf-val">12 min</span></div><div class="prog"><div class="prog-fill pf-green" style="width:60%"></div></div></div>
+        <div><div class="perf-row-top"><div class="perf-label">⏱ Avg Response Time</div><span class="perf-val">12 min</span></div><div class="prog"><div class="prog-fill pf-green" style="width:60%"></div></div></div>
         <div><div class="perf-row-top"><div class="perf-label">✅ Issue Resolution Rate</div><span class="perf-val c-green">94%</span></div><div class="prog"><div class="prog-fill pf-cyan" style="width:94%"></div></div></div>
         <div><div class="perf-row-top"><div class="perf-label">👥 Attendance Score</div><span class="perf-val c-green">98%</span></div><div class="prog"><div class="prog-fill pf-multi" style="width:98%"></div></div></div>
       </div>
@@ -188,15 +172,15 @@
         <div class="qa-list">
           <button class="qa-btn"><div class="qa-ico" style="background:var(--pink-dim);color:var(--pink)">✓</div>Update Task Status</button>
           <button class="qa-btn" onclick="location.href='Messages.html'"><div class="qa-ico" style="background:var(--bg4);color:var(--text2)">💬</div>Message Vendor</button>
-          <button class="qa-btn" onclick="location.href='ReportIssue.html'"><div class="qa-ico" style="background:var(--orange-dim);color:var(--orange)">⚠</div>Report Issue</button>
-          <button class="qa-btn" onclick="location.href='Schedule.html'"><div class="qa-ico" style="background:var(--cyan-dim);color:var(--cyan)">ðŸ“…</div>View Schedule</button>
+          <button class="qa-btn" onclick="location.href='Report.html'"><div class="qa-ico" style="background:var(--orange-dim);color:var(--orange)">⚠</div>Report Issue</button>
+          <button class="qa-btn" onclick="location.href='Schedule.html'"><div class="qa-ico" style="background:var(--cyan-dim);color:var(--cyan)">📅</div>View Schedule</button>
         </div>
       </div>
       <!-- Task Summary -->
       <div class="card">
         <div class="card-head"><div class="card-title">Task Summary</div></div>
         <div class="ts-list">
-          <div class="ts-item"><div class="ts-ico" style="background:var(--orange-dim)">ðŸ•</div><div class="ts-info"><div class="ts-name">Pending</div><div class="ts-sub">Need to accept</div></div><div class="ts-count" style="background:var(--orange-dim);color:var(--orange)">0</div></div>
+          <div class="ts-item"><div class="ts-ico" style="background:var(--orange-dim)">🕐</div><div class="ts-info"><div class="ts-name">Pending</div><div class="ts-sub">Need to accept</div></div><div class="ts-count" style="background:var(--orange-dim);color:var(--orange)">0</div></div>
           <div class="ts-item"><div class="ts-ico" style="background:var(--pink-dim)">⚡</div><div class="ts-info"><div class="ts-name">In Progress</div><div class="ts-sub">Currently working</div></div><div class="ts-count" style="background:var(--pink-dim);color:var(--pink)">2</div></div>
           <div class="ts-item"><div class="ts-ico" style="background:var(--green-dim)">✓</div><div class="ts-info"><div class="ts-name">Completed</div><div class="ts-sub">Finished tasks</div></div><div class="ts-count" style="background:var(--green-dim);color:var(--green)">0</div></div>
         </div>
@@ -297,6 +281,9 @@ function updateDashboard() {
     }
   }
 
+  // Fill the schedule card from this staff member's real assignments.
+  renderSchedule(mine);
+
   // Update Clock
   const updateClock = () => {
     const now = new Date();
@@ -305,6 +292,46 @@ function updateDashboard() {
   };
   updateClock();
   setInterval(updateClock, 1000);
+}
+
+/* Renders the "Upcoming Schedule" card. `list` is this staff member's rows from
+   the staffAssignments collection; we show the soonest ones first. */
+function renderSchedule(list) {
+  const box = document.getElementById('schedList');
+  if (!box) return;
+
+  // An assignment the staff member declined is not on their schedule.
+  const upcoming = (list || [])
+    .filter(a => String(a.status).toLowerCase() !== 'declined')
+    .sort((a, b) => String(a.eventDate || '').localeCompare(String(b.eventDate || '')))
+    .slice(0, 4);
+
+  if (!upcoming.length) {
+    box.innerHTML = '<div style="padding:18px 2px;color:var(--text3);font-size:12.5px">No assignments scheduled yet.</div>';
+    return;
+  }
+
+  // Status drives the badge colour: accepted = green, anything else = pink.
+  box.innerHTML = upcoming.map(a => {
+    const st = String(a.status || 'pending').toLowerCase();
+    const badge = st === 'accepted' ? 'badge-green' : 'badge-pink';
+    const label = st.charAt(0).toUpperCase() + st.slice(1);
+    const when = a.eventDate ? new Date(a.eventDate + 'T00:00:00').toLocaleDateString('en-US') : 'Date TBC';
+    return `
+      <div class="sch-item">
+        <div class="sch-item-top"><span class="sch-item-name">${esc(a.eventName || 'Event')}</span><span class="badge ${badge}">${esc(label)}</span></div>
+        <div class="sch-item-meta">
+          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(a.role || 'Staff')}</span>
+          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${esc(when)}</span>
+          <span class="sch-item-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(a.eventVenue || 'Venue TBC')}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* Event names come from user input, so escape them before dropping into HTML. */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // Check for updates every 5 seconds to sync with backend polling

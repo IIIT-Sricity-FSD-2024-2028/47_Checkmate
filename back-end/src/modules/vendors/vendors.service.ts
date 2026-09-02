@@ -5,6 +5,12 @@ import { DataService } from '../../database/data.service';
 import { CreateVendorApplicationDto, CreateVendorDto, UpdateVendorApplicationDto, UpdateVendorDto } from './dto';
 import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
+// Two related things live here: the approved `vendors` list, and the
+// `vendorApplications` queue that admins approve or reject.
+//
+// WATCH OUT: between signup and approval, the application's `passwordHash`
+// field holds the RAW password, not a hash. It is only hashed at the moment
+// of approval (decideApplication), just before the account is created.
 @Injectable()
 export class VendorsService {
   constructor(private readonly data: DataService) {}
@@ -37,6 +43,8 @@ export class VendorsService {
     // This ensures the DataService trigger (triggerVendorApplicationUpdated) uses the hashed value.
     const currentApp = this.data.find('vendorApplications', id);
     const rawPassword = currentApp.passwordHash || '';
+    // Only hash if it still looks like plain text -- guards against hashing twice
+    // if an application is approved, reopened, and approved again.
     const hashedPassword = rawPassword && !rawPassword.startsWith('$2b$') && rawPassword.length < 128
       ? hashPassword(rawPassword)
       : rawPassword; // Already hashed or is a hash

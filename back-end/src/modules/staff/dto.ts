@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsEmail, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class CreateStaffDto {
   @ApiPropertyOptional({ example: 'S005' }) @IsOptional() @IsString() id?: string;
@@ -42,3 +42,15 @@ export class CreateStaffAssignmentDto {
   @ApiPropertyOptional() @IsOptional() @IsString() respondedAt?: string;
 }
 export class UpdateStaffAssignmentDto extends PartialType(CreateStaffAssignmentDto) {}
+
+export class StaffLoginDto {
+  @ApiProperty({ example: 'mike.staff@eliteevents.com' }) @IsEmail() email: string;
+  @ApiProperty({ example: 'Mike@2026' }) @IsString() password: string;
+}
+
+export class StaffSignupDto {
+  @ApiProperty({ example: 'Alex Johnson' }) @IsString() name: string;
+  @ApiProperty({ example: 'alex@eliteevents.com' }) @IsEmail() email: string;
+  @ApiPropertyOptional({ example: '+1 234-567-8901' }) @IsOptional() @IsString() phone?: string;
+  @ApiProperty({ example: 'Alex@2026' }) @IsString() @MinLength(8) password: string;
+}

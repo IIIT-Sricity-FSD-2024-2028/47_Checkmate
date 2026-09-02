@@ -83,7 +83,7 @@
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--blue"><i data-lucide="pie-chart"></i></div>
-                    <span class="status-badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">10% Platform Commission</span>
+                    <span class="status-badge" id="payRevNote" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">10% Platform Commission</span>
                 </div>
                 <div class="stat-label">Platform Revenue Earned</div>
                 <div class="stat-value" id="statPlatformCommission">$0.00</div>
@@ -92,7 +92,7 @@
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--orange"><i data-lucide="clock"></i></div>
-                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Awaiting Release</span>
+                    <span class="status-badge" id="payPendingNote" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Awaiting Release</span>
                 </div>
                 <div class="stat-label">Pending Vendor Balances (90%)</div>
                 <div class="stat-value" style="color: var(--pink);" id="statPendingPayouts">$0.00</div>
@@ -101,7 +101,7 @@
             <div class="stat-card">
                 <div class="stat-card__top">
                     <div class="stat-icon stat-icon--green"><i data-lucide="check-circle"></i></div>
-                    <span class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Settled</span>
+                    <span class="status-badge" id="payPaidNote" style="background: rgba(0, 230, 118, 0.15); color: #00e676; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight:600;">Settled</span>
                 </div>
                 <div class="stat-label">Total Paid to Vendors (90%)</div>
                 <div class="stat-value" style="color: #22c55e;" id="statSettledPayouts">$0.00</div>
@@ -193,6 +193,9 @@
       const sortSelect = document.getElementById('completedSort');
       const refreshBtn = document.getElementById('refreshPayoutsBtn');
 
+      let session = null;
+      try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch (e) {}
+
       let allBookingsData = [];
       let completedData = [];
 
@@ -211,14 +214,17 @@
       // API Helper
       const apiCall = async (method, path, body) => {
           try {
+              const headers = {
+                  'Content-Type': 'application/json',
+                  'x-role': (session && session.role) || 'admin',
+                  'x-user-id': (session && session.id) || 'U001'
+              };
+              if (session && session.token) headers['Authorization'] = 'Bearer ' + session.token;
+
               const res = await fetch(`${API_BASE}/${path}`, {
                   method,
-                  headers: {
-                      'Content-Type': 'application/json',
-                      'x-role': 'admin',
-                      'x-user-id': 'U001'
-                  },
-                  body: body ? JSON.stringify(body) : undefined
+                  headers,
+                  body: body !== undefined ? JSON.stringify(body) : undefined
               });
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
               return await res.json();
@@ -371,7 +377,7 @@
 
               // Send settlement request to NestJS backend
               const res = await apiCall('PATCH', `bookings/${bookingId}/settle`, {
-                  settledBy: 'U001',
+                  settledBy: (session && session.id) || 'U001',
                   note: 'Payout authorized and released by Admin'
               });
 
@@ -381,7 +387,7 @@
                   if (idx >= 0) {
                       allBookingsData[idx].payoutStatus = 'settled';
                       allBookingsData[idx].settledAt = res.settledAt || new Date().toISOString();
-                      allBookingsData[idx].settledBy = 'U001';
+                      allBookingsData[idx].settledBy = (session && session.id) || 'U001';
                   }
 
                   tr.style.opacity = '0';

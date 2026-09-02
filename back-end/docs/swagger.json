@@ -61,15 +61,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "x-email",
-            "required": true,
-            "in": "header",
-            "description": "User email for profile lookup",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -89,15 +80,6 @@
             "in": "header",
             "description": "Required role: admin or superuser",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "x-email",
-            "required": true,
-            "in": "header",
-            "description": "User email for profile lookup",
             "schema": {
               "type": "string"
             }
@@ -122,15 +104,6 @@
             "in": "header",
             "description": "Required role: admin or superuser",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "x-email",
-            "required": true,
-            "in": "header",
-            "description": "User email for profile lookup",
             "schema": {
               "type": "string"
             }
@@ -1021,6 +994,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffSignupDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -1045,6 +1028,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffLoginDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -2567,6 +2560,30 @@
         ]
       }
     },
+    "/api/public/recruitments": {
+      "get": {
+        "operationId": "AnalyticsController_publicRecruitments",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Summary/snapshot access for dashboards. Snapshot is readable by app roles to hydrate frontend stores.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
     "/api/analytics/summary": {
       "get": {
         "operationId": "AnalyticsController_summary",
@@ -2724,11 +2741,11 @@
   "servers": [],
   "components": {
     "securitySchemes": {
-      "role": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-role",
-        "description": "Role used for RBAC. Supported values: admin, superuser, vendor, client, staff."
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Paste the token returned by POST /api/auth/login."
       }
     },
     "schemas": {
@@ -3206,6 +3223,49 @@
       "UpdateStaffDto": {
         "type": "object",
         "properties": {}
+      },
+      "StaffSignupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alex Johnson"
+          },
+          "email": {
+            "type": "string",
+            "example": "alex@eliteevents.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1 234-567-8901"
+          },
+          "password": {
+            "type": "string",
+            "example": "Alex@2026"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "StaffLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "mike.staff@eliteevents.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Mike@2026"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "CreateStaffAssignmentDto": {
         "type": "object",

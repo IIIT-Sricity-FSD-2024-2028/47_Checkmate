@@ -71,11 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Fetch and render open recruitments
     const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
-    fetch(`${API_BASE}/state/recruitments`, {
-        headers: {
-            'x-role': 'client'
-        }
-    })
+    // Nobody is signed in on the landing page, so this uses the dedicated
+    // public endpoint rather than the authenticated state/:key route.
+    fetch(`${API_BASE}/public/recruitments`)
         .then(res => {
             if (!res.ok) throw new Error('API Error');
             return res.json();

@@ -84,10 +84,11 @@
                 <h3 class="table-header-title" style="margin-bottom: 0;">System Security Audit Log</h3>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <select id="logFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer;">
-                        <option value="all">All Events</option>
-                        <option value="security">Security</option>
-                        <option value="moderation">Moderation</option>
-                        <option value="financial">Financial</option>
+                        <option value="all">All Activity</option>
+                        <option value="EVENT">Events</option>
+                        <option value="VENDOR_APPLICATION">Vendor Approvals</option>
+                        <option value="HTTP">API Calls</option>
+                        <option value="SYSTEM">System</option>
                     </select>
                     <div class="search-box">
                         <i data-lucide="search" class="search-icon"></i>
@@ -103,46 +104,7 @@
                 .log-item { animation: fadeInUp 0.4s ease forwards; }
             </style>
             <div class="approval-list" id="logListContainer" style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
-                <div class="approval-item log-item" data-category="security" style="border-left: 3px solid #3b82f6;">
-                    <div class="vendor-info">
-                        <div class="vendor-avatar" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i data-lucide="log-in"></i></div>
-                        <div>
-                            <h4 class="log-title">Admin Login Detected</h4>
-                            <p class="log-desc">IP: 192.168.1.5</p>
-                        </div>
-                    </div>
-                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 31 19:42:01</span>
-                </div>
-                <div class="approval-item log-item" data-category="moderation" style="border-left: 3px solid var(--pink);">
-                    <div class="vendor-info">
-                        <div class="vendor-avatar" style="background: rgba(233, 30, 140, 0.1); color: var(--pink);"><i data-lucide="shield"></i></div>
-                        <div>
-                            <h4 class="log-title">Service Package Approved</h4>
-                            <p class="log-desc">Admin approved "Elite Wedding Bundle" for Dream Events Ltd.</p>
-                        </div>
-                    </div>
-                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 31 16:15:33</span>
-                </div>
-                <div class="approval-item log-item" data-category="moderation" style="border-left: 3px solid #ef4444;">
-                    <div class="vendor-info">
-                        <div class="vendor-avatar" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i data-lucide="trash-2"></i></div>
-                        <div>
-                            <h4 class="log-title">Vendor Account Rejected</h4>
-                            <p class="log-desc">Admin rejected registration - document verification failed.</p>
-                        </div>
-                    </div>
-                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 30 11:22:00</span>
-                </div>
-                <div class="approval-item log-item" data-category="financial" style="border-left: 3px solid #22c55e;">
-                    <div class="vendor-info">
-                        <div class="vendor-avatar" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;"><i data-lucide="dollar-sign"></i></div>
-                        <div>
-                            <h4 class="log-title">Batch Payout Released</h4>
-                            <p class="log-desc">Admin released $18,450.00 total to 2 vendors.</p>
-                        </div>
-                    </div>
-                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">Mar 29 09:00:00</span>
-                </div>
+                <!-- filled by renderLogs() from /api/state/activityLogs -->
             </div>
             <div class="pagination-controls">
                 <button id="loadMoreBtn" class="export-btn" style="background: var(--bg-hover); color: var(--text-primary); margin-top: 16px; transition: all 0.3s ease;">
@@ -192,97 +154,132 @@
   <script>lucide.createIcons();</script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const searchInput = document.getElementById('logSearch');
-        const filterSelect = document.getElementById('logFilter');
-        const listContainer = document.getElementById('logListContainer');
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        const loadMoreText = document.getElementById('loadMoreText');
-        const loadMoreIcon = document.getElementById('loadMoreIcon');
+      const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+      const searchInput   = document.getElementById('logSearch');
+      const filterSelect  = document.getElementById('logFilter');
+      const listContainer = document.getElementById('logListContainer');
+      const loadMoreBtn   = document.getElementById('loadMoreBtn');
+      const loadMoreText  = document.getElementById('loadMoreText');
+      const loadMoreIcon  = document.getElementById('loadMoreIcon');
 
-        // Filtering Logic
-        const filterLogs = () => {
-            const query = searchInput.value.toLowerCase();
-            const category = filterSelect.value;
-            const items = listContainer.querySelectorAll('.log-item');
+      let session = null;
+      try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch (e) {}
 
-            items.forEach(item => {
-                const title = item.querySelector('.log-title').textContent.toLowerCase();
-                const desc = item.querySelector('.log-desc').textContent.toLowerCase();
-                const itemCat = item.getAttribute('data-category');
+      /* Reads the real audit trail. DataService appends a row here on every event
+         change, vendor approval and audited mutation. */
+      function fetchLogs() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', API_BASE + '/state/activityLogs', false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('x-role', (session && session.role) || 'admin');
+        if (session && session.token) xhr.setRequestHeader('Authorization', 'Bearer ' + session.token);
+        try { xhr.send(null); } catch (e) { return []; }
+        if (xhr.status === 401) { location.href = '../Login/signin.html'; return []; }
+        if (xhr.status >= 400) return [];
+        try { return JSON.parse(xhr.responseText) || []; } catch (e) { return []; }
+      }
 
-                const matchesQuery = title.includes(query) || desc.includes(query);
-                const matchesCategory = category === 'all' || itemCat === category;
+      /* Each entityType gets its own colour + icon so the list scans quickly. */
+      const STYLES = {
+        EVENT:              { color: '#3b82f6', bg: 'rgba(59,130,246,.1)',  icon: 'calendar' },
+        VENDOR_APPLICATION: { color: '#22c55e', bg: 'rgba(34,197,94,.1)',   icon: 'shield-check' },
+        HTTP:               { color: '#f59e0b', bg: 'rgba(245,158,11,.1)',  icon: 'activity' },
+        SYSTEM:             { color: 'var(--pink)', bg: 'rgba(233,30,140,.1)', icon: 'settings' },
+      };
+      const styleFor = (t) => STYLES[t] || { color: '#94a3b8', bg: 'rgba(148,163,184,.1)', icon: 'file-text' };
 
-                if (matchesQuery && matchesCategory) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        };
+      // "EVENT_STATUS_CHANGED" -> "Event Status Changed"; HTTP rows keep their verb+path.
+      function titleOf(log) {
+        if (log.entityType === 'HTTP') return String(log.action);
+        return String(log.action || '').toLowerCase().split('_')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      }
 
-        if (searchInput) searchInput.addEventListener('input', filterLogs);
-        if (filterSelect) filterSelect.addEventListener('change', filterLogs);
-
-        // Load More Logic with Fake Data Animation
-        const fakeLogs = [
-            { category: 'financial', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', icon: 'dollar-sign', title: 'Refund Processed', desc: 'Auto-refund issued to client #10292.', date: 'Mar 28 14:30:00' },
-            { category: 'security', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: 'alert-triangle', title: 'Failed Login Attempt', desc: '3 failed attempts for user admin@eventpro.com', date: 'Mar 28 09:12:44' },
-            { category: 'moderation', color: 'var(--pink)', bg: 'rgba(233, 30, 140, 0.1)', icon: 'shield', title: 'Vendor Account Flagged', desc: 'Multiple user reports on "Party Planners Inc".', date: 'Mar 27 18:05:10' }
-        ];
-
-        let loadClicks = 0;
-
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', () => {
-                if (loadClicks >= 2) {
-                    loadMoreText.textContent = "No older logs found";
-                    loadMoreIcon.style.display = 'none';
-                    loadMoreBtn.style.pointerEvents = 'none';
-                    return;
-                }
-
-                // Spinner Animation state
-                loadMoreIcon.setAttribute('data-lucide', 'loader-2');
-                const style = document.createElement('style');
-                style.innerHTML = '@keyframes spin { 100% { transform: rotate(360deg); } }';
-                document.head.appendChild(style);
-                loadMoreIcon.style.animation = 'spin 1s linear infinite';
-                lucide.createIcons();
-
-                setTimeout(() => {
-                    fakeLogs.forEach((log, index) => {
-                        const html = `
-                        <div class="approval-item log-item" data-category="${log.category}" style="border-left: 3px solid ${log.color}; opacity: 0; animation: fadeInUp 0.4s ease forwards; animation-delay: ${index * 0.1}s;">
-                            <div class="vendor-info">
-                                <div class="vendor-avatar" style="background: ${log.bg}; color: ${log.color};"><i data-lucide="${log.icon}"></i></div>
-                                <div>
-                                    <h4 class="log-title">${log.title}</h4>
-                                    <p class="log-desc">${log.desc}</p>
-                                </div>
-                            </div>
-                            <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">${log.date}</span>
-                        </div>
-                        `;
-                        listContainer.insertAdjacentHTML('beforeend', html);
-                    });
-
-                    // Re-apply filters to newly added items
-                    filterLogs();
-                    lucide.createIcons();
-
-                    // Reset button state
-                    loadMoreIcon.style.animation = '';
-                    loadMoreIcon.setAttribute('data-lucide', 'arrow-down');
-                    lucide.createIcons();
-                    loadClicks++;
-
-                    // Auto-scroll to bottom
-                    listContainer.scrollTo({ top: listContainer.scrollHeight, behavior: 'smooth'});
-
-                }, 800); // Fake network delay
-            });
+      // Turn the details object into one readable line.
+      function descOf(log) {
+        const bits = [];
+        if (log.entityId) bits.push(log.entityId);
+        const d = log.details;
+        if (d && typeof d === 'object') {
+          Object.keys(d).slice(0, 3).forEach((k) => {
+            const v = d[k];
+            if (v !== null && v !== undefined && typeof v !== 'object') bits.push(k + ': ' + v);
+          });
         }
+        if (log.userRole) bits.push('by ' + log.userRole);
+        return bits.join('  ·  ') || '—';
+      }
+
+      function whenOf(log) {
+        const d = new Date(log.createdAt);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+      // Newest first — an audit log is read from the most recent entry backwards.
+      const allLogs = fetchLogs().slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+
+      const PAGE = 10;
+      let shown = PAGE;
+
+      function visibleLogs() {
+        const q = (searchInput ? searchInput.value : '').toLowerCase();
+        const cat = filterSelect ? filterSelect.value : 'all';
+        return allLogs.filter((log) => {
+          if (cat !== 'all' && log.entityType !== cat) return false;
+          if (!q) return true;
+          return (titleOf(log) + ' ' + descOf(log)).toLowerCase().includes(q);
+        });
+      }
+
+      function renderLogs() {
+        const matches = visibleLogs();
+        const page = matches.slice(0, shown);
+
+        if (!page.length) {
+          listContainer.innerHTML = '<div style="padding:28px 6px;color:var(--text-muted);font-size:13px;">No activity matches this filter.</div>';
+        } else {
+          listContainer.innerHTML = page.map((log, i) => {
+            const s = styleFor(log.entityType);
+            return '<div class="approval-item log-item" data-category="' + esc(log.entityType || '') + '"'
+              + ' style="border-left:3px solid ' + s.color + '; animation-delay:' + Math.min(i, 10) * 0.03 + 's;">'
+              + '<div class="vendor-info">'
+              + '<div class="vendor-avatar" style="background:' + s.bg + '; color:' + s.color + ';"><i data-lucide="' + s.icon + '"></i></div>'
+              + '<div><h4 class="log-title">' + esc(titleOf(log)) + '</h4>'
+              + '<p class="log-desc">' + esc(descOf(log)) + '</p></div></div>'
+              + '<span style="color:var(--text-muted);font-size:12px;font-weight:500;">' + esc(whenOf(log)) + '</span>'
+              + '</div>';
+          }).join('');
+        }
+
+        // The button reflects whether more real rows exist, not a fixed click count.
+        if (loadMoreBtn) {
+          const remaining = matches.length - page.length;
+          if (remaining > 0) {
+            loadMoreBtn.style.display = '';
+            loadMoreBtn.style.pointerEvents = '';
+            loadMoreText.textContent = 'Load Older Logs (' + remaining + ' more)';
+            if (loadMoreIcon) loadMoreIcon.style.display = '';
+          } else {
+            loadMoreText.textContent = allLogs.length ? 'No older logs' : 'No activity recorded yet';
+            loadMoreBtn.style.pointerEvents = 'none';
+            if (loadMoreIcon) loadMoreIcon.style.display = 'none';
+          }
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      if (searchInput)  searchInput.addEventListener('input',  () => { shown = PAGE; renderLogs(); });
+      if (filterSelect) filterSelect.addEventListener('change', () => { shown = PAGE; renderLogs(); });
+      if (loadMoreBtn)  loadMoreBtn.addEventListener('click',  () => {
+        shown += PAGE;
+        renderLogs();
+        listContainer.scrollTo({ top: listContainer.scrollHeight, behavior: 'smooth' });
+      });
+
+      renderLogs();
     });
   </script>
 

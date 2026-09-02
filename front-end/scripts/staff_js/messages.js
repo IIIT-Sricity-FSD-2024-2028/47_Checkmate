@@ -95,6 +95,7 @@ function initMessages() {
     }
 
     chatEl.innerHTML = msgs.map(m => Hub.renderMsgBubble(m, session.name)).join('');
+    if (window.lucide) lucide.createIcons();
 
     chatEl.scrollTop = chatEl.scrollHeight;
 

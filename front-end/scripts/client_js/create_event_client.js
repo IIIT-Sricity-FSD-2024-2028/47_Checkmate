@@ -695,9 +695,12 @@ document.addEventListener('DOMContentLoaded', () => {
             submittedAt: new Date().toISOString(),
         };
 
-        // Save to shared DB
+        // Save to shared DB. DB.add returns null if the POST failed, so check
+        // the result before claiming success -- otherwise the client is told
+        // the event was created when nothing reached the server.
+        let saved = null;
         if (typeof DB !== 'undefined') {
-            DB.add('events', newEvent);
+            saved = DB.add('events', newEvent);
         } else {
             console.warn('DB not loaded — event not persisted.');
         }
@@ -706,6 +709,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitBtn = document.getElementById('btnSubmitFinal');
         if (!submitBtn) return;
         const originalContent = submitBtn.innerHTML;
+
+        if (!saved) {
+            submitBtn.innerHTML = '<i class="ph ph-warning-circle"></i> Could not submit — try again';
+            submitBtn.style.background = 'var(--red-solid, #ef4444)';
+            setTimeout(() => {
+                submitBtn.innerHTML = originalContent;
+                submitBtn.style.background = '';
+            }, 3000);
+            return;
+        }
 
         submitBtn.innerHTML = '<i class="ph ph-spinner-gap ph-spin"></i> Submitting...';
         submitBtn.style.opacity = '0.8';

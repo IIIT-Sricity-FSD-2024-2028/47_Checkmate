@@ -7,8 +7,17 @@ Backend:
 ```bash
 cd back-end
 npm install
+cp .env.example .env    # required — see below
+npm run build
 npm run start
 ```
+
+**The `cp .env.example .env` step is required.** `.env` is gitignored, so a fresh
+clone does not have one. Without it the CORS allowlist is empty and the app
+rejects browser requests with no visible error, and `JWT_SECRET` falls back to a
+default that must not be used outside local development.
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
 API base URL: `http://localhost:3000/api`
 
@@ -18,7 +27,13 @@ Generated Swagger JSON: `back-end/docs/swagger.json`
 
 Frontend:
 
-Open the HTML pages under `front-end/pages/` in a browser while the backend is running. The shared frontend stores call the NestJS APIs with an `x-role` header and no authentication.
+The backend serves the frontend, so there is no second server to start. Sign in at
+`http://localhost:3000/front-end/pages/Login/signin.html`.
+
+Authentication uses JWTs. Logging in returns a signed token that the frontend
+stores in `sessionStorage` and sends as `Authorization: Bearer <token>` on every
+later request. The user's role is read from the token, so it cannot be changed by
+the client.
 
 Seed login accounts:
 
@@ -29,6 +44,45 @@ Seed login accounts:
 | Vendor | `sarah@eliteevents.com` | `Sarah@2026` |
 | Client | `emily.client@example.com` | `Emily@2026` |
 | Staff | `mike.staff@eliteevents.com` | `Mike@2026` |
+
+## Middleware and Environment Configuration
+
+Copy `back-end/.env.example` to `back-end/.env` before starting. `.env` is
+gitignored; `.env.example` is the committed template.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3000` | HTTP port |
+| `NODE_ENV` | `development` | Enables the console log transport; `production` turns on HSTS |
+| `CORS_ORIGINS` | see `.env.example` | Comma-separated origin allowlist. `null` is the literal string sent as the Origin by pages opened via `file://` |
+| `LOG_DIR` | `logs` | Log directory, resolved under `back-end/`. Deliberately outside `public/`, so logs are not web-reachable |
+| `LOG_LEVEL` | `info` | Console verbosity only; per-file levels are set per transport |
+| `LOG_DATE_PATTERN` | `YYYY-MM-DD` | Rotation interval |
+| `LOG_MAX_SIZE` | `20m` | Rotate early once a file reaches this size |
+| `LOG_MAX_FILES` | `14d` | Retention window |
+| `UPLOAD_MAX_BYTES` | `5242880` | Avatar upload ceiling, enforced twice (declared `Content-Length`, then Multer) |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rate-limit window |
+| `RATE_LIMIT_LOGIN_MAX` | `20` | Login attempts per window per IP |
+| `RATE_LIMIT_SIGNUP_MAX` | `5` | Registrations per window per IP |
+
+### Log files
+
+Written to `back-end/logs/`, rotated daily and gzip-archived:
+
+| File | Contents |
+| --- | --- |
+| `access-%DATE%.log` | One line per HTTP request (morgan) |
+| `app-%DATE%.log` | Application and lifecycle events, upload attempts, mutation audit |
+| `error-%DATE%.log` | 4xx warnings and 5xx errors, with stack traces |
+| `combined-%DATE%.log` | Unfiltered catch-all |
+
+To demonstrate rotation without waiting a day:
+
+```bash
+LOG_DATE_PATTERN=YYYY-MM-DD-HH-mm LOG_MAX_FILES=20 npm --prefix back-end run start:dev
+```
+
+Rotation then happens every minute. Revert both variables for normal use.
 
 ## Problem Statement
 

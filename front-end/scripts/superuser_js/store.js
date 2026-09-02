@@ -2,6 +2,31 @@
    replacing sessionStorage demo data with backend CRUD calls. */
 window.EP = (() => {
   const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+
+  /* ── Auth token ─────────────────────────
+     Login stores a signed JWT in the session. Every API call must carry it as
+     "Authorization: Bearer <token>"; the server reads the caller's role out of
+     that token, so no request works without it. */
+  function ckToken() {
+    try {
+      var raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return (s && s.token) || null;
+    } catch (e) { return null; }
+  }
+
+  /* A 401 means no token or an expired one. Send the user back to sign in once,
+     rather than letting the page render as though it simply has no data. */
+  var _ckRedirected = false;
+  function ckHandleUnauthorized(status) {
+    if (status !== 401 || _ckRedirected) return;
+    if (/\/Login\//i.test(location.pathname) || /LandingPage/i.test(location.pathname)) return;
+    _ckRedirected = true;
+    try { sessionStorage.removeItem('checkmate_session'); } catch (e) {}
+    location.href = '../Login/signin.html';
+  }
+
   let d = {};
 
   const req = (method, path, body) => {
@@ -10,6 +35,8 @@ window.EP = (() => {
     xhr.open(method, `${API_BASE}/${path}`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('x-role', session?.role || 'superuser');
+    const token = session?.token || ckToken();
+    if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
     try {
       xhr.send(body === undefined ? null : JSON.stringify(body));
     } catch (error) {
@@ -18,6 +45,7 @@ window.EP = (() => {
     }
     if (xhr.status >= 400) {
       console.error(`API ${method} ${path} failed`, xhr.status, xhr.responseText);
+      ckHandleUnauthorized(xhr.status);
       return null;
     }
     return xhr.responseText ? JSON.parse(xhr.responseText) : null;
@@ -148,3 +176,22 @@ window.UI = {
   vopts() { return EP.vendors.map((v) => `<option value="${v.name}">${v.name}</option>`).join(''); },
   viewDetail(fields) { return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${fields.map(([k, v]) => `<div style="background:#22223a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:11px"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:3px">${k}</div><div style="font-size:13px;font-weight:600;color:#f1f5f9">${v}</div></div>`).join('')}</div>`; },
 };
+
+/* Every superuser page ships the sidebar identity as static placeholder markup
+   ("Super Admin / superuser@demo.com"). Fill it from the real login session so
+   the portal shows whoever is actually signed in. */
+document.addEventListener('DOMContentLoaded', () => {
+  let s = null;
+  try {
+    s = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null');
+  } catch { /* corrupt session -> leave the placeholder text alone */ }
+  const u = s && s.user;
+  if (!u) return;
+
+  document.querySelectorAll('.sb-un').forEach((el) => { el.textContent = u.name || 'Superuser'; });
+  document.querySelectorAll('.sb-ue').forEach((el) => { el.textContent = u.email || ''; });
+
+  // The round avatar shows the first letter of the signed-in user's name.
+  const av = document.querySelector('.sb-av');
+  if (av && u.name) av.textContent = u.name.trim().charAt(0).toUpperCase();
+});

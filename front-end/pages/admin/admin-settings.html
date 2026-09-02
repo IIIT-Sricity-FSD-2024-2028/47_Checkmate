@@ -86,18 +86,19 @@
                 <div class="filter-grid" style="grid-template-columns: 1fr;">
                     <div class="input-group">
                         <label>Global Platform Commission Fee (%)</label>
-                        <input type="number" class="form-control" value="10" />
+                        <input type="number" id="setCommission" class="form-control" value="10" min="0" max="100" step="0.5" />
                     </div>
                     <div class="input-group">
                         <label>Tax Withholding Rate (%)</label>
-                        <input type="number" class="form-control" value="0" />
+                        <input type="number" id="setTax" class="form-control" value="0" min="0" max="100" step="0.5" />
                     </div>
                     <div class="input-group">
                         <label>Minimum Vendor Payout Threshold ($)</label>
-                        <input type="number" class="form-control" value="500" />
+                        <input type="number" id="setPayoutMin" class="form-control" value="500" min="0" step="50" />
                     </div>
                     <div style="margin-top: 10px;">
-                      <button class="export-btn">Save Business Rules</button>
+                      <button class="export-btn" id="saveRules">Save Business Rules</button>
+                      <span id="rulesStatus" style="margin-left:12px;font-size:12.5px;"></span>
                     </div>
                 </div>
             </div>
@@ -111,24 +112,25 @@
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Vendor Auto-Approval</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Automatically approve trusted vendor documents</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                        <input type="checkbox" id="setAutoApprove" style="width: 20px; height: 20px; accent-color: var(--pink);" />
                     </div>
                     <div class="approval-item" style="padding: 16px;">
                         <div>
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Maintenance Mode</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Prevent client and vendor logins</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" />
+                        <input type="checkbox" id="setMaintenance" style="width: 20px; height: 20px; accent-color: var(--pink);" />
                     </div>
                     <div class="approval-item" style="padding: 16px;">
                         <div>
                             <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px;">Public Event Directory</h4>
                             <p style="font-size: 12px; color: var(--text-muted);">Allow non-registered users to view public events</p>
                         </div>
-                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--pink);" checked />
+                        <input type="checkbox" id="setPublicDirectory" style="width: 20px; height: 20px; accent-color: var(--pink);" checked />
                     </div>
                 </div>
-                <button class="export-btn" style="margin-top: 24px;">Save Toggles</button>
+                <button class="export-btn" id="saveToggles" style="margin-top: 24px;">Save Toggles</button>
+                <span id="togglesStatus" style="margin-left:12px;font-size:12.5px;"></span>
             </div>
         </div>
       </div>
@@ -172,6 +174,94 @@
   <script>lucide.createIcons();</script>
 
     <!-- Global Injections -->
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const API_BASE = window.CHECKMATE_API_BASE || 'http://localhost:3000/api';
+      let session = null;
+      try { session = JSON.parse(sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session') || 'null'); } catch (e) {}
+
+      /* These settings have no dedicated module, so they live under the generic
+         state/:key store — the same mechanism the chat threads and progress bars use. */
+      function api(method, path, body) {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, API_BASE + '/' + path, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('x-role', (session && session.role) || 'admin');
+        if (session && session.token) xhr.setRequestHeader('Authorization', 'Bearer ' + session.token);
+        try { xhr.send(body === undefined ? null : JSON.stringify(body)); } catch (e) { return null; }
+        if (xhr.status === 401) { location.href = '../Login/signin.html'; return null; }
+        if (xhr.status >= 400) return null;
+        try { return xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch (e) { return null; }
+      }
+
+      // Values used when nothing has been saved yet.
+      const DEFAULTS = {
+        commissionPct: 10,
+        taxWithholdingPct: 0,
+        minPayoutThreshold: 500,
+        vendorAutoApproval: false,
+        maintenanceMode: false,
+        publicEventDirectory: true,
+      };
+
+      const el = (id) => document.getElementById(id);
+
+      function load() {
+        const saved = api('GET', 'state/platformSettings') || {};
+        const s = Object.assign({}, DEFAULTS, saved);
+        el('setCommission').value = s.commissionPct;
+        el('setTax').value = s.taxWithholdingPct;
+        el('setPayoutMin').value = s.minPayoutThreshold;
+        el('setAutoApprove').checked = !!s.vendorAutoApproval;
+        el('setMaintenance').checked = !!s.maintenanceMode;
+        el('setPublicDirectory').checked = !!s.publicEventDirectory;
+        return s;
+      }
+
+      let current = load();
+
+      function flash(target, message, ok) {
+        const node = el(target);
+        node.textContent = message;
+        node.style.color = ok ? '#22c55e' : '#ef4444';
+        setTimeout(() => { node.textContent = ''; }, 3000);
+      }
+
+      // Saving merges into `current` so the two buttons never wipe each other's half.
+      function persist(patch, statusId) {
+        const next = Object.assign({}, current, patch);
+        const result = api('PUT', 'state/platformSettings', { value: next });
+        if (result === null) { flash(statusId, 'Could not save — check the backend.', false); return; }
+        current = next;
+        flash(statusId, 'Saved.', true);
+      }
+
+      el('saveRules').addEventListener('click', () => {
+        const commission = parseFloat(el('setCommission').value);
+        const tax = parseFloat(el('setTax').value);
+        const minPayout = parseFloat(el('setPayoutMin').value);
+        if ([commission, tax, minPayout].some((n) => isNaN(n) || n < 0)) {
+          flash('rulesStatus', 'Enter positive numbers in all three fields.', false);
+          return;
+        }
+        if (commission > 100 || tax > 100) {
+          flash('rulesStatus', 'Percentages cannot exceed 100.', false);
+          return;
+        }
+        persist({ commissionPct: commission, taxWithholdingPct: tax, minPayoutThreshold: minPayout }, 'rulesStatus');
+      });
+
+      el('saveToggles').addEventListener('click', () => {
+        persist({
+          vendorAutoApproval: el('setAutoApprove').checked,
+          maintenanceMode: el('setMaintenance').checked,
+          publicEventDirectory: el('setPublicDirectory').checked,
+        }, 'togglesStatus');
+      });
+    });
+  </script>
+
     <script src="../../scripts/profile-modal.js"></script>
     <script src="../../scripts/welcome-overlay.js"></script>
 </body>

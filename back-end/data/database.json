@@ -79,26 +79,6 @@
       "status": "Active",
       "created": "2026-04-15",
       "passwordHash": "23f51cef4f24ffa2d7f5d3a378e2204e20f99d78f27d2215b140bf6af34602eb"
-    },
-    {
-      "id": "U009",
-      "name": "Test Vendor",
-      "email": "test@vendor.com",
-      "phone": "+1 555-9999",
-      "role": "Vendor",
-      "status": "Active",
-      "created": "2026-09-02",
-      "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976"
-    },
-    {
-      "name": "Jane Client",
-      "email": "jane@client.com",
-      "phone": "+1 555-8888",
-      "role": "Client",
-      "status": "Active",
-      "created": "2026-09-02",
-      "passwordHash": "92f471091a5f0daa7ccde99f0383a9bbb286f9c05341dea3dedf4d5ede2cb361",
-      "id": "U010"
     }
   ],
   "events": [
@@ -353,6 +333,20 @@
           "severity": "high"
         }
       ]
+    },
+    {
+      "name": "International Tech Expo 2026",
+      "type": "Conference",
+      "date": "2026-09-15",
+      "venue": "Grand Ballroom",
+      "budget": 60000,
+      "status": "confirmed",
+      "client": "Global Tech Inc",
+      "clientId": "U004",
+      "vendor": "Elite Events Co.",
+      "vendorId": "V001",
+      "createdBy": "client",
+      "id": "EVT008"
     }
   ],
   "resources": [
@@ -450,8 +444,8 @@
       "vendorId": "V001",
       "quantity": 400,
       "total": 400,
-      "avail": 300,
-      "quantityAvailable": 300,
+      "avail": 400,
+      "quantityAvailable": 400,
       "price": 8,
       "unit": "day",
       "available": true,
@@ -467,8 +461,8 @@
       "vendorId": "V003",
       "quantity": 10,
       "total": 10,
-      "avail": 8,
-      "quantityAvailable": 8,
+      "avail": 10,
+      "quantityAvailable": 10,
       "price": 250,
       "unit": "day",
       "available": true,
@@ -484,8 +478,8 @@
       "vendorId": "V004",
       "quantity": 15,
       "total": 15,
-      "avail": 12,
-      "quantityAvailable": 12,
+      "avail": 15,
+      "quantityAvailable": 15,
       "price": 120,
       "unit": "day",
       "available": true,
@@ -501,8 +495,8 @@
       "vendorId": "V001",
       "quantity": 30,
       "total": 30,
-      "avail": 24,
-      "quantityAvailable": 24,
+      "avail": 30,
+      "quantityAvailable": 30,
       "price": 35,
       "unit": "day",
       "available": true,
@@ -518,8 +512,8 @@
       "vendorId": "V001",
       "quantity": 5,
       "total": 5,
-      "avail": 3,
-      "quantityAvailable": 3,
+      "avail": 5,
+      "quantityAvailable": 5,
       "price": 450,
       "unit": "day",
       "available": true,
@@ -535,8 +529,8 @@
       "vendorId": "V001",
       "quantity": 35,
       "total": 35,
-      "avail": 28,
-      "quantityAvailable": 28,
+      "avail": 35,
+      "quantityAvailable": 35,
       "price": 20,
       "unit": "day",
       "available": true,
@@ -552,8 +546,8 @@
       "vendorId": "V004",
       "quantity": 14,
       "total": 14,
-      "avail": 10,
-      "quantityAvailable": 10,
+      "avail": 14,
+      "quantityAvailable": 14,
       "price": 180,
       "unit": "day",
       "available": true,
@@ -572,9 +566,9 @@
       "vendorId": "V001",
       "phone": "+1 555-1003",
       "email": "mike.staff@eliteevents.com",
-      "workload": 40,
-      "status": "available",
-      "avail": "Available",
+      "workload": 50,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 2,
       "avatar": "pink",
       "assignedEvents": [
@@ -592,9 +586,9 @@
       "vendorId": "V001",
       "phone": "+1 555-1007",
       "email": "elena.staff@eliteevents.com",
-      "workload": 60,
-      "status": "busy",
-      "avail": "Busy",
+      "workload": 25,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "purple",
       "assignedEvents": [
@@ -610,14 +604,12 @@
       "vendorId": "V004",
       "phone": "+1 555-1012",
       "email": "david.kim@soundpro.com",
-      "workload": 30,
+      "workload": 0,
       "status": "available",
       "avail": "Available",
-      "events": 1,
+      "events": 0,
       "avatar": "teal",
-      "assignedEvents": [
-        "EVT003"
-      ]
+      "assignedEvents": []
     },
     {
       "id": "S004",
@@ -628,9 +620,9 @@
       "vendorId": "V001",
       "phone": "+1 555-1014",
       "email": "marcus@eliteevents.com",
-      "workload": 40,
-      "status": "available",
-      "avail": "Available",
+      "workload": 25,
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "orange",
       "assignedEvents": [
@@ -647,8 +639,8 @@
       "phone": "+1 555-1016",
       "email": "chloe@eliteevents.com",
       "workload": 25,
-      "status": "available",
-      "avail": "Available",
+      "status": "assigned",
+      "avail": "Assigned",
       "events": 1,
       "avatar": "green",
       "assignedEvents": [
@@ -917,28 +909,6 @@
       ],
       "status": "pending",
       "submittedAt": "2026-04-27T14:40:00.000Z"
-    },
-    {
-      "status": "approved",
-      "submittedAt": "2026-09-02T11:59:31.001Z",
-      "vendorName": "Test Vendor",
-      "businessName": "Test Events LLC",
-      "email": "test@vendor.com",
-      "phone": "+1 555-9999",
-      "category": "General",
-      "documents": [
-        {
-          "name": "business-license.pdf",
-          "type": "license"
-        },
-        {
-          "name": "tax-id.pdf",
-          "type": "tax_id"
-        }
-      ],
-      "passwordHash": "528832802a4dad943084018f239c6469602e7ee9c792592c3da794301e001976",
-      "id": "VAPP003",
-      "decidedAt": "2026-09-02T11:59:31.009Z"
     }
   ],
   "vendors": [
@@ -983,15 +953,6 @@
       "category": "Catering & Hospitality",
       "status": "Approved",
       "rating": 4.6
-    },
-    {
-      "id": "V006",
-      "name": "Test Events LLC",
-      "businessName": "Test Events LLC",
-      "category": "General",
-      "status": "Approved",
-      "rating": 5,
-      "created": "2026-09-02"
     }
   ],
   "venues": [
@@ -1124,6 +1085,42 @@
       "settledAt": "2026-05-02T14:30:00.000Z",
       "settledBy": "U001",
       "created": "2026-04-20"
+    },
+    {
+      "id": "BK005",
+      "eventId": "EVT008",
+      "eventName": "International Tech Expo 2026",
+      "client": "Global Tech Inc",
+      "clientId": "U004",
+      "vendor": "Elite Events Co.",
+      "vendorId": "V001",
+      "status": "Confirmed",
+      "cost": 60000,
+      "advancePaid": 0,
+      "paymentStatus": "unpaid",
+      "commissionRate": 0.1,
+      "commissionAmount": 6000,
+      "vendorPayoutAmount": 54000,
+      "payoutStatus": "pending",
+      "created": "2026-09-02"
+    },
+    {
+      "eventName": "Summer Charity Gala",
+      "client": "Emily Carter",
+      "clientId": "U004",
+      "vendor": "Aurora Event Studio",
+      "vendorId": "V002",
+      "cost": 35000,
+      "status": "Confirmed",
+      "commissionRate": 0.1,
+      "commissionAmount": 3500,
+      "vendorPayoutAmount": 31500,
+      "payoutStatus": "settled",
+      "paymentStatus": "unpaid",
+      "created": "2026-09-02",
+      "id": "BK006",
+      "settledAt": "2026-09-02T12:43:08.504Z",
+      "settledBy": "U001"
     }
   ],
   "messages": {
@@ -1261,31 +1258,17 @@
       "registration": 100,
       "event": 100,
       "breakdown": 100
+    },
+    "EVT008": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
     }
   },
   "staffRequests": [],
   "staffTasks": [],
-  "vendorDocSubmission": {
-    "status": "pending",
-    "submittedAt": "2026-09-02T11:59:31.001Z",
-    "vendorName": "Test Vendor",
-    "businessName": "Test Events LLC",
-    "email": "test@vendor.com",
-    "phone": "+1 555-9999",
-    "category": "General",
-    "documents": [
-      {
-        "name": "business-license.pdf",
-        "type": "license"
-      },
-      {
-        "name": "tax-id.pdf",
-        "type": "tax_id"
-      }
-    ],
-    "passwordHash": "MyP@ssw0rd",
-    "id": "VAPP003"
-  },
+  "vendorDocSubmission": null,
   "session": {
     "id": "U004",
     "user": "Emily Carter",
@@ -1389,14 +1372,30 @@
       "id": "LOG002",
       "userId": "SYS",
       "userRole": "System",
-      "action": "VENDOR_APPLICATION_APPROVED",
-      "entityType": "VENDOR_APPLICATION",
-      "entityId": "VAPP003",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT008",
       "details": {
-        "businessName": "Test Events LLC",
-        "vendorName": "Test Vendor"
+        "name": "International Tech Expo 2026",
+        "type": "Conference",
+        "date": "2026-09-15",
+        "budget": 60000
       },
-      "createdAt": "2026-09-02T11:59:31.010Z"
+      "createdAt": "2026-09-02T12:43:08.482Z"
+    },
+    {
+      "id": "LOG003",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT008",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "International Tech Expo 2026"
+      },
+      "createdAt": "2026-09-02T12:43:08.492Z"
     }
   ]
 }

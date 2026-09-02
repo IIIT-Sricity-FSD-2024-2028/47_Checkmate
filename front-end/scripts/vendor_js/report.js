@@ -99,7 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const issue = {
-      id:        uid('ISS'),
+      // No `id` here on purpose. The backend assigns ISS001, ISS002, ... via
+      // DataService.nextId(). A client-made id like "ISSMF2K8L1" breaks that
+      // counter, because nextId() strips the letters and takes the max number.
       title:     titleEl.value.trim(),
       desc:      descEl.value.trim(),
       priority:  priorityEl.value,
@@ -115,6 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const savedIssue = DB.add('issues', issue);
+
+    /* DB.add returns null when the API call failed. Stop here and tell the
+       user, instead of crashing on savedIssue.event a line later. */
+    if (!savedIssue) {
+      Toast.show('Could not submit the issue. Check that the backend is running.', 'error');
+      return;
+    }
 
     /* Broadcast to Coordination Hub */
     if (window.CoordHub && (savedIssue.event || savedIssue.eventId)) {
