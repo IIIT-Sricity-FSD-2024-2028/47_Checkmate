@@ -6,3 +6,5 @@ dist/
 # Rotated log files (written by winston-daily-rotate-file)
 back-end/logs/
 !back-end/logs/.gitkeep
+back-end/data/database.json
+back-end/docs/swagger.json

@@ -256,10 +256,10 @@ export const seedData: AppData = {
     { id: 'VN006', vendorId: 'V002', name: 'Crystal Glasshouse', location: 'Botanical Gardens', capacity: 180, pricePerDay: 3200, status: 'AVAILABLE' },
   ],
   bookings: [
-    { id: 'BK001', eventId: 'EVT002', eventName: 'Sarah & Mike Wedding', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', status: 'Confirmed', cost: 25000, advancePaid: 12500, paymentStatus: 'partially_paid', created: '2026-04-10' },
-    { id: 'BK002', eventId: 'EVT003', eventName: 'Annual Corporate Gala', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', status: 'In Progress', cost: 18000, advancePaid: 18000, paymentStatus: 'paid', created: '2026-04-15' },
-    { id: 'BK003', eventId: 'EVT005', eventName: 'FinTech Global Keynote', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', status: 'Confirmed', cost: 32000, advancePaid: 16000, paymentStatus: 'partially_paid', created: '2026-04-18' },
-    { id: 'BK004', eventId: 'EVT006', eventName: '25th Anniversary Banquet', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', status: 'Completed', cost: 22000, advancePaid: 22000, paymentStatus: 'paid', created: '2026-04-20' },
+    { id: 'BK001', eventId: 'EVT002', eventName: 'Sarah & Mike Wedding', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', vendorId: 'V001', status: 'Confirmed', cost: 25000, advancePaid: 12500, paymentStatus: 'partially_paid', commissionRate: 0.10, commissionAmount: 2500, vendorPayoutAmount: 22500, payoutStatus: 'pending', created: '2026-04-10' },
+    { id: 'BK002', eventId: 'EVT003', eventName: 'Annual Corporate Gala', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', vendorId: 'V001', status: 'In Progress', cost: 18000, advancePaid: 18000, paymentStatus: 'paid', commissionRate: 0.10, commissionAmount: 1800, vendorPayoutAmount: 16200, payoutStatus: 'pending', created: '2026-04-15' },
+    { id: 'BK003', eventId: 'EVT005', eventName: 'FinTech Global Keynote', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', vendorId: 'V001', status: 'Confirmed', cost: 32000, advancePaid: 16000, paymentStatus: 'partially_paid', commissionRate: 0.10, commissionAmount: 3200, vendorPayoutAmount: 28800, payoutStatus: 'pending', created: '2026-04-18' },
+    { id: 'BK004', eventId: 'EVT006', eventName: '25th Anniversary Banquet', client: 'Emily Carter', clientId: 'U004', vendor: 'Elite Events Co.', vendorId: 'V001', status: 'Completed', cost: 22000, advancePaid: 22000, paymentStatus: 'paid', commissionRate: 0.10, commissionAmount: 2200, vendorPayoutAmount: 19800, payoutStatus: 'settled', settledAt: '2026-05-02T14:30:00.000Z', settledBy: 'U001', created: '2026-04-20' },
   ],
   messages: {
     'vendor-vendor': [

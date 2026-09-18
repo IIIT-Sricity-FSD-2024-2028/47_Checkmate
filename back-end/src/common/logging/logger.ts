@@ -13,7 +13,7 @@ const maxFiles = process.env.LOG_MAX_FILES || '14d';
 // codebase MUST pass a `kind`; combined-*.log is the unfiltered safety net that
 // catches any record where a caller forgot one.
 const onlyKind = (kind: string) =>
-  winston.format((info) => (info.kind === kind ? info : false))();
+  winston.format((info: winston.Logform.TransformableInfo) => (info.kind === kind ? info : false))();
 
 const baseFormat = winston.format.combine(
   winston.format.timestamp(),

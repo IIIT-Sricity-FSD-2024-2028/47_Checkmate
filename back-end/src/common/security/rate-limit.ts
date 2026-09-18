@@ -1,4 +1,5 @@
 import rateLimit from 'express-rate-limit';
+import { Request, Response } from 'express';
 import { logger } from '../logging/logger';
 
 const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
@@ -11,7 +12,7 @@ export const loginLimiter = rateLimit({
   limit: Number(process.env.RATE_LIMIT_LOGIN_MAX) || 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  handler: (req, res) => {
+  handler: (req: Request, res: Response) => {
     logger.warn({ message: `rate limit hit ${req.originalUrl}`, ip: req.ip, kind: 'error' });
     res.status(429).json({
       statusCode: 429,
@@ -26,7 +27,7 @@ export const signupLimiter = rateLimit({
   limit: Number(process.env.RATE_LIMIT_SIGNUP_MAX) || 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  handler: (req, res) => {
+  handler: (req: Request, res: Response) => {
     logger.warn({ message: `rate limit hit ${req.originalUrl}`, ip: req.ip, kind: 'error' });
     res.status(429).json({
       statusCode: 429,

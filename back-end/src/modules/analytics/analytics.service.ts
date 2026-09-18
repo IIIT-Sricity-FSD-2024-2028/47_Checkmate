@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
+import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
 // The revenue model + dashboard KPIs. Everything here is derived live from the
 // bookings/events/resources collections -- nothing is stored pre-computed.
@@ -23,9 +24,36 @@ export class AnalyticsService {
     // Whatever is booked but not yet in a confirmed state.
     const pendingRevenue = totalRevenue - confirmedRevenue;
 
+    // Platform Commission (10%) and Vendor Payouts (90%)
+    const platformCommissionEarned = snapshot.bookings.reduce(
+      (sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE),
+      0,
+    );
+    const confirmedCommissionEarned = snapshot.bookings
+      .filter((b) => confirmedStatuses.includes(b.status))
+      .reduce(
+        (sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE),
+        0,
+      );
+
+    const totalVendorPayouts = snapshot.bookings.reduce(
+      (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
+      0,
+    );
+    const pendingVendorPayouts = snapshot.bookings
+      .filter((b) => (b.payoutStatus || 'pending') === 'pending')
+      .reduce(
+        (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
+        0,
+      );
+    const settledVendorPayouts = snapshot.bookings
+      .filter((b) => b.payoutStatus === 'settled')
+      .reduce(
+        (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
+        0,
+      );
+
     // Resource utilisation = what share of stock is currently checked out.
-    // `??` picks the first value that is not null/undefined, because different
-    // seed rows use different field names for the same idea.
     const totalResources = snapshot.resources.reduce((sum, r) => sum + Number(r.total ?? r.quantity ?? 0), 0);
     const availableResources = snapshot.resources.reduce((sum, r) => sum + Number(r.avail ?? r.quantityAvailable ?? r.quantity ?? 0), 0);
     const resourceUtilizationRate = totalResources > 0 ? Number((((totalResources - availableResources) / totalResources) * 100).toFixed(2)) : 0;
@@ -48,15 +76,37 @@ export class AnalyticsService {
       resources: snapshot.resources.length,
       staff: snapshot.staff.length,
       openIssues: snapshot.issues.filter((issue) => issue.status !== 'closed' && issue.status !== 'resolved').length,
+      // ── Financial Metrics ──
+      grossBookingVolume: totalRevenue,
       totalRevenue,
       confirmedRevenue,
       pendingRevenue,
-      // Guard the divide -- with zero bookings this would otherwise be NaN.
+      commissionRate: DEFAULT_COMMISSION_RATE,
+      platformCommissionEarned,
+      confirmedCommissionEarned,
+      totalVendorPayouts,
+      pendingVendorPayouts,
+      settledVendorPayouts,
       averageBookingValue: snapshot.bookings.length > 0 ? Number((totalRevenue / snapshot.bookings.length).toFixed(2)) : 0,
       resourceUtilizationRate,
       commissionPct,
       platformCommission,
       vendorPayout,
+    };
+  }
+
+  financialSummary() {
+    const sum = this.summary();
+    return {
+      grossBookingVolume: sum.grossBookingVolume,
+      platformCommissionRate: sum.commissionRate,
+      platformCommissionEarned: sum.platformCommissionEarned,
+      confirmedCommissionEarned: sum.confirmedCommissionEarned,
+      totalVendorPayoutObligations: sum.totalVendorPayouts,
+      pendingVendorPayouts: sum.pendingVendorPayouts,
+      settledVendorPayouts: sum.settledVendorPayouts,
+      averageBookingValue: sum.averageBookingValue,
+      totalBookings: sum.bookings,
     };
   }
 

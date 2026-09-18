@@ -423,13 +423,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Message: show notes
     const msgEl = card.querySelector('.client-req-message');
     if (msgEl) msgEl.textContent = event.notes || 'No additional notes from client.';
-    // Extras: budget, people, event type
+    // Extras: budget, people, event type, commission split
     const extrasEl = card.querySelector('.client-req-extras');
     if (extrasEl) {
+      const budgetVal = Number(event.budget || event.estimatedCost || 0);
+      const fee = budgetVal > 0 ? (budgetVal * 0.10) : 0;
+      const net = budgetVal > 0 ? (budgetVal - fee) : 0;
+      const splitInfo = budgetVal > 0 
+        ? `<div class="client-extra-item" style="border: 1px solid rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); border-radius: 8px; padding: 10px;">
+            <i data-lucide="calculator" style="color:#22c55e;"></i>
+            <div>
+              <div class="client-extra-label" style="color:#22c55e; font-weight:600;">Net Payout (90%)</div>
+              <div class="client-extra-value" style="color:#22c55e; font-weight:700;">$${net.toLocaleString()} <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(Fee: -$${fee.toLocaleString()})</span></div>
+            </div>
+           </div>`
+        : '';
+
       extrasEl.innerHTML = `
-        <div class="client-extra-item"><i data-lucide="dollar-sign"></i><div><div class="client-extra-label">Budget Range</div><div class="client-extra-value">${event.budgetRange || 'Not specified'}</div></div></div>
+        <div class="client-extra-item"><i data-lucide="dollar-sign"></i><div><div class="client-extra-label">Event Budget</div><div class="client-extra-value">${event.budget ? '$' + Number(event.budget).toLocaleString() : (event.budgetRange || 'Not specified')}</div></div></div>
         <div class="client-extra-item"><i data-lucide="users"></i><div><div class="client-extra-label">Expected Guests</div><div class="client-extra-value">${event.people || 0} people</div></div></div>
-        <div class="client-extra-item"><i data-lucide="tag"></i><div><div class="client-extra-label">Event Type</div><div class="client-extra-value">${event.type || '—'}</div></div></div>`;
+        <div class="client-extra-item"><i data-lucide="tag"></i><div><div class="client-extra-label">Event Type</div><div class="client-extra-value">${event.type || '—'}</div></div></div>
+        ${splitInfo}`;
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
