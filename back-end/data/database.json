@@ -489,6 +489,29 @@
         }
       ],
       "estimatedCost": 960
+    },
+    {
+      "name": "Automated Test Gala 2026",
+      "type": "Gala",
+      "date": "2026-08-30",
+      "venue": "Skyline Ballroom",
+      "budget": 20000,
+      "status": "pending",
+      "client": "Emily Carter",
+      "createdBy": "client",
+      "id": "EVT012"
+    },
+    {
+      "name": "Booking Auto-Gen Test",
+      "type": "Corporate",
+      "date": "2026-09-15",
+      "venue": "Convention Center",
+      "budget": 35000,
+      "status": "confirmed",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "createdBy": "client",
+      "id": "EVT013"
     }
   ],
   "resources": [
@@ -804,6 +827,20 @@
       "events": 0,
       "avatar": "purple",
       "assignedEvents": []
+    },
+    {
+      "name": "Test Tech 1788425691247",
+      "role": "Lighting Tech",
+      "phone": "+1 555-9988",
+      "status": "assigned",
+      "workload": 25,
+      "events": 1,
+      "avatar": "purple",
+      "id": "S007",
+      "avail": "Assigned",
+      "assignedEvents": [
+        "EVT001"
+      ]
     }
   ],
   "packages": [
@@ -1011,6 +1048,17 @@
       "eventPeople": 320,
       "role": "Guest Relations Lead",
       "status": "accepted"
+    },
+    {
+      "staffId": "S007",
+      "staffName": "Test Tech 1788425691247",
+      "eventId": "EVT001",
+      "eventName": "Tech Summit 2026",
+      "role": "Lighting Tech",
+      "status": "assigned",
+      "priority": "Medium",
+      "assignedAt": "2026-09-03T08:54:51.247Z",
+      "id": "A006"
     }
   ],
   "vendorApplications": [
@@ -1257,6 +1305,18 @@
       "advancePaid": 22000,
       "paymentStatus": "paid",
       "created": "2026-04-20"
+    },
+    {
+      "id": "BK005",
+      "eventId": "EVT013",
+      "eventName": "Booking Auto-Gen Test",
+      "client": "Acme Corp",
+      "vendor": "Elite Events Co.",
+      "status": "Confirmed",
+      "cost": 35000,
+      "advancePaid": 0,
+      "paymentStatus": "unpaid",
+      "created": "2026-09-03"
     }
   ],
   "messages": {
@@ -1402,6 +1462,18 @@
       "breakdown": 0
     },
     "EVT011": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT012": {
+      "setup": 0,
+      "registration": 0,
+      "event": 0,
+      "breakdown": 0
+    },
+    "EVT013": {
       "setup": 0,
       "registration": 0,
       "event": 0,
@@ -2168,6 +2240,50 @@
         "durationMs": 3
       },
       "createdAt": "2026-09-01T19:04:06.340Z"
+    },
+    {
+      "id": "LOG040",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT012",
+      "details": {
+        "name": "Automated Test Gala 2026",
+        "type": "Gala",
+        "date": "2026-08-30",
+        "budget": 20000
+      },
+      "createdAt": "2026-09-03T08:54:51.239Z"
+    },
+    {
+      "id": "LOG041",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_CREATED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "name": "Booking Auto-Gen Test",
+        "type": "Corporate",
+        "date": "2026-09-15",
+        "budget": 35000
+      },
+      "createdAt": "2026-09-03T08:54:51.243Z"
+    },
+    {
+      "id": "LOG042",
+      "userId": "SYS",
+      "userRole": "System",
+      "action": "EVENT_STATUS_CHANGED",
+      "entityType": "EVENT",
+      "entityId": "EVT013",
+      "details": {
+        "oldStatus": "pending",
+        "newStatus": "confirmed",
+        "eventName": "Booking Auto-Gen Test"
+      },
+      "createdAt": "2026-09-03T08:54:51.244Z"
     }
   ],
   "platformSettings": {
