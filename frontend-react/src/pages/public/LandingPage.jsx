@@ -6,6 +6,10 @@ function LandingPage() {
             Welcome to EventPro
         </h1>
 
+        <Link to="/signin">
+            <button>Sign In</button>
+        </Link>
+
         <Link to="/client/dashboard">
             <button>Client</button>
         </Link>

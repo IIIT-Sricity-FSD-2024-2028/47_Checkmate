@@ -18,12 +18,14 @@ import StaffPerformance from "../pages/staff/Performance";
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
 import SuperuserLayout from "../layouts/SuperUser";
+import SignIn from "../pages/public/SignIn";
 
 
 function AppRoutes() {
     return <BrowserRouter>
         <Routes>
             <Route path="/" element={<LandingPage />}></Route>
+            <Route path="/signin" element={<SignIn />}></Route>
 
             <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<AdminDashboard />}></Route>
