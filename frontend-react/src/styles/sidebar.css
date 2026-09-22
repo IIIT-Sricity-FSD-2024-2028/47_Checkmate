@@ -126,3 +126,33 @@
     color: var(--text-primary, #f0e8ff);
     background: rgba(255, 255, 255, 0.05);
 }
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 68px;
+        padding: 14px 8px;
+    }
+
+    .brand-name,
+    .brand-role,
+    .nav-item span,
+    .user-info,
+    .logout-btn span {
+        display: none !important;
+    }
+
+    .sidebar__brand {
+        padding: 4px;
+        justify-content: center;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .logout-btn {
+        justify-content: center;
+        padding: 12px;
+    }
+}
