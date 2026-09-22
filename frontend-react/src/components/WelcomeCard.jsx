@@ -1,8 +1,14 @@
-import "../styles/dashboard.css"
-function WelcomeCard({user_name,description}){
-    return <div>
-        <h1>Welcome back,{user_name}</h1>
-        <h4>{description}</h4>
-    </div>
+import React from "react";
+import "../styles/dashboard.css";
+
+function WelcomeCard({name, description }) {
+    
+    return (
+        <div className="welcome-banner">
+            <h2>Welcome back ,{name}</h2>
+            <p>{description}</p>
+        </div>
+    );
 }
-export default WelcomeCard
+
+export default WelcomeCard;

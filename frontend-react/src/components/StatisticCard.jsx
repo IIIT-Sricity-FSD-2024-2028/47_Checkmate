@@ -29,11 +29,13 @@ function StatisticCard({ title, value, description = null, status, icon: IconPro
         }
     }
 
+    const isEarnings = key.includes("earning") || key.includes("payout") || key.includes("net") || key.includes("dollar");
+
     return (
-        <div className="stat-card">
+        <div className={`stat-card ${isEarnings ? "stat-card--earnings" : ""}`.trim()}>
             <div className="stat-card__top">
                 <div className={`stat-icon ${iconClass}`.trim()}>
-                    {React.isValidElement(Icon) ? Icon : Icon ? <Icon size={20} /> : null}
+                    {React.isValidElement(Icon) ? Icon : Icon ? <Icon size={18} /> : null}
                 </div>
                 {status && <span className="stat-trend up">{status}</span>}
             </div>
