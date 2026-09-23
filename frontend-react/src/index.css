@@ -2,3 +2,5 @@
 @import "styles/sidebar.css";
 @import "styles/layout.css";
 @import "styles/variables.css";
+@import "styles/components/auth/authbrandpanel.css";
+@import "styles/components/auth/signin.css";
