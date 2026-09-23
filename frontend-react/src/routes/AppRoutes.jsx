@@ -18,10 +18,10 @@ import StaffPerformance from "../pages/staff/Performance";
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
 import SuperuserLayout from "../layouts/SuperUser";
-import SignIn from "../pages/public/SignIn";
+import SignIn from "../pages/auth/SignIn";
 import Events from "../pages/vendor/Events";
-import SignUp1 from "../pages/public/SignUp1";
-import SignUp2 from "../pages/public/SignUp2";
+import SignUp1 from "../pages/auth/SignUp1";
+import SignUp2 from "../pages/auth/SignUp2";
 
 
 function AppRoutes() {

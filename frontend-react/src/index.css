@@ -4,6 +4,6 @@
 @import "styles/layout.css";
 @import "styles/variables.css";
 @import "styles/components/auth/authbrandpanel.css";
-@import "styles/components/auth/signin.css";
+@import "styles/auth/signin.css";
 @import "styles/dashboard.css";
-@import "styles/components/auth/signup.css";
+@import "styles/auth/signup.css";
