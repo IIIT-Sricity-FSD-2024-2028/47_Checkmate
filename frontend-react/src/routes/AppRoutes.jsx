@@ -18,6 +18,7 @@ import StaffPerformance from "../pages/staff/Performance";
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
 import SuperuserLayout from "../layouts/SuperUser";
+import Events from "../pages/vendor/Events";
 
 
 function AppRoutes() {
@@ -57,10 +58,12 @@ function AppRoutes() {
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
                 <Route path="dashboard" element={<VendorDashboard />}></Route>
+                 <Route path="events" element={<Events />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
                 <Route path="report-issue" element={<ReportIssue />}></Route>
+
             </Route>
         </Routes>
     </BrowserRouter>
