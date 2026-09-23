@@ -18,7 +18,7 @@ function Sidebar({ role, menuItems, userName }) {
                 {menuItems.map((item) => (
                     <a href={item.path} className="nav-item" key={item.path}>
                         <i className={item.icon}></i>
-                        {item.label}
+                        <span>{item.label}</span>
                     </a>
                 ))}
             </nav>
@@ -31,7 +31,7 @@ function Sidebar({ role, menuItems, userName }) {
                 </div>
                 <a href="/" className="logout-btn">
                     <i className="ph ph-sign-out"></i>
-                    Logout
+                    <span>Logout</span>
                 </a>
 
             </div>

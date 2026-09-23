@@ -19,6 +19,9 @@ import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
 import SuperuserLayout from "../layouts/SuperUser";
 import SignIn from "../pages/public/SignIn";
+import Events from "../pages/vendor/Events";
+import SignUp1 from "../pages/public/SignUp1";
+import SignUp2 from "../pages/public/SignUp2";
 
 
 function AppRoutes() {
@@ -26,6 +29,8 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<LandingPage />}></Route>
             <Route path="/signin" element={<SignIn />}></Route>
+            <Route path="/signup-details" element={<SignUp1 />}></Route>
+            <Route path="/signup-password" element={<SignUp2 />}></Route>
 
             <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<AdminDashboard />}></Route>
@@ -59,10 +64,12 @@ function AppRoutes() {
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
                 <Route path="dashboard" element={<VendorDashboard />}></Route>
+                 <Route path="events" element={<Events />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
                 <Route path="report-issue" element={<ReportIssue />}></Route>
+
             </Route>
         </Routes>
     </BrowserRouter>

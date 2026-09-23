@@ -66,7 +66,7 @@ function SignIn() {
 
           <p className="signup-text">
             No account?{" "}
-            <span onClick={() => navigate("/signup")}>
+            <span onClick={() => navigate("/signup-details")}>
               Create one
             </span>
           </p>

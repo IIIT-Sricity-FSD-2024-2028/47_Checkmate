@@ -1,6 +1,9 @@
+@import "styles/variables.css";
 @import "styles/global.css";
 @import "styles/sidebar.css";
 @import "styles/layout.css";
 @import "styles/variables.css";
 @import "styles/components/auth/authbrandpanel.css";
 @import "styles/components/auth/signin.css";
+@import "styles/dashboard.css";
+@import "styles/components/auth/signup.css";
