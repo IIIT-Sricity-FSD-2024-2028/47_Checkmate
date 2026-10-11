@@ -1,0 +1,78 @@
+.auth-form-card-signup {
+  width: min(80%, 520px);
+
+  padding: 30px;
+
+  box-sizing: border-box;
+
+  border-radius: 22px;
+
+  background: rgba(25, 22, 34, 0.9);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.auth-form-card-signup h2 {
+  margin: 0 0 45px;
+
+  font-size: 38px;
+
+  font-weight: 700;
+}
+
+.form-group-signup {
+  margin-bottom: 20px;
+}
+
+.form-group-signup label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #aeb1bf;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+}
+.form-group-signup input {
+  width: 100%;
+  height: 54px;
+
+  box-sizing: border-box;
+
+  padding: 0 18px;
+
+  border-radius: 12px;
+
+  border: 1px solid #30303d;
+
+  outline: none;
+
+  background: #1c1b27;
+
+  color: #ffffff;
+
+  font-size: 16px;
+
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-group-signup input::placeholder {
+  color: #666978;
+}
+
+.form-group-signup input:focus {
+  border-color: #ff2f87;
+
+  box-shadow:
+    0 0 0 3px rgba(255, 47, 135, 0.1);
+}
