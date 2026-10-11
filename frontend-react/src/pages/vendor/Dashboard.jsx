@@ -8,12 +8,17 @@ import RecentActivityItem from "../../components/vendor/RecentActivityItem"
 import AlertItem from "../../components/vendor/AlertItem"
 import QuickActionButton from "../../components/vendor/QuickActionButton"
 import { Link } from "react-router-dom";
+import { getAuthSession } from "../../services/auth/authStorage"
+
 function VendorDashboard() {
+
+    const authSession = getAuthSession();
+    const userName = authSession?.user?.name || "User";
     return (
         <div className="vendor-dashboard">
             <TopHeaderBar title="Vendor Dashboard" />
             <div className="content">
-                <WelcomeCard name="John" description="Here's what's happening with your events today." />
+                <WelcomeCard name={userName} description="Here's what's happening with your events today." />
                 <div className="stats-grid">
                     <StatisticCard 
                         value="5" 

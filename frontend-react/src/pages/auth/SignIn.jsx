@@ -5,6 +5,8 @@ import { login } from "../../services/auth/authService";
 import { saveAuthSession } from "../../services/auth/authStorage";
 
 import AuthBrandPanel from "../../components/auth/AuthBrandPanel";
+import FormInput from "../../components/auth/FormInput";
+import FormInputPassword from "../../components/auth/FormInputPassword";
 
 function SignIn() {
   const [emailInput, setEmailInput] = useState("");
@@ -36,39 +38,22 @@ function SignIn() {
         <div className="auth-form-card">
           <h2>Sign in</h2>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Email address</label>
+            <FormInput
+              label="Email address"
+              placeholder="user@example.com"
+              value={emailInput}
+              setValue={setEmailInput}
+            ></FormInput>
 
-              <input
-                type="email"
-                placeholder="user@example.com"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-              />
-            </div>
+            <FormInputPassword
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={passwordInput}
+              setValue={setPasswordInput}
+              setShowPassword={setShowPassword}
+            ></FormInputPassword>
 
-            <div className="form-group">
-              <label>Password</label>
-
-              <div className="password-input-wrapper">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                />
-
-                <button
-                  type="button"
-                  className="show-password-button"
-                  onPointerDown={() => setShowPassword(true)}
-                  onPointerUp={() => setShowPassword(false)}
-                  onPointerLeave={() => setShowPassword(false)}
-                >
-                  Show
-                </button>
-              </div>
-            </div>
             <button type="submit" className="signin-button">
               Sign in →
             </button>
