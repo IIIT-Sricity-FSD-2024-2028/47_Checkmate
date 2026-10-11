@@ -22,6 +22,7 @@ import SignIn from "../pages/auth/SignIn";
 import Events from "../pages/vendor/Events";
 import SignUp1 from "../pages/auth/SignUp1";
 import SignUp2 from "../pages/auth/SignUp2";
+import Profile from "../pages/shared/Profile";
 
 
 function AppRoutes() {
@@ -63,8 +64,9 @@ function AppRoutes() {
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
+                <Route path="profile" element={<Profile />}></Route>
                 <Route path="dashboard" element={<VendorDashboard />}></Route>
-                 <Route path="events" element={<Events />} />
+                <Route path="events" element={<Events />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
