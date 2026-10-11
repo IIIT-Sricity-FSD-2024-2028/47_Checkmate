@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AuthBrandPanel from "../../components/auth/AuthBrandPanel";
+import FormInputPassword from "../../components/auth/FormInputPassword";
 
 function SignUp2() {
   const [passwordInput, setPasswordInput] = useState("");
@@ -22,55 +23,23 @@ function SignUp2() {
 
           <h2>Create your acount</h2>
 
-          <div className="form-group">
-            <label>Password</label>
+          <FormInputPassword
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={passwordInput}
+              setValue={setPasswordInput}
+              setShowPassword={setShowPassword}
+            ></FormInputPassword>
 
-            <div className="password-input-wrapper">
-
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-              />
-
-              <button
-                type="button"
-                className="show-password-button"
-                onPointerDown={() => setShowPassword(true)}
-                onPointerUp={() => setShowPassword(false)}
-                onPointerLeave={() => setShowPassword(false)}
-              >
-                Show
-              </button>
-
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Confirm Password</label>
-
-            <div className="password-input-wrapper">
-
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={passwordConfirmInput}
-                onChange={(e) => setPasswordConfirmInput(e.target.value)}
-              />
-
-              <button
-                type="button"
-                className="show-password-button"
-                onPointerDown={() => setShowConfirmPassword(true)}
-                onPointerUp={() => setShowConfirmPassword(false)}
-                onPointerLeave={() => setShowConfirmPassword(false)}
-              >
-                Show
-              </button>
-
-            </div>
-          </div>
+            <FormInputPassword
+              label="Confirm Password"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={showConfirmPassword}
+              setValue={setPasswordConfirmInput}
+              setShowPassword={setShowConfirmPassword}
+            ></FormInputPassword>
 
           <button
             className="signin-button"
