@@ -1,3 +1,18 @@
+import {
+    LayoutDashboard,
+    ClipboardList,
+    Package,
+    Users,
+    Box,
+    Flag,
+    AlertCircle,
+    ShieldAlert,
+    MessageSquare,
+    Radio,
+    Shield,
+    ShieldCheck
+} from "lucide-react";
+
 export const clientMenuItems = [
     {
         label: "Dashboard",
@@ -35,33 +50,70 @@ export const vendorMenuItems = [
     {
         label: "Dashboard",
         path: "/vendor/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard,
     },
     {
-        label: "Events",
+        label: "Event Request",
         path: "/vendor/events",
-        icon: "ph ph-calendar"
+        icon: ClipboardList,
     },
     {
-        label: "Packages",
+        label: "Manage Resource",
+        path: "/vendor/resources",
+        icon: Package,
+    },
+    {
+        label: "Manage Staff",
+        path: "/vendor/staff",
+        icon: Users,
+    },
+    {
+        label: "Preset Package",
         path: "/vendor/packages",
-        icon: "ph ph-tote"
-    },
-    {
-        label: "Messages",
-        path: "/vendor/messages",
-        icon: "ph ph-chat-teardrop-dots"
-    },
-    {
-        label: "Billing",
-        path: "/vendor/billing",
-        icon: "ph ph-credit-card"
+        icon: Box,
     },
     {
         label: "Report Issue",
-        path: "/vendor/report-issue",
-        icon: "ph ph-warning-circle"
-    }
+        icon: Flag,
+        children: [
+            {
+                label: "Issue on Event",
+                path: "/vendor/report-issue",
+                icon: AlertCircle,
+            },
+            {
+                label: "Issue to Admin",
+                path: "/vendor/report-issue-admin",
+                icon: ShieldAlert,
+            },
+        ],
+    },
+    {
+        label: "Coordination Hub",
+        icon: MessageSquare,
+        children: [
+            {
+                label: "Event Coordination",
+                path: "/vendor/coordination",
+                icon: Radio,
+            },
+            {
+                label: "Admin Coordination",
+                path: "/vendor/coordination-admin",
+                icon: Shield,
+            },
+        ],
+    },
+    {
+        label: "Monitor Live Events",
+        path: "/vendor/monitoring",
+        icon: Radio,
+    },
+    {
+        label: "Verify Documents",
+        path: "/vendor/verify-docs",
+        icon: ShieldCheck,
+    },
 ];
 
 export const staffMenuItems = [
