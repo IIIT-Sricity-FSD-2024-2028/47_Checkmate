@@ -11,9 +11,9 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import './staff.css';
+import '../../styles/staff.css';
 import StatCard from './components/StatCard';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList } from './staffApi';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList } from '../../services/staffApi';
 
 // Month names list used for calendar header and selected date label
 // FACULTY MAY ASK: How do you show 3-letter month abbreviations instead of full names?
