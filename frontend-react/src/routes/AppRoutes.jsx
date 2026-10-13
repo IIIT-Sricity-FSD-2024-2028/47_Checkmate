@@ -22,6 +22,9 @@ import SignIn from "../pages/auth/SignIn";
 import Events from "../pages/vendor/Events";
 import SignUp1 from "../pages/auth/SignUp1";
 import SignUp2 from "../pages/auth/SignUp2";
+import VendorProfile from "../pages/vendor/Profile";
+import ClientProfile from "../pages/client/Profile";
+import StaffProfile from "../pages/staff/Profile";
 
 
 function AppRoutes() {
@@ -41,6 +44,7 @@ function AppRoutes() {
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
             <Route path="/client" element={<ClientLayout />}>
+                <Route path="profile" element={<ClientProfile />}></Route>
                 <Route path="dashboard" element={<ClientDashboard />}></Route>
                 <Route path="create-event" element={<ClientCreateEvent />}></Route>
                 <Route path="events" element={<ClientMyEvents />}></Route>
@@ -49,6 +53,7 @@ function AppRoutes() {
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
             <Route path="/staff" element={<StaffLayout />}>
+                <Route path="profile" element={<StaffProfile />}></Route>
                 <Route path="dashboard" element={<StaffDashboard />}></Route>
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
@@ -63,13 +68,14 @@ function AppRoutes() {
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
-                
-                <Route path="dashboard" element={<VendorDashboard />} />
+                <Route path="profile" element={<VendorProfile />}></Route>
+                <Route path="dashboard" element={<VendorDashboard />}></Route>
                 <Route path="events" element={<Events />} />
-                <Route path="assigned-events" element={<StaffAssignedEvents />} />
-                <Route path="task-board" element={<StaffTaskBoard />} />
-                <Route path="performance" element={<StaffPerformance />} />
-                <Route path="report-issue" element={<ReportIssue />} />
+                <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
+                <Route path="task-board" element={<StaffTaskBoard />}></Route>
+                <Route path="performance" element={<StaffPerformance />}></Route>
+                <Route path="report-issue" element={<ReportIssue />}></Route>
+
             </Route>
         </Routes>
     </BrowserRouter>

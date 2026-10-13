@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function Sidebar({ role, menuItems, userName }) {
     return (
         <aside className="sidebar">
@@ -24,11 +26,13 @@ function Sidebar({ role, menuItems, userName }) {
             </nav>
 
             <div className="sidebar__footer">
-                <div className="user-info">
+                <Link to={`/${role}/profile`}>
+                    <div className="user-info">
                     <div className="user-name">
                         {userName}
                     </div>
                 </div>
+                </Link>
                 <a href="/" className="logout-btn">
                     <i className="ph ph-sign-out"></i>
                     <span>Logout</span>
