@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import { CalendarCheck, ChevronDown, LogOut } from "lucide-react";
 
 import "../styles/sidebar.css";
@@ -128,13 +128,15 @@ function Sidebar({ role, menuItems = [], userName, userEmail: propUserEmail }) {
 
             {/* User Profile & Logout */}
             <div className="sidebar__footer">
-                <div className="user-info">
-                    <div className="user-avatar">{userInitial}</div>
-                    <div className="user-details">
-                        <div className="user-name">{effectiveName}</div>
-                        <div className="user-email">{effectiveEmail}</div>
+                <Link to={`/${role}/profile`} className="user-profile-link">
+                    <div className="user-info">
+                        <div className="user-avatar">{userInitial}</div>
+                        <div className="user-details">
+                            <div className="user-name">{effectiveName}</div>
+                            <div className="user-email">{effectiveEmail}</div>
+                        </div>
                     </div>
-                </div>
+                </Link>
                 <button type="button" className="logout-btn" onClick={handleLogout}>
                     <LogOut size={16} />
                     <span>Logout</span>
