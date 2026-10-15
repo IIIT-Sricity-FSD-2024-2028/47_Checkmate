@@ -25,6 +25,7 @@ import SignUp2 from "../pages/auth/SignUp2";
 import VendorProfile from "../pages/vendor/Profile";
 import ClientProfile from "../pages/client/Profile";
 import StaffProfile from "../pages/staff/Profile";
+import StaffReportIssue from "../pages/staff/ReportIssue";
 
 
 function AppRoutes() {
@@ -58,7 +59,7 @@ function AppRoutes() {
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
-                <Route path="report-issue" element={<ReportIssue />}></Route>
+                <Route path="report-issue" element={<StaffReportIssue />}></Route>
             </Route>
             <Route path="/superuser" element={<SuperuserLayout />}>
                 <Route path="dashboard" element={<SuperuserDashboard />}></Route>

@@ -1,34 +1,29 @@
-import { Link } from "react-router-dom";
+import Navbar from "../../components/public/Navbar";
+import Hero from "../../components/public/Hero";
+import Features from "../../components/public/Features";
+import HowItWorks from "../../components/public/HowItWorks";
+import Stats from "../../components/public/Stats";
+import Events from "../../components/public/Events";
+import CallToAction from "../../components/public/CallToAction";
+import FinalHero from "../../components/public/FinalHero";
+import Footer from "../../components/public/Footer";
 
-function LandingPage() {
-  return <div>
-    <h1>
-      Welcome to EventPro
-    </h1>
+export default function LandingPage() {
+  return (
+    <div className="landing-page">
+      <Navbar />
 
-        <Link to="/signin">
-            <button>Sign In</button>
-        </Link>
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <Stats />
+        <Events />
+        <CallToAction />
+        <FinalHero />
+      </main>
 
-        <Link to="/client/dashboard">
-            <button>Client</button>
-        </Link>
-        <Link to="/vendor/dashboard">
-        <button>Vendor</button>
-      </Link>
-
-      <Link to="/staff/dashboard">
-        <button>Staff</button>
-      </Link>
-
-      <Link to="/admin/dashboard">
-        <button>Admin</button>
-      </Link>
-
-      <Link to="/superuser/dashboard">
-        <button>Superuser</button>
-      </Link>
+      <Footer />
     </div>
+  );
 }
-
-export default LandingPage
