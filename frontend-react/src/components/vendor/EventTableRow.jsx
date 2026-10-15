@@ -60,7 +60,7 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       {/* Action Buttons: View (Review Page), Approve, Reject */}
       <td className="table-actions-cell">
         <div className="table-actions">
-          {/* View / Review Event Button (Navigates to Event Review page) */}
+          {/* Slot 1: View / Review Event Button (Always in Column 1) */}
           <button
             className="action-btn view"
             title="Review Event"
@@ -69,8 +69,8 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
             <Eye size={16} />
           </button>
 
-          {/* Approve Button (Visible unless already confirmed) */}
-          {status !== "confirmed" && (
+          {/* Slot 2: Approve Button (Fixed in Column 2; placeholder keeps alignment if already confirmed) */}
+          {status !== "confirmed" ? (
             <button
               className="action-btn approve"
               title="Approve Request"
@@ -78,10 +78,12 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
             >
               <Check size={16} />
             </button>
+          ) : (
+            <span className="action-btn-placeholder" aria-hidden="true" />
           )}
 
-          {/* Reject Button (Visible unless already rejected) */}
-          {status !== "rejected" && (
+          {/* Slot 3: Reject Button (Fixed in Column 3; placeholder keeps alignment if already rejected) */}
+          {status !== "rejected" ? (
             <button
               className="action-btn reject"
               title="Reject Request"
@@ -89,6 +91,8 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
             >
               <X size={16} />
             </button>
+          ) : (
+            <span className="action-btn-placeholder" aria-hidden="true" />
           )}
         </div>
       </td>
