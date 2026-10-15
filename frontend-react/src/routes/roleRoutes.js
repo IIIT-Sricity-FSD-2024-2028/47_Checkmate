@@ -10,7 +10,13 @@ import {
     MessageSquare,
     Radio,
     Shield,
-    ShieldCheck
+    ShieldCheck,
+    CalendarCheck,
+    PieChart,
+    Bug,
+    DollarSign,
+    Activity,
+    Settings
 } from "lucide-react";
 
 export const clientMenuItems = [
@@ -148,32 +154,57 @@ export const adminMenuItems = [
     {
         label: "Dashboard",
         path: "/admin/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard,
     },
     {
-        label: "Events",
-        path: "/admin/events",
-        icon: "ph ph-calendar"
+        label: "Vendor Approvals",
+        path: "/admin/vendor-approvals",
+        icon: ClipboardList,
     },
     {
-        label: "Users",
+        label: "Manage Users",
         path: "/admin/users",
-        icon: "ph ph-users"
+        icon: Users,
     },
     {
-        label: "Packages",
-        path: "/admin/packages",
-        icon: "ph ph-tote"
+        label: "Monitor Events",
+        path: "/admin/events",
+        icon: CalendarCheck,
     },
     {
-        label: "Reports",
+        label: "Report & Analytics",
         path: "/admin/reports",
-        icon: "ph ph-chart-bar"
+        icon: PieChart,
     },
     {
-        label: "Report Issue",
-        path: "/admin/report-issue",
-        icon: "ph ph-warning-circle"
+        label: "Issue Tracking",
+        path: "/admin/issues",
+        icon: Bug,
+    },
+    {
+        label: "Service Moderation",
+        path: "/admin/moderation",
+        icon: Shield,
+    },
+    {
+        label: "Financial Payouts",
+        path: "/admin/payouts",
+        icon: DollarSign,
+    },
+    {
+        label: "Coordination Hub",
+        path: "/admin/coordination",
+        icon: MessageSquare,
+    },
+    {
+        label: "System Logs",
+        path: "/admin/logs",
+        icon: Activity,
+    },
+    {
+        label: "Global Settings",
+        path: "/admin/settings",
+        icon: Settings,
     }
 ];
 
