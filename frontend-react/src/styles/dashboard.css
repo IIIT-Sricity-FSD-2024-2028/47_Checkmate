@@ -262,6 +262,13 @@
   background: #c2410c;
 }
 
+/* An explicit colour (StatisticCard `color` prop) must beat the nth-child defaults above. */
+.stat-card .stat-icon.stat-icon--blue   { background: #1d4ed8; }
+.stat-card .stat-icon.stat-icon--green  { background: #15803d; }
+.stat-card .stat-icon.stat-icon--purple { background: #7e22ce; }
+.stat-card .stat-icon.stat-icon--orange { background: #c2410c; }
+.stat-card .stat-icon.stat-icon--red    { background: #b91c1c; }
+
 .stat-icon h2 {
   background: transparent !important;
   color: #fff;
