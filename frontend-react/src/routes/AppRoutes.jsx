@@ -24,6 +24,7 @@ import EventReview from "../pages/vendor/EventReview";
 import SignUp1 from "../pages/auth/SignUp1";
 import SignUp2 from "../pages/auth/SignUp2";
 import VendorProfile from "../pages/vendor/Profile";
+import ManageResource from "../pages/vendor/ManageResource";
 import ClientProfile from "../pages/client/Profile";
 import StaffProfile from "../pages/staff/Profile";
 
@@ -74,6 +75,8 @@ function AppRoutes() {
                 <Route path="events" element={<Events />} />
                 <Route path="events/:id/review" element={<EventReview />} />
                 <Route path="event-review" element={<EventReview />} />
+                <Route path="resources" element={<ManageResource />} />
+                <Route path="manage-resource" element={<ManageResource />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
