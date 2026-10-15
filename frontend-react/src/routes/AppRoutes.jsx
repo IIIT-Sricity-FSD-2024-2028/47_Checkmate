@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "../pages/public/LandingPage";
 import AdminDashboard from "../pages/admin/Dashboard";
+import AdminVendorApprovals from "../pages/admin/VendorApprovals";
+import AdminManageUsers from "../pages/admin/ManageUsers";
 import ClientDashboard from "../pages/client/Dashboard";
 import StaffDashboard from "../pages/staff/Dashboard";
 import SuperuserDashboard from "../pages/superuser/Dashboard";
@@ -38,12 +40,10 @@ function AppRoutes() {
             <Route path="/signup-password" element={<SignUp2 />}></Route>
 
             <Route path="/admin" element={<AdminLayout />}>
-                <Route path="dashboard" element={<AdminDashboard />}></Route>
-                <Route path="create-event" element={<ClientCreateEvent />}></Route>
-                <Route path="events" element={<ClientMyEvents />}></Route>
-                <Route path="packages" element={<ClientBrowsePackages />}></Route>
-                <Route path="billing" element={<ClientBilling />}></Route>
-                <Route path="report-issue" element={<ReportIssue />}></Route>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="vendor-approvals" element={<AdminVendorApprovals />} />
+                <Route path="users" element={<AdminManageUsers />} />
             </Route>
             <Route path="/client" element={<ClientLayout />}>
                 <Route path="profile" element={<ClientProfile />}></Route>
