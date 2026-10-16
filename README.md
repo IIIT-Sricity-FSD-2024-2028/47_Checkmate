@@ -209,3 +209,67 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 - Ensure optimal allocation of staff and resources  
 - Provide real-time visibility into event schedules and execution  
 - Enable transparent reporting and issue tracking  
+
+---
+
+## Individual Contributions
+
+Each team member lists the work they did and the files they created or changed.
+To add yours, copy the template at the end of this section.
+
+### epictwodude
+
+**React frontend: Admin module** (`frontend-react/`)
+
+Converted seven Admin pages from the old HTML/JS frontend to React, connected to the
+live backend, and built shared table and pop-up components that other roles can reuse.
+
+| File | Work |
+|---|---|
+| `src/pages/admin/Dashboard.jsx` | Admin dashboard: live stat cards with "since last visit" trends, pending vendor approvals, user distribution |
+| `src/pages/admin/VendorApprovals.jsx` | Vendor application table with review pop-up, Approve / Reject with an optional note, read-only view, `?review=<id>` links |
+| `src/pages/admin/ManageUsers.jsx` | User directory with stat cards, filters, an edit pop-up that checks the name and email, and Disable / Enable |
+| `src/pages/admin/MonitorEvents.jsx` | Event registry with details pop-up, Approve, and Refund after confirmation |
+| `src/pages/admin/ServiceModeration.jsx` | Vendor package review with Approve / Reject / Terminate |
+| `src/pages/admin/IssueTracking.jsx` | Support tickets going Open → Investigating → Resolved, with a details pop-up |
+| `src/pages/admin/SystemLogs.jsx` | Activity log with type filter, search, load older and refresh |
+| `src/components/Modal.jsx` | Generic pop-up dialog (Escape, click outside, X to close) |
+| `src/components/NotificationModal.jsx` | Notifications pop-up built on `Modal` |
+| `src/components/table/DataTable.jsx`, `TableToolbar.jsx`, `Pagination.jsx` | Reusable table, filter/search toolbar and page controls |
+| `src/components/admin/AdminTopBar.jsx` | Admin page header with the live notifications bell |
+| `src/components/admin/ApprovalItem.jsx`, `DistributionRow.jsx` | Dashboard list rows |
+| `src/components/admin/DetailField.jsx` | Label + value pair for detail pop-ups |
+| `src/components/admin/LogItem.jsx` | One row of the system log |
+| `src/hooks/usePagination.js` | Splits a list into pages |
+| `src/hooks/useAdminNotifications.js` | Builds the bell's notifications from live data |
+| `src/utils/formatRelativeTime.js`, `formatCurrency.js`, `logText.js` | Formatting helpers |
+| `src/styles/admin.css`, `src/styles/components/modal.css`, `src/styles/components/table.css` | Styles for the above |
+| `src/styles/dashboard.css` | Fix: `StatisticCard`'s `color` setting was ignored; added a red colour |
+| `src/routes/AppRoutes.jsx`, `src/routes/roleRoutes.js`, `src/layouts/AdminLayout.jsx` | Admin routes, sidebar menu and layout |
+
+**Backend** (`back-end/`)
+
+| Area | Files |
+|---|---|
+| Middleware layer: logging with daily rotation, global error handling, upload limits, CORS / helmet / rate limiting, request IDs, audit log of changes, `.env` configuration | `src/common/logging/*` (`logger.ts`, `file-logger.service.ts`, `http-logger.ts`, `logger-flush.service.ts`, `request-id.middleware.ts`), `src/common/security/*` (`cors.config.ts`, `helmet.config.ts`, `rate-limit.ts`), `src/common/middleware/mutation-audit.middleware.ts`, `src/common/middleware/upload-guard.middleware.ts`, `src/common/filters/all-exceptions.filter.ts`, `src/common/upload/multer.config.ts`, `src/common/paths.ts`, `src/common/middleware.e2e.spec.ts`, `src/main.ts`, `src/app.module.ts`, `.env.example` |
+| Vendor approval and package moderation endpoints | `src/modules/vendors/vendors.controller.ts`, `vendors.service.ts`, `dto.ts`; `src/modules/packages/packages.controller.ts`, `packages.service.ts`, `dto.ts`; `src/domain/models.ts` |
+| Bug fix in coordination messages | `src/modules/messages/messages.service.ts` |
+
+**Original frontend** (`front-end/`)
+
+| Area | Files |
+|---|---|
+| Initial folder structure for pages, scripts and styles by role | `front-end/**` |
+| Admin vendor approvals, service moderation and analytics pages | `pages/admin/admin.html`, `pages/admin/report-analytics.html`, `pages/admin/service-moderation.html`, `scripts/admin_js/admin.js`, `scripts/admin_js/admin-reports.js`, `pages/Login/signup-step4.html` |
+| Consistent layout and design across all roles' pages | `pages/{admin,client,vendor,staff,superuser,Login}/*`, `styles/*` |
+| Fixes for broken links, errors that failed without a message, and corrupted IDs | `pages/Login/login_js/script.js`, `scripts/client_js/create_event_client.js`, `scripts/vendor_js/report.js`, plus page links in admin / client / staff / vendor pages |
+
+### Template
+
+```markdown
+### <your name or GitHub username>
+
+| File | Work |
+|---|---|
+| `path/to/file` | What you built or changed |
+```
