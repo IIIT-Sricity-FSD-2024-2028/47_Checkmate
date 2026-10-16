@@ -209,3 +209,109 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 - Ensure optimal allocation of staff and resources  
 - Provide real-time visibility into event schedules and execution  
 - Enable transparent reporting and issue tracking  
+
+---
+
+## Individual Contributions
+
+Each team member lists their own work below: name, roll number, area, and the specific
+files they created or modified. Add your section after the last one, using the same format.
+
+### Shreeya Jetti (S20240010225)
+
+**Area:** Client portal in React, and client–vendor communication  
+**Branch:** `shreeya-react` (merged into `main` via PR #24)
+
+I rebuilt every Client portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), keeping all of the original functionality and connecting it to the NestJS
+backend. Each page is split into a page file, a custom data hook (API calls and state) and small
+section components. I also built the client–vendor bridge so the two portals can communicate,
+and fixed a shared services file that was breaking the build.
+
+**1. Client pages** – `frontend-react/src/pages/client/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Welcome banner, KPI cards, next-event progress timeline, quick actions, activity feed |
+| `MyEvents.jsx` | Rewritten | Event table with search, status/type filters, status-based actions, rejection-reason popup |
+| `TrackProgress.jsx` | New | `/client/track/:id` – 5-step progress timeline with allocated resources and staff |
+| `LiveMonitoring.jsx` | New | `/client/live/:id` – live task completion, event phases, resources and staff |
+| `CreateEvent.jsx` | Rewritten | 4-step wizard: details → resources (availability + budget check) → staff → review |
+| `BrowsePackages.jsx` | Rewritten | Approved packages with filters and "Quick Create" event request |
+| `Billing.jsx` | Rewritten | Invoices from real bookings, summary cards, filter, pagination, Pay Now, invoice download |
+| `ReportIssue.jsx` | Rewritten | Report to the event team (posted into the event chat) or to the admin |
+| `Messages.jsx` | New | Event chat with the vendor team and admin support chat |
+| `client.css` | New | Styles for all client pages (classes prefixed `cl-`) |
+
+**2. Client data hooks** – `frontend-react/src/components/client/` (all new)
+
+`useClientDashboardData.js`, `useClientEventsData.js`, `useClientTrackData.js`, `useClientLiveData.js`,
+`useCreateEventWizard.js`, `useClientPackagesData.js`, `useClientBillingData.js`, `useReportIssueForm.js`,
+`useClientMessagesData.js`, `useClientNotifications.js`
+
+**3. Client components** – `frontend-react/src/components/client/` (all new)
+
+| Used in | Files |
+|---|---|
+| All client pages | `ClientTopbar.jsx`, `WelcomeOverlay.jsx`, `StatusBadge.jsx`, `TabSwitcher.jsx` |
+| Dashboard | `ClientStatsGrid.jsx`, `ClientNextEventSection.jsx`, `ClientQuickActionsSection.jsx`, `ClientRecentActivitySection.jsx` |
+| My Events | `ClientEventsStatsGrid.jsx`, `ClientEventsToolbar.jsx`, `ClientEventsTable.jsx`, `ClientEventTableRow.jsx`, `RejectionReasonModal.jsx` |
+| Track Progress | `TrackHeroCard.jsx`, `TrackTimeline.jsx`, `TrackSidePanel.jsx` |
+| Live Monitoring | `LiveTaskProgressCard.jsx`, `LiveStatusCards.jsx` |
+| Create Event | `WizardSteps.jsx`, `EventDetailsStep.jsx`, `ResourceSelectionStep.jsx`, `StaffSelectionStep.jsx`, `ReviewStep.jsx` |
+| Browse Packages | `ClientPackageToolbar.jsx`, `ClientPackageGrid.jsx`, `ClientPackageCard.jsx`, `QuickCreateModal.jsx` |
+| Billing | `BillingStatsGrid.jsx`, `InvoiceTable.jsx` |
+| Report Issue | `IssueForm.jsx` |
+
+**4. Shared files created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/components/chat/ChatWindow.jsx` | Chat header, messages and input (used by the client and vendor chat) |
+| `frontend-react/src/components/chat/ConversationList.jsx` | Conversation list (live events / admin support) |
+| `frontend-react/src/components/chat/IssueReportModal.jsx` | Issue details popup |
+| `frontend-react/src/hooks/useEventChat.js` | Shared event-chat hook – both portals read and write the same messages |
+| `frontend-react/src/utils/clientHelpers.js` | Date/money formatting, current user, event progress, error messages |
+
+**5. Client–vendor bridge**
+
+| Feature | How it works |
+|---|---|
+| Approval notifications | When a vendor approves, rejects, starts or completes an event, the backend notifies that client; the bell links to Track Progress |
+| Rejection reasons | The vendor must give a reason when rejecting; the client sees it |
+| Two-way event chat | New vendor page to reply to clients, sharing the client's chat hook and components |
+| Client issue inbox | New vendor page listing issues on the vendor's events, with status updates |
+
+| File | Status |
+|---|---|
+| `back-end/src/modules/events/events.service.ts` | Modified – `notifyClient()` creates the client notification |
+| `frontend-react/src/pages/vendor/EventCoordination.jsx` | New – `/vendor/coordination` |
+| `frontend-react/src/pages/vendor/ClientIssues.jsx` | New – `/vendor/issues` |
+| `frontend-react/src/components/vendor/useVendorIssuesData.js` | New |
+| `frontend-react/src/components/vendor/RejectReasonModal.jsx` | New |
+| `frontend-react/src/styles/bridge.css` | New |
+| `frontend-react/src/pages/vendor/Events.jsx`, `EventReview.jsx` | Modified – reject opens the reason popup |
+| `frontend-react/src/components/vendor/useVendorEventsData.js` | Modified – sends the rejection reason |
+
+**6. Other files modified**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Client routes (`track/:id`, `live/:id`, `messages`) and vendor routes (`coordination`, `issues`) |
+| `frontend-react/src/routes/roleRoutes.js` | "Messages" in the client sidebar, "Client Issues" in the vendor sidebar |
+| `frontend-react/src/layouts/ClientLayout.jsx` | Welcome overlay |
+| `frontend-react/index.html` | Icon font used by the sidebar; page title |
+| `frontend-react/src/services/index.js` | Restored shared service exports that had been removed, which was breaking the build |
+
+**7. Earlier contributions**
+
+- **JWT authentication and real data** (commit `3d0cb62`, 45 files): backend auth (`auth.module.ts`, `auth.service.ts`,
+  `jwt.strategy.ts`, `jwt-auth.guard.ts`, `roles.guard.ts`, `public.decorator.ts`, `roles.decorator.ts`, `password.ts`,
+  `main.ts`, `app.module.ts`, `.env.example`); backend modules (events, analytics, staff, users, vendors, `data.service.ts`,
+  `models.ts`, `swagger.json`); and old frontend admin, staff, superuser and vendor pages connected to real data.
+- **Team video** (commits `1fa2193`, `455d3cf`).
+
+**Commits:** `985a65e` (client pages), `c6f12a9` (client–vendor bridge), `492982d` (services fix), `3d0cb62` (JWT auth),
+`1fa2193` / `455d3cf` (team video)
+
+<!-- Next team member: add your section below, starting with "### Your Name (Roll No.)" -->
