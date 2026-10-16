@@ -36,6 +36,10 @@ import ClientProfile from "../pages/client/Profile";
 import StaffProfile from "../pages/staff/Profile";
 import StaffReportIssue from "../pages/staff/ReportIssue";
 import PresetPackage from "../pages/vendor/PresetPackage";
+import SuperuserUsers from "../pages/superuser/Users";
+import SuperuserEvents from "../pages/superuser/Events";
+import SuperuserResources from "../pages/superuser/Resources";
+import SuperuserBookings from "../pages/superuser/Bookings";
 
 
 function AppRoutes() {
@@ -74,10 +78,10 @@ function AppRoutes() {
             </Route>
             <Route path="/superuser" element={<SuperuserLayout />}>
                 <Route path="dashboard" element={<SuperuserDashboard />}></Route>
-                <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
-                <Route path="task-board" element={<StaffTaskBoard />}></Route>
-                <Route path="performance" element={<StaffPerformance />}></Route>
-                <Route path="report-issue" element={<ReportIssue />}></Route>
+                <Route path="users" element={<SuperuserUsers />}></Route>
+                <Route path="events" element={<SuperuserEvents />}></Route>
+                <Route path="resources" element={<SuperuserResources />}></Route>
+                <Route path="bookings" element={<SuperuserBookings />}></Route>
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
                 <Route path="profile" element={<VendorProfile />}></Route>

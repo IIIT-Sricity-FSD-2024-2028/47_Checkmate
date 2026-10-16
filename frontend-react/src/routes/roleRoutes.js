@@ -74,11 +74,11 @@ export const vendorMenuItems = [
         path: "/vendor/resources",
         icon: Package,
     },
-    {
-        label: "Manage Staff",
-        path: "/vendor/staff",
-        icon: Users,
-    },
+    // {
+    //     label: "Manage Staff",
+    //     path: "/vendor/staff",
+    //     icon: Users,
+    // },
     {
         label: "Preset Package",
         path: "/vendor/packages",
@@ -93,11 +93,11 @@ export const vendorMenuItems = [
                 path: "/vendor/report-issue",
                 icon: AlertCircle,
             },
-            {
-                label: "Issue to Admin",
-                path: "/vendor/report-issue-admin",
-                icon: ShieldAlert,
-            },
+            // {
+            //     label: "Issue to Admin",
+            //     path: "/vendor/report-issue-admin",
+            //     icon: ShieldAlert,
+            // },
         ],
     },
     {
@@ -109,11 +109,11 @@ export const vendorMenuItems = [
                 path: "/vendor/coordination",
                 icon: Radio,
             },
-            {
-                label: "Admin Coordination",
-                path: "/vendor/coordination-admin",
-                icon: Shield,
-            },
+            // {
+            //     label: "Admin Coordination",
+            //     path: "/vendor/coordination-admin",
+            //     icon: Shield,
+            // },
         ],
     },
     {
@@ -122,16 +122,16 @@ export const vendorMenuItems = [
         path: "/vendor/issues",
         icon: Inbox,
     },
-    {
-        label: "Monitor Live Events",
-        path: "/vendor/monitoring",
-        icon: Radio,
-    },
-    {
-        label: "Verify Documents",
-        path: "/vendor/verify-docs",
-        icon: ShieldCheck,
-    },
+    // {
+    //     label: "Monitor Live Events",
+    //     path: "/vendor/monitoring",
+    //     icon: Radio,
+    // },
+    // {
+    //     label: "Verify Documents",
+    //     path: "/vendor/verify-docs",
+    //     icon: ShieldCheck,
+    // },
 ];
 
 export const staffMenuItems = [
@@ -178,46 +178,46 @@ export const adminMenuItems = [
         path: "/admin/users",
         icon: Users,
     },
-    {
-        label: "Monitor Events",
-        path: "/admin/events",
-        icon: CalendarCheck,
-    },
-    {
-        label: "Report & Analytics",
-        path: "/admin/reports",
-        icon: PieChart,
-    },
-    {
-        label: "Issue Tracking",
-        path: "/admin/issues",
-        icon: Bug,
-    },
-    {
-        label: "Service Moderation",
-        path: "/admin/moderation",
-        icon: Shield,
-    },
-    {
-        label: "Financial Payouts",
-        path: "/admin/payouts",
-        icon: DollarSign,
-    },
-    {
-        label: "Coordination Hub",
-        path: "/admin/coordination",
-        icon: MessageSquare,
-    },
-    {
-        label: "System Logs",
-        path: "/admin/logs",
-        icon: Activity,
-    },
-    {
-        label: "Global Settings",
-        path: "/admin/settings",
-        icon: Settings,
-    }
+    // {
+    //     label: "Monitor Events",
+    //     path: "/admin/events",
+    //     icon: CalendarCheck,
+    // },
+    // {
+    //     label: "Report & Analytics",
+    //     path: "/admin/reports",
+    //     icon: PieChart,
+    // },
+    // {
+    //     label: "Issue Tracking",
+    //     path: "/admin/issues",
+    //     icon: Bug,
+    // },
+    // {
+    //     label: "Service Moderation",
+    //     path: "/admin/moderation",
+    //     icon: Shield,
+    // },
+    // {
+    //     label: "Financial Payouts",
+    //     path: "/admin/payouts",
+    //     icon: DollarSign,
+    // },
+    // {
+    //     label: "Coordination Hub",
+    //     path: "/admin/coordination",
+    //     icon: MessageSquare,
+    // },
+    // {
+    //     label: "System Logs",
+    //     path: "/admin/logs",
+    //     icon: Activity,
+    // },
+    // {
+    //     label: "Global Settings",
+    //     path: "/admin/settings",
+    //     icon: Settings,
+    // }
 ];
 
 export const superuserMenuItems = [
@@ -237,18 +237,13 @@ export const superuserMenuItems = [
         icon: "ph ph-calendar"
     },
     {
-        label: "Reports",
-        path: "/superuser/reports",
+        label: "Resources",
+        path: "/superuser/resources",
         icon: "ph ph-chart-bar"
     },
     {
-        label: "System Settings",
-        path: "/superuser/settings",
+        label: "Bookings",
+        path: "/superuser/bookings",
         icon: "ph ph-gear"
     },
-    {
-        label: "Report Issue",
-        path: "/superuser/report-issue",
-        icon: "ph ph-warning-circle"
-    }
 ];
