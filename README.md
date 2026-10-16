@@ -419,3 +419,22 @@ implemented the dedicated `superuserApi` service, and styled the entire portal.
 
 **Commits:** `4772c97` (superuser pages in React), `85afab1` (initial React setup), `331102c` (Swagger documentation), `73272dc` (backend docs), `a908ae3` / `9644467` (merges)
 
+### Moulidharan (S20240010152)
+
+- `src/components/vendor/` — Developed reusable UI components for vendor-specific functionality.
+- `src/components/StatisticCard.jsx` — Developed a reusable component to display statistics and summary metrics.
+- `src/components/TopHeaderBar.jsx` — Implemented the top header bar for navigation and user-related actions.
+- `src/pages/vendor/` — Developed vendor-specific pages and their functionality.
+- `src/services/vendor/` — Implemented API service functions for vendor-related operations and backend integration.
+
+### Cefan (S20240010040)
+
+- `src/components/auth/` — Developed reusable UI components for authentication-related functionality, ensuring consistency across authentication interfaces.
+- `src/components/profile/` — Developed reusable components for displaying and managing user profile information.
+- `src/components/public/` — Developed reusable UI components for publicly accessible sections of the application.
+- `src/components/Sidebar.jsx` — Implemented the sidebar navigation component to provide access to relevant application sections and support role-based navigation.
+- `src/pages/auth/` — Developed page components for authentication workflows, integrating relevant UI components to create structured authentication interfaces.
+- `src/pages/public/` — Developed public-facing pages and organized their layouts and content for users accessing the application without authentication.
+- `src/routes/` — Organized application routing to connect URLs with their corresponding page components and support navigation between public and authenticated sections.
+- `src/services/auth/` — Implemented and organized authentication-related API service functions to handle communication between the frontend and backend.
+- `src/layouts/` — Developed and organized reusable layout components to maintain a consistent structure across different sections of the application.
