@@ -178,26 +178,26 @@ export const adminMenuItems = [
         path: "/admin/users",
         icon: Users,
     },
-    // {
-    //     label: "Monitor Events",
-    //     path: "/admin/events",
-    //     icon: CalendarCheck,
-    // },
+    {
+        label: "Monitor Events",
+        path: "/admin/events",
+        icon: CalendarCheck,
+    },
     // {
     //     label: "Report & Analytics",
     //     path: "/admin/reports",
     //     icon: PieChart,
     // },
-    // {
-    //     label: "Issue Tracking",
-    //     path: "/admin/issues",
-    //     icon: Bug,
-    // },
-    // {
-    //     label: "Service Moderation",
-    //     path: "/admin/moderation",
-    //     icon: Shield,
-    // },
+    {
+        label: "Issue Tracking",
+        path: "/admin/issues",
+        icon: Bug,
+    },
+    {
+        label: "Service Moderation",
+        path: "/admin/moderation",
+        icon: Shield,
+    },
     // {
     //     label: "Financial Payouts",
     //     path: "/admin/payouts",
@@ -208,11 +208,11 @@ export const adminMenuItems = [
     //     path: "/admin/coordination",
     //     icon: MessageSquare,
     // },
-    // {
-    //     label: "System Logs",
-    //     path: "/admin/logs",
-    //     icon: Activity,
-    // },
+    {
+        label: "System Logs",
+        path: "/admin/logs",
+        icon: Activity,
+    },
     // {
     //     label: "Global Settings",
     //     path: "/admin/settings",
