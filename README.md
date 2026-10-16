@@ -419,6 +419,59 @@ implemented the dedicated `superuserApi` service, and styled the entire portal.
 
 **Commits:** `4772c97` (superuser pages in React), `85afab1` (initial React setup), `331102c` (Swagger documentation), `73272dc` (backend docs), `a908ae3` / `9644467` (merges)
 
+### Hemanth (S20240010236)
+
+**Area:** Staff portal in React, operational workflows, and revenue model  
+**Branch:** `hemanth` (merged into `main` via PR #22)
+
+I rebuilt and converted every Staff portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), providing complete operational tooling for event staff on the ground and connecting each page directly
+to the NestJS backend. Every page incorporates real-time status updates, interactive Kanban drag-and-drop, dynamic calendar
+scheduling, on-site incident reporting, and custom HTML5 canvas performance charts, accompanied by comprehensive in-code
+comments and documentation for faculty review. I also engineered the platform revenue and commission backend model,
+implemented the dedicated `staffApi` service, and styled the entire staff portal.
+
+**1. Staff pages** – `frontend-react/src/pages/staff/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Operational overview dashboard: live clock, 4 stat summary cards (assigned events, active tasks, logged hours, performance), upcoming shift preview, live operational ticker, quick actions, and task progress indicators |
+| `AssignedEvents.jsx` | Rewritten | Event assignment hub: summary cards by status (Total, Pending, Accepted, Rejected), status filter bar, and expandable rich event cards allowing staff to accept/reject invitations and inspect allocated subtasks |
+| `TaskBoard.jsx` | Rewritten | Interactive Kanban task management board: column-grouped task tracking (To Do, In Progress, Done), drag-and-drop workflow, task creation for accepted events, task deletion, and real-time backend persistence |
+| `Schedule.jsx` | Rewritten | Shift calendar & schedule viewer: interactive monthly calendar grid with month navigation, upcoming event metrics (Total, This Week, Upcoming), daily agenda view for clicked dates, and upcoming accepted shifts |
+| `Performance.jsx` | Rewritten | Performance analytics portal: work statistics (events completed, acceptance rate, tasks done), dynamic achievement badges, reported vs resolved issue metrics, and pure HTML5 canvas charts for monthly trends and attendance |
+| `ReportIssue.jsx` | Rewritten | On-site incident reporting interface: controlled submission form for operational/technical/safety problems, severity selection, dynamic event dropdown, and instant escalation to event managers |
+| `staff.css` | New | Comprehensive styles for all staff pages, dashboard cards, task board Kanban columns, calendar grid, performance cards, and responsive layouts |
+
+**2. Staff components** – `frontend-react/src/pages/staff/components/` (all new)
+
+| Component | Purpose |
+|---|---|
+| `StatCard.jsx` | Reusable metric summary card component displaying icons, numeric values, labels, and change trends |
+| `Toast.jsx` | Real-time alert toast notification banner for user feedback (e.g., status changes, task moves, issue submission) |
+
+**3. Services and styles created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/pages/staff/staffApi.js` | Dedicated staff API service handling REST calls to NestJS backend (`/api/staff-assignments`, `/api/staff`, `/api/events`, `/api/issues`, `/api/analytics`) with JWT token injection and role headers |
+| `frontend-react/src/pages/staff/staff.css` | Full stylesheet powering staff dashboards, Kanban boards, calendar views, metric grids, and forms |
+
+**4. Routing and navigation**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Registered staff routes (`/staff/dashboard`, `/staff/assigned-events`, `/staff/task-board`, `/staff/schedule`, `/staff/performance`, `/staff/report-issue`, `/staff/profile`) wrapped in `StaffLayout` |
+| `frontend-react/src/routes/roleRoutes.js` | Configured `staffMenuItems` (Dashboard, Assigned Events, Task Board, Performance, Report Issue) with icons for the staff sidebar |
+
+**5. Earlier contributions**
+
+- **Commission & Revenue Model** (PR #7, commit `ed88c2e` / `2aa1dc2`): Engineered the backend commission and platform revenue model (`finance.constants.ts`, `bookings.service.ts`, `bookings.controller.ts`, `analytics.service.ts`, `vendors.service.ts`, DB schemas `DBschema.sql` and `DBschema_v2_normalized.sql`), payout endpoints, and admin payouts/revenue reporting UI.
+- **Frontend Login & Auth Integration** (PR #6, commit `5ba5fb4`): Refined authentication workflows, login scripts, profile modal integration, and client event creation fixes.
+- **Vendor Event Request & Resource Management** (PR #3 & PR #4): Event requests processing, resource allocation checks, and backend module integration.
+
+**Commits:** `85fcc86` (all 6 staff React pages), `458b3d4` (staff API and integration), `795a010` (CSS and path fixes), `ed88c2e` / `2aa1dc2` (Revenue model), `5ba5fb4` (Login integration), `848c4a4` (merge to main via PR #22)
+
 ### Moulidharan (S20240010152)
 
 - `src/components/vendor/` — Developed reusable UI components for vendor-specific functionality.
