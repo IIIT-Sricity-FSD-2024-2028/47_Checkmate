@@ -1,3 +1,24 @@
+import {
+    LayoutDashboard,
+    ClipboardList,
+    Package,
+    Users,
+    Box,
+    Flag,
+    AlertCircle,
+    ShieldAlert,
+    MessageSquare,
+    Radio,
+    Shield,
+    ShieldCheck,
+    CalendarCheck,
+    PieChart,
+    Bug,
+    DollarSign,
+    Activity,
+    Settings
+} from "lucide-react";
+
 export const clientMenuItems = [
     {
         label: "Dashboard",
@@ -35,33 +56,70 @@ export const vendorMenuItems = [
     {
         label: "Dashboard",
         path: "/vendor/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard,
     },
     {
-        label: "Events",
+        label: "Event Request",
         path: "/vendor/events",
-        icon: "ph ph-calendar"
+        icon: ClipboardList,
     },
     {
-        label: "Packages",
+        label: "Manage Resource",
+        path: "/vendor/resources",
+        icon: Package,
+    },
+    {
+        label: "Manage Staff",
+        path: "/vendor/staff",
+        icon: Users,
+    },
+    {
+        label: "Preset Package",
         path: "/vendor/packages",
-        icon: "ph ph-tote"
-    },
-    {
-        label: "Messages",
-        path: "/vendor/messages",
-        icon: "ph ph-chat-teardrop-dots"
-    },
-    {
-        label: "Billing",
-        path: "/vendor/billing",
-        icon: "ph ph-credit-card"
+        icon: Box,
     },
     {
         label: "Report Issue",
-        path: "/vendor/report-issue",
-        icon: "ph ph-warning-circle"
-    }
+        icon: Flag,
+        children: [
+            {
+                label: "Issue on Event",
+                path: "/vendor/report-issue",
+                icon: AlertCircle,
+            },
+            {
+                label: "Issue to Admin",
+                path: "/vendor/report-issue-admin",
+                icon: ShieldAlert,
+            },
+        ],
+    },
+    {
+        label: "Coordination Hub",
+        icon: MessageSquare,
+        children: [
+            {
+                label: "Event Coordination",
+                path: "/vendor/coordination",
+                icon: Radio,
+            },
+            {
+                label: "Admin Coordination",
+                path: "/vendor/coordination-admin",
+                icon: Shield,
+            },
+        ],
+    },
+    {
+        label: "Monitor Live Events",
+        path: "/vendor/monitoring",
+        icon: Radio,
+    },
+    {
+        label: "Verify Documents",
+        path: "/vendor/verify-docs",
+        icon: ShieldCheck,
+    },
 ];
 
 export const staffMenuItems = [
@@ -96,32 +154,57 @@ export const adminMenuItems = [
     {
         label: "Dashboard",
         path: "/admin/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard,
     },
     {
-        label: "Events",
-        path: "/admin/events",
-        icon: "ph ph-calendar"
+        label: "Vendor Approvals",
+        path: "/admin/vendor-approvals",
+        icon: ClipboardList,
     },
     {
-        label: "Users",
+        label: "Manage Users",
         path: "/admin/users",
-        icon: "ph ph-users"
+        icon: Users,
     },
     {
-        label: "Packages",
-        path: "/admin/packages",
-        icon: "ph ph-tote"
+        label: "Monitor Events",
+        path: "/admin/events",
+        icon: CalendarCheck,
     },
     {
-        label: "Reports",
+        label: "Report & Analytics",
         path: "/admin/reports",
-        icon: "ph ph-chart-bar"
+        icon: PieChart,
     },
     {
-        label: "Report Issue",
-        path: "/admin/report-issue",
-        icon: "ph ph-warning-circle"
+        label: "Issue Tracking",
+        path: "/admin/issues",
+        icon: Bug,
+    },
+    {
+        label: "Service Moderation",
+        path: "/admin/moderation",
+        icon: Shield,
+    },
+    {
+        label: "Financial Payouts",
+        path: "/admin/payouts",
+        icon: DollarSign,
+    },
+    {
+        label: "Coordination Hub",
+        path: "/admin/coordination",
+        icon: MessageSquare,
+    },
+    {
+        label: "System Logs",
+        path: "/admin/logs",
+        icon: Activity,
+    },
+    {
+        label: "Global Settings",
+        path: "/admin/settings",
+        icon: Settings,
     }
 ];
 
