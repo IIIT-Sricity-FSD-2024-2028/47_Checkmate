@@ -12,6 +12,7 @@
  *         - <EventsStatsGrid>: 4-column KPI metric cards (Total, Pending, Confirmed, Live).
  *         - <EventsToolbar>: Search box and multi-criteria status/category filters.
  *         - <EventsTable>: Tabular list displaying event records via <EventTableRow>.
+ *         - <RejectReasonModal>: Asks for a rejection reason; the client sees it.
  *
  * Connected Backend Endpoints:
  *   - GET   /events (via getMyEvents) -> fetches vendor-scoped assigned events
@@ -19,12 +20,13 @@
  * ============================================================================
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Stylesheets
 import "../../styles/vendor.css";
 import "../../styles/dashboard.css";
+import "../../styles/bridge.css";
 
 // Global & Shared Reusable UI Components
 import TopHeaderBar from "../../components/TopHeaderBar";
@@ -37,6 +39,7 @@ import EventsToastFeedback from "../../components/vendor/EventsToastFeedback";
 import EventsStatsGrid from "../../components/vendor/EventsStatsGrid";
 import EventsToolbar from "../../components/vendor/EventsToolbar";
 import EventsTable from "../../components/vendor/EventsTable";
+import RejectReasonModal from "../../components/vendor/RejectReasonModal";
 
 function Events() {
   // Navigation hook to transition to the dedicated Event Review inspection page
@@ -59,6 +62,19 @@ function Events() {
     handleStatusUpdate,
     handleResetFilters,
   } = useVendorEventsData();
+
+  // Event whose "reject with reason" popup is open (null = closed)
+  const [rejectingEvent, setRejectingEvent] = useState(null);
+
+  // Sends the rejection with the typed reason, then closes the popup.
+  // (?. because the React Compiler reads this function's dependencies while
+  // rendering, when no event is being rejected yet.)
+  const handleConfirmReject = async (reason) => {
+    const eventId = rejectingEvent?.id;
+    if (!eventId) return;
+    await handleStatusUpdate(eventId, "rejected", reason);
+    setRejectingEvent(null);
+  };
 
   // Navigate to detailed Event Review page
   const handleView = (event) => {
@@ -104,7 +120,14 @@ function Events() {
           loading={loading}
           onView={handleView}
           onApprove={(id) => handleStatusUpdate(id, "confirmed")}
-          onReject={(id) => handleStatusUpdate(id, "rejected")}
+          onReject={(id) => setRejectingEvent(events.find((ev) => ev.id === id) || null)}
+        />
+
+        {/* ── Component 5: Reject reason popup (reason is shown to the client) ── */}
+        <RejectReasonModal
+          event={rejectingEvent}
+          onClose={() => setRejectingEvent(null)}
+          onConfirm={handleConfirmReject}
         />
       </div>
     </div>

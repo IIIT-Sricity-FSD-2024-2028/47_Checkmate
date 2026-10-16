@@ -26,6 +26,8 @@ import SuperuserLayout from "../layouts/SuperUser";
 import SignIn from "../pages/auth/SignIn";
 import Events from "../pages/vendor/Events";
 import EventReview from "../pages/vendor/EventReview";
+import VendorEventCoordination from "../pages/vendor/EventCoordination";
+import VendorClientIssues from "../pages/vendor/ClientIssues";
 import SignUp1 from "../pages/auth/SignUp1";
 import SignUp2 from "../pages/auth/SignUp2";
 import VendorProfile from "../pages/vendor/Profile";
@@ -86,6 +88,9 @@ function AppRoutes() {
                 <Route path="manage-resource" element={<ManageResource />} />
                 <Route path="packages" element={<PresetPackage />} />
                 <Route path="preset-package" element={<PresetPackage />} />
+                {/* Client <-> vendor bridge pages */}
+                <Route path="coordination" element={<VendorEventCoordination />} />
+                <Route path="issues" element={<VendorClientIssues />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>

@@ -1,0 +1,85 @@
+/* ─────────────────────────────────────────────
+   bridge.css — styles for the client <-> vendor bridge pieces
+   that live on the vendor side (reject reason popup, vendor chat,
+   client issue inbox). Kept separate so vendor.css stays untouched.
+   ───────────────────────────────────────────── */
+
+/* Reject reason popup */
+.reject-modal__hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.reject-modal__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.reject-modal__chip {
+    padding: 6px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.08);
+    color: #fca5a5;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.reject-modal__chip:hover { background: rgba(239, 68, 68, 0.18); }
+
+.reject-modal__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-hover);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13.5px;
+    resize: vertical;
+    outline: none;
+}
+
+.reject-modal__input:focus { border-color: var(--red); }
+
+.btn-reject:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* Client issue inbox: priority / status pills */
+.issue-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.issue-pill--critical, .issue-pill--high { background: rgba(239, 68, 68, 0.12); color: #fca5a5; }
+.issue-pill--medium { background: rgba(234, 179, 8, 0.12); color: var(--yellow); }
+.issue-pill--low { background: rgba(34, 197, 94, 0.12); color: #86efac; }
+.issue-pill--open { background: rgba(249, 115, 22, 0.12); color: #fdba74; }
+.issue-pill--in_progress { background: rgba(59, 130, 246, 0.12); color: #93c5fd; }
+.issue-pill--resolved { background: rgba(34, 197, 94, 0.12); color: #86efac; }
+
+.issue-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.issue-actions select {
+    padding: 5px 8px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--border-hover);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+}
