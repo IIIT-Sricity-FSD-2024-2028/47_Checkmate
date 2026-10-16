@@ -359,3 +359,63 @@ and fixed a shared services file that was breaking the build.
 
 **Commits:** `985a65e` (client pages), `c6f12a9` (client–vendor bridge), `492982d` (services fix), `3d0cb62` (JWT auth),
 `1fa2193` / `455d3cf` (team video)
+
+### Sai teja (S20240010136)
+
+**Area:** Superuser portal in React, platform governance, and data services  
+**Branch:** `sai` (merged into `main` via PR #25)
+
+I rebuilt and converted every Superuser portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), preserving all administrative governance capabilities and connecting them directly to the NestJS
+backend. Every page incorporates comprehensive CRUD operations, search filtering, status indicators, and modal workflows,
+accompanied by in-code documentation and comments addressing potential faculty questions. I also engineered interactive
+HTML5 canvas charts for real-time analytics without external dependencies, built reusable superuser components and modals,
+implemented the dedicated `superuserApi` service, and styled the entire portal.
+
+**1. Superuser pages** – `frontend-react/src/pages/superuser/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Executive overview dashboard: real-time KPI metrics (total users, total vendors, total events, total revenue), pure HTML5 canvas visualizations (user signups, cumulative event growth, revenue trends), system health indicators, and quick navigation |
+| `Bookings.jsx` | New | All system bookings table: revenue KPI cards, instant search, full CRUD (create booking, edit active bookings, view detailed breakdown modal, and delete cancellations), and backend sync |
+| `Events.jsx` | New | Platform-wide event governance: multi-field search across titles/venues/clients/vendors, status updates, event details inspection modal, event registration, and cancellation |
+| `Resources.jsx` | New | System-wide resource inventory oversight: total/available unit counters, category and supplier filters, dynamic color-coded inventory progress bars, and full CRUD for equipment and decor |
+| `Staff.jsx` | New | Global workforce administration: personnel metrics, search across roles and vendor affiliations, real-time status badges, and complete CRUD (add staff, update role/contact/availability, delete) |
+| `Users.jsx` | New | System-wide user administration: multi-field search (name, email, role), role and status badges, and complete user lifecycle governance (create account with password, update profile/role/status, permanent deletion) |
+
+**2. Superuser components** – `frontend-react/src/pages/superuser/components/` (all new)
+
+| Component | Purpose |
+|---|---|
+| `ConfirmModal.jsx` | Reusable confirmation popup dialog with danger/warning styling for destructive actions (delete, cancel) |
+| `DataTable.jsx` | Reusable data table component supporting customizable columns, row rendering, and empty states |
+| `DetailModal.jsx` | Detailed record inspection modal displaying full attributes for events, bookings, users, resources, and staff |
+| `SearchBar.jsx` | Search input bar with debounce and instant clear button for real-time table filtering |
+| `StatCard.jsx` | Metric display card with icon, title, value, and subtitle/trend indication |
+| `StatusBadge.jsx` | Color-coded status badge for events, bookings, and user account statuses |
+| `Toast.jsx` | Alert toast notification banner for real-time action feedback (success and error messages) |
+
+**3. Services and styles created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/services/superuserApi.js` | Dedicated superuser API service handling REST calls to NestJS backend (`/api/users`, `/api/events`, `/api/resources`, `/api/staff`, `/api/bookings`, `/api/vendors`, `/api/analytics`) and session token handling |
+| `frontend-react/src/styles/superuser.css` | Comprehensive styles for all superuser pages, dashboards, stats grids, data tables, modals, badges, and canvas charts |
+
+**4. Routing and navigation**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Registered superuser routes (`/superuser/dashboard`, `/superuser/users`, `/superuser/events`, `/superuser/resources`, `/superuser/bookings`) wrapped in `SuperuserLayout` |
+| `frontend-react/src/routes/roleRoutes.js` | Configured `superuserMenuItems` (Dashboard, Users, Events, Resources, Bookings) with icons for the sidebar |
+| `frontend-react/src/layouts/SuperUser.jsx` | Superuser layout wrapper with dynamic role-based sidebar and user session info |
+| `frontend-react/src/services/index.js` | Exported `superuserApi` client for use across the application |
+
+**5. Earlier contributions**
+
+- **Initial React frontend setup** (commit `85afab1`, 92 files): Initial project scaffolding for `react-frontend/` (Vite, React, routing, component hierarchy, layouts, AuthContext, role-based pages, and CSS stylesheets).
+- **Swagger API documentation** (commit `331102c`): Updated and expanded Swagger API specifications in `back-end/docs/swagger.json` (243 additions) documenting endpoints, request/response models, and parameters.
+- **Backend documentation** (commit `73272dc`): Updated backend functionality tracking in `back-end/docs/MISSING_FUNCTIONALITY_REPORT.md`.
+
+**Commits:** `4772c97` (superuser pages in React), `85afab1` (initial React setup), `331102c` (Swagger documentation), `73272dc` (backend docs), `a908ae3` / `9644467` (merges)
+
