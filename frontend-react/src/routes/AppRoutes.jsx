@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route,Navigate } from "react-router-dom";
 import LandingPage from "../pages/public/LandingPage";
 import AdminDashboard from "../pages/admin/Dashboard";
 import ClientDashboard from "../pages/client/Dashboard";
@@ -18,12 +18,19 @@ import StaffPerformance from "../pages/staff/Performance";
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
 import SuperuserLayout from "../layouts/SuperUser";
+import SignIn from "../pages/auth/SignIn";
+import Events from "../pages/vendor/Events";
+import SignUp1 from "../pages/auth/SignUp1";
+import SignUp2 from "../pages/auth/SignUp2";
 
 
 function AppRoutes() {
     return <BrowserRouter>
         <Routes>
             <Route path="/" element={<LandingPage />}></Route>
+            <Route path="/signin" element={<SignIn />}></Route>
+            <Route path="/signup-details" element={<SignUp1 />}></Route>
+            <Route path="/signup-password" element={<SignUp2 />}></Route>
 
             <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<AdminDashboard />}></Route>
@@ -56,11 +63,13 @@ function AppRoutes() {
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
             <Route path="/vendor" element={<VendorLayout />}>
-                <Route path="dashboard" element={<VendorDashboard />}></Route>
-                <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
-                <Route path="task-board" element={<StaffTaskBoard />}></Route>
-                <Route path="performance" element={<StaffPerformance />}></Route>
-                <Route path="report-issue" element={<ReportIssue />}></Route>
+                
+                <Route path="dashboard" element={<VendorDashboard />} />
+                <Route path="events" element={<Events />} />
+                <Route path="assigned-events" element={<StaffAssignedEvents />} />
+                <Route path="task-board" element={<StaffTaskBoard />} />
+                <Route path="performance" element={<StaffPerformance />} />
+                <Route path="report-issue" element={<ReportIssue />} />
             </Route>
         </Routes>
     </BrowserRouter>

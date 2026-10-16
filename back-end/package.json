@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
+    "prestart": "npm run build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "test": "jest --runInBand",

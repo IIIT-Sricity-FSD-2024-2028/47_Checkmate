@@ -3,7 +3,7 @@ import 'dotenv/config'; // must precede every import that reads process.env
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppModule } from './app.module';
 import { logger } from './common/logging/logger';
@@ -65,7 +65,13 @@ export async function bootstrap() {
   const document = createSwaggerDocument(app);
   // persistAuthorization keeps the pasted token across page reloads in Swagger UI.
   SwaggerModule.setup('api/docs', app, document, { swaggerOptions: { persistAuthorization: true } });
-  writeFileSync(join(process.cwd(), 'docs', 'swagger.json'), JSON.stringify(document, null, 2));
+  try {
+    const docsDir = join(process.cwd(), 'docs');
+    mkdirSync(docsDir, { recursive: true });
+    writeFileSync(join(docsDir, 'swagger.json'), JSON.stringify(document, null, 2));
+  } catch (err: any) {
+    logger.warn({ message: `Failed to write swagger.json: ${err?.message}`, kind: 'warn' });
+  }
 
   // Lets LoggerFlushService drain winston before the process exits.
   app.enableShutdownHooks();
