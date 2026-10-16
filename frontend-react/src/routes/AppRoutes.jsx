@@ -29,6 +29,7 @@ import VendorProfile from "../pages/vendor/Profile";
 import ManageResource from "../pages/vendor/ManageResource";
 import ClientProfile from "../pages/client/Profile";
 import StaffProfile from "../pages/staff/Profile";
+import PresetPackage from "../pages/vendor/PresetPackage";
 
 
 function AppRoutes() {
@@ -77,6 +78,8 @@ function AppRoutes() {
                 <Route path="event-review" element={<EventReview />} />
                 <Route path="resources" element={<ManageResource />} />
                 <Route path="manage-resource" element={<ManageResource />} />
+                <Route path="packages" element={<PresetPackage />} />
+                <Route path="preset-package" element={<PresetPackage />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
