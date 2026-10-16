@@ -13,6 +13,9 @@ import ClientCreateEvent from "../pages/client/CreateEvent";
 import ClientMyEvents from "../pages/client/MyEvents";
 import ClientBrowsePackages from "../pages/client/BrowsePackages";
 import ReportIssue from "../pages/client/ReportIssue";
+import ClientTrackProgress from "../pages/client/TrackProgress";
+import ClientLiveMonitoring from "../pages/client/LiveMonitoring";
+import ClientMessages from "../pages/client/Messages";
 import StaffLayout from "../layouts/StaffLayout";
 import StaffAssignedEvents from "../pages/staff/AssignedEvents";
 import StaffTaskBoard from "../pages/staff/TaskBoard";
@@ -51,7 +54,10 @@ function AppRoutes() {
                 <Route path="dashboard" element={<ClientDashboard />}></Route>
                 <Route path="create-event" element={<ClientCreateEvent />}></Route>
                 <Route path="events" element={<ClientMyEvents />}></Route>
+                <Route path="track/:id" element={<ClientTrackProgress />}></Route>
+                <Route path="live/:id" element={<ClientLiveMonitoring />}></Route>
                 <Route path="packages" element={<ClientBrowsePackages />}></Route>
+                <Route path="messages" element={<ClientMessages />}></Route>
                 <Route path="billing" element={<ClientBilling />}></Route>
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
