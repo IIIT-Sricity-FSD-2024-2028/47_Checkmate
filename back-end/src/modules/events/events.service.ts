@@ -51,8 +51,35 @@ export class EventsService {
       if (dto.note) patch.rejectionReason = dto.note;
     }
 
-    return this.data.update('events', id, patch as any);
+    const updated = this.data.update('events', id, patch as any);
+    this.notifyClient(updated as any, s, dto.note);
+    return updated;
   }
 
   remove(id: string) { return this.data.remove('events', id); }
+
+  // Client <-> vendor bridge: when the vendor changes an event's status, drop a
+  // notification for the client who owns it. The client portal's bell reads
+  // these from the `notifications` collection (filtered by userId).
+  private notifyClient(event: { id: string; name: string; clientId?: string; vendor?: string }, status: string, note?: string) {
+    if (!event?.clientId) return;
+
+    const messages: Record<string, { title: string; message: string; type: 'success' | 'error' | 'info' }> = {
+      confirmed: { title: `${event.name} Approved`, message: `${event.vendor || 'The vendor'} approved your request for ${event.name}.`, type: 'success' },
+      approved: { title: `${event.name} Approved`, message: `${event.vendor || 'The vendor'} approved your request for ${event.name}.`, type: 'success' },
+      rejected: { title: `${event.name} Rejected`, message: note ? `Reason: ${note}` : `${event.name} was declined by the vendor.`, type: 'error' },
+      live: { title: `${event.name} is Live`, message: `${event.name} is now in live execution mode.`, type: 'info' },
+      completed: { title: `${event.name} Completed`, message: `${event.name} has finished. Thank you for using EventPro!`, type: 'success' },
+    };
+    const text = messages[status];
+    if (!text) return; // e.g. back to "pending" — nothing to tell the client
+
+    this.data.create('notifications', 'NOTIF', {
+      userId: event.clientId,
+      ...text,
+      isRead: false,
+      linkUrl: `/client/track/${event.id}`,
+      createdAt: new Date().toISOString(),
+    });
+  }
 }

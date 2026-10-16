@@ -16,7 +16,8 @@ import {
     Bug,
     DollarSign,
     Activity,
-    Settings
+    Settings,
+    Inbox
 } from "lucide-react";
 
 export const clientMenuItems = [
@@ -39,6 +40,11 @@ export const clientMenuItems = [
         label: "Browse Packages",
         path: "/client/packages",
         icon: "ph ph-tote"
+    },
+    {
+        label: "Messages",
+        path: "/client/messages",
+        icon: "ph ph-chat-teardrop-dots"
     },
     {
         label: "Billing",
@@ -109,6 +115,12 @@ export const vendorMenuItems = [
                 icon: Shield,
             },
         ],
+    },
+    {
+        // Client <-> vendor bridge: issues clients report on this vendor's events
+        label: "Client Issues",
+        path: "/vendor/issues",
+        icon: Inbox,
     },
     {
         label: "Monitor Live Events",

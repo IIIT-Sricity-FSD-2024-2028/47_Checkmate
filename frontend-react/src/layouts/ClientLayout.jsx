@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { clientMenuItems } from "../routes/roleRoutes";
 import { getAuthSession } from "../services/auth/authStorage";
+import WelcomeOverlay from "../components/client/WelcomeOverlay";
 
 function ClientLayout() {
     const authSession = getAuthSession();
@@ -12,6 +13,8 @@ function ClientLayout() {
         <main className="main-content">
             <Outlet></Outlet>
         </main>
+        {/* Shown once per browser session, on whichever client page opens first */}
+        <WelcomeOverlay />
     </div>
 }
 

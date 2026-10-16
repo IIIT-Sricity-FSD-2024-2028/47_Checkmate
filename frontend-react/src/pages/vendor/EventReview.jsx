@@ -15,6 +15,7 @@
  *   - <EventResourceRequirementsTable>: Required resources vs available inventory table.
  *   - <EventStaffRequirementsTable>: Required staff roles vs active staff table.
  *   - <EventReviewActionBar>: Decision action buttons (Back, Reject, Accept).
+ *   - <RejectReasonModal>: Asks for a rejection reason; the client sees it.
  *
  * Connected Backend Endpoints:
  *   - GET   /events/:id (via getEventById) -> Loads event details.
@@ -38,6 +39,7 @@ import EventFeasibilityBanner from "../../components/vendor/EventFeasibilityBann
 import EventResourceRequirementsTable from "../../components/vendor/EventResourceRequirementsTable";
 import EventStaffRequirementsTable from "../../components/vendor/EventStaffRequirementsTable";
 import EventReviewActionBar from "../../components/vendor/EventReviewActionBar";
+import RejectReasonModal from "../../components/vendor/RejectReasonModal";
 
 // Backend API services
 import { getEventById, getMyEvents, updateEventStatus } from "../../services/eventService";
@@ -46,6 +48,7 @@ import { getMyStaff } from "../../services/staffService";
 
 // Central vendor stylesheet (Zero inline styling)
 import "../../styles/vendor.css";
+import "../../styles/bridge.css";
 
 function EventReview() {
   const navigate = useNavigate();
@@ -72,6 +75,9 @@ function EventReview() {
 
   // Transient feedback toast banner
   const [toast, setToast] = useState(null);
+
+  // Whether the "reject with reason" popup is open
+  const [rejectOpen, setRejectOpen] = useState(false);
 
   // --------------------------------------------------------------------------
   // 2. FETCH EVENT, RESOURCES, AND STAFF ON COMPONENT MOUNT
@@ -253,15 +259,15 @@ function EventReview() {
   // --------------------------------------------------------------------------
   // 6. ACTION HANDLER: REJECT EVENT
   // --------------------------------------------------------------------------
-  const handleRejectEvent = async () => {
+  // Client <-> vendor bridge: the reason typed in <RejectReasonModal> is sent as the
+  // status "note", saved as rejectionReason and shown to the client.
+  const handleRejectEvent = async (reason) => {
     if (!event) return;
-
-    const confirmReject = window.confirm(`Are you sure you want to reject "${event.name}"?`);
-    if (!confirmReject) return;
+    setRejectOpen(false);
 
     try {
-      await updateEventStatus(event.id, "rejected");
-      setEvent((prev) => ({ ...prev, status: "rejected" }));
+      await updateEventStatus(event.id, "rejected", reason);
+      setEvent((prev) => ({ ...prev, status: "rejected", rejectionReason: reason }));
       showToast(`Event "${event.name}" rejected.`, "danger");
     } catch (err) {
       console.error("Failed to reject event:", err);
@@ -360,8 +366,15 @@ function EventReview() {
         <EventReviewActionBar
           eventStatus={event.status}
           onBack={() => navigate("/vendor/events")}
-          onReject={handleRejectEvent}
+          onReject={() => setRejectOpen(true)}
           onAccept={handleAcceptEvent}
+        />
+
+        {/* ── Component 7: Reject reason popup (reason is shown to the client) ── */}
+        <RejectReasonModal
+          event={rejectOpen ? event : null}
+          onClose={() => setRejectOpen(false)}
+          onConfirm={handleRejectEvent}
         />
       </div>
     </div>

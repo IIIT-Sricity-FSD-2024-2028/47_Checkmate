@@ -200,3 +200,9 @@ export {
   setStaffRequests,
   setStateKey,
 } from './stateService';
+
+// Staff portal helpers (added in 458b3d4). Names that already exist above
+// (createIssue, updateStaffAssignment) keep their original meaning, because
+// explicit exports take priority over `export *`. Staff pages import
+// staffApi directly when they need its versions.
+export * from "./staffApi";

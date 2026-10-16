@@ -13,6 +13,9 @@ import ClientCreateEvent from "../pages/client/CreateEvent";
 import ClientMyEvents from "../pages/client/MyEvents";
 import ClientBrowsePackages from "../pages/client/BrowsePackages";
 import ReportIssue from "../pages/client/ReportIssue";
+import ClientTrackProgress from "../pages/client/TrackProgress";
+import ClientLiveMonitoring from "../pages/client/LiveMonitoring";
+import ClientMessages from "../pages/client/Messages";
 import StaffLayout from "../layouts/StaffLayout";
 import StaffAssignedEvents from "../pages/staff/AssignedEvents";
 import StaffTaskBoard from "../pages/staff/TaskBoard";
@@ -23,6 +26,8 @@ import SuperuserLayout from "../layouts/SuperUser";
 import SignIn from "../pages/auth/SignIn";
 import Events from "../pages/vendor/Events";
 import EventReview from "../pages/vendor/EventReview";
+import VendorEventCoordination from "../pages/vendor/EventCoordination";
+import VendorClientIssues from "../pages/vendor/ClientIssues";
 import SignUp1 from "../pages/auth/SignUp1";
 import SignUp2 from "../pages/auth/SignUp2";
 import VendorProfile from "../pages/vendor/Profile";
@@ -52,7 +57,10 @@ function AppRoutes() {
                 <Route path="dashboard" element={<ClientDashboard />}></Route>
                 <Route path="create-event" element={<ClientCreateEvent />}></Route>
                 <Route path="events" element={<ClientMyEvents />}></Route>
+                <Route path="track/:id" element={<ClientTrackProgress />}></Route>
+                <Route path="live/:id" element={<ClientLiveMonitoring />}></Route>
                 <Route path="packages" element={<ClientBrowsePackages />}></Route>
+                <Route path="messages" element={<ClientMessages />}></Route>
                 <Route path="billing" element={<ClientBilling />}></Route>
                 <Route path="report-issue" element={<ReportIssue />}></Route>
             </Route>
@@ -81,6 +89,9 @@ function AppRoutes() {
                 <Route path="manage-resource" element={<ManageResource />} />
                 <Route path="packages" element={<PresetPackage />} />
                 <Route path="preset-package" element={<PresetPackage />} />
+                {/* Client <-> vendor bridge pages */}
+                <Route path="coordination" element={<VendorEventCoordination />} />
+                <Route path="issues" element={<VendorClientIssues />} />
                 <Route path="assigned-events" element={<StaffAssignedEvents />}></Route>
                 <Route path="task-board" element={<StaffTaskBoard />}></Route>
                 <Route path="performance" element={<StaffPerformance />}></Route>
