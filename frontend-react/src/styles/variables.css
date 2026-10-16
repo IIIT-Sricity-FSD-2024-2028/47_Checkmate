@@ -1,4 +1,42 @@
 :root {
-    --sidebar-bg: #ffffff;
-    --border-color: #dddddd;
+  /* Background layers */
+  --bg-sidebar:  #150d1e;
+  --bg-card:     #2e1c40;
+  --bg-hover:    #2a1a3a;
+  --bg-input:    #231530;
+
+  /* Borders */
+  --border:      rgba(255, 255, 255, 0.07);
+  --border-hover:rgba(255, 255, 255, 0.13);
+  --border-color: rgba(255, 255, 255, 0.07);
+
+  /* Brand */
+  --pink:        #e91e8c;
+  --pink-light:  #f040a1;
+  --pink-glow:   rgba(233, 30, 140, 0.25);
+
+  /* Text */
+  --text-primary:   #f0e8ff;
+  --text-secondary: #9b8db0;
+  --text-muted:     #6b5d7e;
+
+  /* Semantic colours */
+  --green:   #22c55e;
+  --blue:    #3b82f6;
+  --purple:  #a855f7;
+  --orange:  #f97316;
+  --yellow:  #eab308;
+  --red:     #ef4444;
+
+  /* Shape */
+  --radius:    12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  /* Compatibility aliases */
+  --sidebar-bg: var(--bg-sidebar);
 }

@@ -1,14 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html,
 body,
 #root {
     margin: 0;
-    min-height: 100%;
+    padding: 0;
+    min-height: 100vh;
+    width: 100%;
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-body, 'DM Sans', sans-serif);
+    min-height: 100vh;
+    color: var(--text-primary, #f0e8ff);
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+      linear-gradient(to bottom,
+        #060a14   0%,
+        #0b1020  25%,
+        #1a1020  55%,
+        #2a0d2a  75%,
+        #a10f4f 100%
+      );
+    background-attachment: fixed;
+    background-color: #060a14;
 }
