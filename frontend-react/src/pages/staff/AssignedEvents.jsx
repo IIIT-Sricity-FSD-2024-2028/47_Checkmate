@@ -419,3 +419,4 @@ export default function StaffAssignedEvents() {
    5. "Where does the 'View Tasks' button navigate to?":
       -> It calls navigate('/staff/task-board') on the ae-btn--tasks button.
    ============================================================ */
+   ============================================================ */
