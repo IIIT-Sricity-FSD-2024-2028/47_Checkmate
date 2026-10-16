@@ -14,10 +14,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './staff.css';
+import '../../styles/staff.css';
 import StatCard from './components/StatCard';
 import Toast from './components/Toast';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList, updateStaffAssignment } from './staffApi';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList, updateStaffAssignment } from '../../services/staffApi';
 
 // Array of vibrant gradients applied cyclically across event card banners
 // FACULTY MAY ASK: How do you change the banner colors or add a new gradient theme?

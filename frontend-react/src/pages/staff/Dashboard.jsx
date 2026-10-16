@@ -14,10 +14,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './staff.css';
+import '../../styles/staff.css';
 import StatCard from './components/StatCard';
 import Toast from './components/Toast';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList, fetchIssues } from './staffApi';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList, fetchIssues } from '../../services/staffApi';
 
 export default function StaffDashboard() {
   const navigate = useNavigate();
