@@ -1,5 +1,6 @@
 import React from "react";
-import { FileText, Package, UserPlus, TrendingUp, Sparkles } from "lucide-react";
+import { FileText, Package, UserPlus, TrendingUp, Sparkles, Box, PlusCircle } from "lucide-react";
+import "../../styles/dashboard.css";
 
 function QuickActionButton({ button, button_type, onClick }) {
     const label = button_type || button || "Action";
@@ -14,7 +15,10 @@ function QuickActionButton({ button, button_type, onClick }) {
     } else if (key.includes("staff") || key.includes("assign") || key.includes("user")) {
         Icon = UserPlus;
         colorClass = "qa-icon--green";
-    } else if (key.includes("package") || key.includes("trend") || key.includes("add")) {
+    } else if (key.includes("package") || key.includes("add")) {
+        Icon = Box;
+        colorClass = "qa-icon--orange";
+    } else if (key.includes("trend")) {
         Icon = TrendingUp;
         colorClass = "qa-icon--orange";
     } else if (key.includes("review") || key.includes("event")) {
