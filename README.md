@@ -215,7 +215,6 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 ## Individual Contributions
 
 Each team member lists the work they did and the files they created or changed.
-To add yours, copy the template at the end of this section.
 
 ### epictwodude
 
@@ -263,13 +262,3 @@ live backend, and built shared table and pop-up components that other roles can 
 | Admin vendor approvals, service moderation and analytics pages | `pages/admin/admin.html`, `pages/admin/report-analytics.html`, `pages/admin/service-moderation.html`, `scripts/admin_js/admin.js`, `scripts/admin_js/admin-reports.js`, `pages/Login/signup-step4.html` |
 | Consistent layout and design across all roles' pages | `pages/{admin,client,vendor,staff,superuser,Login}/*`, `styles/*` |
 | Fixes for broken links, errors that failed without a message, and corrupted IDs | `pages/Login/login_js/script.js`, `scripts/client_js/create_event_client.js`, `scripts/vendor_js/report.js`, plus page links in admin / client / staff / vendor pages |
-
-### Template
-
-```markdown
-### <your name or GitHub username>
-
-| File | Work |
-|---|---|
-| `path/to/file` | What you built or changed |
-```
