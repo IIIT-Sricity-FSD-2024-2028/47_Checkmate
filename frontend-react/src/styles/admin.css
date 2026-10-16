@@ -220,3 +220,128 @@
 .doc-item__type { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
 
 .review-decided { margin-top: 16px; font-size: 12.5px; color: var(--text-muted); }
+
+/* Event / package / issue statuses not covered by dashboard.css */
+.status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.status-badge.open {
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--orange);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+}
+.status-badge.investigating {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--blue);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.status-badge.resolved {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+/* Stat row with three cards instead of five */
+.stats-grid.stats-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+  .stats-grid.stats-grid--three { grid-template-columns: 1fr; }
+}
+
+/* Detail modals (components/admin/DetailField.jsx) */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+@media (max-width: 640px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-field--wide { grid-column: 1 / -1; }
+.detail-field__label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.detail-field__value { font-size: 14px; color: var(--text-primary); line-height: 1.5; }
+.detail-money { color: var(--green); font-weight: 600; }
+
+.detail-section { margin-top: 20px; }
+.detail-section h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.modal-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.modal-text strong { color: var(--text-primary); }
+
+/* Issue tracking */
+.priority { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 13px; }
+.priority--high { color: var(--red); }
+.priority--medium { color: var(--purple); }
+.priority--low { color: var(--green); }
+
+.role-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.role-tag--vendor { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.role-tag--staff { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+.role-tag--client { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+/* System logs (components/admin/LogItem.jsx) */
+.log-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+.log-item { border-left: 3px solid var(--border); gap: 12px; }
+.log-item--blue { border-left-color: #3b82f6; }
+.log-item--green { border-left-color: #22c55e; }
+.log-item--orange { border-left-color: #f59e0b; }
+.log-item--pink { border-left-color: var(--pink); }
+.log-item--gray { border-left-color: #94a3b8; }
+
+.log-item__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.log-item__icon--blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.log-item__icon--green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.log-item__icon--orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.log-item__icon--pink { background: rgba(233, 30, 140, 0.1); color: var(--pink); }
+.log-item__icon--gray { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+
+.log-item__desc { overflow-wrap: anywhere; }
+.log-item__time { flex-shrink: 0; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+
+.log-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}

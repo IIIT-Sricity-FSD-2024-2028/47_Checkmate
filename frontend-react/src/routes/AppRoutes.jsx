@@ -3,6 +3,10 @@ import LandingPage from "../pages/public/LandingPage";
 import AdminDashboard from "../pages/admin/Dashboard";
 import AdminVendorApprovals from "../pages/admin/VendorApprovals";
 import AdminManageUsers from "../pages/admin/ManageUsers";
+import AdminMonitorEvents from "../pages/admin/MonitorEvents";
+import AdminIssueTracking from "../pages/admin/IssueTracking";
+import AdminServiceModeration from "../pages/admin/ServiceModeration";
+import AdminSystemLogs from "../pages/admin/SystemLogs";
 import ClientDashboard from "../pages/client/Dashboard";
 import StaffDashboard from "../pages/staff/Dashboard";
 import SuperuserDashboard from "../pages/superuser/Dashboard";
@@ -55,6 +59,10 @@ function AppRoutes() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="vendor-approvals" element={<AdminVendorApprovals />} />
                 <Route path="users" element={<AdminManageUsers />} />
+                <Route path="events" element={<AdminMonitorEvents />} />
+                <Route path="issues" element={<AdminIssueTracking />} />
+                <Route path="moderation" element={<AdminServiceModeration />} />
+                <Route path="logs" element={<AdminSystemLogs />} />
             </Route>
             <Route path="/client" element={<ClientLayout />}>
                 <Route path="profile" element={<ClientProfile />}></Route>
