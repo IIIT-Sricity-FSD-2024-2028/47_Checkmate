@@ -5,6 +5,12 @@
  * Role: Confirmation Dialog (Vendor Packages Portal)
  * Location: src/components/vendor/PackageDeleteModal.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/PresetPackage.jsx (Lines 143–149)
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx)
+ *   - Where in Code: Positioned at the root layout of PresetPackage.jsx; rendered
+ *     when `isDeleteOpen` is true to safeguard package deletion requests.
+ *
  * Purpose:
  *   Provides an explicit confirmation barrier before permanently deleting
  *   an event preset package from the vendor's catalog.

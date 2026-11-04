@@ -5,6 +5,12 @@
  * Role: Add / Edit Package Modal Dialog (Vendor Packages Portal)
  * Location: src/components/vendor/PackageFormModal.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/PresetPackage.jsx (Lines 132–140)
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx)
+ *   - Where in Code: Rendered at the bottom of PresetPackage.jsx; opened when clicking
+ *     "+ Add Package" in <PackageToolbar> or clicking the Edit pencil icon on any <PackageCard>.
+ *
  * Purpose:
  *   Comprehensive modal dialog allowing vendors to create or update packages:
  *     1. Validated inputs for Name, Category, Price, Duration, Capacity, and Description.

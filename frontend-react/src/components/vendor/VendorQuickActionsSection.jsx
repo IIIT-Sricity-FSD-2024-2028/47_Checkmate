@@ -5,6 +5,12 @@
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/VendorQuickActionsSection.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Dashboard.jsx (Lines 107–109)
+ *   - Parent Page: Vendor Dashboard (src/pages/vendor/Dashboard.jsx, Component 6 in right-col)
+ *   - Where in Code: Positioned in the right column of Dashboard.jsx directly below
+ *     <VendorCriticalAlertsSection>, hosting the 4 <QuickActionButton> navigation tiles.
+ *
  * Purpose:
  *   Renders the Quick Actions card on the Vendor Dashboard:
  *     - Provides one-click access into primary coordinator workflows:

@@ -3,6 +3,14 @@
  * RESOURCE TABLE ROW COMPONENT (ResourceTableRow.jsx)
  * ============================================================================
  * Role: Reusable Table Component (Vendor Portal)
+ * Location: src/components/vendor/ResourceTableRow.jsx
+ *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/ManageResource.jsx (Lines 480–488)
+ *   - Parent Page: Vendor Manage Resources (src/pages/vendor/ManageResource.jsx)
+ *   - Where in Code: Rendered inside the <tbody> inventory table mapping loop
+ *     (`paginatedResources.map(resource => <ResourceTableRow ... />)`) to render each row.
+ *
  * Purpose:
  *   Renders a single row representing an inventory resource item in the
  *   Manage Resource table.

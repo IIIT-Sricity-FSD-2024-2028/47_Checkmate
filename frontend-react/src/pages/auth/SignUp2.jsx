@@ -14,32 +14,29 @@ function SignUp2() {
 
   return (
     <div className="auth-page">
-
       <AuthBrandPanel />
 
       <div className="auth-form-section">
-
         <div className="auth-form-card-signup">
-
           <h2>Create your acount</h2>
 
           <FormInputPassword
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={passwordInput}
-              setValue={setPasswordInput}
-              setShowPassword={setShowPassword}
-            ></FormInputPassword>
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            value={passwordInput}
+            setValue={setPasswordInput}
+            setShowPassword={setShowPassword}
+          />
 
-            <FormInputPassword
-              label="Confirm Password"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={showConfirmPassword}
-              setValue={setPasswordConfirmInput}
-              setShowPassword={setShowConfirmPassword}
-            ></FormInputPassword>
+          <FormInputPassword
+            label="Confirm Password"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="••••••••"
+            value={passwordConfirmInput}
+            setValue={setPasswordConfirmInput}
+            setShowPassword={setShowConfirmPassword}
+          />
 
           <button
             className="signin-button"
@@ -50,15 +47,10 @@ function SignUp2() {
 
           <p className="signup-text">
             Already Registered?{" "}
-            <span onClick={() => navigate("/signin")}>
-              Sign In
-            </span>
+            <span onClick={() => navigate("/signin")}>Sign In</span>
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }

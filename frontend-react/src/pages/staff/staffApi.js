@@ -3,30 +3,27 @@
  * Handles async REST API communication with the backend
  */
 
+import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from '../../services/auth/authStorage';
+
 const API_BASE = (typeof window !== 'undefined' && window.CHECKMATE_API_BASE) || 'http://localhost:3000/api';
 
 export function getSessionUser() {
-  try {
-    const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        name: parsed.user || parsed.name || 'Mike Staff',
-        email: (parsed.email || 'staff@demo.com').toLowerCase(),
-        role: parsed.role || 'Staff',
-        token: parsed.token || null,
-        staffId: parsed.staffId || null,
-      };
-    }
-  } catch {
-    // Fall back to demo user
-  }
+  const session = getAuthSession();
+  const user = session?.user || (typeof session?.user === 'object' && session.user !== null ? session.user : {});
+  const directName = typeof session?.name === 'string' ? session.name : null;
+  const userName = typeof user?.name === 'string' ? user.name : null;
+  const userStaffId = user?.staffId || session?.staffId || null;
+  const userEmail = getAuthEmail() || user?.email || session?.email || 'mike.staff@eliteevents.com';
+  const userRole = getAuthRole() || session?.role || user?.role || 'Staff';
+  const token = getAuthToken() || session?.token || null;
+
   return {
-    name: 'Mike Staff',
-    email: 'staff@demo.com',
-    role: 'Staff',
-    token: null,
-    staffId: null,
+    name: userName || directName || 'Mike Johnson',
+    email: String(userEmail).toLowerCase(),
+    role: userRole,
+    token: token,
+    staffId: userStaffId || 'S001',
+    userId: user?.id || session?.userId || null,
   };
 }
 
@@ -35,6 +32,7 @@ export function getAuthHeaders() {
   const headers = {
     'Content-Type': 'application/json',
     'x-role': 'staff',
+    'x-email': session.email,
   };
   if (session.token) {
     headers['Authorization'] = `Bearer ${session.token}`;

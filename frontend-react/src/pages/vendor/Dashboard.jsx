@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard.css";
 
 // Shared & Global UI Components
-import TopHeaderBar from "../../components/TopHeaderBar";
+import VendorTopBar from "../../components/vendor/VendorTopBar";
 import WelcomeCard from "../../components/WelcomeCard";
 
 // Authentication session storage
@@ -59,10 +59,9 @@ function VendorDashboard() {
 
   return (
     <div className="vendor-dashboard">
-      {/* ── Top Header Bar with Live Alert Notification Count ── */}
-      <TopHeaderBar
+      {/* ── Top Header Bar with Live Working Notifications ── */}
+      <VendorTopBar
         title="Vendor Dashboard"
-        badge={alerts.length}
       />
 
       <div className="content">

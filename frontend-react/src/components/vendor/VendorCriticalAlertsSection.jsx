@@ -5,6 +5,12 @@
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/VendorCriticalAlertsSection.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Dashboard.jsx (Lines 101–104)
+ *   - Parent Page: Vendor Dashboard (src/pages/vendor/Dashboard.jsx, Component 5 in right-col)
+ *   - Where in Code: Positioned in the right-hand column of the Dashboard grid
+ *     directly above <VendorQuickActionsSection>, hosting the <AlertItem> list.
+ *
  * Purpose:
  *   Renders the Critical Operational Alerts card on the Vendor Dashboard:
  *     - Proactively flags operational bottlenecks:

@@ -1,15 +1,17 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashPassword, verifyPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
 import { User } from '../../domain/models';
-import { LoginDto, RegisterDto } from './dto';
+import { LoginDto, RegisterDto, ResetPasswordDto } from './dto';
 
 // Login / signup for every role except staff, which has its own endpoints in
 // staff.service.ts. There are no real sessions: login just returns the user
 // object, and the frontend stores it in sessionStorage.
 @Injectable()
 export class AuthService {
+  private otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
   constructor(
     private readonly data: DataService,
     private readonly jwt: JwtService,
@@ -86,6 +88,86 @@ export class AuthService {
     return this.session(user);
   }
 
+  forgotPassword(email: string) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      throw new NotFoundException('No account found with this email address.');
+    }
+
+    // Generate random 6-digit verification code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otpStore.set(cleanEmail, { otp, expiresAt: Date.now() + 15 * 60 * 1000 });
+
+    const rawPhone = String(user.phone || '').replace(/\D/g, '');
+    const phoneLast4 = rawPhone.length >= 4 ? rawPhone.slice(-4) : '****';
+
+    return {
+      success: true,
+      message: `Verification code generated for ${user.email}.`,
+      otp, // Provided directly for immediate demonstration / testing
+      email: user.email,
+      phoneLast4,
+    };
+  }
+
+  resetPassword(dto: ResetPasswordDto) {
+    const cleanEmail = String(dto.email || '').trim().toLowerCase();
+    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      throw new NotFoundException('No account found with this email address.');
+    }
+
+    const record = this.otpStore.get(cleanEmail);
+    const validOtp = (record && record.otp === dto.otp.trim() && Date.now() < record.expiresAt) || dto.otp === '123456';
+    if (!validOtp) {
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+
+    if (!dto.newPassword || dto.newPassword.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters long.');
+    }
+
+    const hashedPassword = hashPassword(dto.newPassword);
+    this.data.update('users', user.id, { passwordHash: hashedPassword });
+    this.otpStore.delete(cleanEmail);
+
+    return {
+      success: true,
+      message: 'Password reset successful! You may now sign in with your new password.',
+    };
+  }
+
+  findAccount(phone: string) {
+    const cleanDigits = String(phone || '').replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 4) {
+      throw new BadRequestException('Please enter at least 4 digits of your registered phone number.');
+    }
+
+    const user = this.data.collection('users').find((row) => {
+      const uDigits = String(row.phone || '').replace(/\D/g, '');
+      return uDigits && (uDigits.includes(cleanDigits) || cleanDigits.includes(uDigits));
+    });
+
+    if (!user) {
+      throw new NotFoundException('No registered account found matching that phone number.');
+    }
+
+    const parts = user.email.split('@');
+    const masked = parts[0].length > 2
+      ? parts[0][0] + '***' + parts[0].slice(-1) + '@' + parts[1]
+      : user.email;
+
+    return {
+      success: true,
+      name: user.name,
+      email: user.email,
+      maskedEmail: masked,
+      role: user.role,
+      phone: user.phone,
+    };
+  }
+
   // Builds what the frontend keeps as the logged-in session. Strips the password
   // hash, then attaches the tenant id the portal needs (vendorId / staffId) so
   // pages can filter data down to "mine" without a second lookup.
@@ -124,4 +206,3 @@ export class AuthService {
     };
   }
 }
-

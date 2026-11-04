@@ -1,22 +1,50 @@
+/**
+ * ============================================================================
+ * VENDOR EVENT TABLE ROW COMPONENT (EventTableRow.jsx)
+ * ============================================================================
+ * Role: Atomic Table Presentation Component (Vendor Events Portal)
+ * Location: src/components/vendor/EventTableRow.jsx
+ *
+ * Parent / Invocation Context:
+ *   - Called By: src/components/vendor/EventsTable.jsx (Lines 75–84)
+ *   - Parent Page: Vendor Event Requests (src/pages/vendor/Events.jsx, Component 4 via <EventsTable>)
+ *   - Also Reused In: src/components/client/ClientEventsTable.jsx (src/pages/client/MyEvents.jsx)
+ *   - Where in Code: Rendered inside the <tbody> row mapping loop of <EventsTable>
+ *     over `events.map(event => <EventTableRow ... />)`.
+ *
+ * Purpose:
+ *   Renders an individual tabular record in the vendor's incoming event requests:
+ *     1. Displays event identifier formatted with branded prefix (e.g. EVT-0042).
+ *     2. Formats event name, category type badge, localized scheduled date, venue,
+ *        and expected attendance headcount.
+ *     3. Renders the reusable <StatusBadge> indicating current lifecycle state.
+ *     4. Houses a 3-slot aligned action toolbar:
+ *        - Slot 1: View Details / Review Event (routes to Event Review screen)
+ *        - Slot 2: Approve Request (with aligned placeholder when already approved)
+ *        - Slot 3: Reject Request (with aligned placeholder when already rejected)
+ *
+ * Props:
+ *   @param {Object} props.event - The event data object (id, name, type, date, venue, attendees, status)
+ *   @param {Function} props.onView - Callback invoked to navigate to event review / details
+ *   @param {Function} props.onApprove - Callback invoked when approving the request
+ *   @param {Function} props.onReject - Callback invoked when rejecting the request
+ * ============================================================================
+ */
+
 import React from "react";
 import { Eye, Check, X } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
-/**
- * EventTableRow Component
- * ----------------------------------------------------------------------------
- * Renders a single row in the vendor event requests table.
- *
- * Props:
- *  - event: The event object containing id, name, type, date, venue, etc.
- *  - onView: Function called to navigate to the Event Review page
- *  - onApprove: Function called when approving the event request
- *  - onReject: Function called when rejecting the event request
- */
 function EventTableRow({ event, onView, onApprove, onReject }) {
+  // --------------------------------------------------------------------------
+  // 1. DATA EXTRACTION & DEFAULTS
+  // --------------------------------------------------------------------------
   const evId = event.id || "EVT-001";
   const status = String(event.status || "pending").toLowerCase();
 
+  // --------------------------------------------------------------------------
+  // 2. SCHEDULE DATE FORMATTING HELPER
+  // --------------------------------------------------------------------------
   // Helper to format ISO dates into friendly readable strings (e.g., "Oct 24, 2026")
   const formatDate = (dateValue) => {
     if (!dateValue) return "Date TBD";
@@ -25,6 +53,10 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       ? dateValue
       : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
+
+  // --------------------------------------------------------------------------
+  // 3. RENDER TABLE ROW
+  // --------------------------------------------------------------------------
 
   return (
     <tr>

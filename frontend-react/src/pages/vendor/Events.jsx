@@ -27,7 +27,7 @@ import "../../styles/vendor.css";
 import "../../styles/dashboard.css";
 
 // Global & Shared Reusable UI Components
-import TopHeaderBar from "../../components/TopHeaderBar";
+import VendorTopBar from "../../components/vendor/VendorTopBar";
 
 // Custom Data Retrieval & Mutation Hook
 import useVendorEventsData from "../../components/vendor/useVendorEventsData";
@@ -69,8 +69,8 @@ function Events() {
 
   return (
     <div className="vendor-page">
-      {/* ── Top Header Navigation Bar ── */}
-      <TopHeaderBar title="Event Requests" />
+      {/* ── Top Header Navigation Bar with Notifications ── */}
+      <VendorTopBar title="Event Requests" />
 
       <div className="vendor-content">
         {/* ── Component 1: Transient Action Feedback Toast Banner ── */}

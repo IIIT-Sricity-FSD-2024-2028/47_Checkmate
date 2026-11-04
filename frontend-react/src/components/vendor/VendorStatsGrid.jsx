@@ -5,6 +5,12 @@
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/VendorStatsGrid.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Dashboard.jsx (Lines 76–79)
+ *   - Parent Page: Vendor Dashboard (src/pages/vendor/Dashboard.jsx, Component 2)
+ *   - Where in Code: Positioned directly below <WelcomeCard> and spanning full width
+ *     above the two-column bottom layout grid in Dashboard.jsx.
+ *
  * Purpose:
  *   Renders the 5 core KPI metric cards across the top of the Vendor Dashboard:
  *     1. Pending Requests: Unreviewed incoming bookings awaiting vendor review.

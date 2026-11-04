@@ -9,7 +9,7 @@
   --bg2: #1a1724;
   --bg3: #201d2e;
   --bg4: #252238;
-  --sidebar-bg: #1D1D1D;
+  --sidebar-bg: var(--bg-sidebar, #150d1e);
   --border: rgba(255, 255, 255, 0.07);
   --border2: rgba(255, 255, 255, 0.04);
   --pink: #e91e8c;
@@ -51,7 +51,7 @@
 .staff-page-container {
   min-height: 100%;
   padding: 28px 26px 40px;
-  background: linear-gradient(to bottom, #1D1D1D 0%, #1D1D1D 50%, #4A0D3A 80%, #c41368 100%);
+  background: transparent;
   color: var(--text);
   font-family: var(--font);
   box-sizing: border-box;

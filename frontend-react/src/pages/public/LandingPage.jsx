@@ -1,34 +1,21 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { getAuthRole, getAuthToken } from "../../services/auth/authStorage";
 
+/**
+ * Root landing / entry redirector.
+ * Automatically forwards unauthenticated visitors directly to /signin,
+ * or logged-in users directly to their designated role dashboard.
+ */
 function LandingPage() {
-  return <div>
-    <h1>
-      Welcome to EventPro
-    </h1>
+  const token = getAuthToken();
+  const role = getAuthRole();
 
-        <Link to="/signin">
-            <button>Sign In</button>
-        </Link>
+  if (token && role) {
+    return <Navigate to={`/${role.toLowerCase()}/dashboard`} replace />;
+  }
 
-        <Link to="/client/dashboard">
-            <button>Client</button>
-        </Link>
-        <Link to="/vendor/dashboard">
-        <button>Vendor</button>
-      </Link>
-
-      <Link to="/staff/dashboard">
-        <button>Staff</button>
-      </Link>
-
-      <Link to="/admin/dashboard">
-        <button>Admin</button>
-      </Link>
-
-      <Link to="/superuser/dashboard">
-        <button>Superuser</button>
-      </Link>
-    </div>
+  return <Navigate to="/signin" replace />;
 }
 
-export default LandingPage
+export default LandingPage;

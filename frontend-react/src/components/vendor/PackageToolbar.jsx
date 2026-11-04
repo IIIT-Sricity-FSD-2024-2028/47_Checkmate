@@ -5,6 +5,13 @@
  * Role: Modular Search, Category Tabs & Filter Toolbar (Vendor Packages Portal)
  * Location: src/components/vendor/PackageToolbar.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/PresetPackage.jsx (Lines 106–120)
+ *   - Also Reused In: src/pages/client/BrowsePackages.jsx
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx, Component 3)
+ *   - Where in Code: Positioned directly between <PackageStatsGrid> and <PackageGrid>
+ *     in PresetPackage.jsx to house the header, "+ Add Package" trigger, category tabs, and filters.
+ *
  * Purpose:
  *   Provides the top control bar for Preset Packages:
  *     1. Title banner and primary "+ Add Package" action button.

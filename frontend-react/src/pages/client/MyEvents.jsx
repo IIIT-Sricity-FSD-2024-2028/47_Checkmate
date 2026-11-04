@@ -1,5 +1,39 @@
+import React from "react";
+import "../../styles/dashboard.css";
+
 function MyEvents() {
-    return <h1>Client My Events</h1>
+  return (
+    <div className="client-page">
+      <header className="topbar">
+        <h1 className="page-title">My Events</h1>
+      </header>
+      <div className="content">
+        <div
+          className="card"
+          style={{
+            padding: "36px 28px",
+            borderRadius: "var(--radius, 12px)",
+            background: "var(--bg-card, #2e1c40)",
+            border: "1px solid var(--border, rgba(255, 255, 255, 0.08))",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: "700",
+              marginBottom: "8px",
+              color: "var(--text-primary)",
+            }}
+          >
+            Your Booked Events
+          </h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+            Track vendor review status, confirmations, staff assignments, and logistics.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default MyEvents
+export default MyEvents;

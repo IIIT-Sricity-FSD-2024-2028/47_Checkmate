@@ -5,6 +5,12 @@
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/VendorRecentActivitySection.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Dashboard.jsx (Lines 92–95)
+ *   - Parent Page: Vendor Dashboard (src/pages/vendor/Dashboard.jsx, Component 4 in left-col)
+ *   - Where in Code: Positioned in the left column of Dashboard.jsx directly below
+ *     <VendorUpcomingEventsSection>, rendering the chronological <RecentActivityItem> feed.
+ *
  * Purpose:
  *   Renders the Recent Activity stream card on the Vendor Dashboard:
  *     - Displays a real-time chronological log of actions:

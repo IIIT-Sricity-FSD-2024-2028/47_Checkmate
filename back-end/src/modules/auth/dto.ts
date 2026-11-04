@@ -34,3 +34,30 @@ export class RegisterDto {
   @IsIn(['Vendor', 'Client', 'Staff'])
   role: 'Vendor' | 'Client' | 'Staff';
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'sarah@eliteevents.com' })
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: 'sarah@eliteevents.com' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  otp: string;
+
+  @ApiProperty({ example: 'Sarah@2026' })
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+}
+
+export class FindAccountDto {
+  @ApiProperty({ example: '5551002' })
+  @IsString()
+  phone: string;
+}
