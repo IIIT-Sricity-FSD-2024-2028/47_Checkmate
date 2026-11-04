@@ -41,6 +41,11 @@ export const clientMenuItems = [
         icon: "ph ph-tote"
     },
     {
+        label: "Messages",
+        path: "/client/messages",
+        icon: "ph ph-chat-teardrop-dots"
+    },
+    {
         label: "Billing",
         path: "/client/billing",
         icon: "ph ph-credit-card"

@@ -14,8 +14,10 @@ import ClientLayout from "../layouts/ClientLayout";
 import ClientBilling from "../pages/client/Billing";
 import ClientCreateEvent from "../pages/client/CreateEvent";
 import ClientMyEvents from "../pages/client/MyEvents";
+import ClientTrackProgress from "../pages/client/TrackProgress";
 import ClientBrowsePackages from "../pages/client/BrowsePackages";
-import ReportIssue from "../pages/client/ReportIssue";
+import ClientCoordination from "../pages/client/Coordination";
+import ClientReportIssue from "../pages/client/ReportIssue";
 
 import StaffLayout from "../layouts/StaffLayout";
 import StaffAssignedEvents from "../pages/staff/AssignedEvents";
@@ -77,9 +79,12 @@ function AppRoutes() {
             <Route path="dashboard" element={<ClientDashboard />} />
             <Route path="create-event" element={<ClientCreateEvent />} />
             <Route path="events" element={<ClientMyEvents />} />
+            <Route path="track/:id" element={<ClientTrackProgress />} />
             <Route path="packages" element={<ClientBrowsePackages />} />
+            <Route path="messages" element={<ClientCoordination />} />
+            <Route path="coordination" element={<ClientCoordination />} />
             <Route path="billing" element={<ClientBilling />} />
-            <Route path="report-issue" element={<ReportIssue />} />
+            <Route path="report-issue" element={<ClientReportIssue />} />
           </Route>
         </Route>
 
