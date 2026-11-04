@@ -5,6 +5,14 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 import AdminDashboard from "../pages/admin/Dashboard";
 import AdminVendorApprovals from "../pages/admin/VendorApprovals";
 import AdminManageUsers from "../pages/admin/ManageUsers";
+import AdminMonitorEvents from "../pages/admin/MonitorEvents";
+import AdminReportsAnalytics from "../pages/admin/ReportsAnalytics";
+import AdminIssueTracking from "../pages/admin/IssueTracking";
+import AdminServiceModeration from "../pages/admin/ServiceModeration";
+import AdminFinancialPayouts from "../pages/admin/FinancialPayouts";
+import AdminCoordinationHub from "../pages/admin/CoordinationHub";
+import AdminSystemLogs from "../pages/admin/SystemLogs";
+import AdminGlobalSettings from "../pages/admin/GlobalSettings";
 import ClientDashboard from "../pages/client/Dashboard";
 import StaffDashboard from "../pages/staff/Dashboard";
 import SuperuserDashboard from "../pages/superuser/Dashboard";
@@ -68,6 +76,14 @@ function AppRoutes() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="vendor-approvals" element={<AdminVendorApprovals />} />
             <Route path="users" element={<AdminManageUsers />} />
+            <Route path="events" element={<AdminMonitorEvents />} />
+            <Route path="reports" element={<AdminReportsAnalytics />} />
+            <Route path="issues" element={<AdminIssueTracking />} />
+            <Route path="moderation" element={<AdminServiceModeration />} />
+            <Route path="payouts" element={<AdminFinancialPayouts />} />
+            <Route path="coordination" element={<AdminCoordinationHub />} />
+            <Route path="logs" element={<AdminSystemLogs />} />
+            <Route path="settings" element={<AdminGlobalSettings />} />
           </Route>
         </Route>
 
