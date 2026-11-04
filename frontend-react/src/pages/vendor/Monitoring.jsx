@@ -10,7 +10,7 @@ import MonitoringAlertsFeed from '../../components/vendor/MonitoringAlertsFeed';
 import EventExtraResourceModal from '../../components/vendor/EventExtraResourceModal';
 import EventExtraStaffModal from '../../components/vendor/EventExtraStaffModal';
 
-import { getMyEvents, getStaffAssignments, getMyStaff, getMyIssues, getMyResources } from '../../services';
+import { getMyEvents, getStaffAssignments, getMyStaff, getMyIssues, getMyResources, patchIssue } from '../../services';
 
 export default function Monitoring() {
   const [events, setEvents] = useState([]);
@@ -123,6 +123,34 @@ export default function Monitoring() {
         setResourceInventory(rsc || []);
         setIssues(iss || []);
 
+        // Integrate real on-site staff requests submitted from Staff portal
+        const realStaffRequests = (iss || [])
+          .filter(
+            (i) =>
+              (i.type === 'staff_request' ||
+                i.category === 'Staff Request' ||
+                (i.title && i.title.startsWith('Dispatch Request'))) &&
+              ['open', 'pending'].includes(String(i.status || '').toLowerCase())
+          )
+          .map((i) => ({
+            id: i.id,
+            staffName: i.reporter || 'Staff Member',
+            role: i.reporterRole || 'Staff',
+            requestText: i.desc || i.description || i.title,
+            time: i.createdAt
+              ? new Date(i.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'Recently',
+            eventId: i.eventId || i.event,
+          }));
+
+        if (realStaffRequests.length > 0) {
+          setStaffRequests((prev) => {
+            const existingIds = new Set(prev.map((r) => r.id));
+            const fresh = realStaffRequests.filter((r) => !existingIds.has(r.id));
+            return [...fresh, ...prev];
+          });
+        }
+
         if (activeEvents.length > 0) {
           // Default to live event or first
           const liveEvt = activeEvents.find((e) => String(e.status).toLowerCase() === 'live');
@@ -223,6 +251,9 @@ export default function Monitoring() {
     const approved = staffRequests.find((r) => r.id === reqId);
     setStaffRequests((prev) => prev.filter((r) => r.id !== reqId));
     if (approved) {
+      if (reqId && !reqId.startsWith('req_')) {
+        patchIssue(reqId, { status: 'resolved' }).catch(() => {});
+      }
       setAlertsFeed((prev) => [
         {
           id: `al_${Date.now()}`,
@@ -238,6 +269,9 @@ export default function Monitoring() {
 
   const handleRejectStaffRequest = useCallback((reqId) => {
     setStaffRequests((prev) => prev.filter((r) => r.id !== reqId));
+    if (reqId && !reqId.startsWith('req_')) {
+      patchIssue(reqId, { status: 'rejected' }).catch(() => {});
+    }
   }, []);
 
   // Contingency Trigger Action

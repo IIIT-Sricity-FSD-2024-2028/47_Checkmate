@@ -136,7 +136,12 @@ export const staffMenuItems = [
     {
         label: "Task Board",
         path: "/staff/task-board",
-        icon: "ph ph-chat-teardrop-dots"
+        icon: "ph ph-kanban"
+    },
+    {
+        label: "Schedule",
+        path: "/staff/schedule",
+        icon: "ph ph-calendar-check"
     },
     {
         label: "Performance",
@@ -147,6 +152,11 @@ export const staffMenuItems = [
         label: "Report Issue",
         path: "/staff/report-issue",
         icon: "ph ph-warning-circle"
+    },
+    {
+        label: "Messages",
+        path: "/staff/messages",
+        icon: "ph ph-chat-teardrop-dots"
     }
 ];
 

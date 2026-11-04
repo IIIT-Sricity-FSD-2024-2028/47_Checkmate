@@ -145,9 +145,9 @@ export default function StaffAssignedEvents() {
   // FACULTY MAY ASK: Why does rejected count include both 'rejected' and 'declined'?
   // HOW TO CHANGE: In rejectedCount, both statuses are checked to support legacy and current backend data models.
   const totalCount = assignments.length;
-  const pendingCount = assignments.filter((a) => a.status === 'pending').length;
-  const acceptedCount = assignments.filter((a) => a.status === 'accepted').length;
-  const rejectedCount = assignments.filter((a) => a.status === 'rejected' || a.status === 'declined').length;
+  const pendingCount = assignments.filter((a) => ['pending', 'assigned'].includes(String(a.status || '').toLowerCase())).length;
+  const acceptedCount = assignments.filter((a) => ['accepted', 'confirmed', 'in_progress', 'completed'].includes(String(a.status || '').toLowerCase())).length;
+  const rejectedCount = assignments.filter((a) => ['rejected', 'declined'].includes(String(a.status || '').toLowerCase())).length;
 
   // Filters assignments based on the active tab ('all', 'pending', 'accepted', 'rejected')
   // FACULTY MAY ASK: How do you sort the assignments by event date?
@@ -155,9 +155,15 @@ export default function StaffAssignedEvents() {
   const filteredAssignments = useMemo(() => {
     if (filter === 'all') return assignments;
     if (filter === 'rejected') {
-      return assignments.filter((a) => a.status === 'rejected' || a.status === 'declined');
+      return assignments.filter((a) => ['rejected', 'declined'].includes(String(a.status || '').toLowerCase()));
     }
-    return assignments.filter((a) => a.status === filter);
+    if (filter === 'pending') {
+      return assignments.filter((a) => ['pending', 'assigned'].includes(String(a.status || '').toLowerCase()));
+    }
+    if (filter === 'accepted') {
+      return assignments.filter((a) => ['accepted', 'confirmed', 'in_progress', 'completed'].includes(String(a.status || '').toLowerCase()));
+    }
+    return assignments.filter((a) => String(a.status || '').toLowerCase() === filter);
   }, [assignments, filter]);
 
   return (
@@ -225,8 +231,11 @@ export default function StaffAssignedEvents() {
             const priCls = priority === 'High' ? 'pri-high' : priority === 'Low' ? 'pri-low' : 'pri-medium';
 
             const status = String(a.status || 'pending').toLowerCase();
-            const pillCls = status === 'accepted' ? 'pill-accepted' : status === 'rejected' || status === 'declined' ? 'pill-rejected' : 'pill-pending';
-            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+            const isPending = ['pending', 'assigned'].includes(status);
+            const isAccepted = ['accepted', 'confirmed', 'in_progress', 'completed'].includes(status);
+            const isRejected = ['rejected', 'declined'].includes(status);
+            const pillCls = isAccepted ? 'pill-accepted' : isRejected ? 'pill-rejected' : 'pill-pending';
+            const statusLabel = isPending ? 'Pending' : status.charAt(0).toUpperCase() + status.slice(1);
 
             const formattedDate = a.eventDate
               ? new Date(a.eventDate + 'T00:00:00').toLocaleDateString('en-US', {
@@ -335,7 +344,7 @@ export default function StaffAssignedEvents() {
                   {/* FACULTY MAY ASK: Where does "View Tasks" navigate? */}
                   {/* HOW TO CHANGE: Look for onClick={() => navigate('/staff/task-board')} on the ae-btn--tasks button. */}
                   <div className="ae-actions">
-                    {status === 'pending' ? (
+                    {isPending ? (
                       <>
                         <button
                           className="ae-btn ae-btn--accept"
@@ -357,7 +366,7 @@ export default function StaffAssignedEvents() {
                           Reject
                         </button>
                       </>
-                    ) : status === 'accepted' ? (
+                    ) : isAccepted ? (
                       <>
                         <button
                           className="ae-btn ae-btn--tasks"
@@ -371,7 +380,7 @@ export default function StaffAssignedEvents() {
                         </button>
                         <button
                           className="ae-btn ae-btn--msg"
-                          onClick={() => navigate('/staff/task-board')}
+                          onClick={() => navigate('/staff/messages')}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

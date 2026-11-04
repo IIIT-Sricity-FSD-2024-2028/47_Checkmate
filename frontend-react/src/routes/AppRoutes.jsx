@@ -21,6 +21,9 @@ import StaffLayout from "../layouts/StaffLayout";
 import StaffAssignedEvents from "../pages/staff/AssignedEvents";
 import StaffTaskBoard from "../pages/staff/TaskBoard";
 import StaffPerformance from "../pages/staff/Performance";
+import StaffSchedule from "../pages/staff/Schedule";
+import StaffReportIssue from "../pages/staff/ReportIssue";
+import StaffMessages from "../pages/staff/Messages";
 
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
@@ -88,8 +91,10 @@ function AppRoutes() {
             <Route path="dashboard" element={<StaffDashboard />} />
             <Route path="assigned-events" element={<StaffAssignedEvents />} />
             <Route path="task-board" element={<StaffTaskBoard />} />
+            <Route path="schedule" element={<StaffSchedule />} />
             <Route path="performance" element={<StaffPerformance />} />
-            <Route path="report-issue" element={<ReportIssue />} />
+            <Route path="report-issue" element={<StaffReportIssue />} />
+            <Route path="messages" element={<StaffMessages />} />
           </Route>
         </Route>
 
