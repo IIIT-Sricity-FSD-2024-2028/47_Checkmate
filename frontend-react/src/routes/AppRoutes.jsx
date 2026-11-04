@@ -16,6 +16,11 @@ import AdminGlobalSettings from "../pages/admin/GlobalSettings";
 import ClientDashboard from "../pages/client/Dashboard";
 import StaffDashboard from "../pages/staff/Dashboard";
 import SuperuserDashboard from "../pages/superuser/Dashboard";
+import SuperuserUsers from "../pages/superuser/Users";
+import SuperuserEvents from "../pages/superuser/Events";
+import SuperuserReports from "../pages/superuser/Reports";
+import SuperuserSettings from "../pages/superuser/Settings";
+import SuperuserReportIssue from "../pages/superuser/ReportIssue";
 import VendorDashboard from "../pages/vendor/Dashboard";
 
 import ClientLayout from "../layouts/ClientLayout";
@@ -124,10 +129,11 @@ function AppRoutes() {
           <Route path="/superuser" element={<SuperuserLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperuserDashboard />} />
-            <Route path="assigned-events" element={<StaffAssignedEvents />} />
-            <Route path="task-board" element={<StaffTaskBoard />} />
-            <Route path="performance" element={<StaffPerformance />} />
-            <Route path="report-issue" element={<ReportIssue />} />
+            <Route path="users" element={<SuperuserUsers />} />
+            <Route path="events" element={<SuperuserEvents />} />
+            <Route path="reports" element={<SuperuserReports />} />
+            <Route path="settings" element={<SuperuserSettings />} />
+            <Route path="report-issue" element={<SuperuserReportIssue />} />
           </Route>
         </Route>
 

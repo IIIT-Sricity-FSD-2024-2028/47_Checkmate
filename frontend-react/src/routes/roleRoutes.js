@@ -227,31 +227,31 @@ export const superuserMenuItems = [
     {
         label: "Dashboard",
         path: "/superuser/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard
     },
     {
         label: "Users",
         path: "/superuser/users",
-        icon: "ph ph-users"
+        icon: Users
     },
     {
         label: "Events",
         path: "/superuser/events",
-        icon: "ph ph-calendar"
+        icon: CalendarCheck
     },
     {
         label: "Reports",
         path: "/superuser/reports",
-        icon: "ph ph-chart-bar"
+        icon: PieChart
     },
     {
         label: "System Settings",
         path: "/superuser/settings",
-        icon: "ph ph-gear"
+        icon: Settings
     },
     {
         label: "Report Issue",
         path: "/superuser/report-issue",
-        icon: "ph ph-warning-circle"
+        icon: Bug
     }
 ];
