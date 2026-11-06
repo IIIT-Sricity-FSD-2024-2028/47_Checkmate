@@ -14,11 +14,14 @@
  */
 
 import React from "react";
-import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
 
 function EventReviewActionBar({
   eventStatus,
   hasConflicts = false,
+  hasAllocatedResources = true,
+  hasAllocatedStaff = true,
+  hasAllocatedVenue = true,
   onBack,
   onApprove,
   onReject,
@@ -29,6 +32,14 @@ function EventReviewActionBar({
     eventStatus === "approved" ||
     eventStatus === "rejected" ||
     eventStatus === "completed";
+
+  const isFullyAllocated = hasAllocatedResources && hasAllocatedStaff && hasAllocatedVenue;
+  const canApprove = !isAlreadyProcessed && !hasConflicts && isFullyAllocated;
+  const missingAllocations = [
+    !hasAllocatedResources && "Resource",
+    !hasAllocatedStaff && "Staff",
+    !hasAllocatedVenue && "Venue",
+  ].filter(Boolean);
 
   return (
     <div className="action-bar" role="toolbar" aria-label="Event Review Actions">
@@ -42,8 +53,36 @@ function EventReviewActionBar({
         <ArrowLeft size={16} /> Back to Requests
       </button>
 
-      {/* ── Action 2: Approve Event (When conflicts resolved) OR Keep Waiting (When conflicts remain) ── */}
-      {!isAlreadyProcessed && !hasConflicts && (
+      {/* ── State A: Disallow Approval Notice if missing resources or staff ── */}
+      {!isAlreadyProcessed && !hasConflicts && !isFullyAllocated && (
+        <div
+          className="allocation-required-badge"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "7px",
+            padding: "8px 14px",
+            borderRadius: "8px",
+            background: "rgba(234, 179, 8, 0.12)",
+            border: "1px solid rgba(234, 179, 8, 0.35)",
+            color: "#fde047",
+            fontSize: "12.5px",
+            fontWeight: 500,
+          }}
+          title="Events require at least one allocated resource, one assigned staff member and a confirmed venue before approval"
+        >
+          <AlertCircle size={15} color="#eab308" />
+          <span>
+            {[missingAllocations.slice(0, -1).join(", "), missingAllocations.at(-1)]
+              .filter(Boolean)
+              .join(" & ")}{" "}
+            allocation required before approval
+          </span>
+        </div>
+      )}
+
+      {/* ── Action 2: Approve Event (Only rendered when conflicts resolved AND both resources & staff allocated) ── */}
+      {canApprove && (
         <button
           type="button"
           className="btn-approve"
@@ -54,6 +93,7 @@ function EventReviewActionBar({
         </button>
       )}
 
+      {/* ── Action 3: Keep Waiting (When conflicts remain) ── */}
       {!isAlreadyProcessed && hasConflicts && (
         <button
           type="button"
@@ -65,7 +105,7 @@ function EventReviewActionBar({
         </button>
       )}
 
-      {/* ── Action 3: Reject Event ── */}
+      {/* ── Action 4: Reject Event ── */}
       {!isAlreadyProcessed && (
         <button
           type="button"

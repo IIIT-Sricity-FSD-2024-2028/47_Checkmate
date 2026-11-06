@@ -1,228 +1,209 @@
 /**
  * ============================================================================
- * EVENT EXTRA RESOURCE MODAL (EventExtraResourceModal.jsx)
+ * EVENT RESOURCE MODAL (EventExtraResourceModal.jsx)
  * ============================================================================
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/EventExtraResourceModal.jsx
  *
  * Purpose:
- *   Replicates legacy Event Review "Allocate Extra Resource" modal dialog:
- *     - Displays available inventory items for the event date
- *     - Provides quantity selector for the resource
- *     - Allocates the selected inventory item and substitutes shortages
+ *   Lets the vendor allocate inventory to an event from Event Review:
+ *     - Search the inventory, with stock shown for the event date
+ *     - Pick a quantity and press Add; nothing is allocated by clicking a row
+ *     - Items already on this event show their quantity and can be updated
+ *     - Stays open so several items can be added, until Done is pressed
  * ============================================================================
  */
 
 import React, { useState } from "react";
-import { Package, X } from "lucide-react";
+import { Minus, Plus, Search, X } from "lucide-react";
+import { formatCurrency } from "../../utils/formatCurrency";
+
+function formatEventDate(date) {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return "the event date";
+  return parsed.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
 
 function EventExtraResourceModal({
   isOpen,
   onClose,
+  title = "Allocate Resource",
   availableResources = [],
   eventDate,
   onAllocate,
+  onRemove,
 }) {
   const [quantities, setQuantities] = useState({});
+  const [search, setSearch] = useState("");
+  const [savingId, setSavingId] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleQtyChange = (e, resId) => {
-    e.stopPropagation();
-    const val = parseInt(e.target.value, 10) || 1;
-    setQuantities((prev) => ({ ...prev, [resId]: val }));
+  const getMaxQty = (r) => Number(r.availableQty ?? r.quantity ?? 0);
+  const getQty = (r) => {
+    const wanted = quantities[r.id] ?? (r.allocatedQty || 1);
+    return Math.min(Math.max(1, wanted), Math.max(1, getMaxQty(r)));
+  };
+  const setQty = (r, value) => {
+    setQuantities((prev) => ({ ...prev, [r.id]: Number.parseInt(value, 10) || 1 }));
   };
 
-  const handleSelectResource = (resource) => {
-    const qty = quantities[resource.id] || 1;
-    if (onAllocate) {
-      onAllocate(resource, qty);
-    }
+  const handleAllocate = async (r) => {
+    setSavingId(r.id);
+    await onAllocate?.(r, getQty(r));
+    setSavingId(null);
+  };
+
+  const handleRemove = async (r) => {
+    setSavingId(r.id);
+    await onRemove?.(r);
+    setQuantities((prev) => ({ ...prev, [r.id]: undefined }));
+    setSavingId(null);
+  };
+
+  const handleClose = () => {
+    setSearch("");
+    setQuantities({});
     onClose();
   };
 
+  const query = search.trim().toLowerCase();
+  const visibleResources = availableResources.filter(
+    (r) =>
+      !query ||
+      r.name?.toLowerCase().includes(query) ||
+      r.category?.toLowerCase().includes(query)
+  );
+  const allocatedCount = availableResources.filter((r) => r.allocatedQty > 0).length;
+
   return (
-    <div
-      className="modal-overlay"
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.75)",
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onClick={onClose}
-    >
+    <div className="vendor-modal-backdrop" onClick={handleClose}>
       <div
-        className="modal-card"
-        style={{
-          background: "var(--bg-sidebar, #130a1c)",
-          border: "1px solid var(--border, rgba(255, 255, 255, 0.1))",
-          borderRadius: "16px",
-          width: "min(540px, 94vw)",
-          maxHeight: "85vh",
-          overflowY: "auto",
-        }}
+        className="vendor-modal er-res-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label="Allocate Extra Resource"
+        aria-modal="true"
+        aria-label={title}
       >
-        {/* ── Modal Header ── */}
-        <div
-          style={{
-            padding: "18px 22px",
-            borderBottom: "1px solid var(--border, rgba(255, 255, 255, 0.08))",
-            fontWeight: 700,
-            fontSize: "15px",
-            color: "var(--text-primary, #f0e8ff)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <span>Allocate Extra Resource</span>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--text-muted, #6b5d7e)",
-              cursor: "pointer",
-            }}
-          >
+        {/* ── Header ── */}
+        <div className="vendor-modal__header">
+          <div>
+            <h3>{title}</h3>
+            <p className="er-res-modal__subtitle">
+              Stock shown for {formatEventDate(eventDate)}
+            </p>
+          </div>
+          <button type="button" className="modal-close-btn" onClick={handleClose} aria-label="Close">
             <X size={18} />
           </button>
         </div>
 
-        {/* ── Modal Body ── */}
-        <div
-          style={{
-            padding: "18px 22px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          {availableResources.length > 0 ? (
-            availableResources.map((r) => {
-              const maxQty = r.availableQty || r.quantity || 1;
-              const currentQty = quantities[r.id] || 1;
+        {/* ── Search ── */}
+        <div className="er-res-search">
+          <Search size={15} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or category"
+            aria-label="Search resources"
+          />
+        </div>
 
-              return (
-                <div
-                  key={r.id}
-                  onClick={() => handleSelectResource(r)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "14px",
-                    padding: "14px 16px",
-                    border: "1px solid var(--border, rgba(255, 255, 255, 0.08))",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  <div
-                    style={{
-                      width: "42px",
-                      height: "42px",
-                      borderRadius: "10px",
-                      background: "rgba(233, 30, 140, 0.15)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--pink, #e91e8c)",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Package size={20} />
+        {/* ── Inventory List ── */}
+        <div className="er-res-list">
+          {visibleResources.map((r) => {
+            const maxQty = getMaxQty(r);
+            const qty = getQty(r);
+            const isOutOfStock = maxQty <= 0;
+            const isAllocated = r.allocatedQty > 0;
+            const isUnchanged = isAllocated && qty === r.allocatedQty;
+
+            return (
+              <div key={r.id} className={`er-res-row ${isOutOfStock ? "er-res-row--out" : ""}`}>
+                <div className="er-res-row__info">
+                  <div className="er-res-row__name">
+                    {r.name}
+                    {isAllocated && (
+                      <span className="er-res-row__badge">Allocated {r.allocatedQty}</span>
+                    )}
                   </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        color: "var(--text-primary, #f0e8ff)",
-                        fontSize: "13.5px",
-                      }}
-                    >
-                      {r.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "11.5px",
-                        color: "var(--text-muted, #6b5d7e)",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {r.category || "Equipment"} • ₹{r.price || 0}/day •{" "}
-                      <span style={{ color: "#86efac", fontWeight: 600 }}>
-                        {maxQty} available for {eventDate || "event date"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <input
-                      type="number"
-                      value={currentQty}
-                      min="1"
-                      max={maxQty}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => handleQtyChange(e, r.id)}
-                      style={{
-                        width: "60px",
-                        padding: "6px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border, rgba(255, 255, 255, 0.1))",
-                        background: "var(--bg-main, #0d0615)",
-                        color: "var(--text-primary, #f0e8ff)",
-                        fontSize: "12px",
-                        textAlign: "center",
-                      }}
-                    />
+                  <div className="er-res-row__meta">
+                    {r.category || "Equipment"} · {formatCurrency(r.price)}/day ·{" "}
+                    <span className={isOutOfStock ? "er-res-row__stock--out" : "er-res-row__stock"}>
+                      {isOutOfStock ? "Out of stock" : `${maxQty - (r.allocatedQty || 0)} available`}
+                    </span>
                   </div>
                 </div>
-              );
-            })
-          ) : (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "24px",
-                color: "var(--text-muted, #6b5d7e)",
-                fontSize: "13px",
-              }}
-            >
-              No additional resources currently in stock for this date.
+
+                {!isOutOfStock && (
+                  <div className="er-res-row__actions">
+                    <div className="er-res-stepper">
+                      <button
+                        type="button"
+                        onClick={() => setQty(r, qty - 1)}
+                        disabled={qty <= 1}
+                        aria-label={`Fewer ${r.name}`}
+                      >
+                        <Minus size={13} />
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={maxQty}
+                        value={qty}
+                        onChange={(e) => setQty(r, e.target.value)}
+                        aria-label={`Quantity of ${r.name}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setQty(r, qty + 1)}
+                        disabled={qty >= maxQty}
+                        aria-label={`More ${r.name}`}
+                      >
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="er-res-add"
+                      onClick={() => handleAllocate(r)}
+                      disabled={isUnchanged || savingId === r.id}
+                    >
+                      {isAllocated ? "Update" : "Add"}
+                    </button>
+                    {isAllocated && (
+                      <button
+                        type="button"
+                        className="modal-close-btn"
+                        onClick={() => handleRemove(r)}
+                        disabled={savingId === r.id}
+                        aria-label={`Remove ${r.name}`}
+                        title="Remove from this event"
+                      >
+                        <X size={15} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {visibleResources.length === 0 && (
+            <div className="er-res-empty">
+              {query ? "No resources match your search." : "No resources in your inventory."}
             </div>
           )}
+        </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              marginTop: "6px",
-              padding: "10px 18px",
-              borderRadius: "8px",
-              border: "1px solid var(--border, rgba(255, 255, 255, 0.1))",
-              background: "transparent",
-              color: "var(--text-muted, #6b5d7e)",
-              cursor: "pointer",
-              alignSelf: "flex-end",
-            }}
-          >
-            Cancel
+        {/* ── Footer ── */}
+        <div className="vendor-modal__footer er-res-modal__footer">
+          <span className="er-res-modal__count">
+            {allocatedCount} {allocatedCount === 1 ? "item" : "items"} on this event
+          </span>
+          <button type="button" className="vendor-btn-primary" onClick={handleClose}>
+            Done
           </button>
         </div>
       </div>

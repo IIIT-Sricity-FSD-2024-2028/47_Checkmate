@@ -33,10 +33,10 @@
  */
 
 import React from "react";
-import { Eye, Check, X, Trash2, AlertTriangle } from "lucide-react";
+import { Eye, X, Trash2, AlertTriangle } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
-function EventTableRow({ event, collisions = [], onView, onApprove, onReject, onDelete }) {
+function EventTableRow({ event, collisions = [], onView, onReject, onDelete }) {
   // --------------------------------------------------------------------------
   // 1. DATA EXTRACTION & DEFAULTS
   // --------------------------------------------------------------------------
@@ -112,10 +112,10 @@ function EventTableRow({ event, collisions = [], onView, onApprove, onReject, on
         )}
       </td>
 
-      {/* Action Buttons: View (Review Page), Approve, Reject */}
+      {/* Action Buttons: View (Review Page to Approve/Manage), Reject/Delete */}
       <td className="table-actions-cell">
         <div className="table-actions">
-          {/* Slot 1: View / Review Event Button (Always in Column 1) */}
+          {/* Slot 1: View / Review Event Button (Approval is handled in Event Review) */}
           <button
             className="action-btn view"
             title="Review Event"
@@ -124,20 +124,7 @@ function EventTableRow({ event, collisions = [], onView, onApprove, onReject, on
             <Eye size={20} />
           </button>
 
-          {/* Slot 2: Approve Button (Only when pending; placeholder keeps alignment if already confirmed/rejected) */}
-          {status === "pending" ? (
-            <button
-              className="action-btn approve"
-              title={collisions.length > 0 ? "Approve Request (Venue Collision Detected)" : "Approve Request"}
-              onClick={() => onApprove && onApprove(event)}
-            >
-              <Check size={20} />
-            </button>
-          ) : (
-            <span className="action-btn-placeholder" aria-hidden="true" />
-          )}
-
-          {/* Slot 3: Reject Button when pending / Delete Button when rejected */}
+          {/* Slot 2: Reject Button when pending / Delete Button when rejected */}
           {status === "rejected" ? (
             <button
               className="action-btn delete"

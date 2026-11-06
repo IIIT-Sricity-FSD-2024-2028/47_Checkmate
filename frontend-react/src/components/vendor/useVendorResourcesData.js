@@ -10,7 +10,7 @@
  *   search/filter pipelines, pagination, and CRUD modal operations for ManageResource:
  *     1. Fetches vendor-scoped resources via `getMyResources()` and events via `getMyEvents()`.
  *     2. Computes dynamic effective stock availability considering scheduled event allocations.
- *     3. Persists equipment allocation registry to `localStorage` ('resourceAllocations').
+ *     3. Reads and saves allocations through the backend, shared with Event Review.
  *     4. Derives 4 KPI metrics (Total Resources, Available Stock, Low Stock, Out of Stock).
  *     5. Provides multi-attribute filtering (Category, Condition, Stock Level) and search.
  *     6. Manages Add/Edit modal state, input validation, and submission handlers.
@@ -27,7 +27,11 @@ import {
   deleteResource,
 } from "../../services/resourceService";
 import { getMyEvents } from "../../services/eventService";
+import { getResourceAllocations, setResourceAllocations } from "../../services/stateService";
 import { getAuthSession } from "../../services/auth/authStorage";
+
+// Stock on these events has been handed back
+const FINISHED_EVENT_STATUSES = ["rejected", "completed", "cancelled"];
 
 export default function useVendorResourcesData() {
   // ==========================================================================
@@ -41,14 +45,7 @@ export default function useVendorResourcesData() {
   const [events, setEvents] = useState([]);
 
   // Active allocations dictionary mapping eventId -> Array of allocated resource records
-  const [allocations, setAllocations] = useState(() => {
-    try {
-      const saved = localStorage.getItem("resourceAllocations");
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [allocations, setAllocations] = useState({});
 
   // Loading flag for initial asynchronous queries
   const [loading, setLoading] = useState(true);
@@ -74,7 +71,7 @@ export default function useVendorResourcesData() {
     async function loadInitialData() {
       setLoading(true);
       try {
-        const [resData, evData] = await Promise.all([
+        const [resData, evData, allocData] = await Promise.all([
           getMyResources().catch((err) => {
             console.error("Failed to load inventory resources:", err);
             return [];
@@ -83,11 +80,16 @@ export default function useVendorResourcesData() {
             console.error("Failed to load vendor events:", err);
             return [];
           }),
+          getResourceAllocations().catch((err) => {
+            console.error("Failed to load resource allocations:", err);
+            return {};
+          }),
         ]);
 
         if (isMounted) {
           if (Array.isArray(resData)) setResources(resData);
           if (Array.isArray(evData)) setEvents(evData);
+          if (allocData && !Array.isArray(allocData)) setAllocations(allocData);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -100,15 +102,6 @@ export default function useVendorResourcesData() {
       isMounted = false;
     };
   }, []);
-
-  // Sync allocations to browser localStorage whenever updated
-  useEffect(() => {
-    try {
-      localStorage.setItem("resourceAllocations", JSON.stringify(allocations));
-    } catch (err) {
-      console.warn("Unable to persist resourceAllocations to localStorage:", err);
-    }
-  }, [allocations]);
 
   // ==========================================================================
   // 3. CALCULATION HELPER: EFFECTIVE INVENTORY AVAILABILITY
@@ -129,26 +122,17 @@ export default function useVendorResourcesData() {
 
       const totalStock = item.total ?? item.quantity ?? 0;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const activeEvents = events.filter((e) => {
-        if (e.status !== "live" && e.status !== "confirmed" && e.status !== "approved") return false;
-        if (e.id === currentEvId) return false;
-        if (!e.date) return false;
-
-        if (targetDate) return e.date === targetDate;
-
-        const evDate = new Date(`${e.date}T00:00:00`);
-        return evDate >= today;
-      });
-
+      // Every unfinished event holds its stock, pending ones included
       let totalAllocated = 0;
-      activeEvents.forEach((ev) => {
-        const evAllocs = allocations[ev.id] || [];
+      Object.entries(allocations).forEach(([eventId, evAllocs]) => {
+        if (eventId === currentEvId) return;
+        const ev = events.find((e) => e.id === eventId);
+        if (FINISHED_EVENT_STATUSES.includes(String(ev?.status).toLowerCase())) return;
+        if (targetDate && ev?.date !== targetDate) return;
+
         evAllocs.forEach((a) => {
-          if (a.resourceId === resId) {
-            totalAllocated += a.qty || a.quantity || 0;
+          if (a.resourceId === resId && a.status !== "released") {
+            totalAllocated += Number(a.qty || a.quantity || 0);
           }
         });
       });
@@ -515,7 +499,7 @@ export default function useVendorResourcesData() {
     }
   };
 
-  const handleConfirmAllocation = () => {
+  const handleConfirmAllocation = async () => {
     const qty = parseInt(allocUnits, 10);
 
     if (isNaN(qty) || qty < 1) {
@@ -528,20 +512,35 @@ export default function useVendorResourcesData() {
       return;
     }
 
-    setAllocations((prev) => {
-      const existing = prev[selectedEventId] || [];
-      const updatedEventAllocs = [
-        ...existing,
-        {
-          resourceId: allocatingResource.id,
-          resourceName: allocatingResource.name,
-          category: allocatingResource.category,
-          qty,
-          allocatedAt: new Date().toISOString(),
-        },
-      ];
-      return { ...prev, [selectedEventId]: updatedEventAllocs };
-    });
+    // Start from the saved list, so allocations made on Event Review are kept.
+    // Adding to an item the event already has increases its quantity.
+    let updatedAllocations;
+    try {
+      const latest = await getResourceAllocations();
+      const saved = latest && !Array.isArray(latest) ? latest : {};
+      const existing = saved[selectedEventId] || [];
+      const current = existing.find((a) => a.resourceId === allocatingResource.id);
+      updatedAllocations = {
+        ...saved,
+        [selectedEventId]: [
+          ...existing.filter((a) => a !== current),
+          {
+            resourceId: allocatingResource.id,
+            resourceName: allocatingResource.name,
+            category: allocatingResource.category,
+            quantity: Number(current?.qty || current?.quantity || 0) + qty,
+            allocatedAt: new Date().toISOString(),
+          },
+        ],
+      };
+      await setResourceAllocations(updatedAllocations);
+    } catch (err) {
+      console.error("Failed to save allocation:", err);
+      setAllocError("Could not save this allocation. Please try again.");
+      return;
+    }
+
+    setAllocations(updatedAllocations);
 
     setIsAllocModalOpen(false);
     triggerToast(

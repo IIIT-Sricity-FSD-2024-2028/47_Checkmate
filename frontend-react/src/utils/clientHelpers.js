@@ -18,9 +18,9 @@ export function getCurrentUser() {
     const user = session?.user || {};
     const role = (session?.role || user.role || "client").toLowerCase();
     return {
-        id: user.id || "",
-        name: user.name || "User",
-        email: user.email || "",
+        id: user.id || "U004",
+        name: user.name || "Emily Carter",
+        email: user.email || "emily.client@example.com",
         role,
         // "client" -> "Client", used when we save who sent a message / reported an issue
         roleLabel: role.charAt(0).toUpperCase() + role.slice(1),

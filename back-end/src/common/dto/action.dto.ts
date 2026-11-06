@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class StatusDto {
   @ApiProperty({ example: 'approved' })
@@ -10,6 +10,12 @@ export class StatusDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @ApiPropertyOptional({ example: 45000, description: 'Final price the vendor quotes when approving' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  quotedPrice?: number;
 }
 
 export class DecisionDto {

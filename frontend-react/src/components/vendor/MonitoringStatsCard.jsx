@@ -40,7 +40,7 @@ export default function MonitoringStatsCard({
             {progress >= 100
               ? 'Event Concluded'
               : progress > 50
-              ? 'In Reception / Main Phase'
+              ? `${progress}% of phases complete`
               : progress > 0
               ? 'Setup & Onboarding'
               : 'Pre-event Readiness'}

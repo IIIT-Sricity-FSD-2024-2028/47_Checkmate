@@ -67,6 +67,10 @@ export async function patchEvent(id, eventData, options = {}) {
  * @param {Object} [options] - Additional request options
  * @returns {Promise<Object>}
  */
+export async function cancelEvent(id, options = {}) {
+  return patch(`/events/${encodeURIComponent(id)}/cancel`, {}, options);
+}
+
 export async function updateEventStatus(id, statusOrPayload, note, options = {}) {
   let body;
   let requestOptions = options;
@@ -130,7 +134,7 @@ export function filterMyEvents(events, session) {
       const evCreated = (ev.createdBy || '').toLowerCase();
 
       if (vendorId && evVId === vendorId) return true;
-      if (vendorName && (evVName === vendorName || evVName.includes(vendorName) || vendorName.includes(evVName))) return true;
+      if (vendorName && evVName && (evVName === vendorName || evVName.includes(vendorName) || vendorName.includes(evVName))) return true;
       if (userEmail && (evVEmail === userEmail || evCreated === userEmail)) return true;
       if (userId && (evCreated === userId || ev.createdBy === user.id)) return true;
       if (Array.isArray(ev.vendorIds) && vendorId && ev.vendorIds.map((v) => String(v).toLowerCase()).includes(vendorId)) return true;
@@ -212,6 +216,12 @@ export function parseTimeToMinutes(timeStr) {
   return hours * 60 + minutes;
 }
 
+// When an event ends. Older events have no end time, so they are given 4 hours.
+function getEndMinutes(event, startMinutes) {
+  const end = parseTimeToMinutes(event.endTime);
+  return end !== null && end > startMinutes ? end : startMinutes + 240;
+}
+
 /**
  * Checks for a venue, date, and time collision between an incoming/pending event request
  * and an existing confirmed/live event.
@@ -251,8 +261,7 @@ export function checkEventCollision(pendingEvent, confirmedEvent) {
   let severity = 'high';
 
   if (pMinutes !== null && cMinutes !== null) {
-    const diffHours = Math.abs(pMinutes - cMinutes) / 60;
-    if (diffHours < 4) {
+    if (pMinutes < getEndMinutes(confirmedEvent, cMinutes) && cMinutes < getEndMinutes(pendingEvent, pMinutes)) {
       isDirectTimeOverlap = true;
       timeDesc = `at ${pTimeRaw || 'scheduled time'} (overlaps with ${cTimeRaw || 'existing booking'})`;
       severity = 'high';
@@ -292,7 +301,8 @@ export function findEventCollisions(pendingEvent, allEvents) {
   const collisions = [];
   allEvents.forEach((existing) => {
     const col = checkEventCollision(pendingEvent, existing);
-    if (col) collisions.push(col);
+    // Same venue at different times on one day is fine; only overlaps count
+    if (col?.severity === 'high') collisions.push(col);
   });
   return collisions;
 }

@@ -7,7 +7,7 @@ import { getBookingsCommissions, settleBookingPayout } from '../../services/book
 import '../../styles/admin.css';
 
 export default function FinancialPayouts() {
-  const [data, setData] = useState({ commissions: [], aggregates: {} });
+  const [data, setData] = useState({ items: [], summary: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,7 +20,7 @@ export default function FinancialPayouts() {
       setLoading(true);
       setError(null);
       const res = await getBookingsCommissions();
-      setData(res || { commissions: [], aggregates: {} });
+      setData(res || { items: [], summary: {} });
     } catch (err) {
       console.error('Failed to load payout data:', err);
       setError('Failed to fetch financial commissions.');
@@ -33,8 +33,8 @@ export default function FinancialPayouts() {
     fetchPayouts();
   }, []);
 
-  const commissions = data.commissions || [];
-  const aggregates = data.aggregates || {};
+  const commissions = data.items || [];
+  const aggregates = data.summary || {};
 
   const pendingBookings = useMemo(() => {
     return commissions.filter((b) => (b.payoutStatus || 'pending').toLowerCase() === 'pending');
@@ -51,7 +51,7 @@ export default function FinancialPayouts() {
     return list.filter((b) =>
       (b.bookingId && b.bookingId.toLowerCase().includes(q)) ||
       (b.id && b.id.toLowerCase().includes(q)) ||
-      (b.vendorName && b.vendorName.toLowerCase().includes(q)) ||
+      (b.vendor && b.vendor.toLowerCase().includes(q)) ||
       (b.eventName && b.eventName.toLowerCase().includes(q)) ||
       (b.eventId && b.eventId.toLowerCase().includes(q))
     );
@@ -65,7 +65,7 @@ export default function FinancialPayouts() {
       await fetchPayouts();
     } catch (err) {
       console.error('Failed to settle payout:', err);
-      alert('Failed to settle payout.');
+      alert(err.message || 'Failed to settle payout.');
     } finally {
       setActionLoading(false);
     }
@@ -110,7 +110,7 @@ export default function FinancialPayouts() {
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#f59e0b', marginTop: '10px' }}>
-            ₹{Number(aggregates.pendingPayoutTotal || pendingBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.pendingVendorPayouts || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {pendingBookings.length} bookings awaiting release
@@ -125,7 +125,7 @@ export default function FinancialPayouts() {
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#00e676', marginTop: '10px' }}>
-            ₹{Number(aggregates.settledPayoutTotal || completedBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.settledVendorPayouts || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {completedBookings.length} vendors disbursed
@@ -140,7 +140,7 @@ export default function FinancialPayouts() {
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#fff', marginTop: '10px' }}>
-            ₹{Number(aggregates.totalCommission || commissions.reduce((a, b) => a + (Number(b.commissionAmount) || Number(b.amount) * 0.1 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.platformCommissionEarned || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: '#ec4899', marginTop: '4px' }}>
             10% platform revenue share
@@ -231,9 +231,9 @@ export default function FinancialPayouts() {
             <tbody>
               {displayedList.map((b) => {
                 const bId = b.id || b.bookingId;
-                const totalGross = Number(b.amount || b.totalAmount || 0);
-                const fee = Number(b.commissionAmount || totalGross * 0.1);
-                const net = Number(b.netPayout || totalGross * 0.9);
+                const totalGross = Number(b.cost || 0);
+                const fee = Number(b.commissionAmount || 0);
+                const net = Number(b.vendorPayoutAmount || 0);
                 const isSettled = (b.payoutStatus || '').toLowerCase() === 'settled' || (b.payoutStatus || '').toLowerCase() === 'completed';
 
                 return (
@@ -241,10 +241,10 @@ export default function FinancialPayouts() {
                     <td style={{ padding: '14px 16px', fontWeight: '600', color: '#fff' }}>{bId}</td>
                     <td style={{ padding: '14px 16px' }}>
                       <div style={{ color: '#fff', fontWeight: '500' }}>{b.eventName || b.event || b.eventId}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{b.date || b.createdAt ? new Date(b.date || b.createdAt).toLocaleDateString() : 'Active'}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{b.created ? new Date(b.created).toLocaleDateString() : 'Active'}</div>
                     </td>
                     <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>
-                      {b.vendorName || b.vendorId || 'Elite Events Co.'}
+                      {b.vendor || b.vendorId}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', color: '#fff', fontWeight: '500' }}>
                       ₹{totalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -275,7 +275,11 @@ export default function FinancialPayouts() {
                           <Eye size={13} />
                         </button>
 
-                        {!isSettled ? (
+                        {!isSettled && b.settleBlockReason ? (
+                          <span style={{ fontSize: '12px', color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px' }}>
+                            <Clock size={13} /> {b.settleBlockReason}
+                          </span>
+                        ) : !isSettled ? (
                           <button
                             disabled={actionLoading}
                             onClick={() => handleSettle(bId)}
@@ -371,25 +375,25 @@ export default function FinancialPayouts() {
             <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Vendor</span>
-                <span style={{ color: '#fff', fontWeight: '500' }}>{selectedBooking.vendorName || selectedBooking.vendorId || 'Elite Events Co.'}</span>
+                <span style={{ color: '#fff', fontWeight: '500' }}>{selectedBooking.vendor || selectedBooking.vendorId}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Client Paid Gross</span>
+                <span style={{ color: 'var(--text-muted)' }}>Booking Total</span>
                 <span style={{ color: '#fff', fontWeight: '600' }}>
-                  ₹{Number(selectedBooking.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₹{Number(selectedBooking.cost || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Platform Fee (10%)</span>
+                <span style={{ color: 'var(--text-muted)' }}>Platform Fee ({Math.round(Number(selectedBooking.commissionRate || 0) * 100)}%)</span>
                 <span style={{ color: '#ec4899', fontWeight: '600' }}>
-                  -₹{Number(selectedBooking.commissionAmount || (selectedBooking.amount || 0) * 0.1).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  -₹{Number(selectedBooking.commissionAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div style={{ height: '1px', background: 'var(--border)', margin: '12px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
                 <span style={{ color: '#fff', fontWeight: '600' }}>Net Disbursed</span>
                 <span style={{ color: '#00e676', fontWeight: '700' }}>
-                  ₹{Number(selectedBooking.netPayout || (selectedBooking.amount || 0) * 0.9).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₹{Number(selectedBooking.vendorPayoutAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

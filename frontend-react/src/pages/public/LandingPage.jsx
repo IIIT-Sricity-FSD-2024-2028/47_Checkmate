@@ -8,12 +8,8 @@ import {
   ChevronRight,
   Star,
   Sparkles,
-  MapPin,
-  Briefcase,
-  IndianRupee,
   LayoutDashboard,
   LogOut,
-  X,
 } from "lucide-react";
 import {
   getAuthRole,
@@ -21,37 +17,9 @@ import {
   clearAuthSession,
 } from "../../services/auth/authStorage";
 
-import "../../styles/landingpage.css";
+import { getPublicDesignations } from "../../services/staffOnboardingService";
 
-const DEFAULT_RECRUITMENTS = [
-  {
-    id: "JOB-01",
-    position: "Event Coordinator Lead",
-    location: "New York, NY",
-    type: "Full-Time",
-    salary: "₹65,000 - ₹80,000/mo",
-    description:
-      "Oversee vendor onboarding, coordinate client requirements, and ensure seamless on-site operations for major conferences and galas.",
-  },
-  {
-    id: "JOB-02",
-    position: "Stage & AV Technician",
-    location: "San Francisco, CA",
-    type: "Contract",
-    salary: "₹350 - ₹450 / hr",
-    description:
-      "Manage sound, lighting, projection systems, and staging logistics for live corporate summits and festival stages.",
-  },
-  {
-    id: "JOB-03",
-    position: "Hospitality Lead",
-    location: "Chicago, IL",
-    type: "Part-Time",
-    salary: "₹250 - ₹320 / hr",
-    description:
-      "Direct greeting staff, registration desks, and VIP hospitality services during multi-day conventions and private banquets.",
-  },
-];
+import "../../styles/landingpage.css";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -61,8 +29,7 @@ function LandingPage() {
 
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
-  const [recruitments, setRecruitments] = useState(DEFAULT_RECRUITMENTS);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [recruitments, setRecruitments] = useState([]);
 
   // Scroll listener for sticky navbar and active link highlighting
   useEffect(() => {
@@ -88,18 +55,11 @@ function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch live recruitments from public endpoint
+  // The work on offer, one per vendor
   useEffect(() => {
-    fetch("/api/public/recruitments")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setRecruitments(data);
-        }
-      })
-      .catch(() => {
-        // Fallback to default demo recruitments
-      });
+    getPublicDesignations()
+      .then((data) => setRecruitments(Array.isArray(data) ? data : []))
+      .catch(() => setRecruitments([]));
   }, []);
 
   const handleSignOut = () => {
@@ -178,6 +138,9 @@ function LandingPage() {
               >
                 Events
               </a>
+            </li>
+            <li>
+              <Link to="/join-staff">We're Hiring</Link>
             </li>
           </ul>
 
@@ -487,18 +450,13 @@ function LandingPage() {
             </div>
 
             <div className="link-group">
-              <h4>Open Recruitments</h4>
+              <h4>We're Hiring</h4>
               <ul>
                 {recruitments.map((job) => (
-                  <li key={job.id}>
-                    <button
-                      type="button"
-                      className="job-link"
-                      onClick={() => setSelectedJob(job)}
-                    >
-                      {job.position}{" "}
-                      <span>({job.location})</span>
-                    </button>
+                  <li key={job.vendorId}>
+                    <Link to={`/join-staff?vendor=${job.vendorId}`}>
+                      {job.designation} <span>({job.vendorName})</span>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -513,47 +471,6 @@ function LandingPage() {
         </div>
       </footer>
 
-      {/* ── 10. Job Details Modal ── */}
-      {selectedJob && (
-        <div className="modal-backdrop" onClick={() => setSelectedJob(null)}>
-          <div className="job-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="modal-close"
-              onClick={() => setSelectedJob(null)}
-              title="Close modal"
-            >
-              <X size={20} />
-            </button>
-            <h3>{selectedJob.position}</h3>
-            <div className="job-tags">
-              <span>
-                <MapPin size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
-                {selectedJob.location}
-              </span>
-              <span>
-                <Briefcase size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
-                {selectedJob.type}
-              </span>
-              <span>
-                <IndianRupee size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
-                {selectedJob.salary}
-              </span>
-            </div>
-            <h4>Job Description</h4>
-            <p className="job-description">{selectedJob.description}</p>
-            <div style={{ textAlign: "center" }}>
-              <Link
-                to="/signup-details"
-                className="btn-primary modal-account"
-                onClick={() => setSelectedJob(null)}
-              >
-                Create Account to Continue
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

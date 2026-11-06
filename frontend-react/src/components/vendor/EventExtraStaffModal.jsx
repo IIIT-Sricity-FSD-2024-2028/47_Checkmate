@@ -7,24 +7,27 @@
  *
  * Purpose:
  *   Replicates legacy Event Review "Assign Extra Staff" modal dialog:
- *     - Displays available team members (workload < 100%)
+ *     - Lists the roster; a member with a blockReason cannot be assigned
  *     - Shows staff member role, availability status, and workload
  *     - Assigns the selected team member to this event
  * ============================================================================
  */
 
 import React from "react";
-import { X } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 
 function EventExtraStaffModal({
   isOpen,
   onClose,
   availableStaff = [],
+  replacingName,
   onAssign,
 }) {
   if (!isOpen) return null;
 
   const handleSelectStaff = (member) => {
+    if (member.blockReason) return;
+
     if (onAssign) {
       onAssign(member);
     }
@@ -51,7 +54,7 @@ function EventExtraStaffModal({
           background: "var(--bg-sidebar, #130a1c)",
           border: "1px solid var(--border, rgba(255, 255, 255, 0.1))",
           borderRadius: "16px",
-          width: "min(540px, 94vw)",
+          width: "min(560px, 94vw)",
           maxHeight: "85vh",
           overflowY: "auto",
         }}
@@ -73,7 +76,7 @@ function EventExtraStaffModal({
           }}
         >
           <div>
-            <span>Assign Extra Staff</span>{" "}
+            <span>{replacingName ? `Replace ${replacingName}` : "Assign Staff"}</span>{" "}
             <span
               style={{
                 fontSize: "12px",
@@ -81,7 +84,7 @@ function EventExtraStaffModal({
                 fontWeight: 400,
               }}
             >
-              (only available staff shown)
+              (only staff not working on another event)
             </span>
           </div>
 
@@ -105,45 +108,57 @@ function EventExtraStaffModal({
             padding: "18px 22px",
             display: "flex",
             flexDirection: "column",
-            gap: "8px",
+            gap: "10px",
           }}
         >
           {availableStaff.length > 0 ? (
             availableStaff.map((s) => {
               const initial = (s.name || "S")[0].toUpperCase();
+              const currentWl = Number(s.workload || 0);
+              const hasConflict = Boolean(s.blockReason);
+              const conflictReason = hasConflict
+                ? s.blockReason[0].toUpperCase() + s.blockReason.slice(1)
+                : "";
+
               return (
                 <div
                   key={s.id}
-                  onClick={() => handleSelectStaff(s)}
+                  onClick={() => !hasConflict && handleSelectStaff(s)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "14px",
-                    padding: "14px 16px",
-                    border: "1px solid var(--border, rgba(255, 255, 255, 0.08))",
+                    padding: "12px 16px",
+                    border: hasConflict
+                      ? "1px solid rgba(239, 68, 68, 0.25)"
+                      : "1px solid var(--border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "12px",
-                    cursor: "pointer",
+                    cursor: hasConflict ? "not-allowed" : "pointer",
+                    opacity: hasConflict ? 0.6 : 1,
+                    background: hasConflict ? "rgba(239, 68, 68, 0.04)" : "transparent",
                     transition: "all 0.15s ease",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
+                  onMouseEnter={(e) => {
+                    if (!hasConflict) e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!hasConflict) e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   <div
                     style={{
-                      width: "42px",
-                      height: "42px",
+                      width: "40px",
+                      height: "40px",
                       borderRadius: "50%",
-                      background: "linear-gradient(135deg, #e91e8c, #a855f7)",
+                      background: hasConflict
+                        ? "rgba(239, 68, 68, 0.2)"
+                        : "linear-gradient(135deg, #e91e8c, #a855f7)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontWeight: 700,
-                      fontSize: "16px",
-                      color: "#fff",
+                      fontSize: "15px",
+                      color: hasConflict ? "#fca5a5" : "#fff",
                       flexShrink: 0,
                     }}
                   >
@@ -168,25 +183,48 @@ function EventExtraStaffModal({
                       }}
                     >
                       {s.role || "Staff Member"} •{" "}
-                      <span style={{ color: "#86efac", fontWeight: 600 }}>
-                        Available ({s.workload || 0}% workload)
-                      </span>
+                      {hasConflict ? (
+                        <span style={{ color: "#f87171", fontWeight: 600 }}>
+                          <AlertTriangle size={11} style={{ display: "inline", verticalAlign: "middle", marginRight: "3px" }} />
+                          {conflictReason}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#86efac", fontWeight: 600 }}>
+                          Available ({currentWl}% workload)
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      padding: "4px 12px",
-                      borderRadius: "20px",
-                      background: "rgba(34, 197, 94, 0.12)",
-                      color: "#86efac",
-                      border: "1px solid rgba(34, 197, 94, 0.25)",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Assign
-                  </span>
+                  {hasConflict ? (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        background: "rgba(239, 68, 68, 0.15)",
+                        color: "#fca5a5",
+                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Conflict
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        padding: "5px 12px",
+                        borderRadius: "8px",
+                        background: "rgba(34, 197, 94, 0.15)",
+                        color: "#86efac",
+                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Assign
+                    </span>
+                  )}
                 </div>
               );
             })
@@ -199,7 +237,7 @@ function EventExtraStaffModal({
                 fontSize: "13px",
               }}
             >
-              No additional available staff members with open capacity.
+              No staff members found in roster.
             </div>
           )}
 

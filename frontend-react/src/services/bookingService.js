@@ -97,6 +97,17 @@ export async function settlePayout(id, settleData = {}, options = {}) {
 }
 
 /**
+ * Record full payment of a booking by the client who owns it.
+ *
+ * @param {string} id - Booking ID
+ * @param {Object} [options] - Additional request options
+ * @returns {Promise<Object>}
+ */
+export async function payBooking(id, options = {}) {
+  return patch(`/bookings/${encodeURIComponent(id)}/pay`, {}, options);
+}
+
+/**
  * Alias for settlePayout().
  */
 export async function settleBookingPayout(id, settleData, options) {
@@ -183,6 +194,7 @@ const bookingService = {
   createBooking,
   updateBooking,
   patchBooking,
+  payBooking,
   settlePayout,
   settleBookingPayout,
   deleteBooking,

@@ -51,7 +51,7 @@ function EventReviewStats({ event }) {
         </div>
         <div>
           <div className="ev-meta-label">Time</div>
-          <div className="ev-meta-value">{event.time || "9:00 AM – 6:00 PM"}</div>
+          <div className="ev-meta-value">{event.endTime ? `${event.time} – ${event.endTime}` : event.time || "Time not set"}</div>
         </div>
       </div>
 

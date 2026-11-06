@@ -4,8 +4,9 @@
  */
 
 import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from './auth/authStorage';
+import { getBaseUrl } from './apiClient';
 
-const API_BASE = (typeof window !== 'undefined' && window.CHECKMATE_API_BASE) || 'http://localhost:3000/api';
+const API_BASE = getBaseUrl();
 
 export function getSessionUser() {
   const session = getAuthSession();
@@ -60,6 +61,18 @@ export async function updateStaffAssignment(id, patch) {
     throw new Error(`Failed to update assignment: ${response.status}`);
   }
   return response.json();
+}
+
+/** Reports how the signed-in staff member is getting on with a live event. */
+export async function updateStaffProgress(id, progress) {
+  const response = await fetch(`${API_BASE}/staff-assignments/${encodeURIComponent(id)}/progress`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(progress),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.message || 'Could not send your update.');
+  return data;
 }
 
 export async function fetchStaffList() {

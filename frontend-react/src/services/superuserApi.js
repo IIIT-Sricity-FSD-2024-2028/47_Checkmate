@@ -15,9 +15,9 @@
  *   - GET  /api/vendors
  */
 
-const API_BASE =
-  (typeof window !== 'undefined' && window.CHECKMATE_API_BASE) ||
-  'http://localhost:3000/api';
+import { getBaseUrl } from './apiClient';
+
+const API_BASE = getBaseUrl();
 
 /**
  * Retrieves the current logged-in superuser session details

@@ -33,13 +33,23 @@ import {
 
 function EventFeasibilityBanner({
   conflicts = [],
+  hasAllocatedResources = true,
+  hasAllocatedStaff = true,
+  hasAllocatedVenue = true,
   onNavigateResolve,
+  onResolveVenue,
   onOpenKeepWaiting,
   onReject,
   onAccept,
   eventStatus,
 }) {
   const hasConflicts = conflicts.length > 0;
+  const isFullyAllocated = hasAllocatedResources && hasAllocatedStaff && hasAllocatedVenue;
+  const missingAllocationHints = [
+    !hasAllocatedResources && "every requested resource",
+    !hasAllocatedStaff && "every requested staff member",
+    !hasAllocatedVenue && "a confirmed venue (use the Venue Allocation section)",
+  ].filter(Boolean);
   const isAlreadyProcessed =
     eventStatus === "confirmed" ||
     eventStatus === "approved" ||
@@ -114,7 +124,9 @@ function EventFeasibilityBanner({
                       type="button"
                       className="btn-resolve-nav"
                       onClick={() =>
-                        onNavigateResolve && onNavigateResolve(targetPath)
+                        isVenue && onResolveVenue
+                          ? onResolveVenue()
+                          : onNavigateResolve && onNavigateResolve(targetPath)
                       }
                       title={`Resolve conflict: Navigate to ${targetLabel}`}
                     >
@@ -151,8 +163,32 @@ function EventFeasibilityBanner({
             </div>
           )}
         </div>
+      ) : !isFullyAllocated ? (
+        /* ── State 2B: No Operational Conflicts, But Missing Allocation ── */
+        <div
+          className="conflicts-box-safe"
+          style={{
+            borderColor: "rgba(234, 179, 8, 0.4)",
+            background: "rgba(234, 179, 8, 0.08)",
+          }}
+        >
+          <div
+            className="conflicts-box-safe-icon"
+            style={{ background: "rgba(234, 179, 8, 0.2)", color: "#eab308" }}
+          >
+            <Clock size={20} />
+          </div>
+          <div className="conflicts-box-safe-body">
+            <div className="conflicts-box-safe-title" style={{ color: "#fde047" }}>
+              Allocation Incomplete — Approval Unavailable
+            </div>
+            <div className="conflicts-box-safe-sub" style={{ color: "var(--text-secondary, #9b8db0)" }}>
+              This event needs {missingAllocationHints.join(", and ")} before it can be approved.
+            </div>
+          </div>
+        </div>
       ) : (
-        /* ── State 2: No Conflicts Detected (Safe to Approve) ── */
+        /* ── State 2A: No Conflicts & Fully Allocated (Safe to Approve) ── */
         <div className="conflicts-box-safe">
           <div className="conflicts-box-safe-icon">
             <CheckCircle2 size={20} />
@@ -162,11 +198,11 @@ function EventFeasibilityBanner({
               No Conflicts — Safe to Approve
             </div>
             <div className="conflicts-box-safe-sub">
-              All requested resources are in stock and assigned staff members are available.
+              All requested resources are allocated in stock and assigned staff members are available with zero operational conflicts.
             </div>
           </div>
 
-          {/* If resolved and not yet approved: Prompt Accept Event */}
+          {/* If resolved, fully allocated and not yet approved: Prompt Accept Event */}
           {!isAlreadyProcessed && onAccept && (
             <button
               type="button"

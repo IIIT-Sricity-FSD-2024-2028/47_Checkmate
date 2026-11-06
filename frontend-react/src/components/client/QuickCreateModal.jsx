@@ -24,21 +24,26 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import Modal from "../Modal";
+import VenuePicker from "./VenuePicker";
 
 // FACULTY MAY ASK: How does the form reset for each package?
 // HOW TO CHANGE: The page gives this component key={pkg.id}, so React creates a
 // fresh copy (fresh useState) whenever a different package is opened.
 function QuickCreateModal({ pkg, onClose, onSubmit }) {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: pkg ? `${pkg.name} Event` : "", date: "", time: "09:00", venue: "", people: "" });
+  const [form, setForm] = useState({ name: pkg ? `${pkg.name} Event` : "", date: "", time: "09:00", endTime: "", venue: "", people: "" });
   const [error, setError] = useState("");
   const [submitState, setSubmitState] = useState("idle"); // idle | submitting | success
 
   const update = (field, value) => setForm({ ...form, [field]: value });
 
   const handleCreate = async () => {
-    if (!form.name.trim() || !form.date) {
-      setError("Please fill in the required Event Name and Date.");
+    if (!form.name.trim() || !form.date || !form.endTime) {
+      setError("Please fill in the required Event Name, Date and End Time.");
+      return;
+    }
+    if (form.endTime <= form.time) {
+      setError("End time must be after the start time.");
       return;
     }
     setSubmitState("submitting");
@@ -78,16 +83,58 @@ function QuickCreateModal({ pkg, onClose, onSubmit }) {
         </div>
         <div className="cl-field">
           <label>Event Date *</label>
-          <input className="cl-input" type="date" value={form.date} onChange={(e) => update("date", e.target.value)} />
+          <input
+            className="cl-input"
+            type="date"
+            min={new Date().toISOString().split("T")[0]}
+            value={form.date}
+            onChange={(e) => update("date", e.target.value)}
+            onClick={(e) => {
+              try {
+                if (typeof e.target.showPicker === "function") {
+                  e.target.showPicker();
+                }
+              } catch {}
+            }}
+            onFocus={(e) => {
+              try {
+                if (typeof e.target.showPicker === "function") {
+                  e.target.showPicker();
+                }
+              } catch {}
+            }}
+          />
+        </div>
+        <div className="cl-field">
+          <label>End Time *</label>
+          <input className="cl-input" type="time" value={form.endTime} onChange={(e) => update("endTime", e.target.value)} />
         </div>
         <div className="cl-field">
           <label>Event Time</label>
-          <input className="cl-input" type="time" value={form.time} onChange={(e) => update("time", e.target.value)} />
+          <input
+            className="cl-input"
+            type="time"
+            value={form.time}
+            onChange={(e) => update("time", e.target.value)}
+            onClick={(e) => {
+              try {
+                if (typeof e.target.showPicker === "function") {
+                  e.target.showPicker();
+                }
+              } catch {}
+            }}
+            onFocus={(e) => {
+              try {
+                if (typeof e.target.showPicker === "function") {
+                  e.target.showPicker();
+                }
+              } catch {}
+            }}
+          />
         </div>
         <div className="cl-field">
           <label>Venue Location</label>
-          <input className="cl-input" type="text" placeholder="E.g., Central Hall"
-            value={form.venue} onChange={(e) => update("venue", e.target.value)} />
+          <VenuePicker value={form.venue} onChange={(value) => update("venue", value)} />
         </div>
         <div className="cl-field">
           <label>Guests</label>

@@ -5,332 +5,267 @@ import MonitoringStatsCard from '../../components/vendor/MonitoringStatsCard';
 import MonitoringQuickActions from '../../components/vendor/MonitoringQuickActions';
 import MonitoringTimeline from '../../components/vendor/MonitoringTimeline';
 import MonitoringStaffRequests from '../../components/vendor/MonitoringStaffRequests';
+import MonitoringStaffProgress from '../../components/vendor/MonitoringStaffProgress';
 import MonitoringRisksAndContingency from '../../components/vendor/MonitoringRisksAndContingency';
 import MonitoringAlertsFeed from '../../components/vendor/MonitoringAlertsFeed';
-import EventExtraResourceModal from '../../components/vendor/EventExtraResourceModal';
-import EventExtraStaffModal from '../../components/vendor/EventExtraStaffModal';
 
-import { getMyEvents, getStaffAssignments, getMyStaff, getMyIssues, getMyResources, patchIssue } from '../../services';
+import { useNavigate } from 'react-router-dom';
+import {
+  getContingencyPlans,
+  getMonitorProgress,
+  getMyEvents,
+  getMyIssues,
+  getStaffAssignments,
+  patchIssue,
+  setContingencyPlans,
+  setMonitorProgress,
+  updateEventStatus,
+} from '../../services';
+import { sendMessage } from '../../services/messageService';
+
+const REFRESH_MS = 5000;
+const PHASES = [
+  { key: 'setup', title: 'Setup' },
+  { key: 'registration', title: 'Guest Registration' },
+  { key: 'event', title: 'Event in Progress' },
+  { key: 'breakdown', title: 'Breakdown' },
+];
+const CLOSED_ASSIGNMENTS = ['rejected', 'declined'];
+const lower = (value) => String(value || '').toLowerCase();
+const clock = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+// "2h 15m" since the event went live
+function elapsedSince(iso) {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
 
 export default function Monitoring() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [staffAssignments, setStaffAssignments] = useState([]);
-  const [staffList, setStaffList] = useState([]);
-  const [resourceInventory, setResourceInventory] = useState([]);
   const [issues, setIssues] = useState([]);
+  const [progressMap, setProgressMap] = useState({});
+  const [plansMap, setPlansMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sessionAlerts, setSessionAlerts] = useState([]);
 
-  // Modals
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateBulletinText, setUpdateBulletinText] = useState('');
-  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isEndEventModalOpen, setIsEndEventModalOpen] = useState(false);
 
-  // Milestone Progress State (persisted per event)
-  const [milestonesState, setMilestonesState] = useState({
-    EVT002: [
-      { id: 'm1', title: 'Setup & Inbound Logistics', time: '14:00', lead: 'Mike Johnson', status: 'done' },
-      { id: 'm2', title: 'Sound & Stage AV Check', time: '16:00', lead: 'Marcus Sterling', status: 'done' },
-      { id: 'm3', title: 'Guest Arrival & Registration', time: '17:45', lead: 'Chloe Bennett', status: 'current' },
-      { id: 'm4', title: 'Main Wedding Ceremony', time: '18:30', lead: 'Sarah Williams', status: 'pending' },
-      { id: 'm5', title: 'Banquet & Dinner Service', time: '20:00', lead: 'Elite Events Staff', status: 'pending' },
-      { id: 'm6', title: 'Wrap-up & Load-out', time: '22:30', lead: 'Logistics Team', status: 'pending' },
-    ],
-    EVT003: [
-      { id: 'm1', title: 'Hall Setup & Lighting Rig', time: '13:00', lead: 'Elena Rostova', status: 'done' },
-      { id: 'm2', title: 'Keynote Tech & Mic Check', time: '15:30', lead: 'Mike Johnson', status: 'done' },
-      { id: 'm3', title: 'Executive Welcome Reception', time: '18:00', lead: 'Sarah Williams', status: 'current' },
-      { id: 'm4', title: 'Annual Awards Gala', time: '19:30', lead: 'Elena Rostova', status: 'pending' },
-      { id: 'm5', title: 'Dessert & Networking', time: '21:00', lead: 'Chloe Bennett', status: 'pending' },
-    ],
-  });
-
-  // On-site Staff Requests
-  const [staffRequests, setStaffRequests] = useState([
-    {
-      id: 'req_1',
-      staffName: 'Marcus Sterling',
-      role: 'AV Specialist',
-      requestText: 'Stage audio monitors need 2 additional XLR extensions before 18:00 soundcheck.',
-      time: '6m ago',
-    },
-    {
-      id: 'req_2',
-      staffName: 'Chloe Bennett',
-      role: 'Guest Relations',
-      requestText: 'Guest count exceeded 140 at reception foyer; requesting 1 extra usher.',
-      time: '12m ago',
-    },
-  ]);
-
-  // Live Alerts Feed
-  const [alertsFeed, setAlertsFeed] = useState([
-    {
-      id: 'al_1',
-      type: 'success',
-      text: 'Main sound reinforcement checks passed all dB levels at ballroom FOH.',
-      time: '5m ago',
-      source: 'Tech Team',
-    },
-    {
-      id: 'al_2',
-      type: 'warning',
-      text: 'Ambient temperature near West Pavilion rising; HVAC thermostat adjusted to 20°C.',
-      time: '14m ago',
-      source: 'Venue Facility',
-    },
-    {
-      id: 'al_3',
-      type: 'info',
-      text: 'Coordinator Sarah Williams checked in with Lead Client Emily Carter.',
-      time: '28m ago',
-      source: 'Concierge',
-    },
-  ]);
-
-  // Contingency Plans
-  const [contingencies, setContingencies] = useState([
-    { id: 'rain', name: 'Weather Shelter Shift', desc: 'Seal outdoor verandas and redirect guests into Grand Galleria', status: 'ready' },
-    { id: 'power', name: 'Auxiliary Generator Link', desc: 'Switch sound and chandelier lines to emergency 150kVA generator', status: 'ready' },
-    { id: 'overflow', name: 'Overflow Seating Dispatch', desc: 'Deploy 4 reserve banquet tables (32 seats) from East storage', status: 'ready' },
-  ]);
-
-  // 1. Initial Data Fetch
-  useEffect(() => {
-    let mounted = true;
-    async function loadData() {
-      try {
-        const [evs, assigns, stf, rsc, iss] = await Promise.all([
-          getMyEvents().catch(() => []),
-          getStaffAssignments().catch(() => []),
-          getMyStaff().catch(() => []),
-          getMyResources().catch(() => []),
-          getMyIssues().catch(() => []),
-        ]);
-
-        if (!mounted) return;
-
-        // Filter active/confirmed/live events
-        const activeEvents = Array.isArray(evs)
-          ? evs.filter((e) => ['live', 'confirmed', 'pending'].includes(String(e.status || '').toLowerCase()))
-          : [];
-
-        setEvents(activeEvents);
-        setStaffAssignments(assigns || []);
-        setStaffList(stf || []);
-        setResourceInventory(rsc || []);
-        setIssues(iss || []);
-
-        // Integrate real on-site staff requests submitted from Staff portal
-        const realStaffRequests = (iss || [])
-          .filter(
-            (i) =>
-              (i.type === 'staff_request' ||
-                i.category === 'Staff Request' ||
-                (i.title && i.title.startsWith('Dispatch Request'))) &&
-              ['open', 'pending'].includes(String(i.status || '').toLowerCase())
-          )
-          .map((i) => ({
-            id: i.id,
-            staffName: i.reporter || 'Staff Member',
-            role: i.reporterRole || 'Staff',
-            requestText: i.desc || i.description || i.title,
-            time: i.createdAt
-              ? new Date(i.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              : 'Recently',
-            eventId: i.eventId || i.event,
-          }));
-
-        if (realStaffRequests.length > 0) {
-          setStaffRequests((prev) => {
-            const existingIds = new Set(prev.map((r) => r.id));
-            const fresh = realStaffRequests.filter((r) => !existingIds.has(r.id));
-            return [...fresh, ...prev];
-          });
-        }
-
-        if (activeEvents.length > 0) {
-          // Default to live event or first
-          const liveEvt = activeEvents.find((e) => String(e.status).toLowerCase() === 'live');
-          setSelectedEventId(liveEvt ? liveEvt.id : activeEvents[0].id);
-        }
-      } catch (err) {
-        console.error('Failed to load live monitoring data:', err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadData();
-    return () => {
-      mounted = false;
-    };
+  const addAlert = useCallback((type, text, source) => {
+    setSessionAlerts((prev) => [{ id: `al_${Date.now()}`, type, text, time: 'Just now', source }, ...prev]);
   }, []);
 
-  // Selected Event Object
-  const selectedEvent = useMemo(() => {
-    return events.find((e) => e.id === selectedEventId) || events[0] || null;
-  }, [events, selectedEventId]);
+  // Keeps refreshing, so events that start or end on schedule update by themselves
+  const loadData = useCallback(async () => {
+    try {
+      const [evs, assigns, iss, progress, plans] = await Promise.all([
+        getMyEvents(),
+        getStaffAssignments(),
+        getMyIssues(),
+        getMonitorProgress(),
+        getContingencyPlans(),
+      ]);
+      const activeEvents = evs.filter((e) => ['live', 'confirmed', 'approved'].includes(lower(e.status)));
+      setEvents(activeEvents);
+      setStaffAssignments(assigns || []);
+      setIssues(iss || []);
+      setProgressMap(progress || {});
+      setPlansMap(plans && !Array.isArray(plans) ? plans : {});
+      setSelectedEventId((current) => {
+        if (activeEvents.some((e) => e.id === current)) return current;
+        return (activeEvents.find((e) => lower(e.status) === 'live') || activeEvents[0])?.id || null;
+      });
+    } catch (err) {
+      console.error('Failed to load live monitoring data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Milestones for current event
+  useEffect(() => {
+    loadData();
+    const timer = setInterval(loadData, REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [loadData]);
+
+  const selectedEvent = useMemo(
+    () => events.find((e) => e.id === selectedEventId) || null,
+    [events, selectedEventId]
+  );
+  const isLive = lower(selectedEvent?.status) === 'live';
+
+  // The event's four phases, as saved. The client sees the same progress.
   const currentMilestones = useMemo(() => {
     if (!selectedEvent) return [];
-    return milestonesState[selectedEvent.id] || [
-      { id: 'm1', title: 'Site Inspection & Inbound Setup', time: '13:00', status: 'done' },
-      { id: 'm2', title: 'Technical AV & Power Inspection', time: '15:30', status: 'current' },
-      { id: 'm3', title: 'Guest Welcome & Service', time: '18:00', status: 'pending' },
-      { id: 'm4', title: 'Operational Breakdown', time: '22:00', status: 'pending' },
-    ];
-  }, [milestonesState, selectedEvent]);
+    const saved = progressMap[selectedEvent.id] || {};
+    const firstOpen = PHASES.findIndex((p) => Number(saved[p.key] || 0) < 100);
+    return PHASES.map((phase, index) => ({
+      id: phase.key,
+      title: phase.title,
+      time: phase.key === 'event' ? [selectedEvent.time, selectedEvent.endTime].filter(Boolean).join(' – ') : '',
+      status: firstOpen === -1 || index < firstOpen ? 'done' : index === firstOpen ? 'current' : 'pending',
+    }));
+  }, [progressMap, selectedEvent]);
 
-  // Progress % calculated from milestones
   const progressPercent = useMemo(() => {
-    if (!currentMilestones.length) return 50;
-    const completed = currentMilestones.filter((m) => m.status === 'done').length;
-    const current = currentMilestones.filter((m) => m.status === 'current').length ? 0.5 : 0;
-    return Math.round(((completed + current) / currentMilestones.length) * 100);
-  }, [currentMilestones]);
+    if (!selectedEvent) return 0;
+    const saved = progressMap[selectedEvent.id] || {};
+    return Math.round(PHASES.reduce((sum, p) => sum + Number(saved[p.key] || 0), 0) / PHASES.length);
+  }, [progressMap, selectedEvent]);
 
-  // Staff on site for selected event
-  const { activeStaffCount, totalStaffCount } = useMemo(() => {
-    if (!selectedEvent) return { activeStaffCount: 0, totalStaffCount: 0 };
-    const matchingAssigns = staffAssignments.filter(
-      (a) => a.eventId === selectedEvent.id || a.eventName === selectedEvent.name
-    );
-    const total = matchingAssigns.length || 3;
-    const active = matchingAssigns.filter((a) => a.status === 'accepted').length || Math.min(total, 2);
-    return { activeStaffCount: active, totalStaffCount: total };
-  }, [selectedEvent, staffAssignments]);
+  const team = useMemo(
+    () =>
+      staffAssignments.filter(
+        (a) => a.eventId === selectedEvent?.id && !CLOSED_ASSIGNMENTS.includes(lower(a.status))
+      ),
+    [selectedEvent, staffAssignments]
+  );
+  const totalStaffCount = team.length;
+  const activeStaffCount = team.filter((a) => ['on_site', 'working', 'on_break'].includes(a.workStatus)).length;
 
-  // Risks for selected event
-  const eventRisks = useMemo(() => {
-    if (!selectedEvent) return [];
-    const directRisks = issues.filter(
-      (i) => (i.eventId === selectedEvent.id || !i.eventId) && String(i.status).toLowerCase() !== 'resolved'
-    );
-    if (directRisks.length > 0) return directRisks;
+  const eventIssues = useMemo(
+    () => issues.filter((i) => selectedEvent && (i.eventId === selectedEvent.id || i.event === selectedEvent.id)),
+    [issues, selectedEvent]
+  );
+  const isStaffRequest = (i) =>
+    i.type === 'staff_request' || i.category === 'Staff Request' || i.title?.startsWith('Dispatch Request');
 
-    // Fallback contextual live risks
-    return [
-      { id: 'r_1', title: 'Elevated venue hall noise floor near entrance', severity: 'low', location: 'Foyer Zone B', time: '12m ago' },
-      { id: 'r_2', title: 'Catering dessert delivery delayed 15 minutes', severity: 'medium', location: 'Service Kitchen', time: '25m ago' },
-    ];
-  }, [issues, selectedEvent]);
+  const eventRisks = useMemo(
+    () => eventIssues.filter((i) => !isStaffRequest(i) && !['resolved', 'closed'].includes(lower(i.status))),
+    [eventIssues]
+  );
 
-  // Advance Next Milestone Action
-  const handleAdvanceMilestone = useCallback(() => {
-    if (!selectedEvent) return;
-    setMilestonesState((prev) => {
-      const list = [...(prev[selectedEvent.id] || currentMilestones)];
-      const currentIdx = list.findIndex((m) => m.status === 'current');
-      if (currentIdx !== -1) {
-        list[currentIdx] = { ...list[currentIdx], status: 'done' };
-        if (currentIdx + 1 < list.length) {
-          list[currentIdx + 1] = { ...list[currentIdx + 1], status: 'current' };
-          // Append to alerts feed
-          setAlertsFeed((feed) => [
-            {
-              id: `al_${Date.now()}`,
-              type: 'info',
-              text: `Milestone "${list[currentIdx + 1].title}" is now ACTIVE.`,
-              time: 'Just now',
-              source: 'Milestone Engine',
-            },
-            ...feed,
-          ]);
-        }
+  const staffRequests = useMemo(
+    () =>
+      eventIssues
+        .filter((i) => isStaffRequest(i) && ['open', 'pending'].includes(lower(i.status)))
+        .map((i) => ({
+          id: i.id,
+          staffName: i.reporter || 'Staff Member',
+          role: i.reporterRole || 'Staff',
+          requestText: i.desc || i.description || i.title,
+          time: i.createdAt ? clock(i.createdAt) : '',
+        })),
+    [eventIssues]
+  );
+
+  const eventPlans = useMemo(
+    () => (selectedEvent ? plansMap[selectedEvent.id] || plansMap._default || [] : []),
+    [plansMap, selectedEvent]
+  );
+  const contingencies = useMemo(
+    () =>
+      eventPlans.map((p) => ({
+        id: p.id,
+        name: p.problem,
+        desc: p.solution,
+        status: p.status === 'triggered' ? 'activated' : 'ready',
+      })),
+    [eventPlans]
+  );
+
+  const alertsFeed = useMemo(
+    () => [
+      ...sessionAlerts,
+      ...team
+        .filter((a) => a.progressUpdatedAt)
+        .sort((a, b) => new Date(b.progressUpdatedAt) - new Date(a.progressUpdatedAt))
+        .map((a) => ({
+          id: `progress_${a.id}_${a.progressUpdatedAt}`,
+          type: a.workStatus === 'finished' ? 'success' : 'info',
+          text: `${a.staffName}: ${a.workStatus.replace('_', ' ')}${a.progressNote ? ` — ${a.progressNote}` : ''}`,
+          time: clock(a.progressUpdatedAt),
+          source: a.role || 'Staff',
+        })),
+      ...eventIssues.map((i) => ({
+        id: `iss_${i.id}`,
+        type: lower(i.status) === 'resolved' ? 'success' : 'warning',
+        text: i.title,
+        time: i.createdAt ? clock(i.createdAt) : '',
+        source: i.reporter || 'Issue',
+      })),
+    ],
+    [sessionAlerts, eventIssues, team]
+  );
+
+  const handleAdvanceMilestone = useCallback(async () => {
+    const current = currentMilestones.find((m) => m.status === 'current');
+    if (!selectedEvent || !current) return;
+    try {
+      const latest = await getMonitorProgress();
+      const updated = { ...latest, [selectedEvent.id]: { ...latest[selectedEvent.id], [current.id]: 100 } };
+      await setMonitorProgress(updated);
+      setProgressMap(updated);
+      addAlert('info', `${current.title} finished.`, 'Milestones');
+    } catch {
+      addAlert('warning', 'Could not save this milestone. Please try again.', 'Milestones');
+    }
+  }, [selectedEvent, currentMilestones, addAlert]);
+
+  const decideRequest = useCallback(
+    async (reqId, status) => {
+      try {
+        await patchIssue(reqId, { status });
+        await loadData();
+      } catch {
+        addAlert('warning', 'Could not update this request. Please try again.', 'Staff Requests');
       }
-      return { ...prev, [selectedEvent.id]: list };
-    });
-  }, [selectedEvent, currentMilestones]);
+    },
+    [loadData, addAlert]
+  );
+  const handleApproveStaffRequest = (reqId) => decideRequest(reqId, 'resolved');
+  const handleRejectStaffRequest = (reqId) => decideRequest(reqId, 'rejected');
 
-  // Staff Request Handlers
-  const handleApproveStaffRequest = useCallback((reqId) => {
-    const approved = staffRequests.find((r) => r.id === reqId);
-    setStaffRequests((prev) => prev.filter((r) => r.id !== reqId));
-    if (approved) {
-      if (reqId && !reqId.startsWith('req_')) {
-        patchIssue(reqId, { status: 'resolved' }).catch(() => {});
+  const handleTriggerContingency = useCallback(
+    async (planId) => {
+      if (!selectedEvent) return;
+      const toggled = eventPlans.map((p) =>
+        p.id === planId ? { ...p, status: p.status === 'triggered' ? 'ready' : 'triggered' } : p
+      );
+      const updated = { ...plansMap, [selectedEvent.id]: toggled };
+      try {
+        await setContingencyPlans(updated);
+        setPlansMap(updated);
+      } catch {
+        addAlert('warning', 'Could not save this contingency plan.', 'Contingency');
       }
-      setAlertsFeed((prev) => [
-        {
-          id: `al_${Date.now()}`,
-          type: 'success',
-          text: `Approved request from ${approved.staffName}: "${approved.requestText}"`,
-          time: 'Just now',
-          source: 'Coordinator Decision',
-        },
-        ...prev,
-      ]);
-    }
-  }, [staffRequests]);
+    },
+    [selectedEvent, eventPlans, plansMap, addAlert]
+  );
 
-  const handleRejectStaffRequest = useCallback((reqId) => {
-    setStaffRequests((prev) => prev.filter((r) => r.id !== reqId));
-    if (reqId && !reqId.startsWith('req_')) {
-      patchIssue(reqId, { status: 'rejected' }).catch(() => {});
-    }
-  }, []);
-
-  // Contingency Trigger Action
-  const handleTriggerContingency = useCallback((planId) => {
-    setContingencies((prev) =>
-      prev.map((c) => (c.id === planId ? { ...c, status: c.status === 'activated' ? 'ready' : 'activated' } : c))
-    );
-    const plan = contingencies.find((c) => c.id === planId);
-    if (plan) {
-      setAlertsFeed((prev) => [
-        {
-          id: `al_${Date.now()}`,
-          type: 'warning',
-          text: `EMERGENCY PROTOCOL ACTIVATED: ${plan.name} - ${plan.desc}`,
-          time: 'Just now',
-          source: 'Live Incident Command',
-        },
-        ...prev,
-      ]);
-    }
-  }, [contingencies]);
-
-  // Broadcast Bulletin Submit
-  const handleBroadcastBulletin = (e) => {
+  // The bulletin goes to the event's staff conversation, so the team really gets it
+  const handleBroadcastBulletin = async (e) => {
     e.preventDefault();
-    if (!updateBulletinText.trim()) return;
-
-    setAlertsFeed((prev) => [
-      {
-        id: `al_${Date.now()}`,
-        type: 'info',
-        text: `BULLETIN: ${updateBulletinText.trim()}`,
-        time: 'Just now',
-        source: 'Sarah Williams (Lead Coordinator)',
-      },
-      ...prev,
-    ]);
-
-    setUpdateBulletinText('');
-    setIsUpdateModalOpen(false);
+    const text = updateBulletinText.trim();
+    if (!text || !selectedEvent) return;
+    try {
+      await sendMessage({ threadId: `staff-${selectedEvent.id}`, text: `📢 ${text}` });
+      addAlert('info', `Bulletin sent: ${text}`, 'Staff Team');
+      setUpdateBulletinText('');
+      setIsUpdateModalOpen(false);
+    } catch {
+      addAlert('warning', 'Could not send this bulletin. Please try again.', 'Staff Team');
+    }
   };
 
-  // Conclude Event Confirm
-  const handleConfirmEndEvent = () => {
+  const handleConfirmEndEvent = async () => {
     if (!selectedEvent) return;
-    setEvents((prev) =>
-      prev.map((ev) => (ev.id === selectedEvent.id ? { ...ev, status: 'completed' } : ev))
-    );
-    setAlertsFeed((prev) => [
-      {
-        id: `al_${Date.now()}`,
-        type: 'success',
-        text: `Event "${selectedEvent.name}" has officially concluded. Settlement batch dispatched to Admin payouts.`,
-        time: 'Just now',
-        source: 'Operations Director',
-      },
-      ...prev,
-    ]);
     setIsEndEventModalOpen(false);
+    try {
+      await updateEventStatus(selectedEvent.id, 'completed');
+      addAlert('success', `${selectedEvent.name} has ended.`, 'Operations');
+      await loadData();
+    } catch {
+      addAlert('warning', `Could not end ${selectedEvent.name}. Please try again.`, 'Operations');
+    }
+  };
+
+  const openEventReview = () => {
+    if (selectedEvent) navigate(`/vendor/events/${selectedEvent.id}/review`);
   };
 
   // Reference & dynamic height calculation to sync Alerts Feed with Contingency Protocols
@@ -375,6 +310,10 @@ export default function Monitoring() {
           </span>
         </div>
 
+        {!loading && events.length === 0 && (
+          <div className="so-empty">No live or upcoming events to monitor.</div>
+        )}
+
         {/* Event Selector Cards */}
         <MonitoringEventCards
           events={events}
@@ -385,9 +324,9 @@ export default function Monitoring() {
         {/* Quick Operational Actions Bar */}
         <MonitoringQuickActions
           onUpdateEvent={() => setIsUpdateModalOpen(true)}
-          onAllocateResources={() => setIsResourceModalOpen(true)}
-          onAllocateStaff={() => setIsStaffModalOpen(true)}
-          onEndEvent={() => setIsEndEventModalOpen(true)}
+          onAllocateResources={openEventReview}
+          onAllocateStaff={openEventReview}
+          onEndEvent={() => isLive && setIsEndEventModalOpen(true)}
         />
 
         {/* Event Performance & Health KPI Card */}
@@ -395,11 +334,11 @@ export default function Monitoring() {
           <MonitoringStatsCard
             eventName={selectedEvent.name}
             progress={progressPercent}
-            duration="2h 45m"
-            durationSub="Started on time at 17:00"
+            duration={isLive && selectedEvent.startedAt ? elapsedSince(selectedEvent.startedAt) : '—'}
+            durationSub={isLive ? `Started at ${selectedEvent.time}` : `Starts ${selectedEvent.date} at ${selectedEvent.time}`}
             activeStaffCount={activeStaffCount}
             totalStaffCount={totalStaffCount}
-            isLive={String(selectedEvent.status || '').toLowerCase() === 'live'}
+            isLive={isLive}
           />
         )}
 
@@ -422,6 +361,8 @@ export default function Monitoring() {
 
           {/* Right Column: Staff Requests, Risks & Contingency */}
           <div className="mon-right">
+            <MonitoringStaffProgress team={team} />
+
             <MonitoringStaffRequests
               requests={staffRequests}
               onApprove={handleApproveStaffRequest}
@@ -443,7 +384,7 @@ export default function Monitoring() {
             <div className="modal" style={{ width: '500px', padding: '24px' }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ margin: '0 0 10px', color: 'var(--text-primary)' }}>Broadcast Live Bulletin</h3>
               <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                This message will immediately appear on all staff dashboards and on-site monitors.
+                This is sent to the event's staff team in the Coordination Hub.
               </p>
 
               <form onSubmit={handleBroadcastBulletin}>
@@ -496,45 +437,6 @@ export default function Monitoring() {
           </div>
         )}
 
-        {/* Reusable Allocate Additional Resources Modal */}
-        <EventExtraResourceModal
-          isOpen={isResourceModalOpen}
-          onClose={() => setIsResourceModalOpen(false)}
-          resources={resourceInventory}
-          onAddResource={(res) => {
-            setAlertsFeed((prev) => [
-              {
-                id: `al_${Date.now()}`,
-                type: 'info',
-                text: `Allocated extra resource: ${res.name} (Qty: ${res.quantityNeeded || 1})`,
-                time: 'Just now',
-                source: 'Logistics Dispatch',
-              },
-              ...prev,
-            ]);
-            setIsResourceModalOpen(false);
-          }}
-        />
-
-        {/* Reusable Allocate Additional Staff Modal */}
-        <EventExtraStaffModal
-          isOpen={isStaffModalOpen}
-          onClose={() => setIsStaffModalOpen(false)}
-          staffList={staffList}
-          onAddStaff={(stf) => {
-            setAlertsFeed((prev) => [
-              {
-                id: `al_${Date.now()}`,
-                type: 'info',
-                text: `Deployed reserve staff member: ${stf.name} (${stf.role || 'Staff'})`,
-                time: 'Just now',
-                source: 'Workforce Dispatch',
-              },
-              ...prev,
-            ]);
-            setIsStaffModalOpen(false);
-          }}
-        />
       </div>
     </div>
   );

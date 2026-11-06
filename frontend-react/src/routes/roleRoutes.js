@@ -14,7 +14,8 @@ import {
     Bug,
     IndianRupee,
     Activity,
-    Settings
+    Settings,
+    UserPlus
 } from "lucide-react";
 
 export const clientMenuItems = [
@@ -82,12 +83,17 @@ export const vendorMenuItems = [
         icon: Users,
     },
     {
+        label: "Staff Onboarding",
+        path: "/vendor/staff-onboarding",
+        icon: UserPlus,
+    },
+    {
         label: "Live Monitoring",
         path: "/vendor/monitoring",
         icon: Radio,
     },
     {
-        label: "Client Inquiries",
+        label: "Coordination Hub",
         path: "/vendor/coordination",
         icon: MessageSquare,
     },

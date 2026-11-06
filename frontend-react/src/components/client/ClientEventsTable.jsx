@@ -25,7 +25,7 @@ import { Link } from "react-router-dom";
 import { Calendar, Plus } from "lucide-react";
 import ClientEventTableRow from "./ClientEventTableRow";
 
-function ClientEventsTable({ events = [], loading = false, hasAnyEvents = true, onViewReason }) {
+function ClientEventsTable({ events = [], loading = false, hasAnyEvents = true, onViewReason, onEdit, onCancel }) {
   return (
     <div className="vendor-table-wrap events-table-wrap">
       <table className="vendor-table events-table">
@@ -62,7 +62,7 @@ function ClientEventsTable({ events = [], loading = false, hasAnyEvents = true, 
             </tr>
           ) : (
             events.map((event) => (
-              <ClientEventTableRow key={event.id} event={event} onViewReason={onViewReason} />
+              <ClientEventTableRow key={event.id} event={event} onViewReason={onViewReason} onEdit={onEdit} onCancel={onCancel} />
             ))
           )}
         </tbody>

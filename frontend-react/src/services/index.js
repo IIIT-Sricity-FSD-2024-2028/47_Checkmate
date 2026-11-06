@@ -173,6 +173,7 @@ export {
   getCommissions,
   getMyBookings,
   patchBooking,
+  payBooking,
   settleBookingPayout,
   settlePayout,
   updateBooking,

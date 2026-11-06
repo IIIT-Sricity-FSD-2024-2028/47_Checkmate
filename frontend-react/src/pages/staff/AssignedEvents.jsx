@@ -17,7 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/staff.css';
 import StatCard from './components/StatCard';
 import Toast from './components/Toast';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList, updateStaffAssignment } from '../../services/staffApi';
+import StaffProgressPanel from './components/StaffProgressPanel';
+import { getSessionUser, fetchEvents, fetchStaffAssignments, fetchStaffList, updateStaffAssignment } from '../../services/staffApi';
 
 // Array of vibrant gradients applied cyclically across event card banners
 // FACULTY MAY ASK: How do you change the banner colors or add a new gradient theme?
@@ -42,6 +43,7 @@ export default function StaffAssignedEvents() {
   // FACULTY MAY ASK: Where are the assignments saved?
   // HOW TO CHANGE: Stored in this assignments state array after fetching from /api/staff-assignments.
   const [assignments, setAssignments] = useState([]);
+  const [liveEventIds, setLiveEventIds] = useState([]);
 
   // Shows loading indicator while waiting for API responses
   // FACULTY MAY ASK: How do you customize the loading state text?
@@ -69,10 +71,12 @@ export default function StaffAssignedEvents() {
   const loadAssignments = async () => {
     try {
       setError(null);
-      const [allAssignments, staffList] = await Promise.all([
+      const [allAssignments, staffList, events] = await Promise.all([
         fetchStaffAssignments(),
         fetchStaffList().catch(() => []),
+        fetchEvents().catch(() => []),
       ]);
+      setLiveEventIds(events.filter((e) => e.status === 'live').map((e) => e.id));
 
       const myName = (session.name || '').trim().toLowerCase();
       const myEmail = (session.email || '').toLowerCase();
@@ -343,6 +347,18 @@ export default function StaffAssignedEvents() {
                   {/* Actions Section: Accept / Reject when pending; View Tasks / Message when accepted */}
                   {/* FACULTY MAY ASK: Where does "View Tasks" navigate? */}
                   {/* HOW TO CHANGE: Look for onClick={() => navigate('/staff/task-board')} on the ae-btn--tasks button. */}
+                  {status === 'accepted' && liveEventIds.includes(a.eventId) && (
+                    <StaffProgressPanel
+                      assignment={a}
+                      onSaved={(updated) => {
+                        setAssignments((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+                        setToastMessage({ text: '✓ Update sent to your vendor.', type: 'success' });
+                        setTimeout(() => setToastMessage(null), 3000);
+                      }}
+                      onError={(text) => setToastMessage({ text, type: 'warn' })}
+                    />
+                  )}
+
                   <div className="ae-actions">
                     {isPending ? (
                       <>

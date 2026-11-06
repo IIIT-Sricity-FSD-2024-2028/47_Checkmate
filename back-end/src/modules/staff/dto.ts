@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsArray, IsEmail, IsIn, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateStaffDto {
   @ApiPropertyOptional({ example: 'S005' }) @IsOptional() @IsString() id?: string;
@@ -42,6 +42,11 @@ export class CreateStaffAssignmentDto {
   @ApiPropertyOptional() @IsOptional() @IsString() respondedAt?: string;
 }
 export class UpdateStaffAssignmentDto extends PartialType(CreateStaffAssignmentDto) {}
+
+export class StaffProgressDto {
+  @ApiProperty({ enum: ['on_site', 'working', 'on_break', 'finished'] }) @IsIn(['on_site', 'working', 'on_break', 'finished']) workStatus: string;
+  @ApiPropertyOptional({ example: 'Stage rigging finished.' }) @IsOptional() @IsString() @MaxLength(200) note?: string;
+}
 
 export class StaffLoginDto {
   @ApiProperty({ example: 'mike.staff@eliteevents.com' }) @IsEmail() email: string;

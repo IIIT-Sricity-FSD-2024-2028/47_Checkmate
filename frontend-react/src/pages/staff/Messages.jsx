@@ -50,7 +50,7 @@ export default function StaffMessages() {
   // Conversation list & assignments
   const [assignments, setAssignments] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
-  const [activeTab, setActiveTab] = useState('vendor'); // 'vendor' | 'client'
+  const activeTab = 'vendor';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEventId, setSelectedEventId] = useState(null);
 
@@ -60,6 +60,15 @@ export default function StaffMessages() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const chatBottomRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setInputText((prev) => `${prev ? prev + " " : ""}📎 [Attached: ${file.name}]`);
+      e.target.value = "";
+    }
+  };
 
   // Quick Dispatch Request Modal
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -99,17 +108,20 @@ export default function StaffMessages() {
             })
           : [];
 
-        setAssignments(mine);
+        // Only current work: finished events drop off, live ones come first
+        const eventList = Array.isArray(evts) ? evts : [];
+        const statusOf = (a) => eventList.find((e) => e.id === a.eventId)?.status;
+        const current = mine
+          .filter((a) => !['completed', 'rejected', 'cancelled'].includes(statusOf(a)))
+          .sort((a, b) => Number(statusOf(b) === 'live') - Number(statusOf(a) === 'live'));
+        setAssignments(current);
         setAllEvents(Array.isArray(evts) ? evts : []);
 
-        // Default selected event to first assigned event or EVT002
-        if (mine.length > 0) {
-          const firstEvtId = mine[0].eventId || mine[0].id;
+        // Default to the first event this person is assigned to
+        if (current.length > 0) {
+          const firstEvtId = current[0].eventId || current[0].id;
           setSelectedEventId(firstEvtId);
           setReqEventId(firstEvtId);
-        } else if (Array.isArray(evts) && evts.length > 0) {
-          setSelectedEventId(evts[0].id);
-          setReqEventId(evts[0].id);
         }
       } catch (err) {
         console.error('Failed to initialize staff conversations:', err);
@@ -122,14 +134,8 @@ export default function StaffMessages() {
     };
   }, [session]);
 
-  // Determine active thread key based on tab and selected event
-  const currentThreadKey = useMemo(() => {
-    if (activeTab === 'client') {
-      return 'vendor-client';
-    }
-    // For vendor tab: prefer eventId if present, else fallback to vendor-staff
-    return selectedEventId || 'vendor-staff';
-  }, [activeTab, selectedEventId]);
+  // Each event has one conversation between the vendor and its staff
+  const currentThreadKey = selectedEventId ? `staff-${selectedEventId}` : null;
 
   // Selected event metadata
   const selectedEvent = useMemo(() => {
@@ -153,52 +159,9 @@ export default function StaffMessages() {
       if (!currentThreadKey) return;
       try {
         const data = await fetchMessageThread(currentThreadKey);
-        if (!mounted) return;
-
-        // If backend returned thread array
-        if (Array.isArray(data)) {
-          setMessages(data);
-        } else {
-          // If no messages yet, check fallback event coordination messages
-          setMessages([
-            {
-              id: 'msg_welcome',
-              sender: 'Sarah Williams',
-              role: 'Vendor',
-              initials: 'SW',
-              self: false,
-              text: `Welcome to ${selectedEvent?.name || 'Event Coordination'}. Team leads are live on frequency.`,
-              time: '08:30 AM',
-              avatar: 'pink',
-            },
-            {
-              id: 'msg_status',
-              sender: 'Mike Johnson',
-              role: 'Staff',
-              initials: 'MJ',
-              self: session.name?.toLowerCase().includes('mike'),
-              text: 'Staging, audio checks and front desk layout completed as scheduled.',
-              time: '08:45 AM',
-              avatar: 'purple',
-            },
-          ]);
-        }
-      } catch {
-        // Fallback default message
-        if (mounted) {
-          setMessages([
-            {
-              id: 'msg_def',
-              sender: 'Sarah Williams',
-              role: 'Lead Vendor',
-              initials: 'SW',
-              self: false,
-              text: 'Coordination channel established. Please dispatch any on-site equipment or staff requests here.',
-              time: 'Just now',
-              avatar: 'pink',
-            },
-          ]);
-        }
+        if (mounted) setMessages(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Failed to load messages:', err);
       } finally {
         if (mounted) setLoadingMessages(false);
       }
@@ -212,7 +175,7 @@ export default function StaffMessages() {
       mounted = false;
       clearInterval(pollInterval);
     };
-  }, [currentThreadKey, selectedEvent]);
+  }, [currentThreadKey]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -226,7 +189,7 @@ export default function StaffMessages() {
     const query = searchQuery.trim().toLowerCase();
 
     // Map assigned events to conversation cards
-    const list = assignments.map((a, idx) => {
+    const list = assignments.map((a) => {
       const evId = a.eventId || a.id;
       const matchedEvt = allEvents.find((e) => e.id === evId);
       const name = a.eventName || matchedEvt?.name || `Event ${evId}`;
@@ -238,44 +201,19 @@ export default function StaffMessages() {
         name,
         vendor: vendorName,
         status,
-        lastMsg: idx === 0 ? 'Equipment is staged and ready' : 'Briefing at 14:00',
-        time: idx === 0 ? '11:20 AM' : 'Yesterday',
+        lastMsg: matchedEvt?.date || '',
+        time: '',
         initials: (name || 'E')
           .split(' ')
           .map((n) => n[0])
           .join('')
           .slice(0, 2)
           .toUpperCase(),
-        unread: idx === 0 ? 1 : 0,
+        unread: 0,
       };
     });
 
-    // If no assignments, provide default seed events
-    const displayList =
-      list.length > 0
-        ? list
-        : [
-            {
-              id: 'EVT002',
-              name: 'Sarah & Mike Wedding',
-              vendor: 'Elite Events Co.',
-              status: 'Live',
-              lastMsg: 'Staging & AV soundcheck complete',
-              time: '11:20 AM',
-              initials: 'SM',
-              unread: 1,
-            },
-            {
-              id: 'EVT003',
-              name: 'Annual Corporate Gala 2026',
-              vendor: 'Elite Events Co.',
-              status: 'Confirmed',
-              lastMsg: 'Keynote mics verified',
-              time: '09:45 AM',
-              initials: 'CG',
-              unread: 0,
-            },
-          ];
+    const displayList = list;
 
     if (!query) return displayList;
     return displayList.filter(
@@ -290,7 +228,7 @@ export default function StaffMessages() {
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
     const text = inputText.trim();
-    if (!text || sending) return;
+    if (!text || sending || !currentThreadKey) return;
 
     const myInitials = (session.name || 'Staff')
       .split(' ')
@@ -301,7 +239,7 @@ export default function StaffMessages() {
 
     const newMsg = {
       threadId: currentThreadKey,
-      sender: session.name || 'Mike Johnson',
+      sender: session.name,
       initials: myInitials,
       self: true,
       text: text,
@@ -324,6 +262,8 @@ export default function StaffMessages() {
       await sendMessage(newMsg);
     } catch (err) {
       console.error('Failed to post message to backend:', err);
+      setMessages((prev) => prev.filter((m) => m.text !== text || !String(m.id).startsWith("local_")));
+      setInputText(text);
     } finally {
       setSending(false);
     }
@@ -413,24 +353,13 @@ export default function StaffMessages() {
         <div className="msg-left">
           {/* Tabs */}
           <div className="msg-tabs">
-            <button
-              type="button"
+            <div
               className={`msg-tab ${activeTab === 'vendor' ? 'msg-tab-vendor' : 'msg-tab-client'}`}
-              onClick={() => setActiveTab('vendor')}
             >
               <Building2 size={13} />
               <span>Vendor</span>
               <span className="tab-badge">{filteredConversations.length}</span>
-            </button>
-            <button
-              type="button"
-              className={`msg-tab ${activeTab === 'client' ? 'msg-tab-vendor' : 'msg-tab-client'}`}
-              onClick={() => setActiveTab('client')}
-            >
-              <User size={13} />
-              <span>Client</span>
-              <span className="tab-badge">1</span>
-            </button>
+            </div>
           </div>
 
           {/* Search */}
@@ -537,7 +466,6 @@ export default function StaffMessages() {
             ) : (
               messages.map((m, idx) => {
                 const isMe =
-                  m.self ||
                   (m.sender &&
                     session.name &&
                     m.sender.toLowerCase().includes(session.name.toLowerCase()));
@@ -582,11 +510,17 @@ export default function StaffMessages() {
 
           {/* Chat Input Bar */}
           <form className="chat-input-bar" onSubmit={handleSendMessage}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileSelect}
+            />
             <button
               type="button"
               className="chat-attach-btn"
               title="Attach checklist or image"
-              onClick={() => alert('File attachment: Select document or photo to upload.')}
+              onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip size={16} />
             </button>

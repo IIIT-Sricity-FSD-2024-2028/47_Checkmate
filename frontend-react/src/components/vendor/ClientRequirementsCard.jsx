@@ -43,7 +43,7 @@ function formatSubmissionDate(dateString) {
   return `${datePart} at ${timePart}`;
 }
 
-function ClientRequirementsCard({ event }) {
+function ClientRequirementsCard({ event, commissionPercent = 10 }) {
   if (!event) return null;
 
   const reqRes = event.requestedResources || event.resources || [];
@@ -51,9 +51,9 @@ function ClientRequirementsCard({ event }) {
   const clientName = event.client || event.clientEmail || "Client";
   const submittedAt = event.submittedAt || event.createdAt;
 
-  // Budget and 90/10 platform split calculations
+  // Budget and the split it would give; the final price is set in EventQuoteCard
   const budgetVal = Number(event.budget || event.estimatedCost || 0);
-  const platformFee = budgetVal > 0 ? budgetVal * 0.1 : 0;
+  const platformFee = budgetVal > 0 ? (budgetVal * commissionPercent) / 100 : 0;
   const netPayout = budgetVal > 0 ? budgetVal - platformFee : 0;
 
   return (
@@ -148,7 +148,7 @@ function ClientRequirementsCard({ event }) {
           <div className="client-extra-item client-extra-payout">
             <Calculator />
             <div>
-              <div className="client-extra-label">Net Payout (90%)</div>
+              <div className="client-extra-label">Payout at Budget ({100 - commissionPercent}%)</div>
               <div className="client-extra-value">
                 ₹{netPayout.toLocaleString("en-IN")}{" "}
                 <span className="client-extra-fee">

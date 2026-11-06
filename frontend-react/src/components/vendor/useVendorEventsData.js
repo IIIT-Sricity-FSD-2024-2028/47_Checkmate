@@ -169,14 +169,7 @@ export function useVendorEventsData() {
     } catch (error) {
       console.error(`Failed to update event status:`, error);
 
-      // Fallback local update to prevent broken UI
-      setEvents((prev) =>
-        prev.map((ev) => (ev.id === eventId ? { ...ev, status: newStatus } : ev))
-      );
-      setToast({
-        type: "success",
-        text: `Event marked as ${newStatus}.`,
-      });
+      setToast({ type: "danger", text: error.message || "Could not update the event. Please try again." });
       setTimeout(() => setToast(null), 3500);
     }
   };
@@ -195,12 +188,7 @@ export function useVendorEventsData() {
       setTimeout(() => setToast(null), 3500);
     } catch (error) {
       console.error("Failed to delete event:", error);
-      // Fallback local deletion to keep UI responsive
-      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
-      setToast({
-        type: "success",
-        text: "Event permanently deleted from records.",
-      });
+      setToast({ type: "danger", text: error.message || "Could not delete the event. Please try again." });
       setTimeout(() => setToast(null), 3500);
     }
   };

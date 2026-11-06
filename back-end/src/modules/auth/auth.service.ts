@@ -59,7 +59,10 @@ export class AuthService {
     // New accounts registered via Create Account default to Client role
     let rawRole = String(dto.role || 'Client').trim();
     let role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
-    if (!['Client', 'Vendor', 'Staff'].includes(role)) {
+    if (role === 'Staff') {
+      throw new BadRequestException('Staff accounts are created when a vendor approves an application.');
+    }
+    if (!['Client', 'Vendor'].includes(role)) {
       role = 'Client';
     }
 
@@ -72,29 +75,6 @@ export class AuthService {
       created: new Date().toISOString().slice(0, 10),
       passwordHash: hashPassword(dto.password),
     });
-
-    // A user row alone is not enough for the staff portal -- it reads the separate
-    // `staff` collection -- so mirror the signup into a staff record too.
-    // Auto-create a staff record so the staff portal and vendor Manage Staff page see them
-    if (dto.role === 'Staff') {
-      const initials = dto.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
-      const avatars = ['pink', 'teal', 'purple', 'green', 'orange'];
-      const staffList = this.data.collection('staff');
-      this.data.create('staff', 'S', {
-        userId: user.id,
-        name: dto.name,
-        initials,
-        role: 'Staff Member',
-        phone: dto.phone || '',
-        email: dto.email,
-        workload: 0,
-        status: 'available',
-        avail: 'Available',
-        events: 0,
-        avatar: avatars[staffList.length % avatars.length],
-        assignedEvents: [],
-      });
-    }
 
     // Auto-provision a Vendor entity if a Vendor signs up directly
     if (dto.role === 'Vendor') {

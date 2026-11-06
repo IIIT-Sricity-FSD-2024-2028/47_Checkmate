@@ -35,6 +35,9 @@ function VendorWidgetsSection({ widgetsData, loading = false }) {
 
   // Maximum gross value for SVG chart scaling
   const maxGross = Math.max(...monthlyEarnings.map((m) => m.gross || 0), 10000);
+  const averageNet = monthlyEarnings.length
+    ? Math.round(monthlyEarnings.reduce((sum, m) => sum + m.net, 0) / monthlyEarnings.length)
+    : 0;
 
   return (
     <>
@@ -386,7 +389,7 @@ function VendorWidgetsSection({ widgetsData, loading = false }) {
                 {/* Monthly Bars */}
                 {monthlyEarnings.map((m, idx) => {
                   const x = 20 + idx * 40;
-                  const barHeight = Math.max(12, Math.round((m.gross / maxGross) * 75));
+                  const barHeight = m.gross > 0 ? Math.max(6, Math.round((m.gross / maxGross) * 75)) : 0;
                   const y = 90 - barHeight;
 
                   return (
@@ -421,8 +424,8 @@ function VendorWidgetsSection({ widgetsData, loading = false }) {
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, fontSize: "11px", color: "var(--text-secondary, #cbd5e1)" }}>
-              <span>Average Payout: ₹42,500/mo</span>
-              <span style={{ color: "#4ade80", fontWeight: 600 }}>90% Verified</span>
+              <span>Average Payout: ₹{averageNet.toLocaleString("en-IN")}/mo</span>
+              <span style={{ color: "#4ade80", fontWeight: 600 }}>Last 6 months</span>
             </div>
           </div>
         </div>

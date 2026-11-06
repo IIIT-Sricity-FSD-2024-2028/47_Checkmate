@@ -54,7 +54,7 @@ function CreateEvent() {
         <EventsToastFeedback toast={wizard.toast} onClose={() => wizard.setToast(null)} />
 
         {/* ── Step indicator ── */}
-        <WizardSteps labels={STEP_LABELS} current={step} />
+        <WizardSteps labels={STEP_LABELS} current={step} onStepClick={goToStep} />
 
         {/* ── Only the current step is rendered ── */}
         {step === 1 && (

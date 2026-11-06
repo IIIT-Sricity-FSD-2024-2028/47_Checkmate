@@ -48,6 +48,15 @@ export default function ClientCoordination() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const chatBottomRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setInputText((prev) => `${prev ? prev + " " : ""}📎 [Attached: ${file.name}]`);
+      e.target.value = "";
+    }
+  };
 
   // Load client events
   useEffect(() => {
@@ -75,18 +84,12 @@ export default function ClientCoordination() {
   const selectedEvent = useMemo(() => {
     return (
       events.find((e) => e.id === selectedEventId) ||
-      events[0] || {
-        id: 'EVT002',
-        name: 'Event Coordination',
-        vendor: 'Elite Events Co.',
-      }
+      events[0] || { id: null, name: 'No events yet', vendor: '' }
     );
   }, [events, selectedEventId]);
 
-  // Determine thread ID: event-specific or vendor-client
-  const activeThreadId = useMemo(() => {
-    return selectedEvent?.id || 'vendor-client';
-  }, [selectedEvent]);
+  // Each event has its own conversation with the vendor
+  const activeThreadId = selectedEvent.id ? `client-${selectedEvent.id}` : null;
 
   // Load and poll messages
   useEffect(() => {
@@ -95,54 +98,10 @@ export default function ClientCoordination() {
     async function loadMessages() {
       if (!activeThreadId) return;
       try {
-        const thread = await getMessageThread(activeThreadId).catch(() => []);
-        if (!mounted) return;
-
-        if (Array.isArray(thread) && thread.length > 0) {
-          setMessages(thread);
-        } else {
-          // Fallback thread messages for seamless conversation
-          setMessages([
-            {
-              id: 'cmsg_1',
-              sender: 'Sarah Williams',
-              role: 'Vendor Lead',
-              initials: 'SW',
-              self: false,
-              text: `Hello ${clientName.split(' ')[0]}! Welcome to the live coordination channel for ${
-                selectedEvent.name
-              }. We are actively managing all arrangements.`,
-              time: '08:45 AM',
-              avatar: 'teal',
-            },
-            {
-              id: 'cmsg_2',
-              sender: 'Mike Johnson',
-              role: 'Event Coordinator',
-              initials: 'MJ',
-              self: false,
-              text: 'Stage setup, floral arrangements, and sound reinforcement have been finalized.',
-              time: '09:12 AM',
-              avatar: 'pink',
-            },
-          ]);
-        }
-      } catch {
-        // Fallback default message
-        if (mounted) {
-          setMessages([
-            {
-              id: 'cmsg_def',
-              sender: 'Sarah Williams',
-              role: 'Vendor Lead',
-              initials: 'SW',
-              self: false,
-              text: 'Channel active. Feel free to message our coordination desk regarding any updates or adjustments.',
-              time: 'Just now',
-              avatar: 'teal',
-            },
-          ]);
-        }
+        const thread = await getMessageThread(activeThreadId);
+        if (mounted) setMessages(Array.isArray(thread) ? thread : []);
+      } catch (err) {
+        console.error('Failed to load messages:', err);
       }
     }
 
@@ -152,7 +111,7 @@ export default function ClientCoordination() {
       mounted = false;
       clearInterval(interval);
     };
-  }, [activeThreadId, selectedEvent, clientName]);
+  }, [activeThreadId]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -177,7 +136,7 @@ export default function ClientCoordination() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const text = inputText.trim();
-    if (!text || sending) return;
+    if (!text || sending || !activeThreadId) return;
 
     const newMsg = {
       threadId: activeThreadId,
@@ -204,6 +163,8 @@ export default function ClientCoordination() {
       await sendMessage(newMsg);
     } catch (err) {
       console.error('Failed to post client message:', err);
+      setMessages((prev) => prev.filter((m) => m.text !== text || !String(m.id).startsWith("local_")));
+      setInputText(text);
     } finally {
       setSending(false);
     }
@@ -296,7 +257,7 @@ export default function ClientCoordination() {
               </div>
               <div>
                 <div className="chat-name">
-                  <span>{selectedEvent.vendor || 'Elite Events Co.'}</span>
+                  <span>{selectedEvent.vendor}</span>
                   <span
                     style={{
                       fontSize: '10px',
@@ -319,8 +280,7 @@ export default function ClientCoordination() {
           <div className="chat-messages">
             {messages.map((m, idx) => {
               const isMe =
-                m.self ||
-                (m.sender && m.sender.toLowerCase().includes(clientName.toLowerCase()));
+                m.sender?.toLowerCase() === clientName.toLowerCase();
 
               return (
                 <div key={m.id || idx} className={`msg-bubble-wrap ${isMe ? 'me' : 'them'}`}>
@@ -345,11 +305,17 @@ export default function ClientCoordination() {
 
           {/* Input Bar */}
           <form className="chat-input-bar" onSubmit={handleSendMessage}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileSelect}
+            />
             <button
               type="button"
               className="chat-attach-btn"
               title="Attach photo or floorplan"
-              onClick={() => alert('Attachment: You can upload venue photos or floorplans.')}
+              onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip size={16} />
             </button>

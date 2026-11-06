@@ -12,6 +12,7 @@
  *     - Buffer calculations (+/- delta capacity)
  *     - Status badges: Safe, Risk, Critical
  *     - Action controls: Direct "+ Assign" button, "✓ Assigned", or "⚠ Conflict"
+ *       with a "Replace" button
  * ============================================================================
  */
 
@@ -21,6 +22,8 @@ import { Users, Plus } from "lucide-react";
 function EventStaffRequirementsTable({
   requirements = [],
   onAssign,
+  onUnassign,
+  onReplace,
   onOpenExtraModal,
 }) {
   return (
@@ -99,9 +102,31 @@ function EventStaffRequirementsTable({
                     {/* Action Column */}
                     <td className="text-center">
                       {st.isAssigned ? (
-                        <span className="row-status safe">✓ Assigned</span>
+                        <>
+                          <span className="row-status safe">✓ Assigned</span>{" "}
+                          {onUnassign && (
+                            <button
+                              type="button"
+                              className="er-btn-action-assign"
+                              onClick={() => onUnassign(st)}
+                              title={`Remove ${st.name} from this event`}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </>
                       ) : !isAvail ? (
-                        <span className="row-status critical">⚠ Conflict</span>
+                        <>
+                          <span className="row-status critical">⚠ Conflict</span>{" "}
+                          <button
+                            type="button"
+                            className="er-btn-action-assign"
+                            onClick={() => onReplace && onReplace(st)}
+                            title={`Replace ${st.name} with an available staff member`}
+                          >
+                            Replace
+                          </button>
+                        </>
                       ) : (
                         <button
                           type="button"
@@ -118,8 +143,18 @@ function EventStaffRequirementsTable({
               })
             ) : (
               <tr>
-                <td colSpan="7" className="vendor-table-message text-center">
-                  No staff requirements specified for this event.
+                <td colSpan="7" className="vendor-table-message text-center" style={{ padding: "26px 16px" }}>
+                  <div style={{ color: "var(--text-secondary, #9b8db0)", marginBottom: "10px", fontSize: "13.5px" }}>
+                    No staff requested by client for this event.
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-alloc-extra-staff"
+                    onClick={onOpenExtraModal}
+                    style={{ margin: "0 auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  >
+                    <Plus size={14} /> Allocate Staff
+                  </button>
                 </td>
               </tr>
             )}

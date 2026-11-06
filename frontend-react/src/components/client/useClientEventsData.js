@@ -26,7 +26,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { getMyEvents } from "../../services/eventService";
+import { cancelEvent, getMyEvents, patchEvent } from "../../services/eventService";
 import { describeError, REFRESH_MS } from "../../utils/clientHelpers";
 
 export function useClientEventsData() {
@@ -103,6 +103,28 @@ export function useClientEventsData() {
     });
   }, [events, searchTerm, statusFilter, typeFilter]);
 
+  // Returns true when the backend saved the change
+  const handleEditEvent = async (id, changes) => {
+    try {
+      const updated = await patchEvent(id, changes);
+      setEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, ...updated } : ev)));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCancelEvent = async (event) => {
+    if (!window.confirm(`Cancel "${event.name}"? This cannot be undone.`)) return;
+    try {
+      const updated = await cancelEvent(event.id);
+      setEvents((prev) => prev.map((ev) => (ev.id === event.id ? { ...ev, ...updated } : ev)));
+      setError(null);
+    } catch (err) {
+      setError(err.message || "Could not cancel this event.");
+    }
+  };
+
   // --------------------------------------------------------------------------
   // 5. RESET ALL FILTERS
   // --------------------------------------------------------------------------
@@ -113,6 +135,8 @@ export function useClientEventsData() {
   };
 
   return {
+    handleEditEvent,
+    handleCancelEvent,
     events,
     filteredEvents,
     loading,

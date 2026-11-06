@@ -22,7 +22,6 @@
  *         - <StaffAssignModal>: Task assignment wizard with single-event exclusivity safeguard.
  *         - <StaffScheduleModal>: Schedule inspection view displaying assigned events and tasks.
  *         - <StaffDeleteModal>: Safeguard confirmation dialog for removing staff members.
- *         - <StaffRecruitModal>: Administrative requisition dialog for recruiting new positions.
  *
  * Reusable Components Utilized:
  *   - <TopHeaderBar>: src/components/TopHeaderBar.jsx
@@ -54,7 +53,6 @@ import StaffFormModal from "../../components/vendor/StaffFormModal";
 import StaffAssignModal from "../../components/vendor/StaffAssignModal";
 import StaffScheduleModal from "../../components/vendor/StaffScheduleModal";
 import StaffDeleteModal from "../../components/vendor/StaffDeleteModal";
-import StaffRecruitModal from "../../components/vendor/StaffRecruitModal";
 
 function ManageStaff() {
   const navigate = useNavigate();
@@ -95,7 +93,6 @@ function ManageStaff() {
     editingStaffId,
     formData,
     formErrors,
-    handleOpenAddModal,
     handleOpenEditModal,
     handleCloseFormModal,
     handleFormFieldChange,
@@ -132,14 +129,6 @@ function ManageStaff() {
     handleCloseDeleteModal,
     handleConfirmDelete,
 
-    // Recruitment Modal
-    isRecruitOpen,
-    recruitData,
-    recruitErrors,
-    handleOpenRecruitModal,
-    handleCloseRecruitModal,
-    handleRecruitFieldChange,
-    handleSubmitRecruit,
   } = useVendorStaffData();
 
   return (
@@ -191,8 +180,6 @@ function ManageStaff() {
           activeFilters={activeFilters}
           onApplyFilters={handleApplyFilters}
           onResetFilters={handleResetFilters}
-          onOpenAddModal={handleOpenAddModal}
-          onOpenRecruitModal={handleOpenRecruitModal}
         />
 
         {/* ── COMPONENT 4: RESPONSIVE STAFF CARDS GRID WITH PAGINATION ── */}
@@ -256,15 +243,6 @@ function ManageStaff() {
         onClose={handleCloseDeleteModal}
       />
 
-      {/* ── COMPONENT 9: RECRUITMENT REQUISITION MODAL DIALOG ── */}
-      <StaffRecruitModal
-        isOpen={isRecruitOpen}
-        formData={recruitData}
-        errors={recruitErrors}
-        onChange={handleRecruitFieldChange}
-        onSubmit={handleSubmitRecruit}
-        onClose={handleCloseRecruitModal}
-      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "../pages/public/LandingPage";
+import StaffApply from "../pages/public/StaffApply";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 import AdminDashboard from "../pages/admin/Dashboard";
@@ -61,6 +62,7 @@ import ClientProfile from "../pages/client/Profile";
 import StaffProfile from "../pages/staff/Profile";
 import PresetPackage from "../pages/vendor/PresetPackage";
 import ManageStaff from "../pages/vendor/ManageStaff";
+import StaffOnboarding from "../pages/vendor/StaffOnboarding";
 
 import Monitoring from "../pages/vendor/Monitoring";
 import Coordination from "../pages/vendor/Coordination";
@@ -75,6 +77,7 @@ function AppRoutes() {
         {/* ── Public Entry & Auth Routes ── */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/join-staff" element={<StaffApply />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup-details" element={<SignUp1 />} />
         <Route path="/signup-password" element={<SignUp2 />} />
@@ -158,11 +161,11 @@ function AppRoutes() {
             <Route path="manage-resource" element={<ManageResource />} />
             <Route path="staff" element={<ManageStaff />} />
             <Route path="manage-staff" element={<ManageStaff />} />
+            <Route path="staff-onboarding" element={<StaffOnboarding />} />
             <Route path="packages" element={<PresetPackage />} />
             <Route path="preset-package" element={<PresetPackage />} />
             <Route path="monitoring" element={<Monitoring />} />
-            <Route path="coordination" element={<Coordination mode="event" />} />
-            <Route path="coordination-admin" element={<Coordination mode="admin" />} />
+            <Route path="coordination" element={<Coordination />} />
             <Route path="issues" element={<VendorClientIssues />} />
             <Route path="report-issue" element={<ReportIssueVendor target="event" />} />
             <Route path="report-issue-admin" element={<ReportIssueVendor target="admin" />} />

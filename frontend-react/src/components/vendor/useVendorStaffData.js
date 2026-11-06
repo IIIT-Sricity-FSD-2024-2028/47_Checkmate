@@ -16,14 +16,13 @@
  *     5. Manages Add / Edit staff modal state, validation, and optimistic updates.
  *     6. Manages Assign Task modal with live workload meter adjustment (+20%).
  *     7. Manages Schedule Inspection modal for viewing active commitments.
- *     8. Manages Deletion Confirmation and Recruitment Request dialogs.
+ *     8. Manages the Deletion Confirmation dialog.
  * ============================================================================
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   getMyStaff,
-  createStaff,
   updateStaff,
   deleteStaff,
   getStaffAssignments,
@@ -109,6 +108,9 @@ const DEFAULT_STAFF_ROSTER = [
   },
 ];
 
+// Work that is over no longer ties anyone to an event
+const isOpenAssignment = (a) => !["rejected", "declined", "completed"].includes(String(a.status).toLowerCase());
+
 export default function useVendorStaffData() {
   // ==========================================================================
   // 1. PRIMARY STATE: STAFF, EVENTS & ASSIGNMENTS
@@ -184,8 +186,7 @@ export default function useVendorStaffData() {
         (a) =>
           (a.staffId === s.id ||
             (a.staffName && s.name && a.staffName.toLowerCase() === s.name.toLowerCase())) &&
-          a.status !== "rejected" &&
-          a.status !== "declined"
+          isOpenAssignment(a)
       );
       const isAssigned =
         activeAssignments.length > 0 ||
@@ -305,20 +306,6 @@ export default function useVendorStaffData() {
   });
   const [formErrors, setFormErrors] = useState({});
 
-  const handleOpenAddModal = useCallback(() => {
-    setEditingStaffId(null);
-    setFormData({
-      name: "",
-      role: "",
-      phone: "",
-      email: "",
-      workload: 0,
-      status: "available",
-    });
-    setFormErrors({});
-    setIsFormOpen(true);
-  }, []);
-
   const handleOpenEditModal = useCallback((staff) => {
     setEditingStaffId(staff.id);
     setFormData({
@@ -389,36 +376,15 @@ export default function useVendorStaffData() {
     };
 
     try {
-      if (editingStaffId) {
-        await updateStaff(editingStaffId, payload);
-        setStaffList((prev) =>
-          prev.map((s) => (s.id === editingStaffId ? { ...s, ...payload, id: editingStaffId } : s))
-        );
-        triggerToast(`Staff profile for "${payload.name}" updated!`, "success");
-      } else {
-        const created = await createStaff({
-          id: `S${Date.now().toString().slice(-4)}`,
-          ...payload,
-        });
-        const newStaff = created && created.id ? created : { ...payload, id: `S${Date.now().toString().slice(-4)}` };
-        setStaffList((prev) => [newStaff, ...prev]);
-        triggerToast(`"${payload.name}" added to staff team!`, "success");
-      }
+      await updateStaff(editingStaffId, payload);
+      setStaffList((prev) =>
+        prev.map((s) => (s.id === editingStaffId ? { ...s, ...payload, id: editingStaffId } : s))
+      );
+      triggerToast(`Staff profile for "${payload.name}" updated!`, "success");
       setIsFormOpen(false);
     } catch (err) {
       console.error("Failed to save staff to backend:", err);
-      // Fallback local update
-      if (editingStaffId) {
-        setStaffList((prev) =>
-          prev.map((s) => (s.id === editingStaffId ? { ...s, ...payload, id: editingStaffId } : s))
-        );
-        triggerToast(`"${payload.name}" updated locally!`, "success");
-      } else {
-        const fallback = { ...payload, id: `S${Date.now().toString().slice(-4)}` };
-        setStaffList((prev) => [fallback, ...prev]);
-        triggerToast(`"${payload.name}" added locally!`, "success");
-      }
-      setIsFormOpen(false);
+      triggerToast(`Could not update "${payload.name}". Please try again.`, "danger");
     }
   };
 
@@ -442,9 +408,7 @@ export default function useVendorStaffData() {
   // Check single-event restriction for selected staff
   const staffActiveAssignments = useMemo(() => {
     if (!assigningStaff) return [];
-    return assignments.filter(
-      (a) => a.staffId === assigningStaff.id && a.status !== "rejected"
-    );
+    return assignments.filter((a) => a.staffId === assigningStaff.id && isOpenAssignment(a));
   }, [assignments, assigningStaff]);
 
   const restrictedEventId = useMemo(() => {
@@ -469,9 +433,7 @@ export default function useVendorStaffData() {
     setAssignError("");
 
     // Identify if staff is restricted to an existing event
-    const activeAssigned = assignments.filter(
-      (a) => a.staffId === staff.id && a.status !== "rejected"
-    );
+    const activeAssigned = assignments.filter((a) => a.staffId === staff.id && isOpenAssignment(a));
     if (activeAssigned.length > 0) {
       setAssignEventId(activeAssigned[0].eventId);
     } else if (actionableEvents.length > 0) {
@@ -611,22 +573,7 @@ export default function useVendorStaffData() {
       setAssigningStaff(null);
     } catch (err) {
       console.error("Failed to assign staff task:", err);
-      // Optimistic local update
-      setStaffList((prev) =>
-        prev.map((s) =>
-          s.id === assigningStaff.id
-            ? {
-                ...s,
-                workload: newWorkload,
-                status: "assigned",
-                assignedEvents: updatedAssignedEvents,
-                isAssigned: true,
-              }
-            : s
-        )
-      );
-      setIsAssignOpen(false);
-      setAssigningStaff(null);
+      setAssignError(err.message || "Could not assign this work. Please try again.");
     }
   };
 
@@ -707,64 +654,6 @@ export default function useVendorStaffData() {
     }
   };
 
-  // ==========================================================================
-  // 9. ACTION MODAL 5: RECRUITMENT REQUEST
-  // ==========================================================================
-
-  const [isRecruitOpen, setIsRecruitOpen] = useState(false);
-  const [recruitData, setRecruitData] = useState({
-    position: "",
-    location: "",
-    type: "Full Time",
-    salary: "",
-    description: "",
-  });
-  const [recruitErrors, setRecruitErrors] = useState({});
-
-  const handleOpenRecruitModal = useCallback(() => {
-    setRecruitData({
-      position: "",
-      location: "",
-      type: "Full Time",
-      salary: "",
-      description: "",
-    });
-    setRecruitErrors({});
-    setIsRecruitOpen(true);
-  }, []);
-
-  const handleCloseRecruitModal = useCallback(() => {
-    setIsRecruitOpen(false);
-  }, []);
-
-  const handleRecruitFieldChange = useCallback((field, value) => {
-    setRecruitData((prev) => ({ ...prev, [field]: value }));
-    setRecruitErrors((prev) => {
-      if (!prev[field]) return prev;
-      const copy = { ...prev };
-      delete copy[field];
-      return copy;
-    });
-  }, []);
-
-  const handleSubmitRecruit = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-
-    const errors = {};
-    if (!recruitData.position.trim()) errors.position = "Position title is required.";
-    if (!recruitData.location.trim()) errors.location = "Location is required.";
-    if (!recruitData.salary.trim()) errors.salary = "Salary / rate is required.";
-
-    if (Object.keys(errors).length > 0) {
-      setRecruitErrors(errors);
-      triggerToast("Please fill in Position, Location, and Salary.", "danger");
-      return;
-    }
-
-    triggerToast(`Recruitment request for "${recruitData.position}" sent to Admin!`, "success");
-    setIsRecruitOpen(false);
-  };
-
   const formatDateReadable = useCallback((dateStr) => {
     if (!dateStr) return "Date TBD";
     const d = new Date(dateStr);
@@ -806,7 +695,6 @@ export default function useVendorStaffData() {
     editingStaffId,
     formData,
     formErrors,
-    handleOpenAddModal,
     handleOpenEditModal,
     handleCloseFormModal,
     handleFormFieldChange,
@@ -843,13 +731,5 @@ export default function useVendorStaffData() {
     handleCloseDeleteModal,
     handleConfirmDelete,
 
-    // Recruitment Modal
-    isRecruitOpen,
-    recruitData,
-    recruitErrors,
-    handleOpenRecruitModal,
-    handleCloseRecruitModal,
-    handleRecruitFieldChange,
-    handleSubmitRecruit,
   };
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
 import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
@@ -60,8 +60,7 @@ export class AnalyticsService {
 
     // The platform's cut, driven by the rate an admin sets on the Global Settings
     // page. Stored under the generic state store, so fall back to 10% if unset.
-    const settings: any = (snapshot as any).platformSettings || {};
-    const commissionPct = Number.isFinite(Number(settings.commissionPct)) ? Number(settings.commissionPct) : 10;
+    const commissionPct = this.data.getCommissionRate() * 100;
     const platformCommission = Number(((confirmedRevenue * commissionPct) / 100).toFixed(2));
     // What vendors are owed once the platform takes its share.
     const vendorPayout = Number((confirmedRevenue - platformCommission).toFixed(2));
@@ -81,7 +80,7 @@ export class AnalyticsService {
       totalRevenue,
       confirmedRevenue,
       pendingRevenue,
-      commissionRate: DEFAULT_COMMISSION_RATE,
+      commissionRate: this.data.getCommissionRate(),
       platformCommissionEarned,
       confirmedCommissionEarned,
       totalVendorPayouts,
@@ -120,12 +119,21 @@ export class AnalyticsService {
   // Generic key/value read+write, used for the loosely-structured collections
   // (chat threads, progress bars, allocations) that have no dedicated module.
   stateKey(key: string) {
+    this.assertNotPrivate(key);
     const name = this.normalizeKey(key);
     return this.scrubCollection(name, this.data.getValue(name));
   }
 
   setStateKey(key: string, value: unknown) {
+    this.assertNotPrivate(key);
     return this.data.setValue(this.normalizeKey(key), value);
+  }
+
+  // These have their own routes with ownership checks.
+  private assertNotPrivate(key: string) {
+    if (['staffApplications', 'messages'].includes(key)) {
+      throw new ForbiddenException('This data is not available here.');
+    }
   }
 
   // The frontend asks for one key under an older name; map it to the real one.
@@ -146,6 +154,8 @@ export class AnalyticsService {
       ...snapshot,
       users: (snapshot.users || []).map((row: any) => this.omitSecrets(row)),
       vendorApplications: (snapshot.vendorApplications || []).map((row: any) => this.omitSecrets(row)),
+      staffApplications: [],
+      messages: {},
     };
   }
 

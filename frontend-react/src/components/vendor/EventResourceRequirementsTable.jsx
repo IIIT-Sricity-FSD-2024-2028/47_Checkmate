@@ -7,7 +7,7 @@
  *
  * Purpose:
  *   Replicates legacy Event Review Resource Requirements table workflow:
- *     - Header with "+ Allocate Extra Resource" action trigger
+ *     - Header with the "+ Allocate Resource" action trigger, labelled by the page
  *     - Required vs. Available inventory stock comparison
  *     - Buffer calculations (+/- delta units)
  *     - Status badges: Safe, Risk, Critical
@@ -21,6 +21,8 @@ import { Package, Plus } from "lucide-react";
 function EventResourceRequirementsTable({
   requirements = [],
   onAllocate,
+  actionLabel = "Allocate Resource",
+  canAllocate = true,
   onOpenExtraModal,
 }) {
   return (
@@ -32,14 +34,16 @@ function EventResourceRequirementsTable({
           Resource Requirements
         </h3>
 
-        <button
-          type="button"
-          className="btn-alloc-extra-res"
-          onClick={onOpenExtraModal}
-          title="Allocate an extra or alternative inventory resource"
-        >
-          <Plus size={14} /> Allocate Extra Resource
-        </button>
+        {canAllocate && (
+          <button
+            type="button"
+            className="btn-alloc-extra-res"
+            onClick={onOpenExtraModal}
+            title="Allocate inventory to this event"
+          >
+            <Plus size={14} /> {actionLabel}
+          </button>
+        )}
       </div>
 
       {/* ── Table Wrapper ── */}
@@ -124,8 +128,20 @@ function EventResourceRequirementsTable({
               })
             ) : (
               <tr>
-                <td colSpan="7" className="vendor-table-message text-center">
-                  No resource requirements specified for this event.
+                <td colSpan="7" className="vendor-table-message text-center" style={{ padding: "26px 16px" }}>
+                  <div style={{ color: "var(--text-secondary, #9b8db0)", marginBottom: "10px", fontSize: "13.5px" }}>
+                    No resources requested by client for this event.
+                  </div>
+                  {canAllocate && (
+                    <button
+                      type="button"
+                      className="btn-alloc-extra-res"
+                      onClick={onOpenExtraModal}
+                      style={{ margin: "0 auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <Plus size={14} /> {actionLabel}
+                    </button>
+                  )}
                 </td>
               </tr>
             )}

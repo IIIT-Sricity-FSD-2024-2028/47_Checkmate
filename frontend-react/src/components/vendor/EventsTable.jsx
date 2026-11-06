@@ -42,7 +42,6 @@ function EventsTable({
   allEvents = [],
   loading = false,
   onView,
-  onApprove,
   onReject,
   onDelete,
 }) {
@@ -83,17 +82,16 @@ function EventsTable({
             </tr>
           /* State C: Map filtered event records to individual <EventTableRow> components */
           ) : (
-            events.map((event) => {
+            events.map((event, index) => {
               const isPending = String(event.status || "").toLowerCase() === "pending";
               const collisions = isPending ? findEventCollisions(event, comparisonPool) : [];
 
               return (
                 <EventTableRow
-                  key={event.id || Math.random()}
+                  key={event.id || `evt_row_${index}`}
                   event={event}
                   collisions={collisions}
                   onView={onView}
-                  onApprove={onApprove}
                   onReject={onReject}
                   onDelete={onDelete}
                 />

@@ -14,8 +14,6 @@
  *   Provides interactive controls for managing the staff team:
  *     1. Real-time search by staff member name, role, or email.
  *     2. Dropdown filter panel with multi-attribute criteria (Role, Status, Workload).
- *     3. Recruitment request trigger to send a hiring requisition to Admin.
- *     4. "+ Add Staff" direct onboarding modal trigger.
  *
  * Props:
  *   @param {string} props.searchQuery - Current search text input
@@ -24,13 +22,12 @@
  *   @param {Object} props.activeFilters - Currently applied filters { role, status, workload }
  *   @param {Function} props.onApplyFilters - Handler triggered to apply selected dropdown filters
  *   @param {Function} props.onResetFilters - Handler triggered to reset filters to defaults
- *   @param {Function} props.onOpenAddModal - Handler launching Add Staff modal dialog
- *   @param {Function} props.onOpenRecruitModal - Handler launching Recruitment Request dialog
  * ============================================================================
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, Plus, UserPlus, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, SlidersHorizontal, UserPlus, X } from "lucide-react";
 
 function StaffToolbar({
   searchQuery = "",
@@ -39,8 +36,6 @@ function StaffToolbar({
   activeFilters = { role: "All", status: "All", workload: "All" },
   onApplyFilters,
   onResetFilters,
-  onOpenAddModal,
-  onOpenRecruitModal,
 }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState(activeFilters);
@@ -193,26 +188,11 @@ function StaffToolbar({
         )}
       </div>
 
-      {/* ── 3. Request Recruitment Action Button ── */}
-      <button
-        type="button"
-        className="ms-recruit-btn"
-        onClick={onOpenRecruitModal}
-        title="Send a recruitment request to system admin"
-      >
+      {/* ── 3. New staff join through onboarding, never directly ── */}
+      <Link to="/vendor/staff-onboarding" className="ms-recruit-btn">
         <UserPlus size={15} />
-        <span>Request Recruitment</span>
-      </button>
-
-      {/* ── 4. Add Staff Modal Trigger Button ── */}
-      <button
-        type="button"
-        className="ms-add-btn"
-        onClick={onOpenAddModal}
-      >
-        <Plus size={15} />
-        <span>Add Staff</span>
-      </button>
+        <span>Staff Onboarding</span>
+      </Link>
     </div>
   );
 }

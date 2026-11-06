@@ -1,309 +1,180 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Radio, Shield, Calendar } from 'lucide-react';
-import VendorTopBar from '../../components/vendor/VendorTopBar';
-import CoordinationParticipants from '../../components/vendor/CoordinationParticipants';
-import CoordinationTemplates from '../../components/vendor/CoordinationTemplates';
-import CoordinationChat from '../../components/vendor/CoordinationChat';
+/**
+ * ============================================================================
+ * VENDOR COORDINATION HUB (Coordination.jsx)
+ * ============================================================================
+ * Role: Vendor, route /vendor/coordination
+ *
+ * Purpose:
+ *   Client Enquiries: talk to clients about events that have not started.
+ *   Live Events: for each live event, talk to its staff team or its client.
+ *   Clients and staff see the same conversations in their own portals.
+ * ============================================================================
+ */
 
-import { getMyEvents } from '../../services';
+import React, { useEffect, useMemo, useState } from 'react';
+import { MessageSquare, Radio, User, Users } from 'lucide-react';
+
+import VendorTopBar from '../../components/vendor/VendorTopBar';
+import ConversationList from '../../components/chat/ConversationList';
+import ChatWindow from '../../components/chat/ChatWindow';
+import useThreadChat from '../../hooks/useThreadChat';
+import { getMyEvents } from '../../services/eventService';
+import { getStaffAssignments } from '../../services/staffService';
 import { getAuthUser } from '../../services/auth/authStorage';
 
-const CHAT_STORAGE_KEY_EVENT = 'eventpro_coord_event_msgs_v1';
-const CHAT_STORAGE_KEY_ADMIN = 'eventpro_coord_admin_msgs_v1';
+import '../../styles/vendor.css';
+import '../client/client.css';
 
-export default function Coordination({ mode = 'event' }) {
-  const location = useLocation();
-  const navigate = useNavigate();
+const REFRESH_MS = 5000;
+const ENQUIRY_STATUSES = ['pending', 'waiting', 'confirmed', 'approved'];
+const CLOSED_ASSIGNMENTS = ['rejected', 'declined'];
 
-  // Detect active mode from prop or path
-  const [activeTab, setActiveTab] = useState(() => {
-    if (location.pathname.includes('coordination-admin') || mode === 'admin') {
-      return 'admin';
-    }
-    return 'event';
-  });
+const statusOf = (event) => String(event.status || '').toLowerCase();
 
+export default function Coordination() {
+  const user = getAuthUser();
+  const [section, setSection] = useState('enquiries');
+  const [audience, setAudience] = useState('staff');
   const [events, setEvents] = useState([]);
-  const [selectedEventId, setSelectedEventId] = useState('EVT002');
-  const [inputText, setInputText] = useState('');
+  const [assignments, setAssignments] = useState([]);
+  const [selected, setSelected] = useState({ enquiries: null, live: null });
+  const [search, setSearch] = useState('');
+  const [loadError, setLoadError] = useState(null);
 
-  // Current session user
-  const currentUser = useMemo(() => {
-    const user = getAuthUser();
-    return user?.name || 'Sarah Williams';
+  // Keeps refreshing, so an event that goes live moves across by itself
+  useEffect(() => {
+    let isMounted = true;
+    const load = () =>
+      Promise.all([getMyEvents(), getStaffAssignments()])
+        .then(([evs, assigns]) => {
+          if (!isMounted) return;
+          setEvents(Array.isArray(evs) ? evs : []);
+          setAssignments(Array.isArray(assigns) ? assigns : []);
+          setLoadError(null);
+        })
+        .catch((err) => isMounted && setLoadError(err.message || 'Could not load your events.'));
+    load();
+    const timer = setInterval(load, REFRESH_MS);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
   }, []);
 
-  // Event coordination messages
-  const [eventMessages, setEventMessages] = useState(() => {
-    try {
-      const stored = localStorage.getItem(CHAT_STORAGE_KEY_EVENT);
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore
-    }
-    return [
-      {
-        id: 'msg_1',
-        sender: 'Mike Johnson',
-        role: 'Event Coordinator',
-        text: 'Morning everyone! Tech Summit and Sarah & Mike Wedding staging equipment is dispatched.',
-        time: '09:15 AM',
-        self: false,
-      },
-      {
-        id: 'msg_2',
-        sender: 'Sarah Williams',
-        role: 'Lead Vendor',
-        text: 'Confirmed. Marcus, please double check the wireless handheld mics on Stage A.',
-        time: '09:22 AM',
-        self: true,
-      },
-      {
-        id: 'msg_3',
-        sender: 'Marcus Sterling',
-        role: 'AV Specialist',
-        text: 'Mics are on frequency 524MHz, zero interference detected. Batteries at 100%.',
-        time: '09:30 AM',
-        self: false,
-      },
-      {
-        id: 'msg_4',
-        sender: 'Emily Carter',
-        role: 'Client',
-        text: 'Hi Sarah, can we ensure the welcome photo arch is positioned near the foyer entrance?',
-        time: '09:42 AM',
-        self: false,
-      },
-      {
-        id: 'msg_5',
-        sender: 'Sarah Williams',
-        role: 'Lead Vendor',
-        text: 'Already done Emily! Floral team finalized the arch placement 10 minutes ago.',
-        time: '09:45 AM',
-        self: true,
-      },
-    ];
-  });
+  const isLiveSection = section === 'live';
+  const liveEvents = useMemo(() => events.filter((e) => statusOf(e) === 'live'), [events]);
+  const enquiryEvents = useMemo(() => events.filter((e) => ENQUIRY_STATUSES.includes(statusOf(e))), [events]);
 
-  // Admin coordination messages
-  const [adminMessages, setAdminMessages] = useState(() => {
-    try {
-      const stored = localStorage.getItem(CHAT_STORAGE_KEY_ADMIN);
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore
-    }
-    return [
-      {
-        id: 'adm_1',
-        sender: 'Aarav Mehta',
-        role: 'Platform Admin',
-        text: 'Hello Elite Events Co. Your recent business insurance renewal has been reviewed and marked as verified in the admin registry.',
-        time: 'Yesterday 14:10',
-        self: false,
-      },
-      {
-        id: 'adm_2',
-        sender: 'Sarah Williams',
-        role: 'Vendor',
-        text: 'Thank you Aarav. Also regarding the payout for BK004 (25th Anniversary Banquet), will the ACH transfer settle on Friday?',
-        time: 'Yesterday 14:25',
-        self: true,
-      },
-      {
-        id: 'adm_3',
-        sender: 'Aarav Mehta',
-        role: 'Platform Admin',
-        text: 'Yes, batch #882 is scheduled for Friday morning clearance (₹19,800 net after 10% platform fee). Everything is in order.',
-        time: 'Yesterday 14:40',
-        self: false,
-      },
-    ];
-  });
+  const sectionEvents = isLiveSection ? liveEvents : enquiryEvents;
+  const query = search.trim().toLowerCase();
+  const visibleEvents = sectionEvents.filter(
+    (e) => !query || e.name?.toLowerCase().includes(query) || e.client?.toLowerCase().includes(query)
+  );
+  const event = sectionEvents.find((e) => e.id === selected[section]) || sectionEvents[0] || null;
 
-  // Load events
-  useEffect(() => {
-    let mounted = true;
-    async function loadEvents() {
-      try {
-        const evs = await getMyEvents();
-        if (mounted && Array.isArray(evs) && evs.length > 0) {
-          setEvents(evs);
-          if (!selectedEventId) {
-            setSelectedEventId(evs[0].id);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load events for coordination hub:', err);
-      }
-    }
-    loadEvents();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedEventId]);
+  const team = useMemo(
+    () =>
+      assignments.filter(
+        (a) => a.eventId === event?.id && !CLOSED_ASSIGNMENTS.includes(String(a.status).toLowerCase())
+      ),
+    [assignments, event]
+  );
 
-  // Persist messages
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_STORAGE_KEY_EVENT, JSON.stringify(eventMessages));
-    } catch {
-      // ignore
-    }
-  }, [eventMessages]);
+  const isStaffChat = isLiveSection && audience === 'staff';
+  const threadId = event ? `${isStaffChat ? 'staff' : 'client'}-${event.id}` : null;
+  const chat = useThreadChat(threadId);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_STORAGE_KEY_ADMIN, JSON.stringify(adminMessages));
-    } catch {
-      // ignore
-    }
-  }, [adminMessages]);
+  const emptyText = !event
+    ? isLiveSection
+      ? 'No events are live right now.'
+      : 'No client enquiries right now.'
+    : isStaffChat
+    ? 'No messages yet. Say hello to the team.'
+    : 'No messages yet. Say hello to your client.';
 
-  // Participants roster
-  const participants = useMemo(() => {
-    if (activeTab === 'admin') {
-      return [
-        { id: 'u1', name: currentUser, role: 'Lead Vendor Coordinator', avatar: 'sw', isSelf: true },
-        { id: 'u2', name: 'Aarav Mehta', role: 'Super Administrator', avatar: 'aj', isSelf: false },
-        { id: 'u3', name: 'Finance Desk', role: 'Automated Billing Service', avatar: 'mb', isSelf: false },
-      ];
-    }
-
-    return [
-      { id: 'p1', name: currentUser, role: 'Event Coordinator', avatar: 'sw', isSelf: true },
-      { id: 'p2', name: 'Mike Johnson', role: 'Event Staff', avatar: 'mb', isSelf: false },
-      { id: 'p3', name: 'Marcus Sterling', role: 'AV Specialist', avatar: 'aj', isSelf: false },
-      { id: 'p4', name: 'Emily Carter', role: 'Host / Client', avatar: 'ed', isSelf: false },
-      { id: 'p5', name: 'Chloe Bennett', role: 'Guest Relations', avatar: 'sw', isSelf: false },
-    ];
-  }, [activeTab, currentUser]);
-
-  // Send Message Action
-  const handleSendMessage = useCallback(() => {
-    if (!inputText.trim()) return;
-
-    const timeStr = new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const newMsg = {
-      id: `msg_${Date.now()}`,
-      sender: currentUser,
-      role: 'Vendor Coordinator',
-      text: inputText.trim(),
-      time: timeStr,
-      self: true,
-    };
-
-    if (activeTab === 'admin') {
-      setAdminMessages((prev) => [...prev, newMsg]);
-    } else {
-      setEventMessages((prev) => [...prev, newMsg]);
-    }
-
-    setInputText('');
-  }, [inputText, activeTab, currentUser]);
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    navigate(tab === 'admin' ? '/vendor/coordination-admin' : '/vendor/coordination', { replace: true });
-  };
-
-  const selectedEventObj = events.find((e) => e.id === selectedEventId) || { name: 'Sarah & Mike Wedding' };
+  const error = loadError || chat.error;
 
   return (
     <div className="vendor-dashboard">
       <VendorTopBar title="Coordination Hub" />
 
       <div className="content" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Navigation Tabs */}
-        <div className="ch-section-tabs">
+        <div className="ch-section-tabs" role="tablist">
           <button
             type="button"
-            className={`ch-section-tab ${activeTab === 'event' ? 'active' : ''}`}
-            onClick={() => handleTabChange('event')}
+            role="tab"
+            aria-selected={!isLiveSection}
+            className={`ch-section-tab ${!isLiveSection ? 'active' : ''}`}
+            onClick={() => setSection('enquiries')}
+          >
+            <MessageSquare size={16} />
+            <span>Client Enquiries ({enquiryEvents.length})</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isLiveSection}
+            className={`ch-section-tab ${isLiveSection ? 'active' : ''}`}
+            onClick={() => setSection('live')}
           >
             <Radio size={16} />
-            <span>Event Coordination</span>
-          </button>
-
-          <button
-            type="button"
-            className={`ch-section-tab ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => handleTabChange('admin')}
-          >
-            <Shield size={16} />
-            <span>Admin Escalation Channel</span>
+            <span>Live Events ({liveEvents.length})</span>
           </button>
         </div>
 
-        {/* Intro Row */}
-        <div className="ch-intro">
-          <h2>
-            {activeTab === 'admin'
-              ? 'Admin Escalation & Support Channel'
-              : `Event Coordination — ${selectedEventObj.name || 'Live Event'}`}
-          </h2>
-          <p>
-            {activeTab === 'admin'
-              ? 'Direct synchronized thread between Vendor and Checkmate System Administrators'
-              : 'Communicate live with your deployed staff members, clients, and AV technicians'}
-          </p>
-        </div>
+        {error && <div className="cl-client-error">{error}</div>}
 
-        {/* Event Selector (only in event mode) */}
-        {activeTab === 'event' && events.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Calendar size={16} className="text-pink" />
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Active Event Thread:
-            </span>
-            <select
-              className="ri-select"
-              value={selectedEventId}
-              onChange={(e) => setSelectedEventId(e.target.value)}
-              style={{ width: 'auto', minWidth: '260px', padding: '8px 14px' }}
-            >
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.name || ev.title} ({ev.date || 'TBA'})
-                </option>
-              ))}
-            </select>
+        {isLiveSection && event && (
+          <div className="hub-audience">
+            <div className="so-tabs" role="tablist" style={{ marginBottom: 0 }}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={audience === 'staff'}
+                className={`so-tab ${audience === 'staff' ? 'active' : ''}`}
+                onClick={() => setAudience('staff')}
+              >
+                <Users size={13} /> Staff Team ({team.length})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={audience === 'client'}
+                className={`so-tab ${audience === 'client' ? 'active' : ''}`}
+                onClick={() => setAudience('client')}
+              >
+                <User size={13} /> Client
+              </button>
+            </div>
+            {isStaffChat && (
+              <span className="hub-team">
+                {team.length ? team.map((a) => a.staffName).join(', ') : 'No staff assigned to this event'}
+              </span>
+            )}
           </div>
         )}
 
-        {/* Participants Strip */}
-        <CoordinationParticipants participants={participants} />
-
-        {/* Quick Message Templates */}
-        <CoordinationTemplates onSelectTemplate={(tmpl) => setInputText(tmpl)} />
-
-        {/* Chat Component */}
-        <div className="ch-grid">
-          <CoordinationChat
-            messages={activeTab === 'admin' ? adminMessages : eventMessages}
-            inputText={inputText}
-            onInputChange={setInputText}
-            onSendMessage={handleSendMessage}
-            channelTitle={
-              activeTab === 'admin'
-                ? 'Checkmate Admin Helpdesk & Moderation'
-                : `${selectedEventObj.name || 'Event'} Operational Stream`
-            }
-            channelSubtitle={
-              activeTab === 'admin'
-                ? 'Responses typically under 5 minutes'
-                : 'Broadcasting to all on-site personnel'
-            }
-            currentUser={currentUser}
+        <div className="cl-chat-layout">
+          <ConversationList
+            events={visibleEvents}
+            selectedId={event?.id}
+            onSelect={(id) => setSelected((prev) => ({ ...prev, [section]: id }))}
+            search={search}
+            onSearch={setSearch}
+            getSubtitle={(ev) => `Client: ${ev.client || 'Unknown'}`}
+          />
+          <ChatWindow
+            title={event ? (isStaffChat ? `${event.name} Team` : event.client || 'Client') : 'No conversation'}
+            subtitle={event?.name}
+            showOnline={Boolean(event)}
+            messages={chat.messages}
+            emptyText={emptyText}
+            isMine={(m) => m.senderId === user?.id || m.sender === user?.name}
+            disabled={!event}
+            onSend={chat.send}
           />
         </div>
       </div>
     </div>
   );
 }
-

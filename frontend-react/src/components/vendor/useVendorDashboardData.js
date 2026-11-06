@@ -111,6 +111,31 @@ export function sanitizeDisplayName(rawName) {
   return clean || "Specialist";
 }
 
+
+/** Gross and net per month for the last 6 months, from the vendor's bookings */
+function buildMonthlyEarnings(bookings = [], now = new Date()) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const start = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    const inMonth = bookings.filter((b) => {
+      const created = new Date(b.created);
+      return created.getFullYear() === start.getFullYear() && created.getMonth() === start.getMonth();
+    });
+    return {
+      month: start.toLocaleString("en-IN", { month: "short" }),
+      gross: inMonth.reduce((sum, b) => sum + Number(b.cost || 0), 0),
+      net: inMonth.reduce((sum, b) => sum + Number(b.vendorPayoutAmount || 0), 0),
+    };
+  });
+}
+
+/** This month's net earnings compared with last month's */
+function describeGrowth(months) {
+  const [previous, current] = months.slice(-2).map((m) => m.net);
+  if (previous === 0) return current > 0 ? "New earnings this month" : "No earnings last month";
+  const change = ((current - previous) / previous) * 100;
+  return `${change >= 0 ? "+" : ""}${change.toFixed(1)}% vs last month`;
+}
+
 export function useVendorDashboardData() {
   const [loading, setLoading] = useState(true);
 
@@ -133,7 +158,10 @@ export function useVendorDashboardData() {
     platformFee: "₹0.00",
     feeBreakdown: { gross: 0, fee: 0, net: 0, grossFormatted: "₹0.00", feeFormatted: "₹0.00", netFormatted: "₹0.00" },
     sparkline: [20, 24, 22, 30, 28, 38, 45],
-    earningsGrowth: "+12.5% vs last month",
+    earningsGrowth: "",
+    settledFormatted: "₹0.00",
+    pendingFormatted: "₹0.00",
+    vendorSharePercent: 90,
   });
 
   // Categorized event tabs data
@@ -271,7 +299,7 @@ export function useVendorDashboardData() {
           0
         );
         const availableResourcesCount = resources.reduce(
-          (sum, r) => sum + (r.available !== false ? (Number(r.quantity ?? r.avail) || 0) : 0),
+          (sum, r) => sum + (r.available !== false ? (Number(r.avail ?? r.quantity) || 0) : 0),
           0
         );
         const allocatedUnits = Math.max(0, totalResourceStock - availableResourcesCount);
@@ -300,31 +328,21 @@ export function useVendorDashboardData() {
             : "All staff assigned"
           : `${availableStaffCount} ready to assign`;
 
-        // Financials: Gross, 10% Platform fee, 90% Net payout
-        let grossNum = 0;
-        let netNum = 0;
+        // Financials: real booking totals, or "Unavailable" if they failed to load
+        const hasPayouts = typeof payouts?.netPayoutAmount === "number";
+        const grossNum = hasPayouts ? payouts.totalEarnedGross : 0;
+        const netNum = hasPayouts ? payouts.netPayoutAmount : 0;
+        const feeNum = hasPayouts ? payouts.platformFeeDeducted : 0;
+        const vendorSharePercent = 100 - Math.round((payouts?.commissionRate ?? 0.1) * 100);
+        const monthlyEarningsData = buildMonthlyEarnings(hasPayouts ? payouts.bookings : []);
 
-        if (payouts && typeof payouts.netPayoutAmount === "number") {
-          netNum = payouts.netPayoutAmount;
-          grossNum = payouts.grossAmount || netNum / 0.9;
-        } else {
-          grossNum = events
-            .filter((e) =>
-              ["confirmed", "live", "completed"].includes(
-                String(e.status || "").toLowerCase()
-              )
-            )
-            .reduce((sum, e) => sum + (Number(e.budget || e.cost || 0)), 0);
-          if (grossNum === 0) grossNum = 132000; // Baseline fallback for vendor
-          netNum = grossNum * 0.9;
-        }
-
-        const feeNum = grossNum - netNum;
         const formatCur = (n) =>
-          `₹${Number(n || 0).toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`;
+          hasPayouts
+            ? `₹${Number(n || 0).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`
+            : "Unavailable";
 
         // Compute due today for pending requests
         const todayStr = new Date().toISOString().split("T")[0];
@@ -359,8 +377,11 @@ export function useVendorDashboardData() {
             feeFormatted: formatCur(feeNum),
             netFormatted: formatCur(netNum),
           },
-          sparkline: [28, 34, 30, 42, 38, 52, 60],
-          earningsGrowth: "+14.2% vs last month",
+          sparkline: monthlyEarningsData.map((m) => m.net),
+          earningsGrowth: hasPayouts ? describeGrowth(monthlyEarningsData) : "",
+          settledFormatted: formatCur(payouts?.settledPayouts),
+          pendingFormatted: formatCur(payouts?.pendingPayouts),
+          vendorSharePercent,
         });
 
         // --------------------------------------------------------------------
@@ -476,7 +497,7 @@ export function useVendorDashboardData() {
             when: "Workforce Alert",
             severity: "amber",
             actionLabel: "Recruit staff",
-            actionPath: "/vendor/staff",
+            actionPath: "/vendor/staff-onboarding",
           });
         }
 
@@ -639,7 +660,7 @@ export function useVendorDashboardData() {
         resources.forEach((r) => {
           const cat = r.category || "General";
           const qty = Number(r.total ?? r.quantity ?? r.avail) || 0;
-          const avail = r.available !== false ? Number(r.quantity ?? r.avail) || 0 : 0;
+          const avail = r.available !== false ? Number(r.avail ?? r.quantity) || 0 : 0;
           const allocated = Math.max(0, qty - avail);
 
           if (!categoriesMap[cat]) {
@@ -657,16 +678,6 @@ export function useVendorDashboardData() {
         // C. Staff Allocation Snapshot
         const assignedStaffCount = staff.filter((s) => busyStaffIds.has(s.id)).length;
         const awaitingCount = assignments.filter((a) => a.status === "pending" || a.status === "assigned").length;
-
-        // D. Monthly Earnings Trend Chart Data (Last 6 Months)
-        const monthlyEarningsData = [
-          { month: "Nov", gross: 32000, net: 28800 },
-          { month: "Dec", gross: 48000, net: 43200 },
-          { month: "Jan", gross: 39000, net: 35100 },
-          { month: "Feb", gross: 54000, net: 48600 },
-          { month: "Mar", gross: 68000, net: 61200 },
-          { month: "Apr", gross: Math.round(grossNum * 0.95), net: Math.round(netNum * 0.95) },
-        ];
 
         setWidgetsData({
           weekCalendar: weekDays,

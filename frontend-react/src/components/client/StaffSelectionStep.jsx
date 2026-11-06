@@ -51,11 +51,11 @@ function StaffSelectionStep({ staff, search, onSearch, selected, onToggle, chose
         {staff.map((s, index) => {
           const gradient = AVATAR_GRADIENTS[s.avatar] || AVATAR_GRADIENTS[COLOR_NAMES[index % COLOR_NAMES.length]];
           return (
-            <div className={`cl-staff-pick ${selected[s.id] ? "selected" : ""}`} key={s.id} onClick={() => onToggle(s.id)}>
+            <div className={`cl-staff-pick ${selected[s.id] ? "selected" : ""}`} key={s.id} onClick={() => onToggle(s.id)} style={s.isBusy ? { opacity: 0.5, cursor: "not-allowed" } : undefined}>
               <div className="cl-avatar" style={{ background: gradient }}>{s.initials || initials(s.name)}</div>
               <div>
                 <div className="cl-res-card__name">{s.name}</div>
-                <div className="cl-muted-text">{s.role}</div>
+                <div className="cl-muted-text">{s.role}{s.isBusy ? " · Unavailable" : ""}</div>
               </div>
             </div>
           );

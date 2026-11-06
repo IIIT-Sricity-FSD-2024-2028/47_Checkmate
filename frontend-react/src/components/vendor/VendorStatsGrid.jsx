@@ -39,10 +39,19 @@ function VendorStatsGrid({ stats, loading }) {
   const isStaffZero = staffCount === 0;
 
   const feeData = stats.feeBreakdown || {
-    grossFormatted: stats.grossEarnings || "₹132,000.00",
-    feeFormatted: stats.platformFee || "₹13,200.00",
-    netFormatted: stats.netEarnings || "₹118,800.00",
+    grossFormatted: stats.grossEarnings,
+    feeFormatted: stats.platformFee,
+    netFormatted: stats.netEarnings,
   };
+
+  // Sparkline points from the monthly net earnings
+  const trend = stats.sparkline || [];
+  const trendMax = Math.max(...trend, 1);
+  const trendPoints = trend.map((value, i) => ({
+    x: 2 + (i * 44) / Math.max(trend.length - 1, 1),
+    y: 16 - (value / trendMax) * 13,
+  }));
+  const lastTrendPoint = trendPoints.at(-1);
 
   const handleKeyDown = (e, path) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -396,7 +405,7 @@ function VendorStatsGrid({ stats, loading }) {
           onKeyDown={(e) => handleKeyDown(e, "/vendor/events")}
           onMouseEnter={() => setShowFeeTooltip(true)}
           onMouseLeave={() => setShowFeeTooltip(false)}
-          aria-label={`Net Earnings: ${stats.netEarnings}. 90% Net Payout. Click to view events.`}
+          aria-label={`Net Earnings: ${stats.netEarnings}. Click to view events.`}
         >
           {showFeeTooltip && (
             <div className="fee-tooltip-box" role="tooltip">
@@ -408,12 +417,20 @@ function VendorStatsGrid({ stats, loading }) {
                 <span>{feeData.grossFormatted}</span>
               </div>
               <div className="fee-row">
-                <span>Platform Fee (10%):</span>
+                <span>Platform Fee:</span>
                 <span style={{ color: "#f87171" }}>-{feeData.feeFormatted}</span>
               </div>
               <div className="fee-row total">
-                <span>Net Payout (90%):</span>
+                <span>Net Payout:</span>
                 <span>{feeData.netFormatted}</span>
+              </div>
+              <div className="fee-row">
+                <span>Paid Out:</span>
+                <span>{stats.settledFormatted}</span>
+              </div>
+              <div className="fee-row">
+                <span>Still Pending:</span>
+                <span>{stats.pendingFormatted}</span>
               </div>
             </div>
           )}
@@ -433,14 +450,14 @@ function VendorStatsGrid({ stats, loading }) {
                   </linearGradient>
                 </defs>
                 <path
-                  d="M 2 16 L 10 14 L 18 15 L 26 8 L 34 11 L 40 5 L 46 3"
+                  d={trendPoints.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ")}
                   fill="none"
                   stroke="#4ade80"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <circle cx="46" cy="3" r="2.5" fill="#4ade80" />
+                {lastTrendPoint && <circle cx={lastTrendPoint.x} cy={lastTrendPoint.y} r="2.5" fill="#4ade80" />}
               </svg>
 
               <span
@@ -448,7 +465,7 @@ function VendorStatsGrid({ stats, loading }) {
                 style={{ cursor: "help" }}
                 title="Click to view events or hover for gross/fee breakdown"
               >
-                90% Payout <Info size={11} style={{ marginLeft: 2 }} />
+                {stats.vendorSharePercent ?? 90}% Payout <Info size={11} style={{ marginLeft: 2 }} />
               </span>
             </div>
           </div>
@@ -462,7 +479,7 @@ function VendorStatsGrid({ stats, loading }) {
               {loading ? <div className="skeleton-block" style={{ width: 110, height: 28 }} /> : stats.netEarnings || "₹0.00"}
             </div>
             <div className="kpi-subtext">
-              <span style={{ color: "#86efac" }}>{stats.earningsGrowth || "+14.2% vs last month"}</span>
+              <span style={{ color: "#86efac" }}>{stats.earningsGrowth}</span>
               <span style={{ fontSize: "10.5px", color: "var(--text-muted, #94a3b8)" }}>Gross: {feeData.grossFormatted}</span>
             </div>
           </div>

@@ -8,7 +8,7 @@
  *   (from the client's Report Issue page or by staff):
  *     1. Connects to `useVendorIssuesData` (loads, filters, updates status).
  *     2. Assembles shared, reusable components:
- *         - <TopHeaderBar>: Title + number of open issues on the bell.
+ *         - <VendorTopBar>: Title and the vendor notifications bell.
  *         - <EventsToastFeedback>: "Issue ISS003 marked as resolved."
  *         - <TableToolbar> + <DataTable> + <Pagination>: the issue table.
  *         - <IssueReportModal>: Full issue details (shared with the chat pages).
@@ -28,7 +28,7 @@ import "../../styles/bridge.css";
 import "../client/client.css"; // IssueReportModal styles are shared with the client portal
 
 // Shared components
-import TopHeaderBar from "../../components/TopHeaderBar";
+import VendorTopBar from "../../components/vendor/VendorTopBar";
 import EventsToastFeedback from "../../components/vendor/EventsToastFeedback";
 import DataTable from "../../components/table/DataTable";
 import TableToolbar from "../../components/table/TableToolbar";
@@ -89,7 +89,7 @@ function ClientIssues() {
 
   return (
     <div className="vendor-page">
-      <TopHeaderBar title="Client Issues" badge={openCount} />
+      <VendorTopBar title="Client Issues" />
 
       <div className="vendor-content">
         <EventsToastFeedback toast={toast} onClose={() => setToast(null)} />

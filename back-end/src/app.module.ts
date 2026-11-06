@@ -12,6 +12,7 @@ import { ResourcesModule } from './modules/resources/resources.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { StaffModule } from './modules/staff/staff.module';
+import { StaffOnboardingModule } from './modules/staff-onboarding/staff-onboarding.module';
 import { UsersModule } from './modules/users/users.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -43,6 +44,7 @@ import { VendorsController } from './modules/vendors/vendors.controller';
     EventsModule,
     ResourcesModule,
     StaffModule,
+    StaffOnboardingModule,
     PackagesModule,
     IssuesModule,
     MessagesModule,
@@ -69,7 +71,7 @@ export class AppModule implements NestModule {
     consumer.apply(loginLimiter).forRoutes('auth/login', 'staff/login');
 
     // Separate bucket: registration abuse has a different profile than login abuse.
-    consumer.apply(signupLimiter).forRoutes('auth/register', 'staff/signup');
+    consumer.apply(signupLimiter).forRoutes('auth/register', { path: 'staff-applications', method: RequestMethod.POST });
 
     // Rejects oversized uploads on declared Content-Length, before Multer writes.
     consumer
