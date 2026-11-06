@@ -120,7 +120,7 @@ function StaffRecruitModal({
                 <input
                   type="text"
                   className={`form-input ${errors.salary ? "form-input-error" : ""}`}
-                  placeholder="e.g. $45,000/yr or $30/hr"
+                  placeholder="e.g. ₹45,000/mo or ₹500/hr"
                   value={formData.salary}
                   onChange={(e) => onChange("salary", e.target.value)}
                 />

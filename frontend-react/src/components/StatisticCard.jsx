@@ -1,5 +1,5 @@
 import React from "react"
-import { Calendar, TrendingUp, Package, CheckCircle2, DollarSign } from "lucide-react"
+import { Calendar, TrendingUp, Package, CheckCircle2, IndianRupee } from "lucide-react"
 
 function StatisticCard({ title, value, description = null, status, icon: IconProp, color }) {
     const key = (title || "").toLowerCase().trim()
@@ -8,8 +8,8 @@ function StatisticCard({ title, value, description = null, status, icon: IconPro
     let iconClass = color ? `stat-icon--${color}` : ""
 
     if (!Icon) {
-        if (key.includes("earning") || key.includes("payout") || key.includes("net") || key.includes("dollar")) {
-            Icon = DollarSign
+        if (key.includes("earning") || key.includes("payout") || key.includes("net") || key.includes("dollar") || key.includes("rupee") || key.includes("price")) {
+            Icon = IndianRupee
             iconClass = iconClass || "stat-icon--green"
         } else if (key.includes("pending")) {
             Icon = Calendar

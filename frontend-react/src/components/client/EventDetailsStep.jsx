@@ -24,7 +24,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 
 const EVENT_TYPES = ["Wedding", "Birthday", "Conference", "Party", "Corporate"];
-const BUDGET_RANGES = ["$1,000 - $5,000", "$5,000 - $15,000", "$15,000 - $30,000", "$30,000 - $50,000", "$50,000+"];
+const BUDGET_RANGES = ["₹1,000 - ₹5,000", "₹5,000 - ₹15,000", "₹15,000 - ₹30,000", "₹30,000 - ₹50,000", "₹50,000+"];
 
 // Small wrapper so every field has the same label + error markup
 function Field({ label, error, full, children }) {
@@ -84,7 +84,7 @@ function EventDetailsStep({ form, errors, onChange, onNext }) {
           </select>
           {/* Only shown when "Custom..." is picked */}
           {form.budget === "custom" && (
-            <input className="cl-input" type="number" min="0" placeholder="Enter maximum budget in $"
+            <input className="cl-input" type="number" min="0" placeholder="Enter maximum budget in ₹"
               value={form.customBudget} onChange={(e) => onChange("customBudget", e.target.value)} />
           )}
         </Field>

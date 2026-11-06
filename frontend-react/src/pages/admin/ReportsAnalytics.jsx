@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  PieChart, DollarSign, Calendar, Package, Download, 
+  PieChart, IndianRupee, Calendar, Package, Download, 
   Filter, TrendingUp, CheckCircle, Clock, AlertTriangle, RefreshCcw
 } from 'lucide-react';
 import { getEvents } from '../../services/eventService';
@@ -212,11 +212,11 @@ export default function ReportsAnalytics() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Total GMV / Budget</span>
             <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>
-              <DollarSign size={18} />
+              <IndianRupee size={18} />
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#fff', marginTop: '10px' }}>
-            ${metrics.totalRevenue.toLocaleString()}
+            ₹{metrics.totalRevenue.toLocaleString("en-IN")}
           </div>
           <div style={{ fontSize: '11.5px', color: '#ec4899', marginTop: '4px' }}>
             Gross Platform Value
@@ -312,7 +312,7 @@ export default function ReportsAnalytics() {
                 <div key={category}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
                     <span style={{ color: '#fff' }}>{category}</span>
-                    <span style={{ color: color, fontWeight: '600' }}>${amount.toLocaleString()} ({pct}%)</span>
+                    <span style={{ color: color, fontWeight: '600' }}>₹{amount.toLocaleString("en-IN")} ({pct}%)</span>
                   </div>
                   <div style={{ height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: color }} />
@@ -377,7 +377,7 @@ export default function ReportsAnalytics() {
                   <td style={{ padding: '12px', color: '#fff' }}>{ev.client || ev.createdBy || 'Client'}</td>
                   <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>{ev.date}</td>
                   <td style={{ padding: '12px', textAlign: 'right', color: '#00e676', fontWeight: '600' }}>
-                    ${Number(ev.budget || 0).toLocaleString()}
+                    ₹{Number(ev.budget || 0).toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>
                     <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11.5px', background: 'rgba(255,255,255,0.06)', color: '#fff' }}>

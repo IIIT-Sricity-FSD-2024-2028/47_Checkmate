@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  PieChart, DollarSign, Calendar, Package, Users, 
+  PieChart, IndianRupee, Calendar, Package, Users, 
   Download, RefreshCcw, TrendingUp, CheckCircle, ShieldCheck
 } from 'lucide-react';
 import { getEvents } from '../../services/eventService';
@@ -118,9 +118,9 @@ export default function SuperuserReports() {
         <div className="su-card">
           <div className="su-card-header">
             <span className="su-card-label">Total Platform Volume</span>
-            <DollarSign size={18} color="#ec4899" />
+            <IndianRupee size={18} color="#ec4899" />
           </div>
-          <div className="su-card-value" style={{ color: '#ec4899' }}>${totalGMV.toLocaleString()}</div>
+          <div className="su-card-value" style={{ color: '#ec4899' }}>₹{totalGMV.toLocaleString("en-IN")}</div>
           <div className="su-card-sub" style={{ color: '#00e676' }}>
             <TrendingUp size={14} /> 100% Escrow coverage
           </div>
@@ -131,7 +131,7 @@ export default function SuperuserReports() {
             <span className="su-card-label">Commission Take (10%)</span>
             <ShieldCheck size={18} color="#00e676" />
           </div>
-          <div className="su-card-value" style={{ color: '#00e676' }}>${totalCommission.toLocaleString()}</div>
+          <div className="su-card-value" style={{ color: '#00e676' }}>₹{totalCommission.toLocaleString("en-IN")}</div>
           <div className="su-card-sub">
             Platform net revenues
           </div>
@@ -140,9 +140,9 @@ export default function SuperuserReports() {
         <div className="su-card">
           <div className="su-card-header">
             <span className="su-card-label">Vendor Disbursals</span>
-            <DollarSign size={18} color="#22d3ee" />
+            <IndianRupee size={18} color="#22d3ee" />
           </div>
-          <div className="su-card-value" style={{ color: '#22d3ee' }}>${totalNetPayout.toLocaleString()}</div>
+          <div className="su-card-value" style={{ color: '#22d3ee' }}>₹{totalNetPayout.toLocaleString("en-IN")}</div>
           <div className="su-card-sub">
             Contractor gross disbursements
           </div>

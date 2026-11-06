@@ -30,7 +30,15 @@
 import React from "react";
 import QuickActionButton from "./QuickActionButton";
 
-function VendorQuickActionsSection({ onNavigate }) {
+function VendorQuickActionsSection({
+  onNavigate,
+  pendingCount = 0,
+  availableStaff = null,
+  unassignedShiftsCount = 0,
+}) {
+  const needsStaffAttention = availableStaff === 0 || unassignedShiftsCount > 0;
+  const staffHint = availableStaff === 0 ? "0 Available" : unassignedShiftsCount > 0 ? `${unassignedShiftsCount} shifts` : "";
+
   return (
     <div className="card Quckaction-card">
       {/* ── Card Header ── */}
@@ -40,11 +48,12 @@ function VendorQuickActionsSection({ onNavigate }) {
 
       {/* ── Grid of 4 Quick Action Buttons ── */}
       <div className="quick-actions" role="toolbar" aria-label="Vendor Quick Actions">
-        {/* Action 1: Review Incoming Event Requests */}
+        {/* Action 1: Review Incoming Event Requests (with Pending Count Badge) */}
         <QuickActionButton
           button="1"
           button_type="Review Event"
-          onClick={() => onNavigate && onNavigate("/vendor/events")}
+          badge={pendingCount > 0 ? pendingCount : null}
+          onClick={() => onNavigate && onNavigate("/vendor/events?status=pending")}
         />
 
         {/* Action 2: Manage Equipment & Inventory */}
@@ -54,10 +63,12 @@ function VendorQuickActionsSection({ onNavigate }) {
           onClick={() => onNavigate && onNavigate("/vendor/resources")}
         />
 
-        {/* Action 3: Assign Staff Members */}
+        {/* Action 3: Assign Staff Members (Highlighted with Accent when 0 staff or unassigned shifts) */}
         <QuickActionButton
           button="3"
           button_type="Assign Staff"
+          isHighlighted={needsStaffAttention}
+          highlightHint={staffHint}
           onClick={() => onNavigate && onNavigate("/vendor/staff")}
         />
 

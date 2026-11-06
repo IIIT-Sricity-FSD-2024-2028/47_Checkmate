@@ -12,7 +12,7 @@ import {
     CalendarCheck,
     PieChart,
     Bug,
-    DollarSign,
+    IndianRupee,
     Activity,
     Settings
 } from "lucide-react";
@@ -41,7 +41,7 @@ export const clientMenuItems = [
     {
         label: "Billing & Invoices",
         path: "/client/billing",
-        icon: DollarSign
+        icon: IndianRupee
     },
     {
         label: "Messages",
@@ -180,7 +180,7 @@ export const adminMenuItems = [
     {
         label: "Financial Payouts",
         path: "/admin/payouts",
-        icon: DollarSign,
+        icon: IndianRupee,
     },
     {
         label: "Coordination Hub",
@@ -223,7 +223,7 @@ export const superuserMenuItems = [
     {
         label: "Bookings",
         path: "/superuser/bookings",
-        icon: DollarSign
+        icon: IndianRupee
     },
     {
         label: "Reports",

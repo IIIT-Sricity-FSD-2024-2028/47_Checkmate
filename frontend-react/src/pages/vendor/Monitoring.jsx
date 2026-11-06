@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import VendorTopBar from '../../components/vendor/VendorTopBar';
 import MonitoringEventCards from '../../components/vendor/MonitoringEventCards';
 import MonitoringStatsCard from '../../components/vendor/MonitoringStatsCard';
@@ -333,6 +333,29 @@ export default function Monitoring() {
     setIsEndEventModalOpen(false);
   };
 
+  // Reference & dynamic height calculation to sync Alerts Feed with Contingency Protocols
+  const contingencyRef = useRef(null);
+  const [contingencyHeight, setContingencyHeight] = useState(null);
+
+  useEffect(() => {
+    if (!contingencyRef.current) return;
+
+    const measureHeight = () => {
+      if (contingencyRef.current) {
+        const h = contingencyRef.current.offsetHeight;
+        if (h > 0) {
+          setContingencyHeight(h);
+        }
+      }
+    };
+
+    measureHeight();
+    const ro = new ResizeObserver(measureHeight);
+    ro.observe(contingencyRef.current);
+
+    return () => ro.disconnect();
+  }, [contingencies]);
+
   return (
     <div className="vendor-dashboard">
       <VendorTopBar title="Monitor Live Events" />
@@ -382,11 +405,20 @@ export default function Monitoring() {
 
         {/* Two-Column Operational Execution Grid */}
         <div className="mon-bottom">
-          {/* Left Column: Timeline */}
-          <MonitoringTimeline
-            milestones={currentMilestones}
-            onAdvanceMilestone={handleAdvanceMilestone}
-          />
+          {/* Left Column: Timeline & Squeezed Alerts Feed */}
+          <div className="mon-left">
+            <MonitoringTimeline
+              milestones={currentMilestones}
+              onAdvanceMilestone={handleAdvanceMilestone}
+            />
+
+            {/* Live Operational Alerts Feed squeezed inside left column to fill gap, matching Emergency Contingency Protocols height */}
+            <MonitoringAlertsFeed
+              alerts={alertsFeed}
+              isSqueezed
+              targetHeight={contingencyHeight}
+            />
+          </div>
 
           {/* Right Column: Staff Requests, Risks & Contingency */}
           <div className="mon-right">
@@ -400,12 +432,10 @@ export default function Monitoring() {
               risks={eventRisks}
               contingencies={contingencies}
               onTriggerContingency={handleTriggerContingency}
+              contingencyRef={contingencyRef}
             />
           </div>
         </div>
-
-        {/* Live Alerts Stream Feed */}
-        <MonitoringAlertsFeed alerts={alertsFeed} />
 
         {/* ── UPDATE BULLETIN MODAL ── */}
         {isUpdateModalOpen && (

@@ -34,7 +34,14 @@ import React from "react";
 import { FileText, Package, UserPlus, TrendingUp, Sparkles, Box } from "lucide-react";
 import "../../styles/dashboard.css";
 
-function QuickActionButton({ button, button_type, onClick }) {
+function QuickActionButton({
+  button,
+  button_type,
+  badge = null,
+  isHighlighted = false,
+  highlightHint = "",
+  onClick,
+}) {
   // --------------------------------------------------------------------------
   // 1. LABEL & INTENT RESOLUTION
   // --------------------------------------------------------------------------
@@ -77,14 +84,72 @@ function QuickActionButton({ button, button_type, onClick }) {
   // 3. RENDER COMPONENT
   // --------------------------------------------------------------------------
   return (
-    <button className="qa-btn" onClick={onClick} type="button">
+    <button
+      className={`qa-btn ${isHighlighted ? "qa-btn--highlighted" : ""}`}
+      onClick={onClick}
+      type="button"
+      style={{
+        position: "relative",
+        border: isHighlighted ? "1px solid rgba(245, 158, 11, 0.55)" : undefined,
+        background: isHighlighted ? "linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(37, 22, 53, 0.8) 100%)" : undefined,
+        boxShadow: isHighlighted ? "0 4px 16px rgba(245, 158, 11, 0.22)" : undefined,
+      }}
+      aria-label={`${label}${badge ? ` (${badge} pending)` : ""}${isHighlighted ? " - Attention needed" : ""}`}
+    >
+      {/* ── Optional Notification Badge (e.g. Pending Requests Count) ── */}
+      {badge !== null && badge !== undefined && Number(badge) > 0 && (
+        <span
+          className="qa-badge"
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            background: "#e91e8c",
+            color: "#fff",
+            fontSize: "10.5px",
+            fontWeight: 700,
+            padding: "2px 7px",
+            borderRadius: "12px",
+            lineHeight: 1.2,
+            boxShadow: "0 2px 6px rgba(233, 30, 140, 0.4)",
+          }}
+        >
+          {badge}
+        </span>
+      )}
+
+      {/* ── Highlight Alert Dot for Unassigned Shifts ── */}
+      {isHighlighted && (
+        <span
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: "#f59e0b",
+            boxShadow: "0 0 8px #f59e0b",
+            animation: "pulseDot 1.5s infinite",
+          }}
+          title={highlightHint || "Action required"}
+        />
+      )}
+
       {/* ── Contextual Icon Badge with Accent Ring ── */}
       <div className={`qa-icon ${colorClass}`}>
         <Icon size={19} />
       </div>
 
       {/* ── Action Label Text ── */}
-      <span>{label}</span>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+        <span style={{ fontWeight: 600 }}>{label}</span>
+        {isHighlighted && highlightHint && (
+          <span style={{ fontSize: "10px", color: "#fde047", fontWeight: 500 }}>
+            {highlightHint}
+          </span>
+        )}
+      </div>
     </button>
   );
 }

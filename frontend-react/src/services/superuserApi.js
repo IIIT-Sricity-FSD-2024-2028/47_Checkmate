@@ -252,17 +252,17 @@ export async function fetchVendors() {
 /* ── Formatting Helpers ──────────────────────────────────────── */
 
 /**
- * Formats a raw number into a neat dollar string: $2.4M, $25,000, $500
+ * Formats a raw number into a neat rupee string: ₹2.4M, ₹25,000, ₹500
  */
 export function formatCurrency(amount) {
   const n = Number(amount) || 0;
   if (n >= 1000000) {
-    return `$${(n / 1000000).toFixed(1)}M`;
+    return `₹${(n / 1000000).toFixed(1)}M`;
   }
   if (n >= 1000) {
-    return `$${n.toLocaleString()}`;
+    return `₹${n.toLocaleString("en-IN")}`;
   }
-  return `$${n}`;
+  return `₹${n}`;
 }
 
 /**

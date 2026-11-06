@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, Save, RefreshCcw, ShieldCheck, AlertTriangle, 
-  CheckCircle2, DollarSign, Bell, Mail, ToggleLeft, ToggleRight
+  CheckCircle2, IndianRupee, Bell, Mail, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { getStateKey, setStateKey } from '../../services/stateService';
 import '../../styles/admin.css';
@@ -128,7 +128,7 @@ export default function GlobalSettings() {
         {/* Financial & Fee Rules */}
         <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
           <h2 style={{ fontSize: '17px', fontWeight: '600', color: '#fff', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <DollarSign size={18} color="#00e676" /> Financial & Commission Parameters
+            <IndianRupee size={18} color="#00e676" /> Financial & Commission Parameters
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
@@ -146,7 +146,7 @@ export default function GlobalSettings() {
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Minimum Event Budget ($)</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Minimum Event Budget (₹)</label>
               <input
                 type="number"
                 min="100"

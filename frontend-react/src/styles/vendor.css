@@ -374,6 +374,12 @@
   border: 1px solid rgba(234, 179, 8, 0.25);
 }
 
+.status-badge.waiting {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
 .status-badge.confirmed,
 .status-badge.completed,
 .status-badge.active,
@@ -423,18 +429,18 @@
 .table-actions-header {
   text-align: center !important;
   padding: 13px 16px !important;
-  width: 140px;
+  width: 156px;
 }
 
 .table-actions-cell {
   text-align: center !important;
   padding: 10px 16px !important;
-  width: 140px;
+  width: 156px;
 }
 
 .table-actions {
   display: inline-grid;
-  grid-template-columns: 32px 32px 32px;
+  grid-template-columns: 36px 36px 36px;
   gap: 8px;
   align-items: center;
   justify-content: center;
@@ -442,8 +448,8 @@
 }
 
 .action-btn-placeholder {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: inline-block;
   visibility: hidden;
 }
@@ -462,20 +468,20 @@
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s ease, background 0.18s ease;
+  transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
 }
 
 .action-btn.view {
@@ -484,7 +490,8 @@
 }
 
 .action-btn.view:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 .action-btn.approve {
@@ -493,16 +500,20 @@
 }
 
 .action-btn.approve:hover {
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
-.action-btn.reject {
+.action-btn.reject,
+.action-btn.delete {
   color: var(--red, #ef4444);
   grid-column: 3;
 }
 
-.action-btn.reject:hover {
-  background: rgba(239, 68, 68, 0.15);
+.action-btn.reject:hover,
+.action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 .action-btn.edit {
@@ -4997,6 +5008,14 @@
 }
 .tl-time  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
+/* Left panels column */
+.mon-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 /* Right panels column */
 .mon-right {
   display: flex;
@@ -5312,6 +5331,36 @@
   gap: 8px;
   max-height: 280px;
   overflow-y: auto;
+}
+
+/* Squeezed Alerts feed (matching Emergency Contingency Protocols height) */
+.mon-alerts-card--squeezed {
+  display: flex;
+  flex-direction: column;
+  height: 275px;
+  overflow: hidden;
+}
+
+.mon-alerts-card--squeezed .mon-alerts-card__header {
+  padding: 16px 18px 14px;
+  flex-shrink: 0;
+}
+
+.mon-alerts-card--squeezed .mon-alert-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  gap: 8px;
+  max-height: none;
+}
+
+.mon-alerts-card--squeezed .mon-alert-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mon-alerts-card--squeezed .mon-alert-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
 }
 
 .mon-alert-item {
@@ -5812,3 +5861,38 @@
   border-color: rgba(255, 255, 255, 0.2);
   color: var(--text-primary);
 }
+
+/* ── Event Collision Indicators (Events Table) ── */
+.collision-warning-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: help;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  white-space: nowrap;
+}
+
+.collision-warning-pill.medium {
+  background: rgba(234, 179, 8, 0.16);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.venue-collision-subtext {
+  font-size: 11px;
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+

@@ -137,7 +137,7 @@ export function useCreateEventWizard() {
 
   // Budget text shown on the review step and sent to the backend
   const budgetText = form.budget === "custom"
-    ? (form.customBudget ? `$${form.customBudget}` : "")
+    ? (form.customBudget ? `₹${form.customBudget}` : "")
     : form.budget;
 
   // --------------------------------------------------------------------------

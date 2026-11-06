@@ -117,7 +117,7 @@ function ResourceFormModal({
 
               {/* Field 4: Rental Price */}
               <div className="form-group">
-                <label className="form-label">Price ($/day) *</label>
+                <label className="form-label">Price (₹/day) *</label>
                 <input
                   type="number"
                   min="0"

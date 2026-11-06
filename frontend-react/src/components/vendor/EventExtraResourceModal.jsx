@@ -165,7 +165,7 @@ function EventExtraResourceModal({
                         marginTop: "2px",
                       }}
                     >
-                      {r.category || "Equipment"} • ${r.price || 0}/day •{" "}
+                      {r.category || "Equipment"} • ₹{r.price || 0}/day •{" "}
                       <span style={{ color: "#86efac", fontWeight: 600 }}>
                         {maxQty} available for {eventDate || "event date"}
                       </span>

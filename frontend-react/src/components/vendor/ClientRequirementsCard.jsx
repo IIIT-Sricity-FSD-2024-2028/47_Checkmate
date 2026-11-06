@@ -20,7 +20,7 @@ import {
   User,
   Clock,
   Package,
-  DollarSign,
+  IndianRupee,
   Users,
   Tag,
   Calculator,
@@ -114,11 +114,11 @@ function ClientRequirementsCard({ event }) {
       <div className="client-req-extras">
         {/* Budget */}
         <div className="client-extra-item">
-          <DollarSign />
+          <IndianRupee />
           <div>
             <div className="client-extra-label">Event Budget</div>
             <div className="client-extra-value">
-              {budgetVal > 0 ? `$${budgetVal.toLocaleString()}` : "Not specified"}
+              {budgetVal > 0 ? `₹${budgetVal.toLocaleString("en-IN")}` : "Not specified"}
             </div>
           </div>
         </div>
@@ -150,9 +150,9 @@ function ClientRequirementsCard({ event }) {
             <div>
               <div className="client-extra-label">Net Payout (90%)</div>
               <div className="client-extra-value">
-                ${netPayout.toLocaleString()}{" "}
+                ₹{netPayout.toLocaleString("en-IN")}{" "}
                 <span className="client-extra-fee">
-                  (Fee: -${platformFee.toLocaleString()})
+                  (Fee: -₹{platformFee.toLocaleString("en-IN")})
                 </span>
               </div>
             </div>

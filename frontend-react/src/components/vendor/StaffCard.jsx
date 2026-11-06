@@ -83,6 +83,19 @@ function StaffCard({
   // Normalized status string
   const normalizedStatus = (status || "available").toLowerCase();
 
+  // Determine if staff is assigned to an event
+  const isAssigned =
+    staff.isAssigned ??
+    (
+      (Array.isArray(staff.assignedEvents) && staff.assignedEvents.length > 0) ||
+      ["assigned", "busy"].includes(normalizedStatus) ||
+      Number(staff.events || 0) > 0
+    );
+
+  // If workload is above 80%, neither Assign nor Assign Extra Work button should display
+  const isWorkloadAbove80 = workloadNum >= 80;
+  const showAssignBtn = !isWorkloadAbove80;
+
   return (
     <div className="staff-card" data-id={staff.id}>
       {/* ── 1. Card Header: Avatar, Name, Role & Status Badge ── */}
@@ -130,17 +143,42 @@ function StaffCard({
         </div>
       </div>
 
-      {/* ── 4. Card Actions: Assign, Schedule, Edit, Delete ── */}
-      <div className="staff-card__actions">
-        <button
-          type="button"
-          className="staff-btn staff-btn--assign"
-          onClick={() => onAssign(staff)}
-          title={`Assign task to ${name}`}
-        >
-          <CalendarPlus size={13} />
-          <span>Assign</span>
-        </button>
+      {/* ── 4. Card Actions: Assign / Assign Extra Work, Schedule, Edit, Delete ── */}
+      <div
+        className="staff-card__actions"
+        style={{
+          gridTemplateColumns: !showAssignBtn
+            ? "repeat(3, 1fr)"
+            : isAssigned
+            ? "1.45fr 1fr 1fr 1fr"
+            : "repeat(4, 1fr)",
+        }}
+      >
+        {/* Render Assign or Assign Extra Work ONLY if workload is below 80% */}
+        {showAssignBtn && (
+          <button
+            type="button"
+            className={`staff-btn staff-btn--assign ${isAssigned ? "staff-btn--extra-work" : ""}`}
+            onClick={() => onAssign(staff)}
+            title={isAssigned ? `Assign extra work to ${name}` : `Assign task to ${name}`}
+            style={
+              isAssigned
+                ? {
+                    background: "rgba(168, 85, 247, 0.16)",
+                    color: "#c084fc",
+                    borderColor: "rgba(168, 85, 247, 0.35)",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    padding: "8px 2px",
+                  }
+                : undefined
+            }
+          >
+            <CalendarPlus size={13} />
+            <span>{isAssigned ? "Assign Extra Work" : "Assign"}</span>
+          </button>
+        )}
 
         <button
           type="button"

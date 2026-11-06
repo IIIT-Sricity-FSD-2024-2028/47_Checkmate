@@ -16,7 +16,7 @@
  *      direct '▶ Allocate' action, and '+ Allocate Extra Resource' modal trigger.
  *   6. EventStaffRequirementsTable: Required roles vs active members, buffer deltas,
  *      direct '+ Assign' action, and '+ Allocate Extra Staff' modal trigger.
- *   7. EventBufferAndRiskSection: Buffer safety margins and dynamic Risk & Feasibility summary.
+ *   7. EventBufferAndRiskSection: Dynamic Risk & Feasibility summary.
  *   8. EventContingencyPlanning: Interactive CRUD table with problem, trigger, solution.
  *   9. EventReviewActionBar: Conditional Approve and Reject decision buttons.
  *  10. Extra Resource, Extra Staff, Keep Waiting & Reject Reason Modals.
@@ -47,7 +47,9 @@ import RejectReasonModal from "../../components/vendor/RejectReasonModal";
 
 // Backend API services
 import {
+  findEventCollisions,
   getEventById,
+  getEvents,
   getMyEvents,
   updateEventStatus,
 } from "../../services/eventService";
@@ -58,6 +60,8 @@ import {
   setResourceAllocations,
   getContingencyPlans,
   setContingencyPlans,
+  getStateKey,
+  setStateKey,
 } from "../../services/stateService";
 
 // Central vendor stylesheet
@@ -109,6 +113,15 @@ function EventReview() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
+  // Immediate and safe toast notification handler
+  const showToast = useCallback((text, type = "info") => {
+    setToast({ text, type });
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Modal visibility states
   const [isExtraResOpen, setIsExtraResOpen] = useState(false);
   const [isExtraStaffOpen, setIsExtraStaffOpen] = useState(false);
@@ -129,6 +142,36 @@ function EventReview() {
 
       setLoading(true);
       try {
+        const cleanId = String(eventId || "").trim();
+        const normalizedId = cleanId.replace(/^EVT-/, "EVT");
+
+        const fetchEvent = async () => {
+          try {
+            return await getEventById(normalizedId);
+          } catch {
+            try {
+              return await getEventById(cleanId);
+            } catch {
+              const all = await getMyEvents().catch(() => []);
+              const found = all.find(
+                (e) =>
+                  String(e.id).toLowerCase() === cleanId.toLowerCase() ||
+                  String(e.id).toLowerCase() === normalizedId.toLowerCase()
+              );
+              if (found) return found;
+
+              const allEventsGlobal = await getEvents().catch(() => []);
+              return (
+                allEventsGlobal.find(
+                  (e) =>
+                    String(e.id).toLowerCase() === cleanId.toLowerCase() ||
+                    String(e.id).toLowerCase() === normalizedId.toLowerCase()
+                ) || null
+              );
+            }
+          }
+        };
+
         const [
           eventData,
           eventsList,
@@ -137,11 +180,8 @@ function EventReview() {
           allocsData,
           plansData,
         ] = await Promise.all([
-          getEventById(eventId).catch(async () => {
-            const all = await getMyEvents();
-            return all.find((e) => String(e.id) === String(eventId)) || null;
-          }),
-          getMyEvents().catch(() => []),
+          fetchEvent(),
+          getEvents().catch(() => getMyEvents().catch(() => [])),
           getMyResources().catch(() => []),
           getMyStaff().catch(() => []),
           getResourceAllocations().catch(() => {
@@ -428,6 +468,12 @@ function EventReview() {
           severity: "medium",
         });
       }
+    });
+
+    // 3. Venue & Time Collision Check (Same Venue + Same Date + Overlapping Time)
+    const venueCollisions = findEventCollisions(event, allEvents);
+    venueCollisions.forEach((col) => {
+      conflicts.push(col);
     });
 
     return conflicts;
@@ -754,6 +800,7 @@ function EventReview() {
 
       const updatePayload = {
         status: "waiting",
+        note: reason,
         reviewStatus: "waiting",
         waitingReason: reason,
         reviewedAt: new Date().toISOString(),
@@ -767,22 +814,29 @@ function EventReview() {
 
       setEvent((prev) => ({ ...prev, ...updatePayload }));
 
-      // Send structured notification to client
+      // Send structured notification to client in shared notifications store
+      const clientId = event.clientId || event.userId || event.client;
       const clientNotif = {
         id: `NOTIF_${Date.now()}`,
         eventId: event.id,
         eventName: event.name,
-        clientId: event.clientId || event.client,
-        title: "Event Reviewed — Waiting to be Approved",
-        message: `Your event "${event.name}" was reviewed by the vendor but is currently waiting to be approved. Reason: ${reason}`,
+        userId: clientId,
+        clientId,
+        title: `${event.name} Placed on Hold`,
+        message: `Your event "${event.name}" was reviewed by the vendor and placed on hold. Reason: ${reason}`,
         reason,
         status: "waiting",
         type: "warning",
+        linkUrl: `/client/track/${event.id}`,
         createdAt: new Date().toISOString(),
         isRead: false,
       };
 
       try {
+        const notifs = await getStateKey("notifications").catch(() => []);
+        const list = Array.isArray(notifs) ? notifs : [];
+        await setStateKey("notifications", [clientNotif, ...list]);
+
         const existing = JSON.parse(
           localStorage.getItem("client_notifications") || "[]"
         );
@@ -1004,7 +1058,7 @@ function EventReview() {
           onOpenExtraModal={() => setIsExtraStaffOpen(true)}
         />
 
-        {/* ── Section 7: Buffer Planning & Risk Summary (2-Col Bottom) ── */}
+        {/* ── Section 7: Risk & Feasibility Summary ── */}
         <EventBufferAndRiskSection
           resPct={resPct}
           staffPct={staffPct}
@@ -1056,13 +1110,6 @@ function EventReview() {
         />
 
         {/* ── Modal 4: Rejection Reason Dialog (shown to Client) ── */}
-        <RejectReasonModal
-          event={rejectOpen ? event : null}
-          onClose={() => setRejectOpen(false)}
-          onConfirm={handleRejectEvent}
-        />
-
-        {/* ── Component 7: Reject reason popup (reason is shown to the client) ── */}
         <RejectReasonModal
           event={rejectOpen ? event : null}
           onClose={() => setRejectOpen(false)}

@@ -28,14 +28,14 @@
  */
 
 import React from "react";
-import { Package, CheckCircle2, DollarSign, TrendingUp } from "lucide-react";
+import { Package, CheckCircle2, IndianRupee, TrendingUp } from "lucide-react";
 import StatisticCard from "../StatisticCard";
 
 function PackageStatsGrid({ stats = {}, loading = false }) {
   const {
     total = 0,
     active = 0,
-    avgPrice = "$0",
+    avgPrice = "₹0",
     topCategory = "General",
   } = stats;
 
@@ -67,7 +67,7 @@ function PackageStatsGrid({ stats = {}, loading = false }) {
         value={loading ? "..." : avgPrice}
         status="Catalog Average"
         description="Mean turnaround package price"
-        icon={DollarSign}
+        icon={IndianRupee}
         color="blue"
       />
 

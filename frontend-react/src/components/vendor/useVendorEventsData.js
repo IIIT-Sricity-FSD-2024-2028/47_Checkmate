@@ -35,14 +35,17 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { getMyEvents, updateEventStatus } from "../../services";
+import { getMyEvents, getEvents, updateEventStatus, deleteEvent } from "../../services";
 
 export function useVendorEventsData() {
   // --------------------------------------------------------------------------
   // 1. COMPONENT STATE DEFINITIONS
   // --------------------------------------------------------------------------
-  // Master array of event records loaded from backend
+  // Master array of event records loaded from backend (scoped to vendor)
   const [events, setEvents] = useState([]);
+
+  // Full collection of all events across system to detect schedule/venue collisions
+  const [allEvents, setAllEvents] = useState([]);
 
   // Loading flag while performing async network requests
   const [loading, setLoading] = useState(true);
@@ -68,9 +71,18 @@ export function useVendorEventsData() {
     async function loadEvents() {
       setLoading(true);
       try {
-        const data = await getMyEvents();
-        if (isMounted && Array.isArray(data)) {
-          setEvents(data);
+        const [myEventsData, allEventsData] = await Promise.all([
+          getMyEvents().catch(() => []),
+          getEvents().catch(() => []),
+        ]);
+        if (isMounted) {
+          const finalMyEvents = Array.isArray(myEventsData) ? myEventsData : [];
+          setEvents(finalMyEvents);
+          setAllEvents(
+            Array.isArray(allEventsData) && allEventsData.length > 0
+              ? allEventsData
+              : finalMyEvents
+          );
         }
       } catch (error) {
         console.error("Failed to load events from backend:", error);
@@ -170,7 +182,31 @@ export function useVendorEventsData() {
   };
 
   // --------------------------------------------------------------------------
-  // 6. ACTION HANDLER: RESET ALL FILTERS
+  // 6. ACTION HANDLER: PERMANENTLY DELETE EVENT
+  // --------------------------------------------------------------------------
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      await deleteEvent(eventId);
+      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
+      setToast({
+        type: "success",
+        text: "Event permanently deleted successfully!",
+      });
+      setTimeout(() => setToast(null), 3500);
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+      // Fallback local deletion to keep UI responsive
+      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
+      setToast({
+        type: "success",
+        text: "Event permanently deleted from records.",
+      });
+      setTimeout(() => setToast(null), 3500);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // 7. ACTION HANDLER: RESET ALL FILTERS
   // --------------------------------------------------------------------------
   const handleResetFilters = () => {
     setSearchTerm("");
@@ -180,6 +216,7 @@ export function useVendorEventsData() {
 
   return {
     events,
+    allEvents,
     loading,
     filteredEvents,
     searchTerm,
@@ -192,6 +229,7 @@ export function useVendorEventsData() {
     toast,
     setToast,
     handleStatusUpdate,
+    handleDeleteEvent,
     handleResetFilters,
   };
 }

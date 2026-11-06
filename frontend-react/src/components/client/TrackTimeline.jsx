@@ -81,7 +81,17 @@ function TrackTimeline({ event, progress }) {
           desc="Vendor coordinator review and approval"
           icon={isRejected ? <X size={14} color="var(--red)" /> : null}>
           {isApproved && <Tag color="green" icon={<CheckCircle2 size={13} />}>Request approved by coordinator</Tag>}
-          {!isApproved && !isRejected && <Tag color="blue" icon={<Clock size={13} />}>Awaiting vendor approval</Tag>}
+          {event.status === "waiting" && (
+            <>
+              <Tag color="orange" icon={<Clock size={13} />}>On Hold / Waiting for Vendor</Tag>
+              {event.waitingReason && (
+                <div className="cl-reason-box" style={{ borderColor: "rgba(245, 158, 11, 0.4)", background: "rgba(245, 158, 11, 0.08)", color: "#fcd34d" }}>
+                  <strong>Vendor Note:</strong> {event.waitingReason}
+                </div>
+              )}
+            </>
+          )}
+          {!isApproved && !isRejected && event.status !== "waiting" && <Tag color="blue" icon={<Clock size={13} />}>Awaiting vendor approval</Tag>}
           {isRejected && (
             <>
               <Tag color="red" icon={<XCircle size={13} />}>Rejected due to conflict</Tag>

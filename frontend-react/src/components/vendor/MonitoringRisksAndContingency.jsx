@@ -5,6 +5,7 @@ export default function MonitoringRisksAndContingency({
   risks = [],
   contingencies = [],
   onTriggerContingency,
+  contingencyRef = null,
 }) {
   return (
     <div className="mon-risks-contingency-wrap">
@@ -46,7 +47,7 @@ export default function MonitoringRisksAndContingency({
       </div>
 
       {/* ── Contingency Plans ── */}
-      <div className="mon-contingency">
+      <div className="mon-contingency" ref={contingencyRef}>
         <div className="mon-contingency__header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Zap size={16} className="text-orange" />

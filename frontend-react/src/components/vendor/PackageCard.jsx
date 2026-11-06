@@ -126,7 +126,7 @@ function PackageCard({ packageData, onEdit, onDelete }) {
       <div className="pkg-footer">
         <div className="pkg-price">
           <span className="pkg-price__amount">
-            ${Number(price).toLocaleString()}
+            ₹{Number(price).toLocaleString("en-IN")}
           </span>
           <span className="pkg-price__duration">
             {duration} hrs · up to {capacity} guests

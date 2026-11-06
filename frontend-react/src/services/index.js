@@ -51,13 +51,16 @@ export {
 
 // Event management
 export {
+  checkEventCollision,
   createEvent,
   default as eventService,
   deleteEvent,
   filterMyEvents,
+  findEventCollisions,
   getEventById,
   getEvents,
   getMyEvents,
+  parseTimeToMinutes,
   patchEvent,
   updateEvent,
   updateEventStatus,

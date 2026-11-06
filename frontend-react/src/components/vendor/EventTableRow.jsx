@@ -28,14 +28,15 @@
  *   @param {Function} props.onView - Callback invoked to navigate to event review / details
  *   @param {Function} props.onApprove - Callback invoked when approving the request
  *   @param {Function} props.onReject - Callback invoked when rejecting the request
+ *   @param {Function} props.onDelete - Callback invoked when permanently deleting a rejected event
  * ============================================================================
  */
 
 import React from "react";
-import { Eye, Check, X } from "lucide-react";
+import { Eye, Check, X, Trash2, AlertTriangle } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
-function EventTableRow({ event, onView, onApprove, onReject }) {
+function EventTableRow({ event, collisions = [], onView, onApprove, onReject, onDelete }) {
   // --------------------------------------------------------------------------
   // 1. DATA EXTRACTION & DEFAULTS
   // --------------------------------------------------------------------------
@@ -79,7 +80,18 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       <td>{formatDate(event.date)}</td>
 
       {/* Venue Location */}
-      <td>{event.venue || "Venue TBD"}</td>
+      <td>
+        <div>{event.venue || "Venue TBD"}</div>
+        {status === "pending" && collisions.length > 0 && (
+          <div
+            className="venue-collision-subtext"
+            title={collisions[0].desc}
+          >
+            <AlertTriangle size={11} />
+            <span>Collides with {collisions[0].conflictingEvent?.name || collisions[0].conflictingEvent?.id}</span>
+          </div>
+        )}
+      </td>
 
       {/* Expected Attendance / Guest Count */}
       <td>{event.attendees || event.people || event.guests || "—"}</td>
@@ -87,6 +99,17 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       {/* Reusable Status Badge Component */}
       <td>
         <StatusBadge status={event.status} />
+        {status === "pending" && collisions.length > 0 && (
+          <div
+            className={`collision-warning-pill ${
+              collisions[0].severity === "high" ? "high" : "medium"
+            }`}
+            title={collisions.map((c) => c.desc).join("\n")}
+          >
+            <AlertTriangle size={11} />
+            <span>{collisions[0].type}</span>
+          </div>
+        )}
       </td>
 
       {/* Action Buttons: View (Review Page), Approve, Reject */}
@@ -98,30 +121,38 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
             title="Review Event"
             onClick={() => onView && onView(event)}
           >
-            <Eye size={16} />
+            <Eye size={20} />
           </button>
 
-          {/* Slot 2: Approve Button (Fixed in Column 2; placeholder keeps alignment if already confirmed) */}
-          {status !== "confirmed" ? (
+          {/* Slot 2: Approve Button (Only when pending; placeholder keeps alignment if already confirmed/rejected) */}
+          {status === "pending" ? (
             <button
               className="action-btn approve"
-              title="Approve Request"
-              onClick={() => onApprove && onApprove(evId)}
+              title={collisions.length > 0 ? "Approve Request (Venue Collision Detected)" : "Approve Request"}
+              onClick={() => onApprove && onApprove(event)}
             >
-              <Check size={16} />
+              <Check size={20} />
             </button>
           ) : (
             <span className="action-btn-placeholder" aria-hidden="true" />
           )}
 
-          {/* Slot 3: Reject Button (Fixed in Column 3; placeholder keeps alignment if already rejected) */}
-          {status !== "rejected" ? (
+          {/* Slot 3: Reject Button when pending / Delete Button when rejected */}
+          {status === "rejected" ? (
+            <button
+              className="action-btn delete"
+              title="Permanently Delete Event"
+              onClick={() => onDelete && onDelete(event)}
+            >
+              <Trash2 size={20} />
+            </button>
+          ) : status === "pending" ? (
             <button
               className="action-btn reject"
               title="Reject Request"
               onClick={() => onReject && onReject(evId)}
             >
-              <X size={16} />
+              <X size={20} />
             </button>
           ) : (
             <span className="action-btn-placeholder" aria-hidden="true" />

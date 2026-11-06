@@ -29,19 +29,24 @@
  *   @param {Function} onView - Callback to navigate to the Event Review page
  *   @param {Function} onApprove - Callback to approve an event request
  *   @param {Function} onReject - Callback to decline an event request
+ *   @param {Function} onDelete - Callback to permanently delete a rejected event
  * ============================================================================
  */
 
 import React from "react";
 import EventTableRow from "./EventTableRow";
+import { findEventCollisions } from "../../services/eventService";
 
 function EventsTable({
   events = [],
+  allEvents = [],
   loading = false,
   onView,
   onApprove,
   onReject,
+  onDelete,
 }) {
+  const comparisonPool = Array.isArray(allEvents) && allEvents.length > 0 ? allEvents : events;
   return (
     <div className="vendor-table-wrap events-table-wrap">
       <table className="vendor-table events-table">
@@ -78,15 +83,22 @@ function EventsTable({
             </tr>
           /* State C: Map filtered event records to individual <EventTableRow> components */
           ) : (
-            events.map((event) => (
-              <EventTableRow
-                key={event.id || Math.random()}
-                event={event}
-                onView={onView}
-                onApprove={onApprove}
-                onReject={onReject}
-              />
-            ))
+            events.map((event) => {
+              const isPending = String(event.status || "").toLowerCase() === "pending";
+              const collisions = isPending ? findEventCollisions(event, comparisonPool) : [];
+
+              return (
+                <EventTableRow
+                  key={event.id || Math.random()}
+                  event={event}
+                  collisions={collisions}
+                  onView={onView}
+                  onApprove={onApprove}
+                  onReject={onReject}
+                  onDelete={onDelete}
+                />
+              );
+            })
           )}
         </tbody>
       </table>

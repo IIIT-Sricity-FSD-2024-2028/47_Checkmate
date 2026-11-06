@@ -43,7 +43,7 @@ const DEFAULT_STAFF_ROSTER = [
     phone: "+1 555-1003",
     email: "mike.staff@eliteevents.com",
     workload: 40,
-    status: "available",
+    status: "assigned",
     avatar: "pink",
     assignedEvents: ["EVT002", "EVT003"],
   },
@@ -55,7 +55,7 @@ const DEFAULT_STAFF_ROSTER = [
     phone: "+1 555-1007",
     email: "elena.staff@eliteevents.com",
     workload: 60,
-    status: "busy",
+    status: "assigned",
     avatar: "purple",
     assignedEvents: ["EVT003"],
   },
@@ -174,23 +174,47 @@ export default function useVendorStaffData() {
   }, []);
 
   // ==========================================================================
-  // 3. DERIVED KPI METRICS
+  // 3. DERIVED KPI METRICS & REACTIVE ASSIGNMENT ENRICHMENT
   // ==========================================================================
 
+  // Enriches each staff record with an accurate isAssigned flag
+  const enrichedStaffList = useMemo(() => {
+    return staffList.map((s) => {
+      const activeAssignments = assignments.filter(
+        (a) =>
+          (a.staffId === s.id ||
+            (a.staffName && s.name && a.staffName.toLowerCase() === s.name.toLowerCase())) &&
+          a.status !== "rejected" &&
+          a.status !== "declined"
+      );
+      const isAssigned =
+        activeAssignments.length > 0 ||
+        (Array.isArray(s.assignedEvents) && s.assignedEvents.length > 0) ||
+        ["assigned", "busy"].includes(String(s.status || "").toLowerCase()) ||
+        Number(s.events || 0) > 0;
+
+      return {
+        ...s,
+        isAssigned,
+        activeAssignmentsCount: activeAssignments.length,
+      };
+    });
+  }, [staffList, assignments]);
+
   const kpiStats = useMemo(() => {
-    const totalStaff = staffList.length;
-    const availableStaff = staffList.filter(
-      (s) => (s.status || "").toLowerCase() === "available"
+    const totalStaff = enrichedStaffList.length;
+    const availableStaff = enrichedStaffList.filter(
+      (s) => !s.isAssigned && (s.status || "").toLowerCase() !== "off"
     ).length;
-    const busyStaff = staffList.filter(
-      (s) => (s.status || "").toLowerCase() === "busy"
+    const busyStaff = enrichedStaffList.filter(
+      (s) => s.isAssigned || ["busy", "assigned"].includes((s.status || "").toLowerCase())
     ).length;
-    const highWorkloadStaff = staffList.filter(
+    const highWorkloadStaff = enrichedStaffList.filter(
       (s) => (s.workload || 0) >= 80
     ).length;
 
     return { totalStaff, availableStaff, busyStaff, highWorkloadStaff };
-  }, [staffList]);
+  }, [enrichedStaffList]);
 
   // ==========================================================================
   // 4. SEARCH, FILTERING & PAGINATION
@@ -208,7 +232,7 @@ export default function useVendorStaffData() {
   const filteredStaff = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
-    return staffList.filter((s) => {
+    return enrichedStaffList.filter((s) => {
       // 1. Search Query
       const searchMatch =
         !q ||
@@ -237,7 +261,7 @@ export default function useVendorStaffData() {
 
       return searchMatch && roleMatch && statusMatch && workloadMatch;
     });
-  }, [staffList, searchQuery, activeFilters]);
+  }, [enrichedStaffList, searchQuery, activeFilters]);
 
   const handleSearchChange = useCallback((query) => {
     setSearchQuery(query);
@@ -431,8 +455,11 @@ export default function useVendorStaffData() {
   }, [staffActiveAssignments]);
 
   const handleOpenAssignModal = useCallback((staff) => {
-    if ((staff.workload || 0) >= 100) {
-      triggerToast(`${staff.name} is at 100% workload. Complete existing tasks first.`, "danger");
+    if ((staff.workload || 0) >= 80) {
+      triggerToast(
+        `${staff.name} is operating at ${staff.workload}% capacity (above 80% threshold). Additional work cannot be assigned.`,
+        "warning"
+      );
       return;
     }
 
@@ -471,8 +498,11 @@ export default function useVendorStaffData() {
     }
 
     const currentWorkload = assigningStaff.workload || 0;
-    if (currentWorkload >= 100) {
-      triggerToast(`${assigningStaff.name} is at 100% capacity.`, "danger");
+    if (currentWorkload >= 80) {
+      triggerToast(
+        `${assigningStaff.name} is already at or above 80% capacity (${currentWorkload}%).`,
+        "danger"
+      );
       setIsAssignOpen(false);
       return;
     }
@@ -502,7 +532,18 @@ export default function useVendorStaffData() {
       eventName: eventName,
     };
 
-    const newWorkload = Math.min(currentWorkload + 20, 100);
+    // Calculate workload increment according to task priority (High +25%, Medium +20%, Low +15%)
+    const workloadDelta = assignPriority === "High" ? 25 : assignPriority === "Low" ? 15 : 20;
+    const newWorkload = Math.min(currentWorkload + workloadDelta, 100);
+
+    const isCurrentlyAssigned =
+      assigningStaff.isAssigned ||
+      (Array.isArray(assigningStaff.assignedEvents) && assigningStaff.assignedEvents.length > 0) ||
+      ["assigned", "busy"].includes(String(assigningStaff.status || "").toLowerCase());
+
+    const updatedAssignedEvents = Array.from(
+      new Set([...(assigningStaff.assignedEvents || []), assignEventId])
+    );
 
     try {
       if (existingAssignment) {
@@ -533,22 +574,57 @@ export default function useVendorStaffData() {
         setAssignments((prev) => [...prev, newAssignmentPayload]);
       }
 
-      // Update staff workload in state & backend
-      await updateStaff(assigningStaff.id, { workload: newWorkload, status: "busy" }).catch(() => {});
+      // Update staff workload and status in state & backend
+      await updateStaff(assigningStaff.id, {
+        workload: newWorkload,
+        status: "assigned",
+        assignedEvents: updatedAssignedEvents,
+      }).catch(() => {});
+
       setStaffList((prev) =>
-        prev.map((s) => (s.id === assigningStaff.id ? { ...s, workload: newWorkload, status: "busy" } : s))
+        prev.map((s) =>
+          s.id === assigningStaff.id
+            ? {
+                ...s,
+                workload: newWorkload,
+                status: "assigned",
+                assignedEvents: updatedAssignedEvents,
+                isAssigned: true,
+              }
+            : s
+        )
       );
 
-      triggerToast(`Task "${trimmedTask}" assigned to ${assigningStaff.name}! Workload: ${newWorkload}%`, "success");
+      if (isCurrentlyAssigned) {
+        triggerToast(
+          `Extra work "${trimmedTask}" assigned to ${assigningStaff.name}! Workload updated: ${newWorkload}%`,
+          "success"
+        );
+      } else {
+        triggerToast(
+          `Task "${trimmedTask}" assigned to ${assigningStaff.name}! Workload updated: ${newWorkload}%`,
+          "success"
+        );
+      }
+
       setIsAssignOpen(false);
       setAssigningStaff(null);
     } catch (err) {
       console.error("Failed to assign staff task:", err);
       // Optimistic local update
       setStaffList((prev) =>
-        prev.map((s) => (s.id === assigningStaff.id ? { ...s, workload: newWorkload, status: "busy" } : s))
+        prev.map((s) =>
+          s.id === assigningStaff.id
+            ? {
+                ...s,
+                workload: newWorkload,
+                status: "assigned",
+                assignedEvents: updatedAssignedEvents,
+                isAssigned: true,
+              }
+            : s
+        )
       );
-      triggerToast(`Task "${trimmedTask}" assigned locally! Workload: ${newWorkload}%`, "success");
       setIsAssignOpen(false);
       setAssigningStaff(null);
     }

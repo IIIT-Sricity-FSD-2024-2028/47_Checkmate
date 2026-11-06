@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import { CheckCircle2, DollarSign, Receipt } from "lucide-react";
+import { CheckCircle2, IndianRupee, Receipt } from "lucide-react";
 import StatisticCard from "../StatisticCard";
 import { formatDate, money } from "../../utils/clientHelpers";
 
@@ -27,7 +27,7 @@ function BillingStatsGrid({ summary, loading }) {
     <div className="stats-grid cl-stats-3" aria-label="Billing Overview">
       <StatisticCard title="Outstanding Balance" value={loading ? "..." : money(summary.outstanding)}
         description={summary.nextDue ? `Due ${formatDate(summary.nextDue, "long")}` : "Nothing due"}
-        icon={DollarSign} color="purple" />
+        icon={IndianRupee} color="purple" />
       <StatisticCard title="Total Paid" value={loading ? "..." : money(summary.totalPaid)}
         description={`Across ${summary.invoiceCount} total events`}
         icon={CheckCircle2} color="green" />

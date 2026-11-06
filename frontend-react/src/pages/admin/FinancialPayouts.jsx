@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  DollarSign, CheckCircle2, Clock, Search, 
+  IndianRupee, CheckCircle2, Clock, Search, 
   ArrowUpRight, RefreshCcw, ShieldCheck, AlertCircle, Eye, X
 } from 'lucide-react';
 import { getBookingsCommissions, settleBookingPayout } from '../../services/bookingService';
@@ -110,7 +110,7 @@ export default function FinancialPayouts() {
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#f59e0b', marginTop: '10px' }}>
-            ${Number(aggregates.pendingPayoutTotal || pendingBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.pendingPayoutTotal || pendingBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {pendingBookings.length} bookings awaiting release
@@ -125,7 +125,7 @@ export default function FinancialPayouts() {
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#00e676', marginTop: '10px' }}>
-            ${Number(aggregates.settledPayoutTotal || completedBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.settledPayoutTotal || completedBookings.reduce((a, b) => a + (Number(b.netPayout) || Number(b.amount) * 0.9 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
             {completedBookings.length} vendors disbursed
@@ -136,11 +136,11 @@ export default function FinancialPayouts() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Commission Retained</span>
             <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>
-              <DollarSign size={18} />
+              <IndianRupee size={18} />
             </div>
           </div>
           <div style={{ fontSize: '26px', fontWeight: '700', color: '#fff', marginTop: '10px' }}>
-            ${Number(aggregates.totalCommission || commissions.reduce((a, b) => a + (Number(b.commissionAmount) || Number(b.amount) * 0.1 || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{Number(aggregates.totalCommission || commissions.reduce((a, b) => a + (Number(b.commissionAmount) || Number(b.amount) * 0.1 || 0), 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: '#ec4899', marginTop: '4px' }}>
             10% platform revenue share
@@ -247,13 +247,13 @@ export default function FinancialPayouts() {
                       {b.vendorName || b.vendorId || 'Elite Events Co.'}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', color: '#fff', fontWeight: '500' }}>
-                      ${totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹{totalGross.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', color: '#ec4899', fontWeight: '500' }}>
-                      -${fee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      -₹{fee.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right', color: '#00e676', fontWeight: '700' }}>
-                      ${net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹{net.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -293,7 +293,7 @@ export default function FinancialPayouts() {
                               cursor: 'pointer',
                             }}
                           >
-                            <DollarSign size={13} /> Release Payout
+                            <IndianRupee size={13} /> Release Payout
                           </button>
                         ) : (
                           <span style={{ fontSize: '12px', color: '#00e676', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px' }}>
@@ -376,20 +376,20 @@ export default function FinancialPayouts() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Client Paid Gross</span>
                 <span style={{ color: '#fff', fontWeight: '600' }}>
-                  ${Number(selectedBooking.amount || 0).toFixed(2)}
+                  ₹{Number(selectedBooking.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Platform Fee (10%)</span>
                 <span style={{ color: '#ec4899', fontWeight: '600' }}>
-                  -${Number(selectedBooking.commissionAmount || (selectedBooking.amount || 0) * 0.1).toFixed(2)}
+                  -₹{Number(selectedBooking.commissionAmount || (selectedBooking.amount || 0) * 0.1).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div style={{ height: '1px', background: 'var(--border)', margin: '12px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
                 <span style={{ color: '#fff', fontWeight: '600' }}>Net Disbursed</span>
                 <span style={{ color: '#00e676', fontWeight: '700' }}>
-                  ${Number(selectedBooking.netPayout || (selectedBooking.amount || 0) * 0.9).toFixed(2)}
+                  ₹{Number(selectedBooking.netPayout || (selectedBooking.amount || 0) * 0.9).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

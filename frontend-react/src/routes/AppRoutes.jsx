@@ -74,6 +74,7 @@ function AppRoutes() {
       <Routes>
         {/* ── Public Entry & Auth Routes ── */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup-details" element={<SignUp1 />} />
         <Route path="/signup-password" element={<SignUp2 />} />

@@ -128,9 +128,9 @@ function PackageToolbar({
             aria-label="Filter packages by price"
           >
             <option value="All">All Prices</option>
-            <option value="Under2k">Under $2,000</option>
-            <option value="2kTo5k">$2,000 – $5,000</option>
-            <option value="Over5k">Over $5,000</option>
+            <option value="Under2k">Under ₹2,000</option>
+            <option value="2kTo5k">₹2,000 – ₹5,000</option>
+            <option value="Over5k">Over ₹5,000</option>
           </select>
 
           {/* Capacity Select */}

@@ -28,6 +28,7 @@ import {
   Package,
   Users,
   CheckCircle,
+  MapPin,
 } from "lucide-react";
 
 function EventFeasibilityBanner({
@@ -69,16 +70,28 @@ function EventFeasibilityBanner({
               const isResource =
                 conflict.category === "resource" ||
                 conflict.type.toLowerCase().includes("resource");
+              const isVenue =
+                conflict.category === "venue" ||
+                conflict.type.toLowerCase().includes("venue");
 
               const targetLabel = isResource
                 ? "Manage Resources"
+                : isVenue
+                ? "Events Schedule"
                 : "Manage Staff";
 
               const targetPath = isResource
                 ? "/vendor/resources"
+                : isVenue
+                ? "/vendor/events"
                 : "/vendor/staff";
 
-              const ConflictIcon = isResource ? Package : Users;
+              const ConflictIcon = isResource ? Package : isVenue ? MapPin : Users;
+              const conflictCategoryLabel = isResource
+                ? "Resources"
+                : isVenue
+                ? "Venue"
+                : "Staff";
 
               return (
                 <div key={`conflict-${idx}`} className="conflict-item-card">
@@ -106,7 +119,7 @@ function EventFeasibilityBanner({
                       title={`Resolve conflict: Navigate to ${targetLabel}`}
                     >
                       <ConflictIcon size={13} />
-                      <span>Resolve Conflict ({isResource ? "Resources" : "Staff"})</span>
+                      <span>Resolve Conflict ({conflictCategoryLabel})</span>
                       <ArrowRight size={13} />
                     </button>
                   </div>

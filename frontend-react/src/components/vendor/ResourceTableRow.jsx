@@ -111,7 +111,7 @@ function ResourceTableRow({ resource, effectiveAvail, onAllocate, onEdit, onDele
 
       {/* ── Column 4: Rental Unit Price ── */}
       <td>
-        ${Number(price).toLocaleString()}/{unit}
+        ₹{Number(price).toLocaleString("en-IN")}/{unit}
       </td>
 
       {/* ── Column 5: Availability Status Badge ── */}

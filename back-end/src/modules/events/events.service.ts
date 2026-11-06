@@ -49,6 +49,9 @@ export class EventsService {
     } else if (s === 'rejected') {
       patch.rejectedAt = now;
       if (dto.note) patch.rejectionReason = dto.note;
+    } else if (s === 'waiting') {
+      patch.reviewedAt = now;
+      if (dto.note) patch.waitingReason = dto.note;
     }
 
     const updated = this.data.update('events', id, patch as any);
@@ -67,6 +70,7 @@ export class EventsService {
     const messages: Record<string, { title: string; message: string; type: 'success' | 'error' | 'info' }> = {
       confirmed: { title: `${event.name} Approved`, message: `${event.vendor || 'The vendor'} approved your request for ${event.name}.`, type: 'success' },
       approved: { title: `${event.name} Approved`, message: `${event.vendor || 'The vendor'} approved your request for ${event.name}.`, type: 'success' },
+      waiting: { title: `${event.name} Placed on Hold`, message: note ? `Reason: ${note}` : `${event.name} was reviewed by the vendor and placed on hold pending preparations.`, type: 'info' },
       rejected: { title: `${event.name} Rejected`, message: note ? `Reason: ${note}` : `${event.name} was declined by the vendor.`, type: 'error' },
       live: { title: `${event.name} is Live`, message: `${event.name} is now in live execution mode.`, type: 'info' },
       completed: { title: `${event.name} Completed`, message: `${event.name} has finished. Thank you for using EventPro!`, type: 'success' },

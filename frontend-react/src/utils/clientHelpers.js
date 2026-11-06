@@ -77,9 +77,9 @@ export function describeError(err, what = "this page") {
     return "Could not reach the server. Is the backend running on port 3000?";
 }
 
-// "$1,234"
+// "₹1,234"
 export function money(amount) {
-    return "$" + Number(amount || 0).toLocaleString("en-US");
+    return "₹" + Number(amount || 0).toLocaleString("en-IN");
 }
 
 /**

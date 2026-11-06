@@ -56,8 +56,21 @@ function StaffAssignModal({
 }) {
   if (!isOpen || !staff) return null;
 
+  const isAssigned =
+    staff.isAssigned ??
+    (
+      (Array.isArray(staff.assignedEvents) && staff.assignedEvents.length > 0) ||
+      ["assigned", "busy"].includes(String(staff.status || "").toLowerCase()) ||
+      Number(staff.events || 0) > 0 ||
+      Boolean(restrictedEventId)
+    );
+
   const workloadNum = Math.min(Math.max(0, parseInt(staff.workload, 10) || 0), 100);
+  const workloadDelta = priority === "High" ? 25 : priority === "Low" ? 15 : 20;
+  const projectedWorkload = Math.min(100, workloadNum + workloadDelta);
+
   const workloadColor = workloadNum >= 80 ? "#ef4444" : workloadNum >= 60 ? "#f59e0b" : "var(--pink, #e91e8c)";
+  const projectedColor = projectedWorkload >= 80 ? "#ef4444" : projectedWorkload >= 60 ? "#f59e0b" : "var(--pink, #e91e8c)";
 
   const restrictedEventName = actionableEvents.find((e) => e.id === restrictedEventId)?.name || restrictedEventId;
 
@@ -69,7 +82,7 @@ function StaffAssignModal({
       >
         {/* ── Modal Header ── */}
         <div className="vendor-modal__header">
-          <h3>Assign Task</h3>
+          <h3>{isAssigned ? "Assign Extra Work" : "Assign Task"}</h3>
           <button
             type="button"
             className="modal-close-btn"
@@ -84,23 +97,29 @@ function StaffAssignModal({
         <div className="vendor-modal__body">
           {/* Target Staff Member Overview */}
           <div style={{ fontSize: "13.5px", color: "var(--text-secondary, #9b8db0)", marginBottom: "4px" }}>
-            Assign an event task to{" "}
+            {isAssigned ? "Assign extra task work to " : "Assign an event task to "}
             <strong style={{ color: "var(--text-primary, #f0e8ff)" }}>{staff.name}</strong>{" "}
             ({staff.role})
           </div>
 
-          {/* Current Workload Meter Card */}
+          {/* Current & Projected Workload Meter */}
           <div className="assign-workload-box">
             <div className="assign-workload-header">
-              <span className="assign-workload-label">Current Workload</span>
-              <span className="assign-workload-pct" style={{ color: workloadColor }}>
-                {workloadNum}%
+              <span className="assign-workload-label">
+                Workload: {workloadNum}% → <strong style={{ color: projectedColor }}>{projectedWorkload}%</strong> (+{workloadDelta}%)
+              </span>
+              <span className="assign-workload-pct" style={{ color: projectedColor }}>
+                {projectedWorkload >= 80 ? "⚠️ High Capacity" : `${projectedWorkload}%`}
               </span>
             </div>
-            <div className="workload-bar-bg">
+            <div className="workload-bar-bg" style={{ position: "relative" }}>
               <div
                 className="workload-bar-fill"
-                style={{ width: `${workloadNum}%`, background: workloadColor }}
+                style={{ width: `${projectedWorkload}%`, background: projectedColor, opacity: 0.35, position: "absolute", top: 0, bottom: 0, left: 0 }}
+              />
+              <div
+                className="workload-bar-fill"
+                style={{ width: `${workloadNum}%`, background: workloadColor, position: "relative" }}
               />
             </div>
           </div>
@@ -186,10 +205,11 @@ function StaffAssignModal({
             type="button"
             className="mr-add-btn"
             onClick={onConfirm}
-            disabled={!taskName.trim() || actionableEvents.length === 0 || workloadNum >= 100}
+            disabled={!taskName.trim() || actionableEvents.length === 0 || workloadNum >= 80}
+            title={workloadNum >= 80 ? "Staff is at or above 80% capacity" : undefined}
           >
             <CalendarPlus size={14} />
-            <span>Assign Task</span>
+            <span>{isAssigned ? "Assign Extra Work" : "Assign Task"}</span>
           </button>
         </div>
       </div>

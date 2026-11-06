@@ -115,7 +115,7 @@ export default function Coordination({ mode = 'event' }) {
         id: 'adm_3',
         sender: 'Aarav Mehta',
         role: 'Platform Admin',
-        text: 'Yes, batch #882 is scheduled for Friday morning clearance ($19,800 net after 10% platform fee). Everything is in order.',
+        text: 'Yes, batch #882 is scheduled for Friday morning clearance (₹19,800 net after 10% platform fee). Everything is in order.',
         time: 'Yesterday 14:40',
         self: false,
       },

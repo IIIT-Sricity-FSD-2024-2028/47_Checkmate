@@ -128,6 +128,7 @@ export function filterMyBookings(bookings, session) {
 
   const role = (s.role || s.user?.role || '').toLowerCase();
   const user = s.user || s;
+  const userId = (user.id || user.userId || '').toLowerCase();
   const userName = (user.name || user.user || '').toLowerCase();
   const userEmail = (user.email || '').toLowerCase();
   const vendorId = (user.vendorId || '').toLowerCase();
@@ -149,12 +150,14 @@ export function filterMyBookings(bookings, session) {
 
   if (role === 'client') {
     return bookings.filter((b) => {
+      const bClientId = (b.clientId || '').toLowerCase();
       const bClient = (b.client || '').toLowerCase();
       const bClientEmail = (b.clientEmail || '').toLowerCase();
-      return (
-        (userName && bClient === userName) ||
-        (userEmail && bClientEmail === userEmail)
-      );
+
+      if (userId && bClientId && bClientId === userId) return true;
+      if (userEmail && bClientEmail && bClientEmail === userEmail) return true;
+      if (!bClientId && !bClientEmail && userName && bClient === userName) return true;
+      return false;
     });
   }
 

@@ -23,7 +23,7 @@
  */
 
 import React from "react";
-import { AlertTriangle, ArrowLeft, Box, CalendarDays, CheckCircle2, DollarSign, Loader2, NotebookPen, Package, Send, User, UsersRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Box, CalendarDays, CheckCircle2, IndianRupee, Loader2, NotebookPen, Package, Send, User, UsersRound } from "lucide-react";
 import { formatTime12, money } from "../../utils/clientHelpers";
 
 // One label/value box in the details grid
@@ -58,7 +58,7 @@ function ReviewStep({ form, budgetText, resources, staff, subtotal, submitState,
         <div className="card cl-review">
           <div className="cl-review__title"><Package size={16} /> Requested Resources</div>
           <div className="cl-chip-list">
-            {resources.map((r) => <span className="cl-chip" key={r.id}><Box size={14} /> {r.name} ×{r.qty} — ${r.cost}/day</span>)}
+            {resources.map((r) => <span className="cl-chip" key={r.id}><Box size={14} /> {r.name} ×{r.qty} — ₹{r.cost}/day</span>)}
           </div>
         </div>
       )}
@@ -76,7 +76,7 @@ function ReviewStep({ form, budgetText, resources, staff, subtotal, submitState,
       {/* ── Cost ── */}
       {resources.length > 0 && (
         <div className="cl-cost-total">
-          <span><DollarSign size={16} /> Estimated Resource Cost</span>
+          <span><IndianRupee size={16} /> Estimated Resource Cost</span>
           <strong>{money(subtotal)}/day</strong>
         </div>
       )}

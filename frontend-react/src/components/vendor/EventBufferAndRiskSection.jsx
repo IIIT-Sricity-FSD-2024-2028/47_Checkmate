@@ -1,24 +1,22 @@
 /**
  * ============================================================================
- * EVENT BUFFER & RISK SECTION COMPONENT (EventBufferAndRiskSection.jsx)
+ * EVENT RISK & FEASIBILITY SECTION COMPONENT (EventBufferAndRiskSection.jsx)
  * ============================================================================
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/EventBufferAndRiskSection.jsx
  *
  * Purpose:
- *   Replicates legacy Event Review 2-column bottom layout:
- *     1. Buffer Planning Card: Tracks recommended vs. current safety margins
- *        across Resources, Staff, Time, and Budget.
- *     2. Risk & Feasibility Summary Card: Computes weighted overall risk level
- *        (Low / Medium / High) and renders 3 dynamic colored progress bars:
- *          - Resource Availability %
- *          - Staff Availability %
- *          - Contingency Readiness %
+ *   Renders the dynamic Risk & Feasibility Summary card:
+ *     - Computes weighted overall risk level (Low / Medium / High)
+ *     - Renders 3 dynamic colored progress bars:
+ *         * Resource Availability %
+ *         * Staff Availability %
+ *         * Contingency Readiness %
  * ============================================================================
  */
 
 import React from "react";
-import { ShieldCheck, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 function EventBufferAndRiskSection({
   resPct = 100,
@@ -55,71 +53,8 @@ function EventBufferAndRiskSection({
   };
 
   return (
-    <div className="bottom-two" aria-label="Buffer and Risk Feasibility Evaluation">
-      {/* ── CARD 1: BUFFER PLANNING ── */}
-      <div className="buffer-card">
-        <div className="buffer-card__title">
-          <ShieldCheck size={16} /> Buffer Planning
-        </div>
-
-        {/* Resources Margin */}
-        <div className="buffer-row">
-          <div className="buffer-row__top">
-            <span className="buffer-row__name">Resources</span>
-            <span className={`row-status ${resPct >= 80 ? "safe" : "risk"}`}>
-              {resPct >= 80 ? "safe" : "risk"}
-            </span>
-          </div>
-          <div className="buffer-row__bottom">
-            <span className="buffer-row__rec">Recommended: 15%</span>
-            <span className="buffer-row__cur">
-              Current: {Math.max(5, Math.round(resPct * 0.15))}%
-            </span>
-          </div>
-        </div>
-
-        {/* Staff Margin */}
-        <div className="buffer-row">
-          <div className="buffer-row__top">
-            <span className="buffer-row__name">Staff</span>
-            <span className={`row-status ${staffPct >= 80 ? "safe" : "risk"}`}>
-              {staffPct >= 80 ? "safe" : "risk"}
-            </span>
-          </div>
-          <div className="buffer-row__bottom">
-            <span className="buffer-row__rec">Recommended: 20%</span>
-            <span className="buffer-row__cur">
-              Current: {Math.max(8, Math.round(staffPct * 0.2))}%
-            </span>
-          </div>
-        </div>
-
-        {/* Time Setup Margin */}
-        <div className="buffer-row">
-          <div className="buffer-row__top">
-            <span className="buffer-row__name">Time</span>
-            <span className="row-status critical">critical</span>
-          </div>
-          <div className="buffer-row__bottom">
-            <span className="buffer-row__rec">Recommended: 30 min setup buffer</span>
-            <span className="buffer-row__cur">Current: 15 min</span>
-          </div>
-        </div>
-
-        {/* Budget Contingency Margin */}
-        <div className="buffer-row">
-          <div className="buffer-row__top">
-            <span className="buffer-row__name">Budget</span>
-            <span className="row-status safe">safe</span>
-          </div>
-          <div className="buffer-row__bottom">
-            <span className="buffer-row__rec">Recommended: 10%</span>
-            <span className="buffer-row__cur">Current: 12%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── CARD 2: RISK & FEASIBILITY SUMMARY ── */}
+    <div className="bottom-two single-col" style={{ gridTemplateColumns: "1fr" }} aria-label="Risk Feasibility Evaluation">
+      {/* ── RISK & FEASIBILITY SUMMARY ── */}
       <div className="risk-card">
         <div className="risk-card__title">
           <Zap size={16} /> Risk &amp; Feasibility Summary
