@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Radio, Shield, MessageSquare, Calendar } from 'lucide-react';
+import { Radio, Shield, Calendar } from 'lucide-react';
 import VendorTopBar from '../../components/vendor/VendorTopBar';
 import CoordinationParticipants from '../../components/vendor/CoordinationParticipants';
 import CoordinationTemplates from '../../components/vendor/CoordinationTemplates';
 import CoordinationChat from '../../components/vendor/CoordinationChat';
 
-import { getMyEvents, getStaffAssignments } from '../../services';
+import { getMyEvents } from '../../services';
 import { getAuthUser } from '../../services/auth/authStorage';
 
 const CHAT_STORAGE_KEY_EVENT = 'eventpro_coord_event_msgs_v1';

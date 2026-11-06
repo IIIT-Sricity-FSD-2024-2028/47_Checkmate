@@ -6,18 +6,15 @@ import {
     Box,
     Flag,
     AlertCircle,
-    ShieldAlert,
     MessageSquare,
     Radio,
     Shield,
-    ShieldCheck,
     CalendarCheck,
     PieChart,
     Bug,
     DollarSign,
     Activity,
-    Settings,
-    Inbox
+    Settings
 } from "lucide-react";
 
 export const clientMenuItems = [
