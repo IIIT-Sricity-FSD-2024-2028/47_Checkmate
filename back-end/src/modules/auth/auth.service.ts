@@ -30,16 +30,44 @@ export class AuthService {
   }
 
   register(dto: RegisterDto) {
-    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
+    const cleanEmail = String(dto.email || '').trim().toLowerCase();
+    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
     if (existingUser) {
       throw new BadRequestException('This email is already registered. Please sign in instead.');
     }
 
+    // Phone number constraint: maximum 2 accounts with the same phone number
+    if (dto.phone && String(dto.phone).trim()) {
+      const cleanDigits = String(dto.phone).replace(/\D/g, '');
+      if (cleanDigits.length >= 7) {
+        const matchingPhoneUsers = this.data.collection('users').filter((row) => {
+          const rowDigits = String(row.phone || '').replace(/\D/g, '');
+          if (!rowDigits) return false;
+          return (
+            rowDigits === cleanDigits ||
+            (cleanDigits.length >= 10 && rowDigits.endsWith(cleanDigits.slice(-10))) ||
+            (rowDigits.length >= 10 && cleanDigits.endsWith(rowDigits.slice(-10)))
+          );
+        });
+
+        if (matchingPhoneUsers.length >= 2) {
+          throw new BadRequestException('A maximum of 2 accounts can be registered with the same phone number.');
+        }
+      }
+    }
+
+    // New accounts registered via Create Account default to Client role
+    let rawRole = String(dto.role || 'Client').trim();
+    let role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+    if (!['Client', 'Vendor', 'Staff'].includes(role)) {
+      role = 'Client';
+    }
+
     const user = this.data.create('users', 'U', {
-      name: dto.name,
-      email: dto.email,
-      phone: dto.phone,
-      role: dto.role,
+      name: dto.name.trim(),
+      email: cleanEmail,
+      phone: dto.phone ? dto.phone.trim() : '',
+      role: role as any,
       status: 'Active',
       created: new Date().toISOString().slice(0, 10),
       passwordHash: hashPassword(dto.password),

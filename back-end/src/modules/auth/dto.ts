@@ -27,12 +27,13 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'Jordan@2026' })
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   password: string;
 
-  @ApiProperty({ enum: ['Vendor', 'Client', 'Staff'] })
-  @IsIn(['Vendor', 'Client', 'Staff'])
-  role: 'Vendor' | 'Client' | 'Staff';
+  @ApiProperty({ enum: ['Vendor', 'Client', 'Staff', 'vendor', 'client', 'staff'], required: false })
+  @IsOptional()
+  @IsIn(['Vendor', 'Client', 'Staff', 'vendor', 'client', 'staff'])
+  role?: string;
 }
 
 export class ForgotPasswordDto {
