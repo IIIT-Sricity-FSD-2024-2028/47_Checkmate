@@ -604,3 +604,4 @@ export default function MonitorEvents() {
     </div>
   );
 }
+

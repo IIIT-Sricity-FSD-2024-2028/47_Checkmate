@@ -232,3 +232,4 @@ export default function GlobalSettings() {
     </div>
   );
 }
+

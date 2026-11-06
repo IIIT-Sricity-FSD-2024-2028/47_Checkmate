@@ -526,3 +526,4 @@ export default function IssueTracking() {
     </div>
   );
 }
+
