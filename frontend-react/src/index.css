@@ -6,6 +6,11 @@
 @import "styles/auth/signin.css";
 @import "styles/dashboard.css";
 @import "styles/admin.css";
+@import "styles/client.css";
+@import "styles/staff.css";
+@import "styles/superuser.css";
 @import "styles/vendor.css";
 @import "styles/auth/signup.css";
 @import "styles/components/profile/profile.css";
+@import "styles/landingpage.css";
+@import "styles/bridge.css";

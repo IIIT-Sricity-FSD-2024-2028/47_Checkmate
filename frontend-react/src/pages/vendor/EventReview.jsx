@@ -13,15 +13,13 @@
  *   4. EventFeasibilityBanner: Prominent red conflict alert box with itemized
  *      conflict cards (severity pills) and quick rejection button, or green safe box.
  *   5. EventResourceRequirementsTable: Required vs available stock, buffer deltas,
- *      direct "▶ Allocate" action, and "+ Allocate Extra Resource" modal trigger.
+ *      direct '▶ Allocate' action, and '+ Allocate Extra Resource' modal trigger.
  *   6. EventStaffRequirementsTable: Required roles vs active members, buffer deltas,
- *      direct "+ Assign" action, and "+ Allocate Extra Staff" modal trigger.
- *   7. EventBufferAndRiskSection: Buffer safety margins (Resources, Staff, Time, Budget)
- *      and dynamic Risk & Feasibility summary (Level box + colored progress bars).
- *   8. EventContingencyPlanning: Interactive CRUD table with problem, trigger, solution,
- *      triggered/ready badges, delete button, and inline addition form.
+ *      direct '+ Assign' action, and '+ Allocate Extra Staff' modal trigger.
+ *   7. EventBufferAndRiskSection: Buffer safety margins and dynamic Risk & Feasibility summary.
+ *   8. EventContingencyPlanning: Interactive CRUD table with problem, trigger, solution.
  *   9. EventReviewActionBar: Conditional Approve and Reject decision buttons.
- *  10. Extra Resource & Extra Staff Modals for inventory & team substitution.
+ *  10. Extra Resource, Extra Staff, Keep Waiting & Reject Reason Modals.
  * ============================================================================
  */
 
@@ -45,6 +43,7 @@ import EventReviewActionBar from "../../components/vendor/EventReviewActionBar";
 import EventExtraResourceModal from "../../components/vendor/EventExtraResourceModal";
 import EventExtraStaffModal from "../../components/vendor/EventExtraStaffModal";
 import EventKeepWaitingModal from "../../components/vendor/EventKeepWaitingModal";
+import RejectReasonModal from "../../components/vendor/RejectReasonModal";
 
 // Backend API services
 import {
@@ -63,6 +62,7 @@ import {
 
 // Central vendor stylesheet
 import "../../styles/vendor.css";
+import "../../styles/bridge.css";
 
 // Default contingency plans fallback
 const DEFAULT_CONTINGENCY_PLANS = [
@@ -113,12 +113,7 @@ function EventReview() {
   const [isExtraResOpen, setIsExtraResOpen] = useState(false);
   const [isExtraStaffOpen, setIsExtraStaffOpen] = useState(false);
   const [isKeepWaitingOpen, setIsKeepWaitingOpen] = useState(false);
-
-  // Helper to trigger an auto-expiring feedback toast
-  const showToast = useCallback((text, type = "success") => {
-    setToast({ text, type });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
+  const [rejectOpen, setRejectOpen] = useState(false);
 
   // --------------------------------------------------------------------------
   // 2. FETCH EVENT, INVENTORY, STAFF, ALLOCATIONS & CONTINGENCY PLANS
@@ -872,77 +867,31 @@ function EventReview() {
   }, [event, detectedConflicts, navigate, showToast]);
 
   // Reject Event: Confirms and notifies client with summary
-  const handleRejectEvent = useCallback(async () => {
-    if (!event) return;
-    if (event.status === "rejected") {
-      showToast("Event is already rejected.", "info");
-      return;
-    }
-
-    const summary = detectedConflicts.length
-      ? detectedConflicts.map((c) => `${c.type}: ${c.desc}`).join("; ")
-      : "Rejected by vendor";
-
-    const confirmMsg = detectedConflicts.length
-      ? `"${event.name}" has ${detectedConflicts.length} conflict(s). Reject and notify client?`
-      : `Are you sure you want to reject "${event.name}"?`;
-
-    const ok = window.confirm(confirmMsg);
-    if (!ok) return;
-
-    try {
-      await updateEventStatus(event.id, "rejected");
-      setEvent((prev) => ({
-        ...prev,
-        status: "rejected",
-        rejectionReason: summary,
-      }));
-
-      // Notify client of rejection
-      const clientRejectNotif = {
-        id: `NOTIF_${Date.now()}`,
-        eventId: event.id,
-        eventName: event.name,
-        clientId: event.clientId || event.client,
-        title: "Event Request Rejected",
-        message: `Your event "${event.name}" was rejected by the vendor. Reason: ${summary}`,
-        reason: summary,
-        status: "rejected",
-        type: "danger",
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      };
-      try {
-        const existing = JSON.parse(
-          localStorage.getItem("client_notifications") || "[]"
-        );
-        existing.unshift(clientRejectNotif);
-        localStorage.setItem(
-          "client_notifications",
-          JSON.stringify(existing)
-        );
-        window.dispatchEvent(
-          new CustomEvent("client_notifications_updated", {
-            detail: clientRejectNotif,
-          })
-        );
-      } catch {
-        // Fallback
+  const handleRejectEvent = useCallback(
+    async (customReason) => {
+      if (!event) return;
+      if (event.status === "rejected") {
+        showToast("Event is already rejected.", "info");
+        return;
       }
 
-      showToast(`"${event.name}" rejected. Client notified.`, "danger");
-      setTimeout(() => navigate("/vendor/events"), 1400);
-    } catch (err) {
-      console.error("Failed to reject event:", err);
-      setEvent((prev) => ({
-        ...prev,
-        status: "rejected",
-        rejectionReason: summary,
-      }));
-      showToast(`"${event.name}" marked as rejected locally.`, "danger");
-      setTimeout(() => navigate("/vendor/events"), 1400);
-    }
-  }, [event, detectedConflicts, navigate, showToast]);
+      const reason = typeof customReason === 'string' && customReason.trim()
+        ? customReason.trim()
+        : detectedConflicts.length
+        ? detectedConflicts.map((c) => `${c.type}: ${c.desc}`).join("; ")
+        : "Rejected by vendor";
+
+      try {
+        await updateEventStatus(event.id, "rejected", { note: reason, rejectionReason: reason });
+        setEvent((prev) => (prev ? { ...prev, status: "rejected", rejectionReason: reason } : null));
+        setRejectOpen(false);
+        showToast(`Event rejected: ${reason}`, "info");
+      } catch (err) {
+        showToast(err.message || "Failed to reject event.", "error");
+      }
+    },
+    [event, detectedConflicts, showToast]
+  );
 
   // Extra available resources and staff for modals
   const extraAvailableResources = useMemo(() => {
@@ -1076,7 +1025,7 @@ function EventReview() {
           hasConflicts={detectedConflicts.length > 0}
           onBack={() => navigate("/vendor/events")}
           onApprove={handleApproveEvent}
-          onReject={handleRejectEvent}
+          onReject={() => setRejectOpen(true)}
           onOpenKeepWaiting={() => setIsKeepWaitingOpen(true)}
         />
 
@@ -1104,6 +1053,20 @@ function EventReview() {
           eventName={event.name}
           eventId={event.id}
           onSubmit={handleSubmitKeepWaiting}
+        />
+
+        {/* ── Modal 4: Rejection Reason Dialog (shown to Client) ── */}
+        <RejectReasonModal
+          event={rejectOpen ? event : null}
+          onClose={() => setRejectOpen(false)}
+          onConfirm={handleRejectEvent}
+        />
+
+        {/* ── Component 7: Reject reason popup (reason is shown to the client) ── */}
+        <RejectReasonModal
+          event={rejectOpen ? event : null}
+          onClose={() => setRejectOpen(false)}
+          onConfirm={handleRejectEvent}
         />
       </div>
     </div>

@@ -10,9 +10,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './staff.css';
+import '../../styles/staff.css';
 import Toast from './components/Toast';
-import { getSessionUser, fetchEvents, createIssue } from './staffApi';
+import { getSessionUser, fetchEvents, createIssue } from '../../services/staffApi';
 
 export default function StaffReportIssue() {
   // Hook for programmatic navigation (e.g., navigating back on Cancel)

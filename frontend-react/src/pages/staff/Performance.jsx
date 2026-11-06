@@ -11,8 +11,8 @@
 ============================================================ */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import './staff.css';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList, fetchIssues } from './staffApi';
+import '../../styles/staff.css';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList, fetchIssues } from '../../services/staffApi';
 
 // Array of 12-month abbreviations used for chart labels and time bucketing
 // FACULTY MAY ASK: How do you show full month names like "January" instead of "Jan"?

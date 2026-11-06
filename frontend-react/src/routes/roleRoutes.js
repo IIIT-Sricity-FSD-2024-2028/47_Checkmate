@@ -16,44 +16,45 @@ import {
     Bug,
     DollarSign,
     Activity,
-    Settings
+    Settings,
+    Inbox
 } from "lucide-react";
 
 export const clientMenuItems = [
     {
         label: "Dashboard",
         path: "/client/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard
     },
     {
         label: "Create Event",
         path: "/client/create-event",
-        icon: "ph ph-plus"
+        icon: ClipboardList
     },
     {
         label: "My Events",
         path: "/client/events",
-        icon: "ph ph-list-bullets"
+        icon: CalendarCheck
     },
     {
         label: "Browse Packages",
         path: "/client/packages",
-        icon: "ph ph-tote"
+        icon: Package
+    },
+    {
+        label: "Billing & Invoices",
+        path: "/client/billing",
+        icon: DollarSign
     },
     {
         label: "Messages",
         path: "/client/messages",
-        icon: "ph ph-chat-teardrop-dots"
-    },
-    {
-        label: "Billing",
-        path: "/client/billing",
-        icon: "ph ph-credit-card"
+        icon: MessageSquare
     },
     {
         label: "Report Issue",
         path: "/client/report-issue",
-        icon: "ph ph-warning-circle"
+        icon: AlertCircle
     }
 ];
 
@@ -64,66 +65,44 @@ export const vendorMenuItems = [
         icon: LayoutDashboard,
     },
     {
-        label: "Event Request",
+        label: "Events",
         path: "/vendor/events",
         icon: ClipboardList,
     },
     {
-        label: "Manage Resource",
-        path: "/vendor/resources",
+        label: "Services & Packages",
+        path: "/vendor/packages",
         icon: Package,
     },
     {
-        label: "Manage Staff",
+        label: "Inventory / Resources",
+        path: "/vendor/resources",
+        icon: Box,
+    },
+    {
+        label: "Staff Allocation",
         path: "/vendor/staff",
         icon: Users,
     },
     {
-        label: "Preset Package",
-        path: "/vendor/packages",
-        icon: Box,
-    },
-    {
-        label: "Report Issue",
-        icon: Flag,
-        children: [
-            {
-                label: "Issue on Event",
-                path: "/vendor/report-issue",
-                icon: AlertCircle,
-            },
-            {
-                label: "Issue to Admin",
-                path: "/vendor/report-issue-admin",
-                icon: ShieldAlert,
-            },
-        ],
-    },
-    {
-        label: "Coordination Hub",
-        icon: MessageSquare,
-        children: [
-            {
-                label: "Event Coordination",
-                path: "/vendor/coordination",
-                icon: Radio,
-            },
-            {
-                label: "Admin Coordination",
-                path: "/vendor/coordination-admin",
-                icon: Shield,
-            },
-        ],
-    },
-    {
-        label: "Monitor Live Events",
+        label: "Live Monitoring",
         path: "/vendor/monitoring",
         icon: Radio,
     },
     {
-        label: "Verify Documents",
-        path: "/vendor/verify-docs",
-        icon: ShieldCheck,
+        label: "Client Inquiries",
+        path: "/vendor/coordination",
+        icon: MessageSquare,
+    },
+    {
+        label: "Client Issues",
+        path: "/vendor/issues",
+        icon: AlertCircle,
+    },
+    {
+        label: "Report Issue to Admin",
+        path: "/vendor/report-issue",
+        icon: Flag,
     },
 ];
 
@@ -131,38 +110,38 @@ export const staffMenuItems = [
     {
         label: "Dashboard",
         path: "/staff/dashboard",
-        icon: "ph ph-squares-four"
+        icon: LayoutDashboard,
     },
     {
         label: "Assigned Events",
         path: "/staff/assigned-events",
-        icon: "ph ph-calendar"
-    },
-    {
-        label: "Task Board",
-        path: "/staff/task-board",
-        icon: "ph ph-kanban"
+        icon: CalendarCheck,
     },
     {
         label: "Schedule",
         path: "/staff/schedule",
-        icon: "ph ph-calendar-check"
-    },
-    {
-        label: "Performance",
-        path: "/staff/performance",
-        icon: "ph ph-chart-bar"
-    },
-    {
-        label: "Report Issue",
-        path: "/staff/report-issue",
-        icon: "ph ph-warning-circle"
+        icon: ClipboardList,
     },
     {
         label: "Messages",
         path: "/staff/messages",
-        icon: "ph ph-chat-teardrop-dots"
-    }
+        icon: MessageSquare,
+    },
+    {
+        label: "Task Board",
+        path: "/staff/task-board",
+        icon: Package,
+    },
+    {
+        label: "Performance",
+        path: "/staff/performance",
+        icon: Activity,
+    },
+    {
+        label: "Report Issue",
+        path: "/staff/report-issue",
+        icon: AlertCircle,
+    },
 ];
 
 export const adminMenuItems = [
@@ -238,6 +217,16 @@ export const superuserMenuItems = [
         label: "Events",
         path: "/superuser/events",
         icon: CalendarCheck
+    },
+    {
+        label: "Resources",
+        path: "/superuser/resources",
+        icon: Package
+    },
+    {
+        label: "Bookings",
+        path: "/superuser/bookings",
+        icon: DollarSign
     },
     {
         label: "Reports",

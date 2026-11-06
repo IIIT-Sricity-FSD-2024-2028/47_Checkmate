@@ -1,222 +1,141 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Activity, Search, Filter, RefreshCcw, Shield, 
-  Clock, Terminal, CheckCircle2, ChevronDown, ChevronRight 
-} from 'lucide-react';
-import { getStateKey } from '../../services/stateService';
-import '../../styles/admin.css';
+/**
+ * ADMIN · SYSTEM LOGS (pages/admin/SystemLogs.jsx)
+ * Replaces legacy: front-end/pages/admin/audit-logs.html (inline script).
+ *
+ * - Reads the audit trail from GET /state/activityLogs. The backend's DataService appends a
+ *   row on every event status change, vendor decision and audited API mutation.
+ * - Newest first, filterable by type (events / vendor approvals / API calls / system) and
+ *   searchable by title or details.
+ * - Shows 10 entries, then "Load Older Logs (N more)" adds 10 at a time.
+ *
+ * Read-only: nothing on this page changes data.
+ */
 
-export default function SystemLogs() {
+import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, RefreshCw } from "lucide-react";
+
+import "../../styles/dashboard.css";
+import "../../styles/admin.css";
+
+import AdminTopBar from "../../components/admin/AdminTopBar";
+import LogItem from "../../components/admin/LogItem";
+import TableToolbar from "../../components/table/TableToolbar";
+
+import { getStateKey } from "../../services";
+import { logDescription, logTitle } from "../../utils/logText";
+
+const PAGE = 10;
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "All Activity" },
+  { value: "EVENT", label: "Events" },
+  { value: "VENDOR_APPLICATION", label: "Vendor Approvals" },
+  { value: "HTTP", label: "API Calls" },
+  { value: "SYSTEM", label: "System" },
+];
+
+const newestFirst = (logs) =>
+  [...logs].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+
+function SystemLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [expandedLogId, setExpandedLogId] = useState(null);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const fetchLogs = async () => {
-    try {
-      setLoading(true);
-      const data = await getStateKey('activityLogs');
-      setLogs(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to load system logs:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [query, setQuery] = useState("");
+  const [shown, setShown] = useState(PAGE);
 
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    let cancelled = false;
+    getStateKey("activityLogs")
+      .then((data) => {
+        if (cancelled) return;
+        setLogs(newestFirst(Array.isArray(data) ? data : []));
+        setError("");
+      })
+      .catch((err) => {
+        console.error("Failed to load activity logs:", err);
+        if (!cancelled) setError("Could not load system logs.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
-  // Filtered logs
-  const filteredLogs = useMemo(() => {
-    const q = searchTerm.toLowerCase().trim();
-    return logs.filter((log) => {
-      const matchesSearch =
-        !q ||
-        (log.action && log.action.toLowerCase().includes(q)) ||
-        (log.user && log.user.toLowerCase().includes(q)) ||
-        (log.details && JSON.stringify(log.details).toLowerCase().includes(q)) ||
-        (log.ip && log.ip.toLowerCase().includes(q));
-
-      let matchesCat = true;
-      if (categoryFilter !== 'all') {
-        const act = (log.action || '').toLowerCase();
-        if (categoryFilter === 'auth') matchesCat = act.includes('login') || act.includes('auth') || act.includes('token');
-        else if (categoryFilter === 'event') matchesCat = act.includes('event');
-        else if (categoryFilter === 'user') matchesCat = act.includes('user');
-        else if (categoryFilter === 'finance') matchesCat = act.includes('payout') || act.includes('settle') || act.includes('payment');
-        else if (categoryFilter === 'mutation') matchesCat = act.includes('create') || act.includes('update') || act.includes('delete') || act.includes('patch');
-      }
-
-      return matchesSearch && matchesCat;
-    });
-  }, [logs, searchTerm, categoryFilter]);
-
-  const renderActionBadge = (action) => {
-    const act = (action || '').toLowerCase();
-    let style = { background: 'rgba(255,255,255,0.06)', color: '#fff' };
-
-    if (act.includes('approve') || act.includes('settle') || act.includes('create')) {
-      style = { background: 'rgba(0, 230, 118, 0.15)', color: '#00e676', border: '1px solid rgba(0, 230, 118, 0.3)' };
-    } else if (act.includes('delete') || act.includes('reject') || act.includes('terminate')) {
-      style = { background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' };
-    } else if (act.includes('update') || act.includes('patch')) {
-      style = { background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' };
-    } else if (act.includes('login') || act.includes('auth')) {
-      style = { background: 'rgba(236, 72, 153, 0.15)', color: '#ec4899', border: '1px solid rgba(236, 72, 153, 0.3)' };
-    }
-
-    return (
-      <span style={{ ...style, padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', fontFamily: 'monospace' }}>
-        {action || 'ACTION'}
-      </span>
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return logs.filter(
+      (log) =>
+        (typeFilter === "all" || log.entityType === typeFilter) &&
+        (!q || `${logTitle(log)} ${logDescription(log)}`.toLowerCase().includes(q))
     );
+  }, [logs, typeFilter, query]);
+
+  const visible = matches.slice(0, shown);
+  const remaining = matches.length - visible.length;
+
+  const onFilter = (setter) => (value) => {
+    setter(value);
+    setShown(PAGE);
+  };
+
+  const refresh = () => {
+    setLoading(true);
+    setShown(PAGE);
+    setReloadKey((k) => k + 1);
   };
 
   return (
-    <div className="admin-page-container" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '26px', fontWeight: '700', color: '#fff', margin: 0 }}>System Audit Logs</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
-            Immutable forensic audit trail capturing authenticated API mutations, decisions, and system events.
-          </p>
+    <div className="admin-system-logs">
+      <AdminTopBar title="System Logs" />
+
+      <div className="content">
+        {error && <div className="admin-error">{error}</div>}
+
+        <div className="card admin-table-card">
+          <TableToolbar
+            title="System Security Audit Log"
+            filters={[{ label: "Type", value: typeFilter, options: TYPE_OPTIONS, onChange: onFilter(setTypeFilter) }]}
+            search={{ value: query, placeholder: "Search logs...", onChange: onFilter(setQuery) }}
+          />
+
+          <div className="log-list">
+            {loading && <div className="admin-empty">Loading...</div>}
+            {!loading && visible.length === 0 && (
+              <div className="admin-empty">
+                {logs.length ? "No activity matches this filter." : "No activity recorded yet."}
+              </div>
+            )}
+            {!loading && visible.map((log) => <LogItem key={log.id} log={log} />)}
+          </div>
+
+          <div className="log-footer">
+            <span className="cell-muted">
+              {loading ? "" : `Showing ${visible.length} of ${matches.length}`}
+            </span>
+            <div className="cell-actions">
+              <button type="button" className="ui-btn ui-btn--ghost" onClick={refresh} disabled={loading}>
+                <RefreshCw size={14} /> Refresh
+              </button>
+              <button
+                type="button"
+                className="ui-btn ui-btn--ghost"
+                disabled={loading || remaining <= 0}
+                onClick={() => setShown((n) => n + PAGE)}
+              >
+                <ArrowDown size={14} /> {remaining > 0 ? `Load Older Logs (${remaining} more)` : "No older logs"}
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={fetchLogs}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '9px 14px',
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '13px',
-            cursor: 'pointer',
-          }}
-        >
-          <RefreshCcw size={14} className={loading ? 'spin' : ''} /> Refresh Logs
-        </button>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '300px' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="Search audit trail by action, user, or details..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '9px 12px 9px 36px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                color: '#fff',
-                fontSize: '13px',
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{
-              padding: '9px 12px',
-              background: '#161922',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '13px',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="all">All Event Categories</option>
-            <option value="auth">Authentication & Access</option>
-            <option value="event">Event Actions</option>
-            <option value="user">User Management</option>
-            <option value="finance">Finance & Payouts</option>
-            <option value="mutation">State Mutations</option>
-          </select>
-        </div>
-
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Showing {filteredLogs.length} entries
-        </div>
-      </div>
-
-      {/* Audit Logs List */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <RefreshCcw size={28} className="spin" style={{ margin: '0 auto 12px auto', display: 'block' }} />
-            Loading system audit trail...
-          </div>
-        ) : filteredLogs.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            No audit logs found matching your filters.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {filteredLogs.map((log, idx) => {
-              const logId = log.id || `log_${idx}`;
-              const isExpanded = expandedLogId === logId;
-              const dateStr = log.timestamp || log.time || log.date;
-              const formattedDate = dateStr ? new Date(dateStr).toLocaleString() : 'Recently';
-
-              return (
-                <div
-                  key={logId}
-                  style={{
-                    borderBottom: '1px solid var(--border)',
-                    padding: '14px 18px',
-                    transition: 'background-color 0.15s',
-                    background: isExpanded ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-                  }}
-                >
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                    onClick={() => setExpandedLogId(isExpanded ? null : logId)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      {renderActionBadge(log.action)}
-                      <span style={{ fontSize: '13.5px', color: '#fff', fontWeight: '500' }}>
-                        {log.description || log.message || log.action}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        User: <span style={{ color: 'var(--text-secondary)' }}>{log.user || log.userId || 'System'}</span>
-                      </span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{formattedDate}</span>
-                      {isExpanded ? <ChevronDown size={16} color="var(--text-muted)" /> : <ChevronRight size={16} color="var(--text-muted)" />}
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div style={{ marginTop: '12px', padding: '12px', background: '#0a0c12', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '12px', fontFamily: 'monospace' }}>
-                      <pre style={{ margin: 0, color: '#60a5fa', overflowX: 'auto' }}>
-                        {JSON.stringify(log, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
+export default SystemLogs;

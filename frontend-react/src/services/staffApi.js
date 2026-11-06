@@ -3,7 +3,7 @@
  * Handles async REST API communication with the backend
  */
 
-import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from '../../services/auth/authStorage';
+import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from './auth/authStorage';
 
 const API_BASE = (typeof window !== 'undefined' && window.CHECKMATE_API_BASE) || 'http://localhost:3000/api';
 

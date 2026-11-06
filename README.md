@@ -209,3 +209,285 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 - Ensure optimal allocation of staff and resources  
 - Provide real-time visibility into event schedules and execution  
 - Enable transparent reporting and issue tracking  
+
+---
+
+## Individual Contributions
+
+Each team member lists the work they did and the files they created or changed.
+
+### Nitish Gorontala Badrinarayanan (S20240010165)
+
+**React frontend: Admin module** (`frontend-react/`)
+
+Converted seven Admin pages from the old HTML/JS frontend to React, connected to the
+live backend, and built shared table and pop-up components that other roles can reuse.
+
+| File | Work |
+|---|---|
+| `src/pages/admin/Dashboard.jsx` | Admin dashboard: live stat cards with "since last visit" trends, pending vendor approvals, user distribution |
+| `src/pages/admin/VendorApprovals.jsx` | Vendor application table with review pop-up, Approve / Reject with an optional note, read-only view, `?review=<id>` links |
+| `src/pages/admin/ManageUsers.jsx` | User directory with stat cards, filters, an edit pop-up that checks the name and email, and Disable / Enable |
+| `src/pages/admin/MonitorEvents.jsx` | Event registry with details pop-up, Approve, and Refund after confirmation |
+| `src/pages/admin/ServiceModeration.jsx` | Vendor package review with Approve / Reject / Terminate |
+| `src/pages/admin/IssueTracking.jsx` | Support tickets going Open → Investigating → Resolved, with a details pop-up |
+| `src/pages/admin/SystemLogs.jsx` | Activity log with type filter, search, load older and refresh |
+| `src/components/Modal.jsx` | Generic pop-up dialog (Escape, click outside, X to close) |
+| `src/components/NotificationModal.jsx` | Notifications pop-up built on `Modal` |
+| `src/components/table/DataTable.jsx`, `TableToolbar.jsx`, `Pagination.jsx` | Reusable table, filter/search toolbar and page controls |
+| `src/components/admin/AdminTopBar.jsx` | Admin page header with the live notifications bell |
+| `src/components/admin/ApprovalItem.jsx`, `DistributionRow.jsx` | Dashboard list rows |
+| `src/components/admin/DetailField.jsx` | Label + value pair for detail pop-ups |
+| `src/components/admin/LogItem.jsx` | One row of the system log |
+| `src/hooks/usePagination.js` | Splits a list into pages |
+| `src/hooks/useAdminNotifications.js` | Builds the bell's notifications from live data |
+| `src/utils/formatRelativeTime.js`, `formatCurrency.js`, `logText.js` | Formatting helpers |
+| `src/styles/admin.css`, `src/styles/components/modal.css`, `src/styles/components/table.css` | Styles for the above |
+| `src/styles/dashboard.css` | Fix: `StatisticCard`'s `color` setting was ignored; added a red colour |
+| `src/routes/AppRoutes.jsx`, `src/routes/roleRoutes.js`, `src/layouts/AdminLayout.jsx` | Admin routes, sidebar menu and layout |
+
+**Backend** (`back-end/`)
+
+| Area | Files |
+|---|---|
+| Middleware layer: logging with daily rotation, global error handling, upload limits, CORS / helmet / rate limiting, request IDs, audit log of changes, `.env` configuration | `src/common/logging/*` (`logger.ts`, `file-logger.service.ts`, `http-logger.ts`, `logger-flush.service.ts`, `request-id.middleware.ts`), `src/common/security/*` (`cors.config.ts`, `helmet.config.ts`, `rate-limit.ts`), `src/common/middleware/mutation-audit.middleware.ts`, `src/common/middleware/upload-guard.middleware.ts`, `src/common/filters/all-exceptions.filter.ts`, `src/common/upload/multer.config.ts`, `src/common/paths.ts`, `src/common/middleware.e2e.spec.ts`, `src/main.ts`, `src/app.module.ts`, `.env.example` |
+| Vendor approval and package moderation endpoints | `src/modules/vendors/vendors.controller.ts`, `vendors.service.ts`, `dto.ts`; `src/modules/packages/packages.controller.ts`, `packages.service.ts`, `dto.ts`; `src/domain/models.ts` |
+| Bug fix in coordination messages | `src/modules/messages/messages.service.ts` |
+
+**Original frontend** (`front-end/`)
+
+| Area | Files |
+|---|---|
+| Initial folder structure for pages, scripts and styles by role | `front-end/**` |
+| Admin vendor approvals, service moderation and analytics pages | `pages/admin/admin.html`, `pages/admin/report-analytics.html`, `pages/admin/service-moderation.html`, `scripts/admin_js/admin.js`, `scripts/admin_js/admin-reports.js`, `pages/Login/signup-step4.html` |
+| Consistent layout and design across all roles' pages | `pages/{admin,client,vendor,staff,superuser,Login}/*`, `styles/*` |
+| Fixes for broken links, errors that failed without a message, and corrupted IDs | `pages/Login/login_js/script.js`, `scripts/client_js/create_event_client.js`, `scripts/vendor_js/report.js`, plus page links in admin / client / staff / vendor pages |
+
+### Shreeya Jetti (S20240010225)
+
+**Area:** Client portal in React, and client–vendor communication  
+**Branch:** `shreeya-react` (merged into `main` via PR #24)
+
+I rebuilt every Client portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), keeping all of the original functionality and connecting it to the NestJS
+backend. Each page is split into a page file, a custom data hook (API calls and state) and small
+section components. I also built the client–vendor bridge so the two portals can communicate,
+and fixed a shared services file that was breaking the build.
+
+**1. Client pages** – `frontend-react/src/pages/client/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Welcome banner, KPI cards, next-event progress timeline, quick actions, activity feed |
+| `MyEvents.jsx` | Rewritten | Event table with search, status/type filters, status-based actions, rejection-reason popup |
+| `TrackProgress.jsx` | New | `/client/track/:id` – 5-step progress timeline with allocated resources and staff |
+| `LiveMonitoring.jsx` | New | `/client/live/:id` – live task completion, event phases, resources and staff |
+| `CreateEvent.jsx` | Rewritten | 4-step wizard: details → resources (availability + budget check) → staff → review |
+| `BrowsePackages.jsx` | Rewritten | Approved packages with filters and "Quick Create" event request |
+| `Billing.jsx` | Rewritten | Invoices from real bookings, summary cards, filter, pagination, Pay Now, invoice download |
+| `ReportIssue.jsx` | Rewritten | Report to the event team (posted into the event chat) or to the admin |
+| `Messages.jsx` | New | Event chat with the vendor team and admin support chat |
+| `client.css` | New | Styles for all client pages (classes prefixed `cl-`) |
+
+**2. Client data hooks** – `frontend-react/src/components/client/` (all new)
+
+`useClientDashboardData.js`, `useClientEventsData.js`, `useClientTrackData.js`, `useClientLiveData.js`,
+`useCreateEventWizard.js`, `useClientPackagesData.js`, `useClientBillingData.js`, `useReportIssueForm.js`,
+`useClientMessagesData.js`, `useClientNotifications.js`
+
+**3. Client components** – `frontend-react/src/components/client/` (all new)
+
+| Used in | Files |
+|---|---|
+| All client pages | `ClientTopbar.jsx`, `WelcomeOverlay.jsx`, `StatusBadge.jsx`, `TabSwitcher.jsx` |
+| Dashboard | `ClientStatsGrid.jsx`, `ClientNextEventSection.jsx`, `ClientQuickActionsSection.jsx`, `ClientRecentActivitySection.jsx` |
+| My Events | `ClientEventsStatsGrid.jsx`, `ClientEventsToolbar.jsx`, `ClientEventsTable.jsx`, `ClientEventTableRow.jsx`, `RejectionReasonModal.jsx` |
+| Track Progress | `TrackHeroCard.jsx`, `TrackTimeline.jsx`, `TrackSidePanel.jsx` |
+| Live Monitoring | `LiveTaskProgressCard.jsx`, `LiveStatusCards.jsx` |
+| Create Event | `WizardSteps.jsx`, `EventDetailsStep.jsx`, `ResourceSelectionStep.jsx`, `StaffSelectionStep.jsx`, `ReviewStep.jsx` |
+| Browse Packages | `ClientPackageToolbar.jsx`, `ClientPackageGrid.jsx`, `ClientPackageCard.jsx`, `QuickCreateModal.jsx` |
+| Billing | `BillingStatsGrid.jsx`, `InvoiceTable.jsx` |
+| Report Issue | `IssueForm.jsx` |
+
+**4. Shared files created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/components/chat/ChatWindow.jsx` | Chat header, messages and input (used by the client and vendor chat) |
+| `frontend-react/src/components/chat/ConversationList.jsx` | Conversation list (live events / admin support) |
+| `frontend-react/src/components/chat/IssueReportModal.jsx` | Issue details popup |
+| `frontend-react/src/hooks/useEventChat.js` | Shared event-chat hook – both portals read and write the same messages |
+| `frontend-react/src/utils/clientHelpers.js` | Date/money formatting, current user, event progress, error messages |
+
+**5. Client–vendor bridge**
+
+| Feature | How it works |
+|---|---|
+| Approval notifications | When a vendor approves, rejects, starts or completes an event, the backend notifies that client; the bell links to Track Progress |
+| Rejection reasons | The vendor must give a reason when rejecting; the client sees it |
+| Two-way event chat | New vendor page to reply to clients, sharing the client's chat hook and components |
+| Client issue inbox | New vendor page listing issues on the vendor's events, with status updates |
+
+| File | Status |
+|---|---|
+| `back-end/src/modules/events/events.service.ts` | Modified – `notifyClient()` creates the client notification |
+| `frontend-react/src/pages/vendor/EventCoordination.jsx` | New – `/vendor/coordination` |
+| `frontend-react/src/pages/vendor/ClientIssues.jsx` | New – `/vendor/issues` |
+| `frontend-react/src/components/vendor/useVendorIssuesData.js` | New |
+| `frontend-react/src/components/vendor/RejectReasonModal.jsx` | New |
+| `frontend-react/src/styles/bridge.css` | New |
+| `frontend-react/src/pages/vendor/Events.jsx`, `EventReview.jsx` | Modified – reject opens the reason popup |
+| `frontend-react/src/components/vendor/useVendorEventsData.js` | Modified – sends the rejection reason |
+
+**6. Other files modified**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Client routes (`track/:id`, `live/:id`, `messages`) and vendor routes (`coordination`, `issues`) |
+| `frontend-react/src/routes/roleRoutes.js` | "Messages" in the client sidebar, "Client Issues" in the vendor sidebar |
+| `frontend-react/src/layouts/ClientLayout.jsx` | Welcome overlay |
+| `frontend-react/index.html` | Icon font used by the sidebar; page title |
+| `frontend-react/src/services/index.js` | Restored shared service exports that had been removed, which was breaking the build |
+
+**7. Earlier contributions**
+
+- **JWT authentication and real data** (commit `3d0cb62`, 45 files): backend auth (`auth.module.ts`, `auth.service.ts`,
+  `jwt.strategy.ts`, `jwt-auth.guard.ts`, `roles.guard.ts`, `public.decorator.ts`, `roles.decorator.ts`, `password.ts`,
+  `main.ts`, `app.module.ts`, `.env.example`); backend modules (events, analytics, staff, users, vendors, `data.service.ts`,
+  `models.ts`, `swagger.json`); and old frontend admin, staff, superuser and vendor pages connected to real data.
+- **Team video** (commits `1fa2193`, `455d3cf`).
+
+**Commits:** `985a65e` (client pages), `c6f12a9` (client–vendor bridge), `492982d` (services fix), `3d0cb62` (JWT auth),
+`1fa2193` / `455d3cf` (team video)
+
+### Sai teja (S20240010136)
+
+**Area:** Superuser portal in React, platform governance, and data services  
+**Branch:** `sai` (merged into `main` via PR #25)
+
+I rebuilt and converted every Superuser portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), preserving all administrative governance capabilities and connecting them directly to the NestJS
+backend. Every page incorporates comprehensive CRUD operations, search filtering, status indicators, and modal workflows,
+accompanied by in-code documentation and comments addressing potential faculty questions. I also engineered interactive
+HTML5 canvas charts for real-time analytics without external dependencies, built reusable superuser components and modals,
+implemented the dedicated `superuserApi` service, and styled the entire portal.
+
+**1. Superuser pages** – `frontend-react/src/pages/superuser/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Executive overview dashboard: real-time KPI metrics (total users, total vendors, total events, total revenue), pure HTML5 canvas visualizations (user signups, cumulative event growth, revenue trends), system health indicators, and quick navigation |
+| `Bookings.jsx` | New | All system bookings table: revenue KPI cards, instant search, full CRUD (create booking, edit active bookings, view detailed breakdown modal, and delete cancellations), and backend sync |
+| `Events.jsx` | New | Platform-wide event governance: multi-field search across titles/venues/clients/vendors, status updates, event details inspection modal, event registration, and cancellation |
+| `Resources.jsx` | New | System-wide resource inventory oversight: total/available unit counters, category and supplier filters, dynamic color-coded inventory progress bars, and full CRUD for equipment and decor |
+| `Staff.jsx` | New | Global workforce administration: personnel metrics, search across roles and vendor affiliations, real-time status badges, and complete CRUD (add staff, update role/contact/availability, delete) |
+| `Users.jsx` | New | System-wide user administration: multi-field search (name, email, role), role and status badges, and complete user lifecycle governance (create account with password, update profile/role/status, permanent deletion) |
+
+**2. Superuser components** – `frontend-react/src/pages/superuser/components/` (all new)
+
+| Component | Purpose |
+|---|---|
+| `ConfirmModal.jsx` | Reusable confirmation popup dialog with danger/warning styling for destructive actions (delete, cancel) |
+| `DataTable.jsx` | Reusable data table component supporting customizable columns, row rendering, and empty states |
+| `DetailModal.jsx` | Detailed record inspection modal displaying full attributes for events, bookings, users, resources, and staff |
+| `SearchBar.jsx` | Search input bar with debounce and instant clear button for real-time table filtering |
+| `StatCard.jsx` | Metric display card with icon, title, value, and subtitle/trend indication |
+| `StatusBadge.jsx` | Color-coded status badge for events, bookings, and user account statuses |
+| `Toast.jsx` | Alert toast notification banner for real-time action feedback (success and error messages) |
+
+**3. Services and styles created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/services/superuserApi.js` | Dedicated superuser API service handling REST calls to NestJS backend (`/api/users`, `/api/events`, `/api/resources`, `/api/staff`, `/api/bookings`, `/api/vendors`, `/api/analytics`) and session token handling |
+| `frontend-react/src/styles/superuser.css` | Comprehensive styles for all superuser pages, dashboards, stats grids, data tables, modals, badges, and canvas charts |
+
+**4. Routing and navigation**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Registered superuser routes (`/superuser/dashboard`, `/superuser/users`, `/superuser/events`, `/superuser/resources`, `/superuser/bookings`) wrapped in `SuperuserLayout` |
+| `frontend-react/src/routes/roleRoutes.js` | Configured `superuserMenuItems` (Dashboard, Users, Events, Resources, Bookings) with icons for the sidebar |
+| `frontend-react/src/layouts/SuperUser.jsx` | Superuser layout wrapper with dynamic role-based sidebar and user session info |
+| `frontend-react/src/services/index.js` | Exported `superuserApi` client for use across the application |
+
+**5. Earlier contributions**
+
+- **Initial React frontend setup** (commit `85afab1`, 92 files): Initial project scaffolding for `react-frontend/` (Vite, React, routing, component hierarchy, layouts, AuthContext, role-based pages, and CSS stylesheets).
+- **Swagger API documentation** (commit `331102c`): Updated and expanded Swagger API specifications in `back-end/docs/swagger.json` (243 additions) documenting endpoints, request/response models, and parameters.
+- **Backend documentation** (commit `73272dc`): Updated backend functionality tracking in `back-end/docs/MISSING_FUNCTIONALITY_REPORT.md`.
+
+**Commits:** `4772c97` (superuser pages in React), `85afab1` (initial React setup), `331102c` (Swagger documentation), `73272dc` (backend docs), `a908ae3` / `9644467` (merges)
+
+### Hemanth (S20240010236)
+
+**Area:** Staff portal in React, operational workflows, and revenue model  
+**Branch:** `hemanth` (merged into `main` via PR #22)
+
+I rebuilt and converted every Staff portal page from the old HTML/CSS/JavaScript version into the React app
+(`frontend-react`), providing complete operational tooling for event staff on the ground and connecting each page directly
+to the NestJS backend. Every page incorporates real-time status updates, interactive Kanban drag-and-drop, dynamic calendar
+scheduling, on-site incident reporting, and custom HTML5 canvas performance charts, accompanied by comprehensive in-code
+comments and documentation for faculty review. I also engineered the platform revenue and commission backend model,
+implemented the dedicated `staffApi` service, and styled the entire staff portal.
+
+**1. Staff pages** – `frontend-react/src/pages/staff/`
+
+| File | Status | What it does |
+|---|---|---|
+| `Dashboard.jsx` | Rewritten | Operational overview dashboard: live clock, 4 stat summary cards (assigned events, active tasks, logged hours, performance), upcoming shift preview, live operational ticker, quick actions, and task progress indicators |
+| `AssignedEvents.jsx` | Rewritten | Event assignment hub: summary cards by status (Total, Pending, Accepted, Rejected), status filter bar, and expandable rich event cards allowing staff to accept/reject invitations and inspect allocated subtasks |
+| `TaskBoard.jsx` | Rewritten | Interactive Kanban task management board: column-grouped task tracking (To Do, In Progress, Done), drag-and-drop workflow, task creation for accepted events, task deletion, and real-time backend persistence |
+| `Schedule.jsx` | Rewritten | Shift calendar & schedule viewer: interactive monthly calendar grid with month navigation, upcoming event metrics (Total, This Week, Upcoming), daily agenda view for clicked dates, and upcoming accepted shifts |
+| `Performance.jsx` | Rewritten | Performance analytics portal: work statistics (events completed, acceptance rate, tasks done), dynamic achievement badges, reported vs resolved issue metrics, and pure HTML5 canvas charts for monthly trends and attendance |
+| `ReportIssue.jsx` | Rewritten | On-site incident reporting interface: controlled submission form for operational/technical/safety problems, severity selection, dynamic event dropdown, and instant escalation to event managers |
+| `staff.css` | New | Comprehensive styles for all staff pages, dashboard cards, task board Kanban columns, calendar grid, performance cards, and responsive layouts |
+
+**2. Staff components** – `frontend-react/src/pages/staff/components/` (all new)
+
+| Component | Purpose |
+|---|---|
+| `StatCard.jsx` | Reusable metric summary card component displaying icons, numeric values, labels, and change trends |
+| `Toast.jsx` | Real-time alert toast notification banner for user feedback (e.g., status changes, task moves, issue submission) |
+
+**3. Services and styles created**
+
+| File | Purpose |
+|---|---|
+| `frontend-react/src/pages/staff/staffApi.js` | Dedicated staff API service handling REST calls to NestJS backend (`/api/staff-assignments`, `/api/staff`, `/api/events`, `/api/issues`, `/api/analytics`) with JWT token injection and role headers |
+| `frontend-react/src/pages/staff/staff.css` | Full stylesheet powering staff dashboards, Kanban boards, calendar views, metric grids, and forms |
+
+**4. Routing and navigation**
+
+| File | Change |
+|---|---|
+| `frontend-react/src/routes/AppRoutes.jsx` | Registered staff routes (`/staff/dashboard`, `/staff/assigned-events`, `/staff/task-board`, `/staff/schedule`, `/staff/performance`, `/staff/report-issue`, `/staff/profile`) wrapped in `StaffLayout` |
+| `frontend-react/src/routes/roleRoutes.js` | Configured `staffMenuItems` (Dashboard, Assigned Events, Task Board, Performance, Report Issue) with icons for the staff sidebar |
+
+**5. Earlier contributions**
+
+- **Commission & Revenue Model** (PR #7, commit `ed88c2e` / `2aa1dc2`): Engineered the backend commission and platform revenue model (`finance.constants.ts`, `bookings.service.ts`, `bookings.controller.ts`, `analytics.service.ts`, `vendors.service.ts`, DB schemas `DBschema.sql` and `DBschema_v2_normalized.sql`), payout endpoints, and admin payouts/revenue reporting UI.
+- **Frontend Login & Auth Integration** (PR #6, commit `5ba5fb4`): Refined authentication workflows, login scripts, profile modal integration, and client event creation fixes.
+- **Vendor Event Request & Resource Management** (PR #3 & PR #4): Event requests processing, resource allocation checks, and backend module integration.
+
+**Commits:** `85fcc86` (all 6 staff React pages), `458b3d4` (staff API and integration), `795a010` (CSS and path fixes), `ed88c2e` / `2aa1dc2` (Revenue model), `5ba5fb4` (Login integration), `848c4a4` (merge to main via PR #22)
+
+### Moulidharan (S20240010152)
+
+- `src/components/vendor/` — Developed reusable UI components for vendor-specific functionality.
+- `src/components/StatisticCard.jsx` — Developed a reusable component to display statistics and summary metrics.
+- `src/components/TopHeaderBar.jsx` — Implemented the top header bar for navigation and user-related actions.
+- `src/pages/vendor/` — Developed vendor-specific pages and their functionality.
+- `src/services/vendor/` — Implemented API service functions for vendor-related operations and backend integration.
+
+### Cefan (S20240010040)
+
+- `src/components/auth/` — Developed reusable UI components for authentication-related functionality, ensuring consistency across authentication interfaces.
+- `src/components/profile/` — Developed reusable components for displaying and managing user profile information.
+- `src/components/public/` — Developed reusable UI components for publicly accessible sections of the application.
+- `src/components/Sidebar.jsx` — Implemented the sidebar navigation component to provide access to relevant application sections and support role-based navigation.
+- `src/pages/auth/` — Developed page components for authentication workflows, integrating relevant UI components to create structured authentication interfaces.
+- `src/pages/public/` — Developed public-facing pages and organized their layouts and content for users accessing the application without authentication.
+- `src/routes/` — Organized application routing to connect URLs with their corresponding page components and support navigation between public and authenticated sections.
+- `src/services/auth/` — Implemented and organized authentication-related API service functions to handle communication between the frontend and backend.
+- `src/layouts/` — Developed and organized reusable layout components to maintain a consistent structure across different sections of the application.

@@ -13,9 +13,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import './staff.css';
+import '../../styles/staff.css';
 import Toast from './components/Toast';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList, updateStaffAssignment, updateStaffMember } from './staffApi';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList, updateStaffAssignment, updateStaffMember } from '../../services/staffApi';
 
 export default function StaffTaskBoard() {
   // Stores the active staff user info (name, email, role, token) from browser session

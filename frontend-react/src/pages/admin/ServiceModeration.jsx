@@ -1,505 +1,303 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ShieldCheck, AlertOctagon, CheckCircle2, XCircle, Eye, 
-  Search, Filter, RefreshCcw, X, Package, DollarSign, Store
-} from 'lucide-react';
-import { getPackages, decidePackage } from '../../services/packageService';
-import '../../styles/admin.css';
+/**
+ * ADMIN · SERVICE MODERATION (pages/admin/ServiceModeration.jsx)
+ * Replaces legacy: front-end/pages/admin/service-moderation.html + SECTION 4 of
+ * scripts/admin_js/admin.js.
+ *
+ * - Vendor packages (pending first), filterable by status and searchable by package / vendor /
+ *   category, 10 per page.
+ * - Stat cards: pending, approved, rejected.
+ * - Review opens the package (price, capacity, description, resources, staff) with the same
+ *   decision buttons as the row.
+ * - Decisions -> PATCH /packages/:id/decision { status }:
+ *     pending  -> Approve / Reject
+ *     approved -> Terminate (sets rejected, takes it off the client marketplace)
+ *     rejected -> Approve
+ *
+ * Differences from legacy: adds filter, search and pagination; decisions can also be made
+ * from inside the review modal.
+ */
 
-export default function ServiceModeration() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedPkg, setSelectedPkg] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
+import { useEffect, useMemo, useState } from "react";
+import { Ban, Check, CheckCircle2, Clock, Eye, X, XCircle } from "lucide-react";
 
-  const fetchPackages = async () => {
-    try {
-      setLoading(true);
-      const data = await getPackages();
-      setPackages(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to load packages:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+import "../../styles/dashboard.css";
+import "../../styles/admin.css";
 
-  useEffect(() => {
-    fetchPackages();
-  }, []);
+import AdminTopBar from "../../components/admin/AdminTopBar";
+import DetailField from "../../components/admin/DetailField";
+import StatisticCard from "../../components/StatisticCard";
+import Modal from "../../components/Modal";
+import DataTable from "../../components/table/DataTable";
+import TableToolbar from "../../components/table/TableToolbar";
+import Pagination from "../../components/table/Pagination";
+import StatusBadge from "../../components/vendor/StatusBadge";
 
-  // Compute stat counts
-  const stats = useMemo(() => {
-    let pending = 0, approved = 0, rejected = 0;
-    packages.forEach((p) => {
-      const s = (p.status || 'pending').toLowerCase();
-      if (s === 'pending') pending++;
-      else if (s === 'approved') approved++;
-      else if (s === 'rejected') rejected++;
-    });
-    return { pending, approved, rejected };
-  }, [packages]);
+import { usePagination } from "../../hooks/usePagination";
+import { decidePackage, getPackages } from "../../services";
+import { formatCurrency } from "../../utils/formatCurrency";
 
-  // Filtering
-  const filteredPackages = useMemo(() => {
-    const q = searchTerm.toLowerCase().trim();
-    return packages.filter((p) => {
-      const matchesSearch =
-        !q ||
-        (p.id && p.id.toLowerCase().includes(q)) ||
-        (p.name && p.name.toLowerCase().includes(q)) ||
-        (p.vendorName && p.vendorName.toLowerCase().includes(q)) ||
-        (p.vendorId && p.vendorId.toLowerCase().includes(q)) ||
-        (p.category && p.category.toLowerCase().includes(q));
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+];
 
-      const s = (p.status || 'pending').toLowerCase();
-      let matchesStatus = true;
-      if (statusFilter !== 'all') {
-        matchesStatus = s === statusFilter.toLowerCase();
-      }
+// Packages without a status were created before moderation existed; treat them as pending.
+const statusOf = (pkg) => String(pkg?.status || "pending").toLowerCase();
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [packages, searchTerm, statusFilter]);
+const inclusionCount = (pkg) => (pkg.resources || []).length + (pkg.staff || []).length;
 
-  const handleDecision = async (pkgId, newStatus) => {
-    try {
-      setActionLoading(true);
-      await decidePackage(pkgId, { status: newStatus });
-      await fetchPackages();
-      if (selectedPkg && selectedPkg.id === pkgId) {
-        setSelectedPkg(null);
-      }
-    } catch (err) {
-      console.error('Failed to moderate package:', err);
-      alert('Failed to update service status.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
+function sortPendingFirst(packages) {
+  return [...packages].sort(
+    (a, b) => Number(statusOf(b) === "pending") - Number(statusOf(a) === "pending")
+  );
+}
 
-  const renderBadge = (status) => {
-    const s = (status || 'pending').toLowerCase();
-    if (s === 'approved') {
-      return (
-        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '600', background: 'rgba(0, 230, 118, 0.15)', color: '#00e676' }}>
-          Approved
-        </span>
-      );
-    }
-    if (s === 'rejected') {
-      return (
-        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '600', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-          Rejected
-        </span>
-      );
-    }
-    return (
-      <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '600', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
-        Pending Moderation
-      </span>
-    );
-  };
-
+/** The buttons that apply to a package in its current status. Shared by the row and the modal. */
+function DecisionButtons({ pkg, onDecide, busy }) {
+  const status = statusOf(pkg);
   return (
-    <div className="admin-page-container" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '700', color: '#fff', margin: 0 }}>Service & Package Moderation</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
-          Review and approve custom vendor packages before they become available on the marketplace.
-        </p>
-      </div>
-
-      {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Pending Moderation</span>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
-              <Package size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#f59e0b', marginTop: '10px' }}>
-            {stats.pending}
-          </div>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Awaiting admin audit
-          </div>
-        </div>
-
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Approved Packages</span>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(0, 230, 118, 0.1)', color: '#00e676' }}>
-              <CheckCircle2 size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#00e676', marginTop: '10px' }}>
-            {stats.approved}
-          </div>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Live on marketplace
-          </div>
-        </div>
-
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Terminated / Rejected</span>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-              <XCircle size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#ef4444', marginTop: '10px' }}>
-            {stats.rejected}
-          </div>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Delisted from catalog
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '300px' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="Search by package name, vendor, or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '9px 12px 9px 36px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                color: '#fff',
-                fontSize: '13px',
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '9px 12px',
-              background: '#161922',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '13px',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-
+    <>
+      {status !== "approved" && (
         <button
-          onClick={fetchPackages}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '9px 14px',
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            color: '#fff',
-            fontSize: '13px',
-            cursor: 'pointer',
-          }}
+          type="button"
+          className="ui-btn ui-btn--success"
+          disabled={busy}
+          onClick={() => onDecide(pkg, "approved")}
         >
-          <RefreshCcw size={14} className={loading ? 'spin' : ''} /> Refresh
+          <Check size={14} /> Approve
         </button>
-      </div>
-
-      {/* Packages Table */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <RefreshCcw size={28} className="spin" style={{ margin: '0 auto 12px auto', display: 'block' }} />
-            Loading packages...
-          </div>
-        ) : filteredPackages.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            No packages match your search filters.
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13.5px' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '14px 16px', fontWeight: '600' }}>Package Name</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600' }}>Vendor</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600' }}>Price</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600' }}>Inclusions</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600' }}>Status</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPackages.map((pkg) => {
-                const s = (pkg.status || 'pending').toLowerCase();
-                const isPending = s === 'pending';
-                const isApproved = s === 'approved';
-                const isRejected = s === 'rejected';
-                const inclusionsCount = (pkg.resources || []).length + (pkg.staff || []).length;
-
-                return (
-                  <tr key={pkg.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '14px 16px', color: '#fff', fontWeight: '600' }}>
-                      <div>{pkg.name}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pkg.category || 'Event Package'}</div>
-                    </td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>
-                      {pkg.vendorName || pkg.vendor || pkg.vendorId || 'Elite Events Co.'}
-                    </td>
-                    <td style={{ padding: '14px 16px', color: '#00e676', fontWeight: '600' }}>
-                      ${Number(pkg.price || 0).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>
-                      {inclusionsCount} items included
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>{renderBadge(pkg.status)}</td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={() => setSelectedPkg(pkg)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '6px 10px',
-                            background: 'rgba(255, 255, 255, 0.06)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '6px',
-                            color: '#fff',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Eye size={13} /> Review
-                        </button>
-
-                        {(isPending || isRejected) && (
-                          <button
-                            disabled={actionLoading}
-                            onClick={() => handleDecision(pkg.id, 'approved')}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '6px 10px',
-                              background: 'rgba(0, 230, 118, 0.15)',
-                              border: '1px solid rgba(0, 230, 118, 0.4)',
-                              borderRadius: '6px',
-                              color: '#00e676',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <CheckCircle2 size={13} /> Approve
-                          </button>
-                        )}
-
-                        {(isPending || isApproved) && (
-                          <button
-                            disabled={actionLoading}
-                            onClick={() => handleDecision(pkg.id, 'rejected')}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '6px 10px',
-                              background: 'rgba(239, 68, 68, 0.15)',
-                              border: '1px solid rgba(239, 68, 68, 0.4)',
-                              borderRadius: '6px',
-                              color: '#ef4444',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <XCircle size={13} /> {isApproved ? 'Terminate' : 'Reject'}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Package Review Modal */}
-      {selectedPkg && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(5px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '20px',
-          }}
-          onClick={() => setSelectedPkg(null)}
-        >
-          <div
-            style={{
-              background: '#12141c',
-              border: '1px solid var(--border)',
-              borderRadius: '14px',
-              width: '100%',
-              maxWidth: '650px',
-              padding: '24px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              position: 'relative',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedPkg(null)}
-              style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={20} />
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#fff', margin: 0 }}>
-                {selectedPkg.name}
-              </h2>
-              {renderBadge(selectedPkg.status)}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Vendor / Provider</div>
-                <div style={{ fontSize: '14px', color: '#fff', fontWeight: '600', marginTop: '2px' }}>
-                  {selectedPkg.vendorName || selectedPkg.vendor || selectedPkg.vendorId || 'Elite Events Co.'}
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Pricing</div>
-                <div style={{ fontSize: '16px', color: '#00e676', fontWeight: '700', marginTop: '2px' }}>
-                  ${Number(selectedPkg.price || 0).toLocaleString()}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
-                Description
-              </div>
-              <div style={{ fontSize: '13.5px', color: '#fff', lineHeight: '1.5' }}>
-                {selectedPkg.description || 'Full-service event production bundle with premium audio visual resources and certified staff.'}
-              </div>
-            </div>
-
-            {/* Inclusions */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Included Equipment & Staff
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {Array.isArray(selectedPkg.resources) && selectedPkg.resources.length > 0 ? (
-                  selectedPkg.resources.map((r, i) => (
-                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', fontSize: '12px', color: '#fff', border: '1px solid var(--border)' }}>
-                      📦 {typeof r === 'string' ? r : r.name || r.resourceName}
-                    </span>
-                  ))
-                ) : (
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Default audio-visual and stage lighting</span>
-                )}
-                {Array.isArray(selectedPkg.staff) && selectedPkg.staff.map((s, i) => (
-                  <span key={'s' + i} style={{ padding: '4px 10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '6px', fontSize: '12px', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                    👤 {typeof s === 'string' ? s : s.role || s.staffName}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                onClick={() => setSelectedPkg(null)}
-                style={{
-                  padding: '8px 16px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                }}
-              >
-                Close
-              </button>
-
-              <button
-                disabled={actionLoading}
-                onClick={() => handleDecision(selectedPkg.id, 'rejected')}
-                style={{
-                  padding: '8px 16px',
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.4)',
-                  borderRadius: '8px',
-                  color: '#ef4444',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Reject / Terminate
-              </button>
-
-              <button
-                disabled={actionLoading}
-                onClick={() => handleDecision(selectedPkg.id, 'approved')}
-                style={{
-                  padding: '8px 16px',
-                  background: '#00e676',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#000',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Approve Service
-              </button>
-            </div>
-          </div>
-        </div>
       )}
+      {status === "pending" && (
+        <button
+          type="button"
+          className="ui-btn ui-btn--danger"
+          disabled={busy}
+          onClick={() => onDecide(pkg, "rejected")}
+        >
+          <X size={14} /> Reject
+        </button>
+      )}
+      {status === "approved" && (
+        <button
+          type="button"
+          className="ui-btn ui-btn--danger"
+          disabled={busy}
+          onClick={() => onDecide(pkg, "rejected")}
+        >
+          <Ban size={14} /> Terminate
+        </button>
+      )}
+    </>
+  );
+}
+
+function PackageReviewModal({ pkg, onClose, onDecide, busy, error }) {
+  return (
+    <Modal
+      open={Boolean(pkg)}
+      title={pkg?.name || "Package Details"}
+      onClose={onClose}
+      width={620}
+      footer={
+        pkg && (
+          <>
+            <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={busy}>
+              Close
+            </button>
+            <DecisionButtons pkg={pkg} onDecide={onDecide} busy={busy} />
+          </>
+        )
+      }
+    >
+      {pkg && (
+        <>
+          <div className="detail-grid">
+            <DetailField label="Vendor">{pkg.vendorName || pkg.vendorId || "Unknown"}</DetailField>
+            <DetailField label="Status">
+              <StatusBadge status={statusOf(pkg)} />
+            </DetailField>
+            <DetailField label="Category">{pkg.category || "Package"}</DetailField>
+            <DetailField label="Price">
+              <span className="detail-money">{formatCurrency(pkg.price)}</span>
+            </DetailField>
+            <DetailField label="Capacity">{pkg.capacity}</DetailField>
+            <DetailField label="Duration">{pkg.duration ? `${pkg.duration} hrs` : null}</DetailField>
+            <DetailField label="Description" wide>
+              {pkg.desc}
+            </DetailField>
+          </div>
+
+          <div className="detail-section">
+            <h4>Included Resources</h4>
+            <TagList items={pkg.resources} empty="No resources listed." />
+          </div>
+          <div className="detail-section">
+            <h4>Required Staff</h4>
+            <TagList items={pkg.staff} empty="No staff listed." />
+          </div>
+
+          {error && (
+            <div className="admin-error" style={{ marginTop: 16 }}>
+              {error}
+            </div>
+          )}
+        </>
+      )}
+    </Modal>
+  );
+}
+
+function TagList({ items, empty }) {
+  if (!items?.length) return <div className="cell-muted">{empty}</div>;
+  return (
+    <div className="tag-list">
+      {items.map((item, i) => (
+        <span className="tag" key={`${item}-${i}`}>
+          {item}
+        </span>
+      ))}
     </div>
   );
 }
 
+function ServiceModeration() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const [reviewId, setReviewId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPackages()
+      .then((data) => {
+        if (!cancelled) setPackages(sortPendingFirst(data || []));
+      })
+      .catch((err) => {
+        console.error("Failed to load packages:", err);
+        if (!cancelled) setError("Could not load packages.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = useMemo(() => {
+    const count = (status) => packages.filter((p) => statusOf(p) === status).length;
+    return { pending: count("pending"), approved: count("approved"), rejected: count("rejected") };
+  }, [packages]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return packages.filter(
+      (p) =>
+        (statusFilter === "all" || statusOf(p) === statusFilter) &&
+        (!q ||
+          [p.name, p.vendorName, p.vendorId, p.category].some((v) =>
+            String(v || "").toLowerCase().includes(q)
+          ))
+    );
+  }, [packages, statusFilter, query]);
+
+  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
+
+  const decide = async (pkg, status) => {
+    setBusyId(pkg.id);
+    setError("");
+    try {
+      const updated = await decidePackage(pkg.id, status);
+      setPackages((prev) =>
+        sortPendingFirst(prev.map((p) => (p.id === pkg.id ? { ...p, ...(updated || { status }) } : p)))
+      );
+    } catch (err) {
+      console.error("Package decision failed:", err);
+      setError(`Could not update ${pkg.name}: ${err?.message || "request failed"}.`);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onFilter = (setter) => (value) => {
+    setter(value);
+    setPage(1);
+  };
+
+  const columns = [
+    { key: "name", header: "Package Name", className: "cell-highlight" },
+    { key: "vendor", header: "Vendor", render: (p) => p.vendorName || p.vendorId || "Unknown Vendor" },
+    { key: "category", header: "Category", render: (p) => p.category || "—" },
+    { key: "price", header: "Price", render: (p) => formatCurrency(p.price) },
+    { key: "inclusions", header: "Features", render: (p) => `${inclusionCount(p)} inclusions` },
+    { key: "status", header: "Status", render: (p) => <StatusBadge status={statusOf(p)} /> },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      render: (p) => (
+        <div className="cell-actions">
+          <button
+            type="button"
+            className="ui-btn ui-btn--ghost"
+            onClick={() => {
+              setError("");
+              setReviewId(p.id);
+            }}
+          >
+            <Eye size={14} /> Review
+          </button>
+          <DecisionButtons pkg={p} onDecide={decide} busy={busyId === p.id} />
+        </div>
+      ),
+    },
+  ];
+
+  const statValue = (n) => (loading ? "-" : n);
+  const reviewing = packages.find((p) => p.id === reviewId) || null;
+
+  return (
+    <div className="admin-service-moderation">
+      <AdminTopBar title="Service Moderation" />
+
+      <div className="content">
+        {error && !reviewing && <div className="admin-error">{error}</div>}
+
+        <div className="stats-grid stats-grid--three">
+          <StatisticCard title="Pending Review" value={statValue(stats.pending)} icon={Clock} color="orange" />
+          <StatisticCard title="Approved" value={statValue(stats.approved)} icon={CheckCircle2} color="green" />
+          <StatisticCard title="Rejected" value={statValue(stats.rejected)} icon={XCircle} color="red" />
+        </div>
+
+        <div className="card admin-table-card">
+          <TableToolbar
+            title="Package Reviews"
+            filters={[
+              { label: "Status", value: statusFilter, options: STATUS_OPTIONS, onChange: onFilter(setStatusFilter) },
+            ]}
+            search={{ value: query, placeholder: "Search packages, vendors...", onChange: onFilter(setQuery) }}
+          />
+          <DataTable columns={columns} rows={pageItems} loading={loading} emptyMessage="No packages match your filters." />
+          <Pagination {...pagination} onPageChange={setPage} />
+        </div>
+      </div>
+
+      <PackageReviewModal
+        pkg={reviewing}
+        onClose={() => setReviewId(null)}
+        onDecide={decide}
+        busy={busyId === reviewId}
+        error={error}
+      />
+    </div>
+  );
+}
+
+export default ServiceModeration;

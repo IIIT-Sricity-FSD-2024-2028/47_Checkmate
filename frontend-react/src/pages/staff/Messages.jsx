@@ -33,7 +33,7 @@ import {
   AlertTriangle,
   Boxes,
 } from 'lucide-react';
-import './staff.css';
+import '../../styles/staff.css';
 import Toast from './components/Toast';
 import {
   getSessionUser,
@@ -42,7 +42,7 @@ import {
   fetchMessageThread,
   sendMessage,
   createStaffRequest,
-} from './staffApi';
+} from '../../services/staffApi';
 
 export default function StaffMessages() {
   const [session] = useState(() => getSessionUser());

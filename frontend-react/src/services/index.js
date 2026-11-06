@@ -1,3 +1,6 @@
+export * as staffApi from './staffApi';
+export * as superuserApi from './superuserApi';
+
 // Central HTTP client and error definitions
 export {
   default as apiClient,
@@ -197,3 +200,5 @@ export {
   setStaffRequests,
   setStateKey,
 } from './stateService';
+
+

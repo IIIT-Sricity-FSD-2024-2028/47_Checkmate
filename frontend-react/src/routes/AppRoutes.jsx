@@ -13,14 +13,18 @@ import AdminFinancialPayouts from "../pages/admin/FinancialPayouts";
 import AdminCoordinationHub from "../pages/admin/CoordinationHub";
 import AdminSystemLogs from "../pages/admin/SystemLogs";
 import AdminGlobalSettings from "../pages/admin/GlobalSettings";
+
 import ClientDashboard from "../pages/client/Dashboard";
 import StaffDashboard from "../pages/staff/Dashboard";
 import SuperuserDashboard from "../pages/superuser/Dashboard";
 import SuperuserUsers from "../pages/superuser/Users";
 import SuperuserEvents from "../pages/superuser/Events";
+import SuperuserResources from "../pages/superuser/Resources";
+import SuperuserBookings from "../pages/superuser/Bookings";
 import SuperuserReports from "../pages/superuser/Reports";
 import SuperuserSettings from "../pages/superuser/Settings";
 import SuperuserReportIssue from "../pages/superuser/ReportIssue";
+
 import VendorDashboard from "../pages/vendor/Dashboard";
 
 import ClientLayout from "../layouts/ClientLayout";
@@ -31,12 +35,13 @@ import ClientTrackProgress from "../pages/client/TrackProgress";
 import ClientBrowsePackages from "../pages/client/BrowsePackages";
 import ClientCoordination from "../pages/client/Coordination";
 import ClientReportIssue from "../pages/client/ReportIssue";
+import ClientLiveMonitoring from "../pages/client/LiveMonitoring";
 
 import StaffLayout from "../layouts/StaffLayout";
 import StaffAssignedEvents from "../pages/staff/AssignedEvents";
 import StaffTaskBoard from "../pages/staff/TaskBoard";
-import StaffPerformance from "../pages/staff/Performance";
 import StaffSchedule from "../pages/staff/Schedule";
+import StaffPerformance from "../pages/staff/Performance";
 import StaffReportIssue from "../pages/staff/ReportIssue";
 import StaffMessages from "../pages/staff/Messages";
 
@@ -59,6 +64,7 @@ import ManageStaff from "../pages/vendor/ManageStaff";
 
 import Monitoring from "../pages/vendor/Monitoring";
 import Coordination from "../pages/vendor/Coordination";
+import VendorClientIssues from "../pages/vendor/ClientIssues";
 import ReportIssueVendor from "../pages/vendor/ReportIssueVendor";
 import VerifyDocs from "../pages/vendor/VerifyDocs";
 
@@ -66,10 +72,8 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Entry Redirect: Forwards directly to /signin or role dashboard ── */}
+        {/* ── Public Entry & Auth Routes ── */}
         <Route path="/" element={<LandingPage />} />
-
-        {/* ── Public Auth Routes ── */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup-details" element={<SignUp1 />} />
         <Route path="/signup-password" element={<SignUp2 />} />
@@ -104,6 +108,7 @@ function AppRoutes() {
             <Route path="packages" element={<ClientBrowsePackages />} />
             <Route path="messages" element={<ClientCoordination />} />
             <Route path="coordination" element={<ClientCoordination />} />
+            <Route path="live-monitoring" element={<ClientLiveMonitoring />} />
             <Route path="billing" element={<ClientBilling />} />
             <Route path="report-issue" element={<ClientReportIssue />} />
           </Route>
@@ -131,6 +136,8 @@ function AppRoutes() {
             <Route path="dashboard" element={<SuperuserDashboard />} />
             <Route path="users" element={<SuperuserUsers />} />
             <Route path="events" element={<SuperuserEvents />} />
+            <Route path="resources" element={<SuperuserResources />} />
+            <Route path="bookings" element={<SuperuserBookings />} />
             <Route path="reports" element={<SuperuserReports />} />
             <Route path="settings" element={<SuperuserSettings />} />
             <Route path="report-issue" element={<SuperuserReportIssue />} />
@@ -155,6 +162,7 @@ function AppRoutes() {
             <Route path="monitoring" element={<Monitoring />} />
             <Route path="coordination" element={<Coordination mode="event" />} />
             <Route path="coordination-admin" element={<Coordination mode="admin" />} />
+            <Route path="issues" element={<VendorClientIssues />} />
             <Route path="report-issue" element={<ReportIssueVendor target="event" />} />
             <Route path="report-issue-admin" element={<ReportIssueVendor target="admin" />} />
             <Route path="verify-docs" element={<VerifyDocs />} />

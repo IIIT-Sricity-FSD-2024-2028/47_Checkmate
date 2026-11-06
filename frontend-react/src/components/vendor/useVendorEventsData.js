@@ -136,14 +136,16 @@ export function useVendorEventsData() {
   // --------------------------------------------------------------------------
   // 5. ACTION HANDLER: APPROVE / REJECT EVENT STATUS
   // --------------------------------------------------------------------------
-  const handleStatusUpdate = async (eventId, newStatus) => {
+  // `note` is the rejection reason typed in <RejectReasonModal>; the backend saves it
+  // as rejectionReason so the client can see why (client <-> vendor bridge).
+  const handleStatusUpdate = async (eventId, newStatus, note) => {
     try {
       // Send PATCH request to backend endpoint (PATCH /events/:id/status)
-      await updateEventStatus(eventId, newStatus);
+      await updateEventStatus(eventId, newStatus, note);
 
       // Optimistically update the local event state
       setEvents((prev) =>
-        prev.map((ev) => (ev.id === eventId ? { ...ev, status: newStatus } : ev))
+        prev.map((ev) => (ev.id === eventId ? { ...ev, status: newStatus, ...(note ? { rejectionReason: note } : {}) } : ev))
       );
 
       // Trigger feedback toast notification
