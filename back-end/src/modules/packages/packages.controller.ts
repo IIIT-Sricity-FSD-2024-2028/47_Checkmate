@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { DecisionDto } from '../../common/dto/action.dto';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { CreatePackageDto, UpdatePackageDto } from './dto';
 import { PackagesService } from './packages.service';
@@ -15,8 +16,9 @@ export class PackagesController {
   @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreatePackageDto) { return this.service.create(dto); }
   @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
   @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
-  @Patch(':id/decision') @Roles('admin', 'superuser') decide(@Param() { id }: IdParamDto, @Body() body: { status: 'pending' | 'approved' | 'rejected' }) {
-    return this.service.decidePackage(id, body);
+  @Patch(':id/decision') @Roles('admin', 'superuser') decide(@Param() { id }: IdParamDto, @Body() dto: DecisionDto) {
+    // DecisionDto only accepts approved/rejected; an inline type here would skip validation.
+    return this.service.decidePackage(id, dto);
   }
   @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
 }

@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
-import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
+import { DEFAULT_COMMISSION_RATE, isCancelledBooking, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
 // The revenue model + dashboard KPIs. Everything here is derived live from the
 // bookings/events/resources collections -- nothing is stored pre-computed.
@@ -10,6 +10,8 @@ export class AnalyticsService {
 
   summary() {
     const snapshot = this.data.snapshot();
+    // Refunded bookings are not revenue and not payouts owed.
+    const bookings = snapshot.bookings.filter((booking) => !isCancelledBooking(booking));
 
     // Bookings are the billable records. One is created automatically whenever an
     // event flips to confirmed/approved (see DataService.triggerEventUpdated),
@@ -17,36 +19,36 @@ export class AnalyticsService {
     const confirmedStatuses = ['Confirmed', 'Completed', 'confirmed', 'completed', 'In Progress', 'live'];
 
     // Total = every booking. Confirmed = only the ones that actually count as earned.
-    const totalRevenue = snapshot.bookings.reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
-    const confirmedRevenue = snapshot.bookings
+    const totalRevenue = bookings.reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
+    const confirmedRevenue = bookings
       .filter((booking) => confirmedStatuses.includes(booking.status))
       .reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
     // Whatever is booked but not yet in a confirmed state.
     const pendingRevenue = totalRevenue - confirmedRevenue;
 
     // Platform Commission (10%) and Vendor Payouts (90%)
-    const platformCommissionEarned = snapshot.bookings.reduce(
+    const platformCommissionEarned = bookings.reduce(
       (sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE),
       0,
     );
-    const confirmedCommissionEarned = snapshot.bookings
+    const confirmedCommissionEarned = bookings
       .filter((b) => confirmedStatuses.includes(b.status))
       .reduce(
         (sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE),
         0,
       );
 
-    const totalVendorPayouts = snapshot.bookings.reduce(
+    const totalVendorPayouts = bookings.reduce(
       (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
       0,
     );
-    const pendingVendorPayouts = snapshot.bookings
+    const pendingVendorPayouts = bookings
       .filter((b) => (b.payoutStatus || 'pending') === 'pending')
       .reduce(
         (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
         0,
       );
-    const settledVendorPayouts = snapshot.bookings
+    const settledVendorPayouts = bookings
       .filter((b) => b.payoutStatus === 'settled')
       .reduce(
         (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
@@ -71,7 +73,7 @@ export class AnalyticsService {
       events: snapshot.events.length,
       liveEvents: snapshot.events.filter((e) => e.status === 'live').length,
       completedEvents: snapshot.events.filter((e) => e.status === 'completed').length,
-      bookings: snapshot.bookings.length,
+      bookings: bookings.length,
       resources: snapshot.resources.length,
       staff: snapshot.staff.length,
       openIssues: snapshot.issues.filter((issue) => issue.status !== 'closed' && issue.status !== 'resolved').length,
@@ -86,7 +88,7 @@ export class AnalyticsService {
       totalVendorPayouts,
       pendingVendorPayouts,
       settledVendorPayouts,
-      averageBookingValue: snapshot.bookings.length > 0 ? Number((totalRevenue / snapshot.bookings.length).toFixed(2)) : 0,
+      averageBookingValue: bookings.length > 0 ? Number((totalRevenue / bookings.length).toFixed(2)) : 0,
       resourceUtilizationRate,
       commissionPct,
       platformCommission,
@@ -124,9 +126,27 @@ export class AnalyticsService {
     return this.scrubCollection(name, this.data.getValue(name));
   }
 
-  setStateKey(key: string, value: unknown) {
+  // Only the loosely-structured keys may be written here. Real collections
+  // (users, events, bookings...) have their own endpoints with their own rules;
+  // without this list any signed-in user could overwrite e.g. the users list.
+  private static readonly SHARED_KEYS = [
+    'adminChatMessages', 'coordinationMessages', 'notifications', 'monitorProgress',
+    'resourceAllocations', 'contingencyPlans', 'staffRequests', 'staffTasks',
+    'venueAllocations', 'liveEvents', 'session', 'vendorNotifications',
+  ];
+  // Admin-only keys. platformSettings is still written here by the legacy admin
+  // page; the React app uses the validated PUT /settings instead.
+  private static readonly ADMIN_KEYS = ['superuserEngineSettings', 'platformSettings', 'recruitments'];
+
+  setStateKey(key: string, value: unknown, role?: string) {
     this.assertNotPrivate(key);
-    return this.data.setValue(this.normalizeKey(key), value);
+    const name = this.normalizeKey(key);
+    const isAdmin = role === 'admin' || role === 'superuser';
+    const allowed = AnalyticsService.SHARED_KEYS.includes(name) || (isAdmin && AnalyticsService.ADMIN_KEYS.includes(name));
+    if (!allowed) {
+      throw new ForbiddenException(`"${name}" can't be changed through /state. Use its own endpoint.`);
+    }
+    return this.data.setValue(name, value);
   }
 
   // These have their own routes with ownership checks.
@@ -144,9 +164,8 @@ export class AnalyticsService {
     return aliases[key] || key;
   }
 
-  // Collections that carry credentials. `users` holds the password hash, and a
-  // vendorApplication holds the applicant's password in PLAIN TEXT until an admin
-  // approves it (see VendorsService), so neither may ever leave the server as-is.
+  // Collections that carry credentials: `users` and `vendorApplications` both hold
+  // a password hash, so neither may ever leave the server as-is.
   private static readonly SECRET_FIELDS = ['passwordHash', 'password'];
 
   private stripCredentials(snapshot: any) {
@@ -154,6 +173,7 @@ export class AnalyticsService {
       ...snapshot,
       users: (snapshot.users || []).map((row: any) => this.omitSecrets(row)),
       vendorApplications: (snapshot.vendorApplications || []).map((row: any) => this.omitSecrets(row)),
+      vendorDocSubmission: this.omitSecrets(snapshot.vendorDocSubmission),
       staffApplications: [],
       messages: {},
     };
@@ -164,6 +184,7 @@ export class AnalyticsService {
     if ((name === 'users' || name === 'vendorApplications') && Array.isArray(value)) {
       return value.map((row) => this.omitSecrets(row));
     }
+    if (name === 'vendorDocSubmission') return this.omitSecrets(value as any);
     return value;
   }
 

@@ -8,8 +8,10 @@ import { EventsModule } from './modules/events/events.module';
 import { IssuesModule } from './modules/issues/issues.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { PackagesModule } from './modules/packages/packages.module';
+import { PlatformModule } from './modules/platform/platform.module';
 import { ResourcesModule } from './modules/resources/resources.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { StaffModule } from './modules/staff/staff.module';
 import { StaffOnboardingModule } from './modules/staff-onboarding/staff-onboarding.module';
@@ -51,6 +53,7 @@ import { VendorsController } from './modules/vendors/vendors.controller';
     VendorsModule,
     BookingsModule,
     AnalyticsModule,
+    PlatformModule,
   ],
   providers: [
     // Guard ORDER matters and follows registration order. Authentication must run
@@ -58,6 +61,7 @@ import { VendorsController } from './modules/vendors/vendors.controller';
     // then RolesGuard decides whether that user may call this route.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: MaintenanceGuard },
     FileLoggerService,
     LoggerFlushService,
   ],

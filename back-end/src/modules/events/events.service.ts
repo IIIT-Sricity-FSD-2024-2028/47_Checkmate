@@ -71,6 +71,15 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
   create(dto: CreateEventDto) {
     // Pull presetPackageId out of the payload; `...event` is everything else.
     const { presetPackageId, ...event } = dto;
+
+    // Global Settings can set a minimum budget. Budgets sent as text ranges are skipped.
+    const minBudget = Number((this.data.getValue('platformSettings') as any)?.minEventBudget || 0);
+    const hasBudget = event.budget !== undefined && event.budget !== null && event.budget !== '';
+    const budget = Number(event.budget);
+    if (minBudget > 0 && hasBudget && Number.isFinite(budget) && budget < minBudget) {
+      throw new BadRequestException(`The minimum event budget is ₹${minBudget.toLocaleString('en-IN')}.`);
+    }
+
     return this.data.create('events', 'EVT', {
       // These defaults are listed BEFORE ...event on purpose: a value the client
       // actually sent overwrites the default, because later keys win.
@@ -83,7 +92,18 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  update(id: string, dto: UpdateEventDto) { return this.data.update('events', id, dto); }
+  // Clients may edit the details of their own request, but never its status:
+  // approving is the vendor's/admin's job (and approving creates a booking).
+  update(id: string, dto: UpdateEventDto, user?: { id: string; role: string }) {
+    if (user?.role === 'client') {
+      const event = this.data.find('events', id);
+      if (event.clientId !== user.id) throw new ForbiddenException('You can only edit your own events.');
+      if (dto.status !== undefined && dto.status !== event.status) {
+        throw new ForbiddenException('Clients cannot change the status of an event.');
+      }
+    }
+    return this.data.update('events', id, dto);
+  }
 
   // A client can withdraw their own request until the vendor approves it.
   cancel(id: string, user?: { id: string }) {
@@ -126,6 +146,25 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     return updated;
   }
 
+  // Admin refund: only an approved event that hasn't started can be refunded.
+  // Setting it to cancelled makes DataService cancel the booking and give the
+  // stock and staff back; this method adds the paper trail and tells the client.
+  refund(id: string, reason: string | undefined, user?: { id: string; role?: string }) {
+    const event = this.data.find('events', id);
+    if (!['approved', 'confirmed'].includes(String(event.status).toLowerCase())) {
+      throw new BadRequestException('Only approved events that have not started can be refunded.');
+    }
+
+    const updated = this.data.update('events', id, {
+      status: 'cancelled',
+      cancelledAt: new Date().toISOString(),
+      refundReason: reason || '',
+    } as any);
+    this.data.logActivity('EVENT_REFUNDED', 'EVENT', id, { eventName: event.name, reason: reason || '' }, user?.id, user?.role);
+    this.notifyClient(updated as any, 'cancelled', reason);
+    return updated;
+  }
+
   remove(id: string) { return this.data.remove('events', id); }
 
   // Client <-> vendor bridge: when the vendor changes an event's status, drop a
@@ -142,6 +181,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       rejected: { title: `${event.name} Rejected`, message: note ? `Reason: ${note}` : `${event.name} was declined by the vendor.`, type: 'error' },
       live: { title: `${event.name} is Live`, message: `${event.name} is now in live execution mode.`, type: 'info' },
       completed: { title: `${event.name} Completed`, message: `${event.name} has finished. Thank you for using EventPro!`, type: 'success' },
+      cancelled: { title: `${event.name} Cancelled & Refunded`, message: note ? `Reason: ${note}. Any payment you made will be refunded.` : `${event.name} was cancelled by the platform. Any payment you made will be refunded.`, type: 'error' },
     };
     const text = messages[status];
     if (!text) return; // e.g. back to "pending" — nothing to tell the client

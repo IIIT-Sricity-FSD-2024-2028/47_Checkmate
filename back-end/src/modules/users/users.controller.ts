@@ -46,7 +46,7 @@ export class UsersController {
   @Get() @Roles('admin', 'superuser') @ApiOkResponse({ type: [CreateUserDto] }) findAll() { return this.service.findAll(); }
   @Get(':id') @Roles('admin', 'superuser') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
   @Post() @Roles('admin', 'superuser') create(@Body() dto: CreateUserDto) { return this.service.create(dto); }
-  @Put(':id') @Roles('admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateUserDto) { return this.service.update(id, dto); }
-  @Patch(':id') @Roles('admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateUserDto) { return this.service.update(id, dto); }
-  @Delete(':id') @Roles('admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+  @Put(':id') @Roles('admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateUserDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Patch(':id') @Roles('admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateUserDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Delete(':id') @Roles('admin', 'superuser') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 }

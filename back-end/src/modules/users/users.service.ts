@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { hashPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
@@ -40,7 +40,31 @@ export class UsersService {
       passwordHash: hashPassword(password || 'ChangeMe@2026'),
     }));
   }
-  update(id: string, dto: UpdateUserDto) {
+  // `actor` is the signed-in user making the change (req.user).
+  update(id: string, dto: UpdateUserDto, actor?: { id: string; role: string }) {
+    const target = this.data.find('users', id);
+    const actorIsSuperuser = actor?.role === 'superuser';
+
+    // Admin safety rules. The admin pages hide these buttons, but the UI can be
+    // bypassed, so the backend has to enforce them too.
+    if (!actorIsSuperuser) {
+      if (String(target.role).toLowerCase() === 'superuser') {
+        throw new ForbiddenException('Only a superuser can change a superuser account.');
+      }
+      if (String(dto.role || '').toLowerCase() === 'superuser') {
+        throw new ForbiddenException('Only a superuser can grant the superuser role.');
+      }
+    }
+    if (actor?.id === id && dto.status && String(dto.status).toLowerCase() !== 'active') {
+      throw new BadRequestException('You cannot disable your own account.');
+    }
+    if (dto.email) {
+      const email = dto.email.trim().toLowerCase();
+      const taken = this.data.collection('users').some((u) => u.id !== target.id && u.email.toLowerCase() === email);
+      if (taken) throw new BadRequestException('A user with this email already exists.');
+      dto = { ...dto, email };
+    }
+
     const { password, ...patch } = dto;
     return this.sanitize(this.data.update('users', id, {
       ...patch,
@@ -77,7 +101,14 @@ export class UsersService {
     return this.sanitize(this.data.update('users', user.id, { profile_picture_url: avatarUrl }));
   }
 
-  remove(id: string) { return this.data.remove('users', id); }
+  remove(id: string, actor?: { id: string; role: string }) {
+    const target = this.data.find('users', id);
+    if (actor?.id === id) throw new BadRequestException('You cannot delete your own account.');
+    if (actor?.role !== 'superuser' && String(target.role).toLowerCase() === 'superuser') {
+      throw new ForbiddenException('Only a superuser can delete a superuser account.');
+    }
+    return this.data.remove('users', id);
+  }
   private sanitize<T extends { passwordHash?: string }>(user: T) {
     const { passwordHash, ...safeUser } = user;
     return safeUser;

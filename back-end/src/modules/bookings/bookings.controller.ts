@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -63,9 +63,10 @@ export class BookingsController {
   settlePayout(
     @Param() { id }: IdParamDto,
     @Body() dto: SettlePayoutDto,
-    @Headers('x-user-id') adminUserId?: string,
+    @Req() req: any,
   ) {
-    return this.service.settlePayout(id, dto, adminUserId);
+    // Who released it comes from the login token, not from a header the caller could fake.
+    return this.service.settlePayout(id, dto, req.user?.id);
   }
 
   @Patch(':id')

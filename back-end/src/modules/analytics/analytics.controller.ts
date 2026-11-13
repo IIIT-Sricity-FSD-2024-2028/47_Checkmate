@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -47,7 +47,7 @@ export class AnalyticsController {
 
   @Put('state/:key')
   @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
-  setStateKey(@Param('key') key: string, @Body() dto: StateValueDto) {
-    return this.service.setStateKey(key, dto.value);
+  setStateKey(@Param('key') key: string, @Body() dto: StateValueDto, @Req() req: any) {
+    return this.service.setStateKey(key, dto.value, req.user?.role);
   }
 }

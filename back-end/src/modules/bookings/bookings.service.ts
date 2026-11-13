@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
 import { CreateBookingDto, SettlePayoutDto, UpdateBookingDto } from './dto';
-import { calculateCommissionSplit } from '../../common/constants/finance.constants';
+import { calculateCommissionSplit, isCancelledBooking } from '../../common/constants/finance.constants';
 import { Booking } from '../../domain/models';
 
 @Injectable()
@@ -79,10 +79,12 @@ export class BookingsService {
       bookings = bookings.filter((b) => (b.eventId || '').toLowerCase() === eId);
     }
 
-    const totalGross = bookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);
-    const totalCommission = bookings.reduce((sum, b) => sum + Number(b.commissionAmount || 0), 0);
-    const totalVendorPayouts = bookings.reduce((sum, b) => sum + Number(b.vendorPayoutAmount || 0), 0);
-    const pendingVendorPayouts = bookings
+    // Refunded bookings are still listed, but they are no longer money earned or owed.
+    const live = bookings.filter((b) => !isCancelledBooking(b));
+    const totalGross = live.reduce((sum, b) => sum + Number(b.cost || 0), 0);
+    const totalCommission = live.reduce((sum, b) => sum + Number(b.commissionAmount || 0), 0);
+    const totalVendorPayouts = live.reduce((sum, b) => sum + Number(b.vendorPayoutAmount || 0), 0);
+    const pendingVendorPayouts = live
       .filter((b) => (b.payoutStatus || 'pending') === 'pending')
       .reduce((sum, b) => sum + Number(b.vendorPayoutAmount || 0), 0);
     const settledVendorPayouts = bookings
@@ -91,7 +93,8 @@ export class BookingsService {
 
     return {
       summary: {
-        totalBookings: bookings.length,
+        totalBookings: live.length,
+        refundedBookings: bookings.length - live.length,
         totalGrossVolume: totalGross,
         platformCommissionRate: this.data.getCommissionRate(),
         platformCommissionEarned: totalCommission,
@@ -109,6 +112,7 @@ export class BookingsService {
    */
   private getSettleBlockReason(booking: Booking): string | null {
     if (booking.payoutStatus === 'settled') return 'Payout already settled';
+    if (isCancelledBooking(booking)) return 'Event was refunded';
     if (booking.paymentStatus !== 'paid') return 'Client has not paid in full';
     const event = this.data.collection('events').find((e) => e.id === booking.eventId);
     if (String(event?.status ?? booking.status).toLowerCase() !== 'completed') return 'Event is not completed';
@@ -150,7 +154,7 @@ export class BookingsService {
     }
 
     const settledAt = new Date().toISOString();
-    const settledBy = dto?.settledBy || adminUserId || 'U001';
+    const settledBy = adminUserId || 'unknown';
 
     const updated = this.data.update('bookings', id, {
       payoutStatus: 'settled',

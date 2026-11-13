@@ -29,7 +29,8 @@ export type ArrayCollectionName =
 @Injectable()
 export class DataService implements OnModuleInit {
   private readonly logger = new Logger(DataService.name);
-  private readonly dataDir = join(__dirname, '..', '..', 'data');
+  // DATA_DIR lets the tests use a throwaway folder instead of the real database.
+  private readonly dataDir = process.env.DATA_DIR || join(__dirname, '..', '..', 'data');
   private readonly dbFilePath = join(this.dataDir, 'database.json');
 
   private data: AppData;
@@ -351,6 +352,13 @@ export class DataService implements OnModuleInit {
       this.releaseEventAllocations(newEvent.id);
     }
 
+    // THE REFUND RULE. Cancelling an event that was already billed cancels its
+    // booking: whatever the client paid is refunded, and the vendor payout that
+    // was waiting on this event is called off.
+    if (String(newEvent.status).toLowerCase() === 'cancelled' && String(oldEvent.status).toLowerCase() !== 'cancelled') {
+      this.refundEventBooking(newEvent.id);
+    }
+
     if (oldEvent.status !== newEvent.status) {
       this.logActivity('EVENT_STATUS_CHANGED', 'EVENT', newEvent.id, {
         oldStatus: oldEvent.status,
@@ -387,8 +395,7 @@ export class DataService implements OnModuleInit {
           role: 'Vendor',
           status: 'Active',
           created: new Date().toISOString().slice(0, 10),
-          // By the time this trigger fires, passwordHash should already be properly hashed
-          // by vendors.service.ts decideApplication(). Use it as-is.
+          // Already a hash: VendorsService hashes the password when the application arrives.
           passwordHash: newApp.passwordHash || '',
         });
       }
@@ -465,6 +472,25 @@ export class DataService implements OnModuleInit {
     if (this.data.monitorProgress[eventId]) {
       this.data.monitorProgress[eventId] = { setup: 100, registration: 100, event: 100, breakdown: 100 };
     }
+  }
+
+  private refundEventBooking(eventId: string) {
+    const booking = this.data.bookings.find((b) => b.eventId === eventId);
+    // Nothing to refund if it was never billed, and a payout already sent can't be taken back.
+    if (!booking || booking.payoutStatus === 'settled' || booking.payoutStatus === 'cancelled') return;
+
+    const refundedAmount = Number(booking.advancePaid || 0);
+    booking.status = 'Cancelled';
+    booking.payoutStatus = 'cancelled';
+    booking.paymentStatus = refundedAmount > 0 ? 'refunded' : booking.paymentStatus;
+    booking.refundedAmount = refundedAmount;
+    booking.refundedAt = new Date().toISOString();
+
+    this.logActivity('BOOKING_REFUNDED', 'BOOKING', booking.id, {
+      eventId,
+      eventName: booking.eventName,
+      refundedAmount,
+    });
   }
 
   // Deleting an event must not leave assignments/tasks/bookings pointing at an id

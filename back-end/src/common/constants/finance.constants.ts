@@ -13,6 +13,11 @@ export function commissionRateFromPercent(percent: unknown): number {
   return Number.isFinite(value) && value >= 0 && value <= 100 ? value / 100 : DEFAULT_COMMISSION_RATE;
 }
 
+/** A booking whose event was refunded. It no longer counts as revenue or as a payout owed. */
+export function isCancelledBooking(booking: { status?: string; payoutStatus?: string }): boolean {
+  return String(booking.status).toLowerCase() === 'cancelled' || booking.payoutStatus === 'cancelled';
+}
+
 export interface CommissionCalculation {
   totalCost: number;
   commissionRate: number;

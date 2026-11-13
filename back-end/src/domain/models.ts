@@ -248,10 +248,12 @@ export interface Booking {
   commissionRate?: number;       // e.g. 0.10
   commissionAmount?: number;     // 10% platform commission
   vendorPayoutAmount?: number;   // 90% net to vendor
-  payoutStatus?: PayoutStatus;   // 'pending' | 'settled'
+  payoutStatus?: PayoutStatus;   // 'pending' | 'settled' | 'cancelled' (refunded event)
   vendorSplits?: VendorSplit[];  // Only when several vendors supplied the event
   settledAt?: string;            // Timestamp when payout released
   settledBy?: string;            // Admin User ID who authorized settlement
+  refundedAmount?: number;       // What the client got back when the event was refunded
+  refundedAt?: string;
   created: string;
 }
 

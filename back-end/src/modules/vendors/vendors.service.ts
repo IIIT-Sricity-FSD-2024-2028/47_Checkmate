@@ -3,14 +3,16 @@ import { hashPassword } from '../../common/security/password';
 import { DecisionDto } from '../../common/dto/action.dto';
 import { DataService } from '../../database/data.service';
 import { CreateVendorApplicationDto, CreateVendorDto, UpdateVendorApplicationDto, UpdateVendorDto } from './dto';
-import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
+import { DEFAULT_COMMISSION_RATE, isCancelledBooking, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
 // Two related things live here: the approved `vendors` list, and the
 // `vendorApplications` queue that admins approve or reject.
 //
-// WATCH OUT: between signup and approval, the application's `passwordHash`
-// field holds the RAW password, not a hash. It is only hashed at the moment
-// of approval (decideApplication), just before the account is created.
+// The applicant's password is hashed the moment the application arrives, and
+// applications are never sent back with it (see sanitize). On approval the
+// DataService trigger copies that hash onto the new vendor's user account.
+const SHA256_HEX = /^[a-f0-9]{64}$/;
+
 @Injectable()
 export class VendorsService {
   constructor(private readonly data: DataService) {}
@@ -19,55 +21,48 @@ export class VendorsService {
   createVendor(dto: CreateVendorDto) { return this.data.create('vendors', 'V', dto); }
   updateVendor(id: string, dto: UpdateVendorDto) { return this.data.update('vendors', id, dto); }
   removeVendor(id: string) { return this.data.remove('vendors', id); }
-
-  applications() { return this.data.collection('vendorApplications'); }
-  findApplication(id: string) { return this.data.find('vendorApplications', id); }
+  applications() { return this.data.collection('vendorApplications').map((app) => this.sanitize(app)); }
+  findApplication(id: string) { return this.sanitize(this.data.find('vendorApplications', id)); }
   createApplication(dto: CreateVendorApplicationDto) {
-    // Store the raw password separately so we can hash it on approval.
-    // The passwordHash field here actually contains the raw password from the signup form.
-    const rawPassword = dto.passwordHash;
-    const appPayload = {
-      status: 'pending' as const,
+    // The signup form sends the plain password in `passwordHash`; hash it before storing.
+    // status goes after ...dto so an applicant can't submit themselves as "approved".
+    const app = this.data.create('vendorApplications', 'VAPP', {
       submittedAt: new Date().toISOString(),
       ...dto,
-      // Keep the raw password in passwordHash field for now; it will be hashed on approval
-      passwordHash: rawPassword || '',
-    };
-    const app = this.data.create('vendorApplications', 'VAPP', appPayload);
-    this.data.setValue('vendorDocSubmission', app);
-    return app;
-  }
-  updateApplication(id: string, dto: UpdateVendorApplicationDto) { return this.data.update('vendorApplications', id, dto); }
-  decideApplication(id: string, dto: DecisionDto) {
-    // Hash the raw password stored in the application BEFORE updating status.
-    // This ensures the DataService trigger (triggerVendorApplicationUpdated) uses the hashed value.
-    const currentApp = this.data.find('vendorApplications', id);
-    const rawPassword = currentApp.passwordHash || '';
-    // Only hash if it still looks like plain text -- guards against hashing twice
-    // if an application is approved, reopened, and approved again.
-    const hashedPassword = rawPassword && !rawPassword.startsWith('$2b$') && rawPassword.length < 128
-      ? hashPassword(rawPassword)
-      : rawPassword; // Already hashed or is a hash
+      status: 'pending' as const,
+      passwordHash: dto.passwordHash ? hashPassword(dto.passwordHash) : '',
+    });
+    this.data.setValue('vendorDocSubmission', this.sanitize(app));
 
-    // Pre-set the hashed password on the application before the status change triggers auto-provisioning
+    // Global Settings > Auto-Approve Vendors skips the admin review.
+    const settings = this.data.getValue('platformSettings') as { autoApproveVendors?: boolean } | undefined;
+    if (settings?.autoApproveVendors) {
+      return this.decideApplication(app.id, { status: 'approved', note: 'Auto-approved (Global Settings)' });
+    }
+    return this.sanitize(app);
+  }
+  updateApplication(id: string, dto: UpdateVendorApplicationDto) {
+    return this.sanitize(this.data.update('vendorApplications', id, dto));
+  }
+  decideApplication(id: string, dto: DecisionDto) {
+    // Applications saved before passwords were hashed on arrival may still hold
+    // plain text; hash those now so the new account can log in.
+    const current = this.data.find('vendorApplications', id);
+    const stored = current.passwordHash || '';
+    const passwordHash = stored && !SHA256_HEX.test(stored) ? hashPassword(stored) : stored;
+
+    // Approving fires the DataService trigger that creates the vendor + user.
     const app = this.data.update('vendorApplications', id, {
       status: dto.status,
       note: dto.note,
       decidedAt: new Date().toISOString(),
-      passwordHash: hashedPassword,
+      passwordHash,
     });
-
-    // The DataService triggerVendorApplicationUpdated handles vendor + user creation,
-    // but we need to ensure the user gets the properly hashed password.
-    // Check if the trigger already created the user; if so, update the password hash.
-    if (dto.status === 'approved') {
-      const createdUser = this.data.collection('users').find((u) => u.email.toLowerCase() === app.email.toLowerCase());
-      if (createdUser && createdUser.passwordHash !== hashedPassword) {
-        this.data.update('users', createdUser.id, { passwordHash: hashedPassword });
-      }
-    }
-
-    return app;
+    return this.sanitize(app);
+  }
+  private sanitize<T extends { passwordHash?: string }>(app: T) {
+    const { passwordHash, ...safe } = app;
+    return safe;
   }
   removeApplication(id: string) { return this.data.remove('vendorApplications', id); }
 
@@ -88,13 +83,15 @@ export class VendorsService {
       return share ? { ...b, ...share, vendorSplits: undefined } : b;
     });
 
-    const totalEarnedGross = vendorBookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);
-    const platformFeeDeducted = vendorBookings.reduce((sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE), 0);
-    const netPayoutAmount = vendorBookings.reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
-    const pendingPayouts = vendorBookings
+    // Refunded bookings stay in the list but earn nothing.
+    const counted = vendorBookings.filter((b) => !isCancelledBooking(b));
+    const totalEarnedGross = counted.reduce((sum, b) => sum + Number(b.cost || 0), 0);
+    const platformFeeDeducted = counted.reduce((sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE), 0);
+    const netPayoutAmount = counted.reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
+    const pendingPayouts = counted
       .filter((b) => (b.payoutStatus || 'pending') === 'pending')
       .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
-    const settledPayouts = vendorBookings
+    const settledPayouts = counted
       .filter((b) => b.payoutStatus === 'settled')
       .reduce((sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE), 0);
 

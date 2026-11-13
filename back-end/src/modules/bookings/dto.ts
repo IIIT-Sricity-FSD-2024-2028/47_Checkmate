@@ -25,7 +25,7 @@ export class CreateBookingDto {
 export class UpdateBookingDto extends PartialType(CreateBookingDto) {}
 
 export class SettlePayoutDto {
-  @ApiPropertyOptional({ example: 'U001', description: 'Admin User ID authorizing payout' })
+  @ApiPropertyOptional({ example: 'U001', description: 'Ignored: the releasing admin is read from the login token' })
   @IsOptional()
   @IsString()
   settledBy?: string;
