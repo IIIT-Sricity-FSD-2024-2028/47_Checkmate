@@ -27,7 +27,7 @@ import { useEffect, useState } from "react";
 import { getEventById } from "../../services/eventService";
 import { getStaffAssignments } from "../../services/staffService";
 import { getResourceAllocations } from "../../services/stateService";
-import { getEventProgress, REFRESH_MS } from "../../utils/clientHelpers";
+import { getEventProgress, normalizeEvent, REFRESH_MS } from "../../utils/clientHelpers";
 
 export function useClientTrackData(eventId) {
   const [event, setEvent] = useState(null);
@@ -47,7 +47,7 @@ export function useClientTrackData(eventId) {
           getStaffAssignments(),
         ]);
         if (!isMounted) return;
-        setEvent(ev);
+        setEvent(normalizeEvent(ev));
         setAllocations(allocs || {});
         setAssignments(staffAssignments || []);
         setNotFound(!ev);

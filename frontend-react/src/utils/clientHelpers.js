@@ -9,6 +9,34 @@ import { getAuthSession } from "../services/auth/authStorage";
 // Statuses that mean the vendor has approved the event
 export const APPROVED_STATUSES = ["confirmed", "approved", "live", "completed"];
 
+// Other portals save statuses in their own spelling (the superuser page saves
+// "Confirmed", "In Progress", "Cancelled"), but every client page compares
+// against lowercase names. These map the other spellings onto ours.
+const STATUS_ALIASES = {
+    "in progress": "live",
+    "in_progress": "live",
+    "ongoing": "live",
+    "canceled": "cancelled",
+    "declined": "rejected",
+    "done": "completed",
+};
+
+// FACULTY MAY ASK: Why normalise here instead of fixing every comparison?
+// HOW TO CHANGE: The client pages have many `status === "live"` checks. Cleaning
+// the status once, when events arrive from the backend, keeps them all correct.
+export function normalizeStatus(status) {
+    const s = String(status || "pending").trim().toLowerCase();
+    return STATUS_ALIASES[s] || s;
+}
+
+export function normalizeEvent(event) {
+    return event && typeof event === "object" ? { ...event, status: normalizeStatus(event.status) } : event;
+}
+
+export function normalizeEvents(events) {
+    return Array.isArray(events) ? events.map(normalizeEvent) : [];
+}
+
 // How often the live pages re-fetch data (the old pages polled every 3–5 s)
 export const REFRESH_MS = 5000;
 

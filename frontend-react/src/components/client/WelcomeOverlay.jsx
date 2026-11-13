@@ -12,7 +12,7 @@
 import { useEffect, useState } from "react";
 import { Hand } from "lucide-react";
 import { getMyEvents } from "../../services/eventService";
-import { getCurrentUser } from "../../utils/clientHelpers";
+import { getCurrentUser, normalizeEvents } from "../../utils/clientHelpers";
 
 // sessionStorage is cleared when the tab closes, so the popup shows again next visit
 const SHOWN_KEY = "welcome_shown";
@@ -27,7 +27,7 @@ function WelcomeOverlay() {
         sessionStorage.setItem(SHOWN_KEY, "true");
         getMyEvents()
             .then((events) => {
-                const inProgress = events.filter((e) => e.status === "live" || e.status === "confirmed").length;
+                const inProgress = normalizeEvents(events).filter((e) => e.status === "live" || e.status === "confirmed").length;
                 setSummary(`You have ${inProgress} events currently in progress or confirmed.`);
             })
             .catch(() => {}); // keep the default text

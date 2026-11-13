@@ -27,7 +27,7 @@ import { useEffect, useState } from "react";
 import { getEventById } from "../../services/eventService";
 import { getStaffAssignments } from "../../services/staffService";
 import { getResourceAllocations, getMonitorProgress } from "../../services/stateService";
-import { describeError } from "../../utils/clientHelpers";
+import { describeError, normalizeEvent } from "../../utils/clientHelpers";
 
 const LIVE_REFRESH_MS = 3000;
 
@@ -50,7 +50,7 @@ export function useClientLiveData(eventId) {
           getMonitorProgress(),
         ]);
         if (!isMounted) return;
-        setEvent(ev);
+        setEvent(normalizeEvent(ev));
         setAssignments(staffAssignments || []);
         setAllocations(allocs || {});
         setMonitor(monitorProgress || {});

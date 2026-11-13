@@ -30,7 +30,7 @@ import { useEffect, useState } from "react";
 import { getMyEvents } from "../services/eventService";
 import { getIssues } from "../services/issueService";
 import { getStateKey, setStateKey } from "../services/stateService";
-import { describeError, getCurrentUser, initials } from "../utils/clientHelpers";
+import { describeError, getCurrentUser, initials, normalizeEvents } from "../utils/clientHelpers";
 
 const CHAT_REFRESH_MS = 3000;
 const MESSAGES_KEY = "coordinationMessages";
@@ -58,7 +58,7 @@ export function useEventChat() {
           getIssues(),
         ]);
         if (!isMounted) return;
-        const live = myEvents.filter((e) => e.status === "live");
+        const live = normalizeEvents(myEvents).filter((e) => e.status === "live");
         setEvents(live);
         // Select the first live event the first time we load
         setSelectedId((current) => current || live[0]?.id || null);

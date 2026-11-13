@@ -30,7 +30,7 @@ import { getResources } from "../../services/resourceService";
 import { getSnapshot } from "../../services/analyticsService";
 import { getEvents, createEvent } from "../../services/eventService";
 import { getResourceAllocations } from "../../services/stateService";
-import { getCurrentUser, formatTime12 } from "../../utils/clientHelpers";
+import { getCurrentUser, formatTime12, normalizeEvents } from "../../utils/clientHelpers";
 
 export const STEP_LABELS = ["Event Details", "Resources", "Staff", "Review"];
 
@@ -91,7 +91,7 @@ export function useCreateEventWizard() {
       if (!isMounted) return;
       if (res.status === "fulfilled") setResources(res.value || []);
       if (snap.status === "fulfilled") setStaff(snap.value?.staff || []);
-      if (evs.status === "fulfilled") setAllEvents(evs.value || []);
+      if (evs.status === "fulfilled") setAllEvents(normalizeEvents(evs.value));
       if (allocs.status === "fulfilled") setAllocations(allocs.value || {});
     }
     loadData();
