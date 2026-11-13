@@ -99,7 +99,7 @@ export default function StaffSchedule() {
               const isMe =
                 (matchedStaffId && a.staffId === matchedStaffId) ||
                 (a.staffName && a.staffName.trim().toLowerCase() === myName);
-              return isMe && a.status === 'accepted';
+              return isMe && ['accepted', 'assigned', 'confirmed', 'in_progress'].includes(String(a.status || '').toLowerCase());
             })
           : [];
 

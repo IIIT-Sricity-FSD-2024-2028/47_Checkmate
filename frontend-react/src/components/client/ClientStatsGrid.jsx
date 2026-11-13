@@ -22,10 +22,12 @@
  */
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { CalendarCheck, CheckCircle2, Hourglass, Rocket } from "lucide-react";
 import StatisticCard from "../StatisticCard";
 
 function ClientStatsGrid({ stats, loading }) {
+  const navigate = useNavigate();
   const show = (value) => (loading ? "..." : String(value ?? 0));
 
   return (
@@ -38,6 +40,7 @@ function ClientStatsGrid({ stats, loading }) {
         description="Events currently live or approved"
         icon={Rocket}
         color="blue"
+        onClick={() => navigate("/client/events")}
       />
 
       {/* ── Card 2: Pending Requests ── */}
@@ -48,6 +51,7 @@ function ClientStatsGrid({ stats, loading }) {
         description="Awaiting vendor approval"
         icon={Hourglass}
         color="orange"
+        onClick={() => navigate("/client/events")}
       />
 
       {/* ── Card 3: All Submitted Events ── */}
@@ -58,6 +62,7 @@ function ClientStatsGrid({ stats, loading }) {
         description="All events you've submitted"
         icon={CalendarCheck}
         color="purple"
+        onClick={() => navigate("/client/events")}
       />
 
       {/* ── Card 4: Completed Events ── */}
@@ -68,6 +73,7 @@ function ClientStatsGrid({ stats, loading }) {
         description="Successfully finished events"
         icon={CheckCircle2}
         color="green"
+        onClick={() => navigate("/client/events")}
       />
     </div>
   );

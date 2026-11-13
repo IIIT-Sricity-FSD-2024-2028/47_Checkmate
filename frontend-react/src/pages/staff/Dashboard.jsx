@@ -474,7 +474,7 @@ export default function StaffDashboard() {
                 <div className="qa-ico" style={{ background: 'var(--pink-dim)', color: 'var(--pink)' }}>✓</div>
                 Update Task Status
               </button>
-              <button className="qa-btn" onClick={() => navigate('/staff/task-board')}>
+              <button className="qa-btn" onClick={() => navigate('/staff/messages')}>
                 <div className="qa-ico" style={{ background: 'var(--bg4)', color: 'var(--text2)' }}>💬</div>
                 Message Vendor
               </button>

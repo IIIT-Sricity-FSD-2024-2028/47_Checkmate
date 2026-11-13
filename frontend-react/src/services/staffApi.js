@@ -3,30 +3,28 @@
  * Handles async REST API communication with the backend
  */
 
-const API_BASE = (typeof window !== 'undefined' && window.CHECKMATE_API_BASE) || 'http://localhost:3000/api';
+import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from './auth/authStorage';
+import { getBaseUrl } from './apiClient';
+
+const API_BASE = getBaseUrl();
 
 export function getSessionUser() {
-  try {
-    const raw = sessionStorage.getItem('checkmate_session') || localStorage.getItem('checkmate_session');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        name: parsed.user || parsed.name || 'Mike Staff',
-        email: (parsed.email || 'staff@demo.com').toLowerCase(),
-        role: parsed.role || 'Staff',
-        token: parsed.token || null,
-        staffId: parsed.staffId || null,
-      };
-    }
-  } catch {
-    // Fall back to demo user
-  }
+  const session = getAuthSession();
+  const user = session?.user || (typeof session?.user === 'object' && session.user !== null ? session.user : {});
+  const directName = typeof session?.name === 'string' ? session.name : null;
+  const userName = typeof user?.name === 'string' ? user.name : null;
+  const userStaffId = user?.staffId || session?.staffId || null;
+  const userEmail = getAuthEmail() || user?.email || session?.email || 'mike.staff@eliteevents.com';
+  const userRole = getAuthRole() || session?.role || user?.role || 'Staff';
+  const token = getAuthToken() || session?.token || null;
+
   return {
-    name: 'Mike Staff',
-    email: 'staff@demo.com',
-    role: 'Staff',
-    token: null,
-    staffId: null,
+    name: userName || directName || 'Mike Johnson',
+    email: String(userEmail).toLowerCase(),
+    role: userRole,
+    token: token,
+    staffId: userStaffId || 'S001',
+    userId: user?.id || session?.userId || null,
   };
 }
 
@@ -35,6 +33,7 @@ export function getAuthHeaders() {
   const headers = {
     'Content-Type': 'application/json',
     'x-role': 'staff',
+    'x-email': session.email,
   };
   if (session.token) {
     headers['Authorization'] = `Bearer ${session.token}`;
@@ -62,6 +61,18 @@ export async function updateStaffAssignment(id, patch) {
     throw new Error(`Failed to update assignment: ${response.status}`);
   }
   return response.json();
+}
+
+/** Reports how the signed-in staff member is getting on with a live event. */
+export async function updateStaffProgress(id, progress) {
+  const response = await fetch(`${API_BASE}/staff-assignments/${encodeURIComponent(id)}/progress`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(progress),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.message || 'Could not send your update.');
+  return data;
 }
 
 export async function fetchStaffList() {
@@ -116,4 +127,75 @@ export async function createIssue(data) {
     throw new Error(`Failed to submit issue: ${response.status}`);
   }
   return response.json();
+}
+
+export async function fetchMessageThread(threadId) {
+  const response = await fetch(`${API_BASE}/messages/${encodeURIComponent(threadId)}`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    if (response.status === 404) return [];
+    throw new Error(`Failed to load messages for thread ${threadId}: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function sendMessage(messageData) {
+  const response = await fetch(`${API_BASE}/messages`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(messageData),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to send message: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function createStaffRequest(requestData) {
+  const session = getSessionUser();
+  const payload = {
+    title: requestData.title || `Dispatch Request: ${requestData.item || 'Resource'}`,
+    description: requestData.desc || requestData.description || `Staff requested ${requestData.qty || 1}x ${requestData.item}`,
+    desc: requestData.desc || requestData.description || `Staff requested ${requestData.qty || 1}x ${requestData.item}`,
+    category: 'Staff Request',
+    type: 'staff_request',
+    priority: requestData.priority || 'High',
+    eventId: requestData.eventId || null,
+    event: requestData.eventId || null,
+    reporter: session.name,
+    reporterRole: 'Staff',
+    email: session.email,
+    role: 'Staff',
+    status: 'open',
+    severity: 'high',
+    createdAt: new Date().toISOString(),
+  };
+
+  const issueResult = await createIssue(payload);
+
+  // Also post an event coordination message to the thread so vendor chat displays the request
+  if (requestData.eventId) {
+    try {
+      await sendMessage({
+        threadId: requestData.eventId,
+        sender: session.name,
+        initials: (session.name || 'Staff')
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase(),
+        self: true,
+        text: `📋 Dispatch Request: ${requestData.qty || 1}x ${requestData.item} (${requestData.type || 'resource'})${
+          requestData.desc ? ' — "' + requestData.desc + '"' : ''
+        }`,
+        avatar: 'pink',
+      });
+    } catch {
+      // Non-fatal if thread not yet seeded
+    }
+  }
+
+  return issueResult;
 }

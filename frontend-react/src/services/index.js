@@ -1,5 +1,5 @@
-export * from './staffApi';
-export * from './superuserApi';
+export * as staffApi from './staffApi';
+export * as superuserApi from './superuserApi';
 
 // Central HTTP client and error definitions
 export {
@@ -51,13 +51,16 @@ export {
 
 // Event management
 export {
+  checkEventCollision,
   createEvent,
   default as eventService,
   deleteEvent,
   filterMyEvents,
+  findEventCollisions,
   getEventById,
   getEvents,
   getMyEvents,
+  parseTimeToMinutes,
   patchEvent,
   updateEvent,
   updateEventStatus,
@@ -170,6 +173,7 @@ export {
   getCommissions,
   getMyBookings,
   patchBooking,
+  payBooking,
   settleBookingPayout,
   settlePayout,
   updateBooking,
@@ -201,8 +205,4 @@ export {
   setStateKey,
 } from './stateService';
 
-// Staff portal helpers (added in 458b3d4). Names that already exist above
-// (createIssue, updateStaffAssignment) keep their original meaning, because
-// explicit exports take priority over `export *`. Staff pages import
-// staffApi directly when they need its versions.
-export * from "./staffApi";
+

@@ -293,6 +293,7 @@ export const seedData: AppData = {
     EVT005: { setup: 0, registration: 0, event: 0, breakdown: 0 },
     EVT006: { setup: 100, registration: 100, event: 100, breakdown: 100 },
   },
+  staffApplications: [],
   staffRequests: [],
   staffTasks: [],
   vendorDocSubmission: null,

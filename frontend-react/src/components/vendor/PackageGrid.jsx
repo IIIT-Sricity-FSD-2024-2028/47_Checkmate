@@ -5,6 +5,13 @@
  * Role: Responsive Card Grid Container (Vendor Packages Portal)
  * Location: src/components/vendor/PackageGrid.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/PresetPackage.jsx (Lines 123–129)
+ *   - Also Reused In: src/pages/client/BrowsePackages.jsx
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx, Component 4)
+ *   - Where in Code: Positioned directly below <PackageToolbar> in PresetPackage.jsx
+ *     to render the multi-column package card showcase via <PackageCard> iterations.
+ *
  * Purpose:
  *   Renders the responsive 3-column / 2-column / 1-column card grid:
  *     1. Handles loading placeholder skeleton state.
@@ -27,6 +34,10 @@ import { Box } from "lucide-react";
 import PackageCard from "./PackageCard";
 
 function PackageGrid({ packages = [], loading = false, onEdit, onDelete }) {
+  // --------------------------------------------------------------------------
+  // 1. LOADING SKELETON STATE
+  // --------------------------------------------------------------------------
+  // Renders 3 pulse-animated placeholder cards while data is being fetched
   if (loading) {
     return (
       <div className="pp-grid">
@@ -44,6 +55,10 @@ function PackageGrid({ packages = [], loading = false, onEdit, onDelete }) {
     );
   }
 
+  // --------------------------------------------------------------------------
+  // 2. EMPTY STATE FALLBACK
+  // --------------------------------------------------------------------------
+  // Displayed when no catalogued preset packages match the active search or category filters
   if (packages.length === 0) {
     return (
       <div className="pp-grid">
@@ -55,6 +70,10 @@ function PackageGrid({ packages = [], loading = false, onEdit, onDelete }) {
     );
   }
 
+  // --------------------------------------------------------------------------
+  // 3. RESPONSIVE CARDS GRID RENDER
+  // --------------------------------------------------------------------------
+  // Maps each package data object into a modular <PackageCard> component
   return (
     <div className="pp-grid">
       {packages.map((pkg) => (

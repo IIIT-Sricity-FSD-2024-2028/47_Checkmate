@@ -79,9 +79,14 @@ export class VendorsService {
     const allBookings = this.data.collection('bookings');
     const vendorBookings = allBookings.filter(
       (b) =>
+        b.vendorSplits?.some((s) => s.vendorId.toLowerCase() === vendorId.toLowerCase()) ||
         (b.vendorId && b.vendorId.toLowerCase() === vendorId.toLowerCase()) ||
         (b.vendor && vendor && (b.vendor.toLowerCase() === vendor.name.toLowerCase() || b.vendor.toLowerCase() === (vendor.businessName || '').toLowerCase())),
-    );
+    ).map((b) => {
+      // On a shared booking, this vendor only earns their part
+      const share = b.vendorSplits?.find((s) => s.vendorId.toLowerCase() === vendorId.toLowerCase());
+      return share ? { ...b, ...share, vendorSplits: undefined } : b;
+    });
 
     const totalEarnedGross = vendorBookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);
     const platformFeeDeducted = vendorBookings.reduce((sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE), 0);
@@ -97,7 +102,7 @@ export class VendorsService {
       vendorId: vendor.id,
       vendorName: vendor.name,
       businessName: vendor.businessName,
-      commissionRate: DEFAULT_COMMISSION_RATE,
+      commissionRate: this.data.getCommissionRate(),
       totalEarnedGross,
       platformFeeDeducted,
       netPayoutAmount,

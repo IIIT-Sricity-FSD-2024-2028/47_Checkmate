@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -47,6 +47,14 @@ export class BookingsController {
   @Roles('admin', 'superuser', 'vendor')
   updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateBookingDto) {
     return this.service.update(id, dto);
+  }
+
+  // Called by the client's Pay Now button. The gateway itself is still simulated.
+  @Patch(':id/pay')
+  @Roles('client')
+  @ApiOperation({ summary: 'Record full payment of a booking by the client who owns it' })
+  pay(@Param() { id }: IdParamDto, @Req() req: any) {
+    return this.service.recordPayment(id, req.user);
   }
 
   @Patch(':id/settle')

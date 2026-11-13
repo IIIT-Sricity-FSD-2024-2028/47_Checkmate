@@ -1,87 +1,147 @@
 /**
  * ============================================================================
- * EVENT RESOURCE REQUIREMENTS TABLE COMPONENT (EventResourceRequirementsTable.jsx)
+ * EVENT RESOURCE REQUIREMENTS TABLE (EventResourceRequirementsTable.jsx)
  * ============================================================================
  * Role: Reusable Component (Vendor Portal)
  * Location: src/components/vendor/EventResourceRequirementsTable.jsx
  *
  * Purpose:
- *   Renders the Resource Feasibility Inspection table:
- *     - Displays each requested inventory item along with its category.
- *     - Compares required quantity against active available stock.
- *     - Provides a clear visual badge: "In Stock" (green) or "Shortage" (red).
- *
- * Props:
- *   @param {Array} props.requirements - List of resource requirement objects:
- *     [{ id, name, category, required, available, isSufficient }]
+ *   Replicates legacy Event Review Resource Requirements table workflow:
+ *     - Header with the "+ Allocate Resource" action trigger, labelled by the page
+ *     - Required vs. Available inventory stock comparison
+ *     - Buffer calculations (+/- delta units)
+ *     - Status badges: Safe, Risk, Critical
+ *     - Action controls: Direct "▶ Allocate" button, "✓ Allocated", or "⚠ Conflict"
  * ============================================================================
  */
 
 import React from "react";
-import { Package, Check, X } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 
-function EventResourceRequirementsTable({ requirements = [] }) {
+function EventResourceRequirementsTable({
+  requirements = [],
+  onAllocate,
+  actionLabel = "Allocate Resource",
+  canAllocate = true,
+  onOpenExtraModal,
+}) {
   return (
-    <div className="client-req-card er-card-section">
-      {/* ── Card Header with Icon & Title ── */}
+    <div className="client-req-card er-card-section" id="resourceReqSection">
+      {/* ── Section Header with Title and Allocate Extra Button ── */}
       <div className="er-section-header">
         <h3 className="section-title">
           <Package size={16} className="er-title-icon er-title-icon--pink" />
-          Required Resources Check
+          Resource Requirements
         </h3>
+
+        {canAllocate && (
+          <button
+            type="button"
+            className="btn-alloc-extra-res"
+            onClick={onOpenExtraModal}
+            title="Allocate inventory to this event"
+          >
+            <Plus size={14} /> {actionLabel}
+          </button>
+        )}
       </div>
 
-      {/* ── Resources Table Wrapper ── */}
-      <div className="mr-table-wrap">
-        <table className="mr-table">
+      {/* ── Table Wrapper ── */}
+      <div className="req-wrap">
+        <table className="req-table">
           <thead>
             <tr>
-              <th>Resource Item</th>
+              <th>Resource Name</th>
               <th>Category</th>
-              <th>Required Units</th>
-              <th>Available in Stock</th>
-              <th>Status</th>
+              <th className="text-center">Required</th>
+              <th className="text-center">Available</th>
+              <th className="text-right">Buffer</th>
+              <th className="text-right">Status</th>
+              <th className="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {requirements.length > 0 ? (
-              requirements.map((res, index) => (
-                <tr key={res.id || index}>
-                  {/* Resource Name */}
-                  <td className="col-res-name">{res.name}</td>
+              requirements.map((res, index) => {
+                const reqQty = Number(res.required || 0);
+                const availQty = Number(res.available || 0);
+                const buffer = availQty - reqQty;
 
-                  {/* Category Badge */}
-                  <td>
-                    <span className="badge badge--conference">{res.category}</span>
-                  </td>
+                // Buffer styling class
+                const bufferClass =
+                  buffer > 0 ? "pos" : buffer === 0 ? "zero" : "neg";
 
-                  {/* Required Units */}
-                  <td>{res.required}</td>
+                // Row status badge
+                const statusBadge = res.isAllocated
+                  ? "safe"
+                  : buffer > 2
+                  ? "safe"
+                  : buffer >= 0
+                  ? "risk"
+                  : "critical";
 
-                  {/* Available Stock */}
-                  <td>{res.available}</td>
+                return (
+                  <tr key={res.id || index}>
+                    {/* Resource Name */}
+                    <td>{res.name}</td>
 
-                  {/* Status Badge (In Stock vs Shortage) */}
-                  <td>
-                    {res.isSufficient ? (
-                      <span className="avail-badge available">
-                        <Check size={12} className="er-badge-icon" />
-                        In Stock
+                    {/* Category */}
+                    <td>{res.category || "Equipment"}</td>
+
+                    {/* Required Quantity */}
+                    <td className="col-num">{reqQty}</td>
+
+                    {/* Available in Stock */}
+                    <td className="col-num">{availQty}</td>
+
+                    {/* Buffer Difference */}
+                    <td className={`buffer-val ${bufferClass}`}>
+                      {buffer >= 0 ? `+${buffer}` : buffer}
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="text-right">
+                      <span className={`row-status ${statusBadge}`}>
+                        {statusBadge}
                       </span>
-                    ) : (
-                      <span className="avail-badge unavailable">
-                        <X size={12} className="er-badge-icon" />
-                        Shortage ({res.required - res.available} needed)
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
+                    </td>
+
+                    {/* Action Column */}
+                    <td className="text-center">
+                      {res.isAllocated ? (
+                        <span className="row-status safe">✓ Allocated</span>
+                      ) : buffer < 0 ? (
+                        <span className="row-status critical">⚠ Conflict</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="er-btn-action-allocate"
+                          onClick={() => onAllocate && onAllocate(res)}
+                          title={`Allocate ${res.name} to this event`}
+                        >
+                          ▶ Allocate
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
-              /* Empty state if no specific resources were requested */
               <tr>
-                <td colSpan="5" className="vendor-table-message">
-                  No specific resources requested for this event.
+                <td colSpan="7" className="vendor-table-message text-center" style={{ padding: "26px 16px" }}>
+                  <div style={{ color: "var(--text-secondary, #9b8db0)", marginBottom: "10px", fontSize: "13.5px" }}>
+                    No resources requested by client for this event.
+                  </div>
+                  {canAllocate && (
+                    <button
+                      type="button"
+                      className="btn-alloc-extra-res"
+                      onClick={onOpenExtraModal}
+                      style={{ margin: "0 auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <Plus size={14} /> {actionLabel}
+                    </button>
+                  )}
                 </td>
               </tr>
             )}
@@ -92,4 +152,4 @@ function EventResourceRequirementsTable({ requirements = [] }) {
   );
 }
 
-export default EventResourceRequirementsTable;
+export default React.memo(EventResourceRequirementsTable);

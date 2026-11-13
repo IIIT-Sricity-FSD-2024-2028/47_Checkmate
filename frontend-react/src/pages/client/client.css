@@ -1004,6 +1004,27 @@
     color-scheme: dark; /* dark date/time pickers */
 }
 
+input[type="date"].cl-input,
+input[type="time"].cl-input {
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.85;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.14);
+}
+
 .cl-input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-glow); }
 .cl-input.input-error { border-color: var(--red); }
 .cl-error { font-size: 12px; color: var(--red); margin-top: 4px; }
@@ -1485,4 +1506,29 @@
     .cl-chat-sidebar { max-height: 220px; border-right: none; border-bottom: 1px solid var(--border); }
     .cl-chat-main { height: 520px; }
     .cl-wizard-step__label { display: none; }
+}
+
+/* ── Create Event: Step 1 sections ── */
+.cl-details-card { max-width: 860px; margin: 0 auto; }
+.cl-form-section { padding: 20px 0; border-top: 1px solid var(--border); }
+.cl-form-section__head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.cl-form-section__head h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.cl-form-section__head p { margin: 2px 0 0; font-size: 12px; color: var(--pink); }
+.cl-form-section__icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  color: var(--pink); background: rgba(233, 30, 140, 0.12);
+}
+.cl-form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cl-chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.cl-chip-option {
+  padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); background: transparent;
+  border: 1px solid var(--border); transition: all 0.15s ease;
+}
+.cl-chip-option:hover { color: var(--text-primary); border-color: var(--pink); }
+.cl-chip-option.selected { color: #fff; background: var(--pink); border-color: var(--pink); }
+@media (max-width: 720px) {
+  .cl-form-grid--3 { grid-template-columns: 1fr; }
 }

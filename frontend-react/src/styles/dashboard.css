@@ -46,6 +46,12 @@
 
 /* ── Global Layout Containers ── */
 .vendor-dashboard,
+.vendor-page,
+.admin-dashboard,
+.admin-manage-users,
+.admin-vendor-approvals,
+.client-page,
+.superuser-page,
 .dashboard-page {
   display: flex;
   flex-direction: column;
@@ -53,7 +59,7 @@
   min-width: 0;
   width: 100%;
   min-height: 100vh;
-  background: var(--bg-main, #0d0615);
+  background: transparent;
   color: var(--text-primary);
   font-family: var(--font-body);
 }

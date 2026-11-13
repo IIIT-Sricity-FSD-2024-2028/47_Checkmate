@@ -37,12 +37,18 @@ import { describeError, formatTime12, getCurrentUser } from "../../utils/clientH
  * flags unknown ids, so the vendor sees the package needs something they don't stock.
  */
 function matchPackageItems(pkg, resources, staff) {
-  const requestedResources = (pkg.resources || []).map((name, i) => {
-    const match = resources.find((r) => name.toLowerCase().includes(r.name.toLowerCase().split(" ")[0]));
+  const requestedResources = (pkg.resources || []).map((label, i) => {
+    // "Round Banquet Tables (15)" -> name + quantity 15
+    const [, name, count] = label.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+    const quantity = Number(count) || 1;
+    const text = name.toLowerCase();
+    const match =
+      resources.find((r) => r.name.toLowerCase() === text) ||
+      resources.find((r) => text.includes(r.name.toLowerCase().split(" ")[0]));
     if (match) {
-      return { resourceId: match.id, resourceName: match.name, category: match.category, quantity: 1, pricePerDay: match.price || 0 };
+      return { resourceId: match.id, resourceName: match.name, category: match.category, quantity, pricePerDay: match.price || 0 };
     }
-    return { resourceId: `UNKNOWN_RES_${Date.now()}_${i}`, resourceName: name, category: "Uncategorized", quantity: 1, pricePerDay: 0 };
+    return { resourceId: `UNKNOWN_RES_${Date.now()}_${i}`, resourceName: name, category: "Uncategorized", quantity, pricePerDay: 0 };
   });
 
   const requestedStaff = (pkg.staff || []).map((label, i) => {
@@ -54,7 +60,8 @@ function matchPackageItems(pkg, resources, staff) {
     return { staffId: `UNKNOWN_STF_${Date.now()}_${i}`, staffName: label, role: label };
   });
 
-  const estimatedCost = requestedResources.reduce((sum, r) => sum + r.pricePerDay * r.quantity, 0);
+  // The package has its own price; add up the items only if it has none
+  const estimatedCost = Number(pkg.price) || requestedResources.reduce((sum, r) => sum + r.pricePerDay * r.quantity, 0);
   return { requestedResources, requestedStaff, estimatedCost };
 }
 
@@ -113,6 +120,7 @@ export function useClientPackagesData() {
         type: pkg.category || "Package",
         date: form.date,
         time: formatTime12(form.time),
+        endTime: formatTime12(form.endTime),
         venue: form.venue.trim() || "TBD",
         people: Number(form.people) || 0,
         status: "pending",
@@ -129,6 +137,7 @@ export function useClientPackagesData() {
         requestedResources: requestedResources.length > 0 ? requestedResources : undefined,
         requestedStaff: requestedStaff.length > 0 ? requestedStaff : undefined,
         estimatedCost: estimatedCost > 0 ? estimatedCost : undefined,
+        budget: Number(pkg.price) || undefined,
       });
       return true;
     } catch {

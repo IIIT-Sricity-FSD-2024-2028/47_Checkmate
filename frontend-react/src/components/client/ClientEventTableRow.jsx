@@ -41,7 +41,8 @@ function ActionButton({ event, onViewReason }) {
   return <Link to={trackLink} className="cl-btn-sm cl-btn-ghost"><Hourglass size={14} /> View</Link>;
 }
 
-function ClientEventTableRow({ event, onViewReason }) {
+function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
+  const canChange = event.status === "pending" || event.status === "waiting";
   const reason = event.rejectionReason || "";
 
   return (
@@ -71,6 +72,13 @@ function ClientEventTableRow({ event, onViewReason }) {
       {/* Status-dependent action */}
       <td className="table-actions-cell">
         <ActionButton event={event} onViewReason={onViewReason} />
+        {canChange && (
+          <>
+            {" "}
+            <button type="button" className="cl-btn-sm cl-btn-ghost" onClick={() => onEdit(event)}>Edit</button>{" "}
+            <button type="button" className="cl-btn-sm cl-btn-danger" onClick={() => onCancel(event)}>Cancel</button>
+          </>
+        )}
       </td>
     </tr>
   );

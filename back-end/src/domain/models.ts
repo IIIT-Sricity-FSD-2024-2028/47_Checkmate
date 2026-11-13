@@ -153,6 +153,7 @@ export interface EventRecord {
   presetPackageId?: string;
   budget?: any;
   estimatedCost?: any;
+  quotedPrice?: number; // Final price set by the vendor on approval
   budgetRange?: string;
   notes?: string;
   rejectionReason?: string;
@@ -196,6 +197,9 @@ export interface StaffAssignment {
   assignedAt?: string;
   respondedAt?: string;
   completedAt?: string;
+  workStatus?: 'on_site' | 'working' | 'on_break' | 'finished'; // Reported by the staff member
+  progressNote?: string;
+  progressUpdatedAt?: string;
   tasks?: Array<StaffTask>;
 }
 
@@ -219,6 +223,15 @@ export interface StaffTask {
 
 export type PayoutStatus = 'pending' | 'processing' | 'settled' | 'cancelled';
 
+// One vendor's part of a booking whose items came from several vendors
+export interface VendorSplit {
+  vendorId: string;
+  vendor: string;
+  cost: number;
+  commissionAmount: number;
+  vendorPayoutAmount: number;
+}
+
 export interface Booking {
   id: string;
   eventId?: string;
@@ -236,6 +249,7 @@ export interface Booking {
   commissionAmount?: number;     // 10% platform commission
   vendorPayoutAmount?: number;   // 90% net to vendor
   payoutStatus?: PayoutStatus;   // 'pending' | 'settled'
+  vendorSplits?: VendorSplit[];  // Only when several vendors supplied the event
   settledAt?: string;            // Timestamp when payout released
   settledBy?: string;            // Admin User ID who authorized settlement
   created: string;
@@ -344,6 +358,25 @@ export interface ActivityLog {
   createdAt: string;
 }
 
+export interface StaffApplication {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  passwordHash?: string; // Only held while the application is pending
+  designation: string;
+  vendorId: string;
+  vendorName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  documents: Array<{ id: string; name: string; storedName: string; mimeType: string; size: number }>;
+  note?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  userId?: string;
+  staffId?: string;
+}
+
 export interface AppData {
   users: User[];
   events: EventRecord[];
@@ -353,6 +386,7 @@ export interface AppData {
   issues: Issue[];
   staffAssignments: StaffAssignment[];
   vendorApplications: VendorApplication[];
+  staffApplications: StaffApplication[];
   vendors: Vendor[];
   bookings: Booking[];
   messages: Record<string, Message[]>;

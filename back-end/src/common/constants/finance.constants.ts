@@ -1,10 +1,17 @@
 /**
  * Financial & Commission Constants for EventPro Revenue Model
- * Single Source of Truth for Platform Commission (10%) and Vendor Payout (90%)
+ * The live rate is set on Global Settings; 10% only applies if that is missing.
  */
 
 export const DEFAULT_COMMISSION_RATE = 0.10; // 10% platform commission fee
 export const VENDOR_SHARE_RATE = 0.90;       // 90% vendor net payout
+
+/** Converts the Global Settings percentage into a rate (12 -> 0.12). */
+export function commissionRateFromPercent(percent: unknown): number {
+  if (percent === undefined || percent === null || percent === '') return DEFAULT_COMMISSION_RATE;
+  const value = Number(percent);
+  return Number.isFinite(value) && value >= 0 && value <= 100 ? value / 100 : DEFAULT_COMMISSION_RATE;
+}
 
 export interface CommissionCalculation {
   totalCost: number;

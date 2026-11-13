@@ -59,6 +59,19 @@ export async function setResourceAllocations(allocations, options) {
   return setStateKey('resourceAllocations', allocations, options);
 }
 
+export async function getVenues(options) {
+  return (await getStateKey('venues', options)) || [];
+}
+
+/** Vendor-confirmed venues, keyed by event ID: { [eventId]: { venueId, venueName, allocatedAt } }. */
+export async function getVenueAllocations(options) {
+  return (await getStateKey('venueAllocations', options)) || {};
+}
+
+export async function setVenueAllocations(allocations, options) {
+  return setStateKey('venueAllocations', allocations, options);
+}
+
 export async function getStaffRequests(options) {
   return (await getStateKey('staffRequests', options)) || [];
 }

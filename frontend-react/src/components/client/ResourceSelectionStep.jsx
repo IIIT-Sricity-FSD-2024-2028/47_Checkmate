@@ -59,7 +59,7 @@ function ResourceSelectionStep({
                 <span className={`cl-cat cl-cat--${r.category.toLowerCase()}`}>{r.category}</span>
               </div>
               <div className="cl-res-card__bottom">
-                <div className="cl-res-card__price">${r.price}/{r.unit || "day"}</div>
+                <div className="cl-res-card__price">₹{r.price}/{r.unit || "day"}</div>
                 <div className="cl-qty">
                   <button type="button" onClick={() => onChangeQty(r, -1)}>−</button>
                   <span>{qty}</span>
@@ -82,7 +82,7 @@ function ResourceSelectionStep({
           {chosen.map((r) => (
             <div className="cl-summary__item" key={r.id}>
               <span>{r.name}</span>
-              <span className="cl-muted-text">×{r.qty} · ${r.cost}/day</span>
+              <span className="cl-muted-text">×{r.qty} · ₹{r.cost}/day</span>
               <button type="button" className="cl-remove" onClick={() => onRemove(r.id)} title="Remove">✕</button>
             </div>
           ))}

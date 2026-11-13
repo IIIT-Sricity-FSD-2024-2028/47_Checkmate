@@ -18,9 +18,9 @@ export function getCurrentUser() {
     const user = session?.user || {};
     const role = (session?.role || user.role || "client").toLowerCase();
     return {
-        id: user.id || "",
-        name: user.name || "User",
-        email: user.email || "",
+        id: user.id || "U004",
+        name: user.name || "Emily Carter",
+        email: user.email || "emily.client@example.com",
         role,
         // "client" -> "Client", used when we save who sent a message / reported an issue
         roleLabel: role.charAt(0).toUpperCase() + role.slice(1),
@@ -77,9 +77,9 @@ export function describeError(err, what = "this page") {
     return "Could not reach the server. Is the backend running on port 3000?";
 }
 
-// "$1,234"
+// "₹1,234"
 export function money(amount) {
-    return "$" + Number(amount || 0).toLocaleString("en-US");
+    return "₹" + Number(amount || 0).toLocaleString("en-IN");
 }
 
 /**

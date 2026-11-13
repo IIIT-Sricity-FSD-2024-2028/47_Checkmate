@@ -346,7 +346,7 @@ export default function SuperuserDashboard() {
       ctx.lineTo(pad.l + cW, y);
       ctx.stroke();
 
-      const label = v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`;
+      const label = v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v.toFixed(0)}`;
       ctx.fillText(label, pad.l - 6, y + 3);
     }
 
@@ -450,7 +450,7 @@ export default function SuperuserDashboard() {
           label="System Revenue"
           value={loading ? '...' : formatCurrency(totalRevenue)}
           subtext="↑ +22% from last month"
-          icon="$"
+          icon="₹"
           colorClass="green"
           borderColor="rgba(16, 185, 129, 0.25)"
         />
@@ -484,7 +484,7 @@ export default function SuperuserDashboard() {
       {/* HOW TO CHANGE: In the .rc container below, update the text inside .cc-title. */}
       <div className="rc">
         <div className="cc-title">
-          <span style={{ color: '#f59e0b' }}>$</span> Revenue Summary
+          <span style={{ color: '#f59e0b' }}>₹</span> Revenue Summary
         </div>
         <div style={{ height: '210px', width: '100%', position: 'relative' }}>
           <canvas ref={revenueCanvasRef} />

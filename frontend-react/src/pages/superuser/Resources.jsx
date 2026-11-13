@@ -370,7 +370,7 @@ export default function SuperuserResources() {
             </td>
             <td>{r.vendor}</td>
             <td>{renderProgressBar(r.avail, r.total)}</td>
-            <td style={{ fontWeight: 600, color: '#f1f5f9' }}>$ {r.price}</td>
+            <td style={{ fontWeight: 600, color: '#f1f5f9' }}>₹ {r.price}</td>
             <td>
               <div style={{ display: 'flex', gap: '5px' }}>
                 <button
@@ -486,7 +486,7 @@ export default function SuperuserResources() {
                 </div>
 
                 <div className="fg">
-                  <label className="fl">Price per Unit ($) *</label>
+                  <label className="fl">Price per Unit (₹) *</label>
                   <input
                     className={`fc ${formErrors.price ? 'fc-err' : ''}`}
                     type="number"

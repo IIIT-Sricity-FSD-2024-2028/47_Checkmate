@@ -21,10 +21,11 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
+import VenuePicker from "./VenuePicker";
+import { ArrowLeft, ArrowRight, CalendarDays, Clock, MapPin, Sparkles, Wallet } from "lucide-react";
 
 const EVENT_TYPES = ["Wedding", "Birthday", "Conference", "Party", "Corporate"];
-const BUDGET_RANGES = ["$1,000 - $5,000", "$5,000 - $15,000", "$15,000 - $30,000", "$30,000 - $50,000", "$50,000+"];
+const BUDGET_RANGES = ["₹1,000 - ₹5,000", "₹5,000 - ₹15,000", "₹15,000 - ₹30,000", "₹30,000 - ₹50,000", "₹50,000+"];
 
 // Small wrapper so every field has the same label + error markup
 function Field({ label, error, full, children }) {
@@ -37,67 +38,125 @@ function Field({ label, error, full, children }) {
   );
 }
 
+// Opens the browser's date/time picker when the field is clicked
+const openPicker = (e) => {
+  try {
+    e.target.showPicker?.();
+  } catch {}
+};
+
+// "18:00" to "21:30" -> "3h 30m"
+function describeDuration(start, end) {
+  if (!start || !end || end <= start) return "";
+  const toMinutes = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const minutes = toMinutes(end) - toMinutes(start);
+  return `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ""}`;
+}
+
+function Section({ icon: Icon, title, hint, children }) {
+  return (
+    <section className="cl-form-section">
+      <div className="cl-form-section__head">
+        <span className="cl-form-section__icon"><Icon size={16} /></span>
+        <div>
+          <h4>{title}</h4>
+          {hint && <p>{hint}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function EventDetailsStep({ form, errors, onChange, onNext }) {
   const inputClass = (field) => `cl-input ${errors[field] ? "input-error" : ""}`;
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const duration = describeDuration(form.time, form.endTime);
 
   return (
-    <div className="card">
+    <div className="card cl-details-card">
       <h3 className="cl-section-title"><CalendarDays size={20} color="var(--pink)" /> General Details</h3>
+      <p className="cl-section-sub">Tell us about your event. Fields marked * are required.</p>
 
-      <div className="cl-form-grid">
-        <Field label="Event Name *" error={errors.name} full>
-          <input className={inputClass("name")} type="text" placeholder="E.g., Sarah & Mike's Wedding"
-            value={form.name} onChange={(e) => onChange("name", e.target.value)} />
-        </Field>
+      <Section icon={Sparkles} title="About the event">
+        <div className="cl-form-grid">
+          <Field label="Event Name *" error={errors.name} full>
+            <input id="fieldEventName" name="name" className={inputClass("name")} type="text"
+              placeholder="E.g., Sarah & Mike's Wedding" value={form.name}
+              onChange={(e) => onChange("name", e.target.value)} />
+          </Field>
+          <Field label="Event Type *" error={errors.type} full>
+            <div className="cl-chip-group" role="radiogroup" aria-label="Event type">
+              {EVENT_TYPES.map((t) => (
+                <button key={t} type="button" role="radio" aria-checked={form.type === t}
+                  className={`cl-chip-option ${form.type === t ? "selected" : ""}`}
+                  onClick={() => onChange("type", t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+      </Section>
 
-        <Field label="Event Type *" error={errors.type}>
-          <select className={inputClass("type")} value={form.type} onChange={(e) => onChange("type", e.target.value)}>
-            <option value="" disabled>Select an event type</option>
-            {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </Field>
+      <Section icon={Clock} title="When" hint={duration ? `Duration: ${duration}` : undefined}>
+        <div className="cl-form-grid cl-form-grid--3">
+          <Field label="Event Date *" error={errors.date}>
+            <input id="fieldEventDate" name="date" className={inputClass("date")} type="date" min={todayStr}
+              value={form.date} onChange={(e) => onChange("date", e.target.value)} onClick={openPicker} />
+          </Field>
+          <Field label="Start Time">
+            <input id="fieldEventTime" name="time" className="cl-input" type="time" value={form.time}
+              onChange={(e) => onChange("time", e.target.value)} onClick={openPicker} />
+          </Field>
+          <Field label="End Time *" error={errors.endTime}>
+            <input id="fieldEndTime" name="endTime" className={inputClass("endTime")} type="time" value={form.endTime}
+              onChange={(e) => onChange("endTime", e.target.value)} onClick={openPicker} />
+          </Field>
+        </div>
+      </Section>
 
-        <Field label="Event Date *" error={errors.date}>
-          <input className={inputClass("date")} type="date"
-            value={form.date} onChange={(e) => onChange("date", e.target.value)} />
-        </Field>
+      <Section icon={MapPin} title="Where and how many">
+        <div className="cl-form-grid">
+          <Field label="Estimated Guest Count *" error={errors.people}>
+            <input id="fieldPeople" name="people" className={inputClass("people")} type="number" min="1"
+              placeholder="E.g., 150" value={form.people} onChange={(e) => onChange("people", e.target.value)} />
+          </Field>
+          <Field label="Venue (Optional)">
+            <VenuePicker value={form.venue} onChange={(value) => onChange("venue", value)} />
+          </Field>
+        </div>
+      </Section>
 
-        <Field label="Event Time">
-          <input className="cl-input" type="time" value={form.time} onChange={(e) => onChange("time", e.target.value)} />
-        </Field>
-
-        <Field label="Estimated Guest Count *" error={errors.people}>
-          <input className={inputClass("people")} type="number" min="1" placeholder="E.g., 150"
-            value={form.people} onChange={(e) => onChange("people", e.target.value)} />
-        </Field>
-
-        <Field label="Venue (Optional)" full>
-          <input className="cl-input" type="text" placeholder="E.g., Grand Ballroom, Downtown"
-            value={form.venue} onChange={(e) => onChange("venue", e.target.value)} />
-        </Field>
-
-        <Field label="Budget Range (Optional)">
-          <select className="cl-input" value={form.budget} onChange={(e) => onChange("budget", e.target.value)}>
-            <option value="">Select budget range</option>
-            {BUDGET_RANGES.map((b) => <option key={b} value={b}>{b}</option>)}
-            <option value="custom">Custom...</option>
-          </select>
-          {/* Only shown when "Custom..." is picked */}
+      <Section icon={Wallet} title="Budget and notes">
+        <div className="cl-form-grid">
+          <Field label="Budget Range (Optional)" full={form.budget !== "custom"}>
+            <select id="fieldBudget" name="budget" className="cl-input" value={form.budget}
+              onChange={(e) => onChange("budget", e.target.value)}>
+              <option value="">Select budget range</option>
+              {BUDGET_RANGES.map((b) => <option key={b} value={b}>{b}</option>)}
+              <option value="custom">Custom...</option>
+            </select>
+          </Field>
           {form.budget === "custom" && (
-            <input className="cl-input" type="number" min="0" placeholder="Enter maximum budget in $"
-              value={form.customBudget} onChange={(e) => onChange("customBudget", e.target.value)} />
+            <Field label="Maximum Budget (₹)">
+              <input id="fieldCustomBudget" name="customBudget" className="cl-input" type="number" min="0"
+                placeholder="E.g., 25000" value={form.customBudget}
+                onChange={(e) => onChange("customBudget", e.target.value)} />
+            </Field>
           )}
-        </Field>
-
-        <Field label="Additional Notes" full>
-          <textarea className="cl-input" rows="3" placeholder="Any special requirements, dietary needs, or instructions..."
-            value={form.notes} onChange={(e) => onChange("notes", e.target.value)} />
-        </Field>
-      </div>
+          <Field label="Additional Notes" full>
+            <textarea id="fieldNotes" name="notes" className="cl-input" rows="3"
+              placeholder="Any special requirements, dietary needs, or instructions..." value={form.notes}
+              onChange={(e) => onChange("notes", e.target.value)} />
+          </Field>
+        </div>
+      </Section>
 
       <div className="cl-wizard-nav">
         <Link to="/client/dashboard" className="cl-btn-ghost"><ArrowLeft size={16} /> Cancel</Link>
-        <button type="button" className="cl-btn-pink" onClick={onNext}><ArrowRight size={16} /> Next: Resources</button>
+        <button type="button" className="cl-btn-pink" onClick={onNext}>Next: Resources <ArrowRight size={16} /></button>
       </div>
     </div>
   );

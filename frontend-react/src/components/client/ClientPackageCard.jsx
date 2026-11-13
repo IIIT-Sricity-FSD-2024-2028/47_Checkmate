@@ -53,7 +53,7 @@ function ClientPackageCard({ pkg, onQuickCreate }) {
         </div>
 
         <div className="cl-pkg-card__footer">
-          <div className="cl-pkg-card__price">${(pkg.price || 0).toLocaleString()}</div>
+          <div className="cl-pkg-card__price">₹{(pkg.price || 0).toLocaleString("en-IN")}</div>
           <div className="cl-muted-text">{pkg.duration || 0} hours • Up to {pkg.capacity || "N/A"} Guests</div>
           <button type="button" className="cl-btn-pink" onClick={() => onQuickCreate(pkg)}>
             <Zap size={16} /> Quick Create

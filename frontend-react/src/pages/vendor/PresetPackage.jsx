@@ -24,7 +24,7 @@ import "../../styles/vendor.css";
 import "../../styles/dashboard.css";
 
 // Global Reusable UI Components
-import TopHeaderBar from "../../components/TopHeaderBar";
+import VendorTopBar from "../../components/vendor/VendorTopBar";
 
 // Custom Data Retrieval & Mutation Hook
 import useVendorPackagesData from "../../components/vendor/useVendorPackagesData";
@@ -86,8 +86,8 @@ function PresetPackage() {
 
   return (
     <div className="vendor-page">
-      {/* ── Top Header Navigation Bar ── */}
-      <TopHeaderBar title="Preset Package" />
+      {/* ── Top Header Navigation Bar with Notifications ── */}
+      <VendorTopBar title="Preset Package" />
 
       <div className="vendor-content">
         {/* ── Component 1: Transient Action Feedback Toast Banner ── */}

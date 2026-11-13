@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { getEventById } from "../../services/eventService";
+import { getEventById, getMyEvents } from "../../services/eventService";
 import { getStaffAssignments } from "../../services/staffService";
 import { getResourceAllocations, getMonitorProgress } from "../../services/stateService";
 import { describeError } from "../../utils/clientHelpers";
@@ -43,8 +43,18 @@ export function useClientLiveData(eventId) {
 
     async function loadData() {
       try {
+        // Opened from the menu there is no id, so use the client's live event
+        const targetId = eventId || (await getMyEvents()).find((e) => e.status === "live")?.id;
+        if (!targetId) {
+          if (isMounted) {
+            setEvent(null);
+            setError("You have no live events right now.");
+          }
+          return;
+        }
+
         const [ev, staffAssignments, allocs, monitorProgress] = await Promise.all([
-          getEventById(eventId),
+          getEventById(targetId),
           getStaffAssignments(),
           getResourceAllocations(),
           getMonitorProgress(),
@@ -68,8 +78,10 @@ export function useClientLiveData(eventId) {
     };
   }, [eventId]);
 
+  const activeEventId = event?.id;
+
   // Staff who accepted this event
-  const staff = assignments.filter((a) => a.eventId === eventId && a.status === "accepted");
+  const staff = assignments.filter((a) => a.eventId === activeEventId && a.status === "accepted");
 
   // Every task, tagged with the staff member who owns it
   // FACULTY MAY ASK: Why flatMap?
@@ -89,8 +101,8 @@ export function useClientLiveData(eventId) {
     tasks,
     doneCount,
     taskPercent,
-    resources: allocations[eventId] || [],
-    phases: monitor[eventId] || {},
+    resources: allocations[activeEventId] || [],
+    phases: monitor[activeEventId] || {},
   };
 }
 

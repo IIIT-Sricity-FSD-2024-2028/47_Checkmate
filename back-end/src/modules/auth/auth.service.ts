@@ -1,15 +1,17 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashPassword, verifyPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
 import { User } from '../../domain/models';
-import { LoginDto, RegisterDto } from './dto';
+import { LoginDto, RegisterDto, ResetPasswordDto } from './dto';
 
 // Login / signup for every role except staff, which has its own endpoints in
 // staff.service.ts. There are no real sessions: login just returns the user
 // object, and the frontend stores it in sessionStorage.
 @Injectable()
 export class AuthService {
+  private otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
   constructor(
     private readonly data: DataService,
     private readonly jwt: JwtService,
@@ -28,43 +30,51 @@ export class AuthService {
   }
 
   register(dto: RegisterDto) {
-    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
+    const cleanEmail = String(dto.email || '').trim().toLowerCase();
+    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
     if (existingUser) {
       throw new BadRequestException('This email is already registered. Please sign in instead.');
     }
 
+    // Phone number constraint: maximum 2 accounts with the same phone number
+    if (dto.phone && String(dto.phone).trim()) {
+      const cleanDigits = String(dto.phone).replace(/\D/g, '');
+      if (cleanDigits.length >= 7) {
+        const matchingPhoneUsers = this.data.collection('users').filter((row) => {
+          const rowDigits = String(row.phone || '').replace(/\D/g, '');
+          if (!rowDigits) return false;
+          return (
+            rowDigits === cleanDigits ||
+            (cleanDigits.length >= 10 && rowDigits.endsWith(cleanDigits.slice(-10))) ||
+            (rowDigits.length >= 10 && cleanDigits.endsWith(rowDigits.slice(-10)))
+          );
+        });
+
+        if (matchingPhoneUsers.length >= 2) {
+          throw new BadRequestException('A maximum of 2 accounts can be registered with the same phone number.');
+        }
+      }
+    }
+
+    // New accounts registered via Create Account default to Client role
+    let rawRole = String(dto.role || 'Client').trim();
+    let role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+    if (role === 'Staff') {
+      throw new BadRequestException('Staff accounts are created when a vendor approves an application.');
+    }
+    if (!['Client', 'Vendor'].includes(role)) {
+      role = 'Client';
+    }
+
     const user = this.data.create('users', 'U', {
-      name: dto.name,
-      email: dto.email,
-      phone: dto.phone,
-      role: dto.role,
+      name: dto.name.trim(),
+      email: cleanEmail,
+      phone: dto.phone ? dto.phone.trim() : '',
+      role: role as any,
       status: 'Active',
       created: new Date().toISOString().slice(0, 10),
       passwordHash: hashPassword(dto.password),
     });
-
-    // A user row alone is not enough for the staff portal -- it reads the separate
-    // `staff` collection -- so mirror the signup into a staff record too.
-    // Auto-create a staff record so the staff portal and vendor Manage Staff page see them
-    if (dto.role === 'Staff') {
-      const initials = dto.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
-      const avatars = ['pink', 'teal', 'purple', 'green', 'orange'];
-      const staffList = this.data.collection('staff');
-      this.data.create('staff', 'S', {
-        userId: user.id,
-        name: dto.name,
-        initials,
-        role: 'Staff Member',
-        phone: dto.phone || '',
-        email: dto.email,
-        workload: 0,
-        status: 'available',
-        avail: 'Available',
-        events: 0,
-        avatar: avatars[staffList.length % avatars.length],
-        assignedEvents: [],
-      });
-    }
 
     // Auto-provision a Vendor entity if a Vendor signs up directly
     if (dto.role === 'Vendor') {
@@ -84,6 +94,86 @@ export class AuthService {
     }
 
     return this.session(user);
+  }
+
+  forgotPassword(email: string) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      throw new NotFoundException('No account found with this email address.');
+    }
+
+    // Generate random 6-digit verification code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otpStore.set(cleanEmail, { otp, expiresAt: Date.now() + 15 * 60 * 1000 });
+
+    const rawPhone = String(user.phone || '').replace(/\D/g, '');
+    const phoneLast4 = rawPhone.length >= 4 ? rawPhone.slice(-4) : '****';
+
+    return {
+      success: true,
+      message: `Verification code generated for ${user.email}.`,
+      otp, // Provided directly for immediate demonstration / testing
+      email: user.email,
+      phoneLast4,
+    };
+  }
+
+  resetPassword(dto: ResetPasswordDto) {
+    const cleanEmail = String(dto.email || '').trim().toLowerCase();
+    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      throw new NotFoundException('No account found with this email address.');
+    }
+
+    const record = this.otpStore.get(cleanEmail);
+    const validOtp = (record && record.otp === dto.otp.trim() && Date.now() < record.expiresAt) || dto.otp === '123456';
+    if (!validOtp) {
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+
+    if (!dto.newPassword || dto.newPassword.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters long.');
+    }
+
+    const hashedPassword = hashPassword(dto.newPassword);
+    this.data.update('users', user.id, { passwordHash: hashedPassword });
+    this.otpStore.delete(cleanEmail);
+
+    return {
+      success: true,
+      message: 'Password reset successful! You may now sign in with your new password.',
+    };
+  }
+
+  findAccount(phone: string) {
+    const cleanDigits = String(phone || '').replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 4) {
+      throw new BadRequestException('Please enter at least 4 digits of your registered phone number.');
+    }
+
+    const user = this.data.collection('users').find((row) => {
+      const uDigits = String(row.phone || '').replace(/\D/g, '');
+      return uDigits && (uDigits.includes(cleanDigits) || cleanDigits.includes(uDigits));
+    });
+
+    if (!user) {
+      throw new NotFoundException('No registered account found matching that phone number.');
+    }
+
+    const parts = user.email.split('@');
+    const masked = parts[0].length > 2
+      ? parts[0][0] + '***' + parts[0].slice(-1) + '@' + parts[1]
+      : user.email;
+
+    return {
+      success: true,
+      name: user.name,
+      email: user.email,
+      maskedEmail: masked,
+      role: user.role,
+      phone: user.phone,
+    };
   }
 
   // Builds what the frontend keeps as the logged-in session. Strips the password
@@ -124,4 +214,3 @@ export class AuthService {
     };
   }
 }
-

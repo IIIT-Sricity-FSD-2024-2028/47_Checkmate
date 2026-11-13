@@ -5,6 +5,13 @@
  * Role: Modular KPI Metric Cards Grid (Vendor Events Portal)
  * Location: src/components/vendor/EventsStatsGrid.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Events.jsx (Lines 99–102)
+ *   - Also Reused In: src/pages/client/MyEvents.jsx
+ *   - Parent Page: Vendor Event Requests (src/pages/vendor/Events.jsx, Component 2)
+ *   - Where in Code: Positioned directly below <EventsToastFeedback> and above
+ *     <EventsToolbar> in the Event Requests page layout.
+ *
  * Purpose:
  *   Renders a balanced 4-column summary metric grid displaying:
  *     1. Total cumulative event requests submitted to the vendor.

@@ -25,6 +25,7 @@ function getBadge(event, progress) {
   if (event.status === "rejected") return { cls: "red", text: "Rejected" };
   if (event.status === "completed") return { cls: "green", text: "Completed ✅" };
   if (event.status === "live") return { cls: "live", text: "LIVE NOW" };
+  if (event.status === "waiting") return { cls: "orange", text: "On Hold / Waiting" };
   if (progress.stepsComplete === 5) return { cls: "green", text: "Ready" };
   if (progress.isApproved) return { cls: "purple", text: "In Progress" };
   return { cls: "blue", text: "Pending Review" };

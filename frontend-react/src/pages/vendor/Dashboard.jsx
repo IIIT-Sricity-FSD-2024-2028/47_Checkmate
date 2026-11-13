@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard.css";
 
 // Shared & Global UI Components
-import TopHeaderBar from "../../components/TopHeaderBar";
+import VendorTopBar from "../../components/vendor/VendorTopBar";
 import WelcomeCard from "../../components/WelcomeCard";
 
 // Authentication session storage
@@ -39,6 +39,7 @@ import VendorUpcomingEventsSection from "../../components/vendor/VendorUpcomingE
 import VendorRecentActivitySection from "../../components/vendor/VendorRecentActivitySection";
 import VendorCriticalAlertsSection from "../../components/vendor/VendorCriticalAlertsSection";
 import VendorQuickActionsSection from "../../components/vendor/VendorQuickActionsSection";
+import VendorWidgetsSection from "../../components/vendor/VendorWidgetsSection";
 
 function VendorDashboard() {
   // Navigation hook to navigate between vendor submodules
@@ -52,17 +53,18 @@ function VendorDashboard() {
   const {
     loading,
     stats,
+    eventsData,
     upcomingEvents,
     recentActivities,
     alerts,
+    widgetsData,
   } = useVendorDashboardData();
 
   return (
     <div className="vendor-dashboard">
-      {/* ── Top Header Bar with Live Alert Notification Count ── */}
-      <TopHeaderBar
+      {/* ── Top Header Bar with Live Working Notifications ── */}
+      <VendorTopBar
         title="Vendor Dashboard"
-        badge={alerts.length}
       />
 
       <div className="content">
@@ -82,9 +84,10 @@ function VendorDashboard() {
         <div className="bottom-grid">
           {/* Left Column: Events & Activity Stream */}
           <div className="left-col">
-            {/* Component 3: Upcoming Events Section Card */}
+            {/* Component 3: Upcoming Events Section Card (With Tabs & Staffing Progress) */}
             <VendorUpcomingEventsSection
               events={upcomingEvents}
+              eventsData={eventsData}
               loading={loading}
             />
 
@@ -103,12 +106,21 @@ function VendorDashboard() {
               loading={loading}
             />
 
-            {/* Component 6: One-Click Quick Action Buttons Card */}
+            {/* Component 6: One-Click Quick Action Buttons Card (With Badges & Staff Highlight) */}
             <VendorQuickActionsSection
               onNavigate={(path) => navigate(path)}
+              pendingCount={stats.pendingRequests}
+              availableStaff={stats.availableStaff}
+              unassignedShiftsCount={widgetsData?.unassignedShiftsCount || 0}
             />
           </div>
         </div>
+
+        {/* ── Component 7: Operational Widgets (Venue Calendar, Utilization, Staff & Earnings) ── */}
+        <VendorWidgetsSection
+          widgetsData={widgetsData}
+          loading={loading}
+        />
       </div>
     </div>
   );

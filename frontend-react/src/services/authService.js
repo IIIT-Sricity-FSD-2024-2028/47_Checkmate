@@ -97,6 +97,27 @@ export async function staffSignup(staffData, options = {}) {
 }
 
 /**
+ * Request password recovery code for registered email.
+ */
+export async function forgotPassword(email) {
+  return post('/auth/forgot-password', { email }, { isPublic: true });
+}
+
+/**
+ * Reset password with verification code.
+ */
+export async function resetPassword({ email, otp, newPassword }) {
+  return post('/auth/reset-password', { email, otp, newPassword }, { isPublic: true });
+}
+
+/**
+ * Find registered account / login email by phone number.
+ */
+export async function findAccount(phone) {
+  return post('/auth/find-account', { phone }, { isPublic: true });
+}
+
+/**
  * Clear the current client-side auth session.
  */
 export function logout() {
@@ -120,6 +141,9 @@ const authService = {
   staffLogin,
   staffSignup,
   logout,
+  forgotPassword,
+  resetPassword,
+  findAccount,
   saveAuthSession,
   getAuthSession,
   clearAuthSession,

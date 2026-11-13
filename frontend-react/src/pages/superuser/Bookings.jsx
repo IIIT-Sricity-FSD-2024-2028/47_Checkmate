@@ -292,7 +292,7 @@ export default function SuperuserBookings() {
           label="Total Revenue"
           value={loading ? '...' : formatCurrency(totalRevenue)}
           subtext="All bookings"
-          icon="$"
+          icon="₹"
           colorClass="green"
           borderColor="rgba(16, 185, 129, 0.3)"
         />
@@ -300,7 +300,7 @@ export default function SuperuserBookings() {
           label="Confirmed Revenue"
           value={loading ? '...' : formatCurrency(confirmedRevenue)}
           subtext="Confirmed + Completed"
-          icon="$"
+          icon="₹"
           colorClass="teal"
           borderColor="rgba(34, 211, 238, 0.28)"
         />
@@ -457,7 +457,7 @@ export default function SuperuserBookings() {
                 </div>
 
                 <div className="fg">
-                  <label className="fl">Total Cost ($) *</label>
+                  <label className="fl">Total Cost (₹) *</label>
                   <input
                     className={`fc ${formErrors.cost ? 'fc-err' : ''}`}
                     type="number"

@@ -5,6 +5,12 @@
  * Role: Modular KPI Metric Cards Grid (Vendor Packages Portal)
  * Location: src/components/vendor/PackageStatsGrid.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/PresetPackage.jsx (Lines 100–103)
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx, Component 2)
+ *   - Where in Code: Positioned directly below <EventsToastFeedback> and above
+ *     <PackageToolbar> in the Preset Packages page layout.
+ *
  * Purpose:
  *   Renders a 4-column summary metric grid displaying:
  *     1. Total catalogued event preset packages.
@@ -22,14 +28,14 @@
  */
 
 import React from "react";
-import { Package, CheckCircle2, DollarSign, TrendingUp } from "lucide-react";
+import { Package, CheckCircle2, IndianRupee, TrendingUp } from "lucide-react";
 import StatisticCard from "../StatisticCard";
 
 function PackageStatsGrid({ stats = {}, loading = false }) {
   const {
     total = 0,
     active = 0,
-    avgPrice = "$0",
+    avgPrice = "₹0",
     topCategory = "General",
   } = stats;
 
@@ -61,7 +67,7 @@ function PackageStatsGrid({ stats = {}, loading = false }) {
         value={loading ? "..." : avgPrice}
         status="Catalog Average"
         description="Mean turnaround package price"
-        icon={DollarSign}
+        icon={IndianRupee}
         color="blue"
       />
 

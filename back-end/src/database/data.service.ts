@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppData, ActivityLog, Booking, EventRecord, Resource, StaffMember, VendorApplication } from '../domain/models';
 import { seedData } from './seed';
-import { calculateCommissionSplit, DEFAULT_COMMISSION_RATE } from '../common/constants/finance.constants';
+import { calculateCommissionSplit, commissionRateFromPercent, DEFAULT_COMMISSION_RATE } from '../common/constants/finance.constants';
 
 export type ArrayCollectionName =
   | 'users'
@@ -14,6 +14,7 @@ export type ArrayCollectionName =
   | 'issues'
   | 'staffAssignments'
   | 'vendorApplications'
+  | 'staffApplications'
   | 'vendors'
   | 'bookings'
   | 'venues'
@@ -278,17 +279,50 @@ export class DataService implements OnModuleInit {
     });
   }
 
+  /** The rate an admin set on Global Settings, as a fraction (12% -> 0.12). */
+  public getCommissionRate(): number {
+    const settings = this.getValue('platformSettings') as { commissionRate?: unknown } | undefined;
+    return commissionRateFromPercent(settings?.commissionRate);
+  }
+
+  // Shares a booking between vendors in proportion to the value of the items each
+  // supplied. Returns undefined when one vendor supplied everything.
+  private buildVendorSplits(eventId: string, cost: number, rate: number) {
+    const values = new Map<string, { vendor: string; value: number }>();
+    (this.data.resourceAllocations[eventId] || []).forEach((item: any) => {
+      const resource: any = this.data.resources.find((r) => r.id === item.resourceId);
+      if (!resource?.vendorId) return;
+      const entry = values.get(resource.vendorId) || { vendor: resource.vendor, value: 0 };
+      entry.value += Number(item.quantity || item.qty || 0) * Number(resource.price || 0);
+      values.set(resource.vendorId, entry);
+    });
+    if (values.size < 2) return undefined;
+
+    const totalValue = [...values.values()].reduce((sum, v) => sum + v.value, 0);
+    if (totalValue <= 0) return undefined;
+    let remaining = cost;
+    return [...values.entries()].map(([vendorId, entry], index) => {
+      // The last vendor takes what is left, so rounding never loses a paisa
+      const share = index === values.size - 1 ? remaining : Number(((cost * entry.value) / totalValue).toFixed(2));
+      remaining = Number((remaining - share).toFixed(2));
+      const { commissionAmount, vendorPayoutAmount } = calculateCommissionSplit(share, rate);
+      return { vendorId, vendor: entry.vendor, cost: share, commissionAmount, vendorPayoutAmount };
+    });
+  }
+
   // THE REVENUE RULE. When an event crosses into confirmed/approved for the first
   // time, bill it: create the matching booking row. Guarded so re-saving an
-  // already-confirmed event does not double-charge.
+  // already-confirmed event does not double-charge. The cost is the vendor's quote;
+  // approvals made without one fall back to the budget. The rate is stored on the
+  // booking, so changing the setting later never alters past bookings.
   private triggerEventUpdated(oldEvent: EventRecord, newEvent: EventRecord) {
     const confirmedStatuses = ['confirmed', 'approved', 'Confirmed', 'Approved'];
 
     if (confirmedStatuses.includes(String(newEvent.status)) && !confirmedStatuses.includes(String(oldEvent.status))) {
-      const existingBooking = this.data.bookings.find((b) => b.eventName === newEvent.name || (b as any).eventId === newEvent.id);
+      const existingBooking = this.data.bookings.find((b) => (b.eventId ? b.eventId === newEvent.id : b.eventName === newEvent.name));
       if (!existingBooking) {
-        const cost = Number(newEvent.budget || newEvent.estimatedCost || 0);
-        const split = calculateCommissionSplit(cost, DEFAULT_COMMISSION_RATE);
+        const cost = Number(newEvent.quotedPrice || newEvent.budget || newEvent.estimatedCost || 0);
+        const split = calculateCommissionSplit(cost, this.getCommissionRate());
         this.data.bookings.push({
           id: this.nextId(this.data.bookings, 'BK'),
           eventId: newEvent.id,
@@ -305,12 +339,15 @@ export class DataService implements OnModuleInit {
           commissionAmount: split.commissionAmount,
           vendorPayoutAmount: split.vendorPayoutAmount,
           payoutStatus: 'pending',
+          vendorSplits: this.buildVendorSplits(newEvent.id, cost, split.commissionRate),
           created: new Date().toISOString().slice(0, 10),
         });
       }
     }
 
-    if (String(newEvent.status).toLowerCase() === 'completed' && String(oldEvent.status).toLowerCase() !== 'completed') {
+    // A finished event gives its stock and staff back, however it finished.
+    const finishedStatuses = ['completed', 'rejected', 'cancelled'];
+    if (finishedStatuses.includes(String(newEvent.status).toLowerCase()) && !finishedStatuses.includes(String(oldEvent.status).toLowerCase())) {
       this.releaseEventAllocations(newEvent.id);
     }
 
@@ -371,7 +408,7 @@ export class DataService implements OnModuleInit {
     if (!staff) return;
 
     const activeAssignments = this.data.staffAssignments.filter(
-      (a) => (a.staffId === staff.id || a.staffName === staff.name) && ['assigned', 'accepted', 'in_progress'].includes(String(a.status).toLowerCase()),
+      (a) => (a.staffId === staff.id || a.staffName === staff.name) && ['pending', 'assigned', 'accepted', 'in_progress'].includes(String(a.status).toLowerCase()),
     );
 
     const activeCount = activeAssignments.length;
@@ -390,7 +427,7 @@ export class DataService implements OnModuleInit {
     Object.values(this.data.resourceAllocations).forEach((list) => {
       list.forEach((item) => {
         if (!item.status || item.status === 'allocated') {
-          allocatedTotals[item.resourceId] = (allocatedTotals[item.resourceId] || 0) + Number(item.quantity || 0);
+          allocatedTotals[item.resourceId] = (allocatedTotals[item.resourceId] || 0) + Number(item.quantity || (item as any).qty || 0);
         }
       });
     });
