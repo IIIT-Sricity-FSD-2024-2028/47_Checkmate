@@ -29,7 +29,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getMyEvents } from "../../services/eventService";
 import { getStaffAssignments } from "../../services/staffService";
 import { getResourceAllocations, getMonitorProgress } from "../../services/stateService";
-import { getEventProgress, describeError, REFRESH_MS } from "../../utils/clientHelpers";
+import { getEventProgress, describeError, normalizeEvents, REFRESH_MS } from "../../utils/clientHelpers";
 
 /**
  * Picks the event to highlight: live first, then approved, then pending,
@@ -39,7 +39,7 @@ import { getEventProgress, describeError, REFRESH_MS } from "../../utils/clientH
  */
 function pickNextEvent(events) {
   const rank = { live: 1, confirmed: 2, approved: 2, pending: 3 };
-  const open = events.filter((e) => e.status !== "completed" && e.status !== "rejected");
+  const open = events.filter((e) => !["completed", "rejected", "cancelled"].includes(e.status));
   open.sort((a, b) => {
     const rankDiff = (rank[a.status] || 4) - (rank[b.status] || 4);
     if (rankDiff !== 0) return rankDiff;
@@ -114,7 +114,7 @@ export function useClientDashboardData() {
           getMonitorProgress(),
         ]);
         if (!isMounted) return;
-        setEvents(myEvents);
+        setEvents(normalizeEvents(myEvents));
         setAllocations(allocs || {});
         setAssignments(staffAssignments || []);
         setMonitor(monitorProgress || {});

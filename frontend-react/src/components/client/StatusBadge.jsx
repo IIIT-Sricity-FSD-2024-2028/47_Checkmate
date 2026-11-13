@@ -8,6 +8,7 @@ const LABELS = {
     approved: "Approved",
     rejected: "Rejected",
     completed: "Completed",
+    cancelled: "Cancelled",
 };
 
 function StatusBadge({ status }) {
@@ -18,8 +19,8 @@ function StatusBadge({ status }) {
             </span>
         );
     }
-    // confirmed and approved share the same green style
-    const style = status === "confirmed" ? "approved" : status || "pending";
+    // confirmed and approved share the same green style; cancelled reuses the red one
+    const style = status === "confirmed" ? "approved" : status === "cancelled" ? "rejected" : status || "pending";
     return <span className={`cl-badge cl-badge--${style}`}>{LABELS[status] || status}</span>;
 }
 

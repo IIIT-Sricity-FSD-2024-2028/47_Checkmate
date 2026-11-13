@@ -27,7 +27,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getMyEvents } from "../../services/eventService";
-import { describeError, REFRESH_MS } from "../../utils/clientHelpers";
+import { describeError, normalizeEvents, REFRESH_MS } from "../../utils/clientHelpers";
 
 export function useClientEventsData() {
   // --------------------------------------------------------------------------
@@ -52,7 +52,7 @@ export function useClientEventsData() {
       try {
         const data = await getMyEvents();
         if (!isMounted) return;
-        setEvents(Array.isArray(data) ? data : []);
+        setEvents(normalizeEvents(data));
         setError(null);
       } catch (err) {
         if (isMounted) setError(describeError(err, "your events"));

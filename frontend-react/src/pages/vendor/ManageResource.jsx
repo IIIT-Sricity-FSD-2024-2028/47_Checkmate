@@ -53,6 +53,7 @@ import ResourceTableRow from "../../components/vendor/ResourceTableRow";
 // Backend API services and tenant auth storage
 import { getMyResources, createResource, updateResource, deleteResource } from "../../services/resourceService";
 import { getMyEvents } from "../../services/eventService";
+import { getResourceAllocations, setResourceAllocations } from "../../services/stateService";
 import { getAuthSession } from "../../services/auth/authStorage";
 
 // Central vendor stylesheet (Zero inline styling)
@@ -187,7 +188,7 @@ function ManageResource() {
       setLoading(true);
       try {
         // Fetch resources and events in parallel for maximum speed
-        const [resData, evData] = await Promise.all([
+        const [resData, evData, allocData] = await Promise.all([
           getMyResources().catch((err) => {
             console.error("Failed to load inventory resources:", err);
             return [];
@@ -196,11 +197,17 @@ function ManageResource() {
             console.error("Failed to load vendor events:", err);
             return [];
           }),
+          // The backend copy is the shared one the client Track/Live pages read
+          getResourceAllocations().catch((err) => {
+            console.error("Failed to load resource allocations:", err);
+            return null;
+          }),
         ]);
 
         if (isMounted) {
           if (Array.isArray(resData)) setResources(resData);
           if (Array.isArray(evData)) setEvents(evData);
+          if (allocData && typeof allocData === "object") setAllocations(allocData);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -636,7 +643,7 @@ function ManageResource() {
   /**
    * Confirms the resource allocation to the selected event.
    */
-  const handleConfirmAllocation = () => {
+  const handleConfirmAllocation = async () => {
     const qty = parseInt(allocUnits, 10);
 
     if (isNaN(qty) || qty < 1) {
@@ -649,27 +656,36 @@ function ManageResource() {
       return;
     }
 
-    // Persist allocation in state & localStorage
-    setAllocations((prev) => {
-      const existing = prev[selectedEventId] || [];
-      const updatedEventAllocs = [
-        ...existing,
-        {
-          resourceId: allocatingResource.id,
-          resourceName: allocatingResource.name,
-          category: allocatingResource.category,
-          qty,
-          allocatedAt: new Date().toISOString(),
-        },
-      ];
-      return { ...prev, [selectedEventId]: updatedEventAllocs };
-    });
+    const record = {
+      resourceId: allocatingResource.id,
+      resourceName: allocatingResource.name,
+      category: allocatingResource.category,
+      qty,
+      quantity: qty, // the backend stock trigger and client pages read `quantity`
+      status: "allocated",
+      allocatedAt: new Date().toISOString(),
+    };
 
     setIsAllocModalOpen(false);
-    triggerToast(
-      `${qty} unit${qty !== 1 ? "s" : ""} of "${allocatingResource.name}" allocated to "${selectedEvent.name}".`,
-      "success"
-    );
+
+    // FACULTY MAY ASK: Why save to the backend and not only localStorage?
+    // HOW TO CHANGE: The client's Track Progress / Live pages read allocations from
+    // GET /api/state/resourceAllocations, so a localStorage-only copy never reached
+    // them. We re-read the latest backend copy first so another vendor's
+    // allocations made in the meantime are not overwritten.
+    try {
+      const latest = (await getResourceAllocations()) || {};
+      const next = { ...latest, [selectedEventId]: [...(latest[selectedEventId] || []), record] };
+      await setResourceAllocations(next);
+      setAllocations(next);
+      triggerToast(
+        `${qty} unit${qty !== 1 ? "s" : ""} of "${allocatingResource.name}" allocated to "${selectedEvent.name}".`,
+        "success"
+      );
+    } catch (err) {
+      console.error("Failed to save allocation:", err);
+      triggerToast("Could not save the allocation. Please try again.", "danger");
+    }
   };
 
   // Helper date formatter for table and modal displays

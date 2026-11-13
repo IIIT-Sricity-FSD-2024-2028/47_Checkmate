@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { getMyEvents } from "../../services/eventService";
 import { createIssue } from "../../services/issueService";
 import { getStateKey, setStateKey } from "../../services/stateService";
-import { getCurrentUser, initials } from "../../utils/clientHelpers";
+import { getCurrentUser, initials, normalizeEvents } from "../../utils/clientHelpers";
 
 const EMPTY_FORM = { title: "", desc: "", priority: "", eventId: "", category: "" };
 
@@ -59,7 +59,7 @@ export function useReportIssueForm() {
   // Only live events can have issues raised against them (same as the old page)
   useEffect(() => {
     getMyEvents()
-      .then((events) => setLiveEvents(events.filter((e) => e.status === "live")))
+      .then((events) => setLiveEvents(normalizeEvents(events).filter((e) => e.status === "live")))
       .catch(() => setLiveEvents([]));
   }, []);
 
