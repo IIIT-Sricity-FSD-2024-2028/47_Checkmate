@@ -5,6 +5,13 @@
  * Role: Individual Package Presentation Card (Vendor Packages Portal)
  * Location: src/components/vendor/PackageCard.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/components/vendor/PackageGrid.jsx (Lines 45–51)
+ *   - Also Reused In: src/components/client/ClientPackageGrid.jsx (src/pages/client/BrowsePackages.jsx)
+ *   - Parent Page: Vendor Preset Packages (src/pages/vendor/PresetPackage.jsx via <PackageGrid>)
+ *   - Where in Code: Rendered inside the <div className="pkg-grid"> loop mapping over
+ *     `packages.map(pkg => <PackageCard ... />)` to display each turnkey bundle.
+ *
  * Purpose:
  *   Renders a single turnkey event package card displaying:
  *     1. Contextual category banner with customized gradient and iconography.
@@ -119,7 +126,7 @@ function PackageCard({ packageData, onEdit, onDelete }) {
       <div className="pkg-footer">
         <div className="pkg-price">
           <span className="pkg-price__amount">
-            ${Number(price).toLocaleString()}
+            ₹{Number(price).toLocaleString("en-IN")}
           </span>
           <span className="pkg-price__duration">
             {duration} hrs · up to {capacity} guests

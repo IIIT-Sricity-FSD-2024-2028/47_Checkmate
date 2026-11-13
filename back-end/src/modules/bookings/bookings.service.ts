@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
 import { CreateBookingDto, SettlePayoutDto, UpdateBookingDto } from './dto';
-import { calculateCommissionSplit, DEFAULT_COMMISSION_RATE } from '../../common/constants/finance.constants';
+import { calculateCommissionSplit } from '../../common/constants/finance.constants';
 import { Booking } from '../../domain/models';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class BookingsService {
 
   create(dto: CreateBookingDto) {
     const cost = Number(dto.cost || 0);
-    const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : DEFAULT_COMMISSION_RATE;
+    const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : this.data.getCommissionRate();
     const split = calculateCommissionSplit(cost, rate);
 
     const payload: Partial<Booking> = {
@@ -37,11 +37,14 @@ export class BookingsService {
 
   update(id: string, dto: UpdateBookingDto) {
     const existing = this.data.find('bookings', id);
+    if (dto.payoutStatus === 'settled' && existing.payoutStatus !== 'settled') {
+      throw new BadRequestException('Payouts can only be released through the settlement action.');
+    }
     const patch: Partial<Booking> = { ...dto } as any;
 
     if (dto.cost !== undefined || dto.commissionRate !== undefined) {
       const cost = dto.cost !== undefined ? Number(dto.cost) : existing.cost;
-      const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : (existing.commissionRate || DEFAULT_COMMISSION_RATE);
+      const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : (existing.commissionRate ?? this.data.getCommissionRate());
       const split = calculateCommissionSplit(cost, rate);
 
       patch.cost = cost;
@@ -90,14 +93,46 @@ export class BookingsService {
       summary: {
         totalBookings: bookings.length,
         totalGrossVolume: totalGross,
-        platformCommissionRate: DEFAULT_COMMISSION_RATE,
+        platformCommissionRate: this.data.getCommissionRate(),
         platformCommissionEarned: totalCommission,
         totalVendorPayoutObligations: totalVendorPayouts,
         pendingVendorPayouts,
         settledVendorPayouts,
       },
-      items: bookings,
+      items: bookings.map((b) => ({ ...b, settleBlockReason: this.getSettleBlockReason(b) })),
     };
+  }
+
+  /**
+   * Why a booking's payout cannot be released yet, or null when it can. The vendor
+   * is paid only after the client has paid in full and the event has finished.
+   */
+  private getSettleBlockReason(booking: Booking): string | null {
+    if (booking.payoutStatus === 'settled') return 'Payout already settled';
+    if (booking.paymentStatus !== 'paid') return 'Client has not paid in full';
+    const event = this.data.collection('events').find((e) => e.id === booking.eventId);
+    if (String(event?.status ?? booking.status).toLowerCase() !== 'completed') return 'Event is not completed';
+    return null;
+  }
+
+  /**
+   * Records that the client who owns a booking has paid its full amount
+   */
+  recordPayment(id: string, user?: { id: string }) {
+    const booking = this.data.find('bookings', id);
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found.`);
+    }
+    if (!booking.clientId || booking.clientId !== user?.id) {
+      throw new ForbiddenException('You can only pay your own bookings.');
+    }
+    if (booking.paymentStatus === 'paid') {
+      throw new BadRequestException('This booking is already paid.');
+    }
+
+    const updated = this.data.update('bookings', id, { advancePaid: booking.cost, paymentStatus: 'paid' } as any);
+    this.data.logActivity('PAYMENT_RECORDED', 'BOOKING', id, { bookingId: id, eventName: booking.eventName, amount: booking.cost }, user.id, 'Client');
+    return updated;
   }
 
   /**
@@ -107,6 +142,11 @@ export class BookingsService {
     const booking = this.data.find('bookings', id);
     if (!booking) {
       throw new NotFoundException(`Booking with ID ${id} not found.`);
+    }
+
+    const blockReason = this.getSettleBlockReason(booking);
+    if (blockReason) {
+      throw new BadRequestException(`Cannot release payout: ${blockReason}.`);
     }
 
     const settledAt = new Date().toISOString();

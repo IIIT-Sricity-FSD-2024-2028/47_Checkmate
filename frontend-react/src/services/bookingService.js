@@ -97,6 +97,17 @@ export async function settlePayout(id, settleData = {}, options = {}) {
 }
 
 /**
+ * Record full payment of a booking by the client who owns it.
+ *
+ * @param {string} id - Booking ID
+ * @param {Object} [options] - Additional request options
+ * @returns {Promise<Object>}
+ */
+export async function payBooking(id, options = {}) {
+  return patch(`/bookings/${encodeURIComponent(id)}/pay`, {}, options);
+}
+
+/**
  * Alias for settlePayout().
  */
 export async function settleBookingPayout(id, settleData, options) {
@@ -128,6 +139,7 @@ export function filterMyBookings(bookings, session) {
 
   const role = (s.role || s.user?.role || '').toLowerCase();
   const user = s.user || s;
+  const userId = (user.id || user.userId || '').toLowerCase();
   const userName = (user.name || user.user || '').toLowerCase();
   const userEmail = (user.email || '').toLowerCase();
   const vendorId = (user.vendorId || '').toLowerCase();
@@ -149,12 +161,14 @@ export function filterMyBookings(bookings, session) {
 
   if (role === 'client') {
     return bookings.filter((b) => {
+      const bClientId = (b.clientId || '').toLowerCase();
       const bClient = (b.client || '').toLowerCase();
       const bClientEmail = (b.clientEmail || '').toLowerCase();
-      return (
-        (userName && bClient === userName) ||
-        (userEmail && bClientEmail === userEmail)
-      );
+
+      if (userId && bClientId && bClientId === userId) return true;
+      if (userEmail && bClientEmail && bClientEmail === userEmail) return true;
+      if (!bClientId && !bClientEmail && userName && bClient === userName) return true;
+      return false;
     });
   }
 
@@ -180,6 +194,7 @@ const bookingService = {
   createBooking,
   updateBooking,
   patchBooking,
+  payBooking,
   settlePayout,
   settleBookingPayout,
   deleteBooking,

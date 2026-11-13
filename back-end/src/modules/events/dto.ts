@@ -16,6 +16,7 @@ export class CreateEventDto {
   @ApiProperty({ example: 'Corporate' }) @IsString() type: string;
   @ApiProperty({ example: '2026-06-12' }) @IsString() date: string;
   @ApiPropertyOptional({ example: '18:00' }) @IsOptional() @IsString() time?: string;
+  @ApiPropertyOptional({ example: '10:00 PM' }) @IsOptional() @IsString() endTime?: string;
   @ApiProperty({ example: 'Skyline Ballroom' }) @IsString() venue: string;
   @ApiPropertyOptional({ example: 200 }) @IsOptional() @IsNumber() @Min(0) people?: number;
   @ApiPropertyOptional({ example: 200 }) @IsOptional() @IsNumber() @Min(0) guests?: number;

@@ -68,6 +68,12 @@ function ClientNextEventSection({ event, progress, steps = [], loading = false }
             <div className="cl-progress-track">
               <div className="cl-progress-fill" style={{ width: `${progress.percent}%` }} />
             </div>
+
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
+              <Link to={`/client/track/${event.id}`} className="cl-btn-sm cl-btn-pink" style={{ textDecoration: "none" }}>
+                Track Live Progress →
+              </Link>
+            </div>
           </div>
 
           {/* ── 5-step timeline ── */}

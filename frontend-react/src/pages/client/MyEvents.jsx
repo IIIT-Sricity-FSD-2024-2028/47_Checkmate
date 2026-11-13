@@ -39,6 +39,7 @@ import ClientEventsStatsGrid from "../../components/client/ClientEventsStatsGrid
 import ClientEventsToolbar from "../../components/client/ClientEventsToolbar";
 import ClientEventsTable from "../../components/client/ClientEventsTable";
 import RejectionReasonModal from "../../components/client/RejectionReasonModal";
+import EditEventModal from "../../components/client/EditEventModal";
 
 function MyEvents() {
   const {
@@ -54,10 +55,13 @@ function MyEvents() {
     typeFilter,
     setTypeFilter,
     handleResetFilters,
+    handleEditEvent,
+    handleCancelEvent,
   } = useClientEventsData();
 
   // The rejected event whose reason popup is open (null = closed)
   const [reasonEvent, setReasonEvent] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   return (
     <div className="vendor-page">
@@ -91,10 +95,13 @@ function MyEvents() {
           loading={loading}
           hasAnyEvents={events.length > 0}
           onViewReason={setReasonEvent}
+          onEdit={setEditingEvent}
+          onCancel={handleCancelEvent}
         />
 
         {/* ── Component 4: Rejection Reason Popup ── */}
         <RejectionReasonModal event={reasonEvent} onClose={() => setReasonEvent(null)} />
+        <EditEventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleEditEvent} />
       </div>
     </div>
   );

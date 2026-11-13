@@ -1,22 +1,51 @@
-import React from "react";
-import { Eye, Check, X } from "lucide-react";
-import StatusBadge from "./StatusBadge";
-
 /**
- * EventTableRow Component
- * ----------------------------------------------------------------------------
- * Renders a single row in the vendor event requests table.
+ * ============================================================================
+ * VENDOR EVENT TABLE ROW COMPONENT (EventTableRow.jsx)
+ * ============================================================================
+ * Role: Atomic Table Presentation Component (Vendor Events Portal)
+ * Location: src/components/vendor/EventTableRow.jsx
+ *
+ * Parent / Invocation Context:
+ *   - Called By: src/components/vendor/EventsTable.jsx (Lines 75–84)
+ *   - Parent Page: Vendor Event Requests (src/pages/vendor/Events.jsx, Component 4 via <EventsTable>)
+ *   - Also Reused In: src/components/client/ClientEventsTable.jsx (src/pages/client/MyEvents.jsx)
+ *   - Where in Code: Rendered inside the <tbody> row mapping loop of <EventsTable>
+ *     over `events.map(event => <EventTableRow ... />)`.
+ *
+ * Purpose:
+ *   Renders an individual tabular record in the vendor's incoming event requests:
+ *     1. Displays event identifier formatted with branded prefix (e.g. EVT-0042).
+ *     2. Formats event name, category type badge, localized scheduled date, venue,
+ *        and expected attendance headcount.
+ *     3. Renders the reusable <StatusBadge> indicating current lifecycle state.
+ *     4. Houses a 3-slot aligned action toolbar:
+ *        - Slot 1: View Details / Review Event (routes to Event Review screen)
+ *        - Slot 2: Approve Request (with aligned placeholder when already approved)
+ *        - Slot 3: Reject Request (with aligned placeholder when already rejected)
  *
  * Props:
- *  - event: The event object containing id, name, type, date, venue, etc.
- *  - onView: Function called to navigate to the Event Review page
- *  - onApprove: Function called when approving the event request
- *  - onReject: Function called when rejecting the event request
+ *   @param {Object} props.event - The event data object (id, name, type, date, venue, attendees, status)
+ *   @param {Function} props.onView - Callback invoked to navigate to event review / details
+ *   @param {Function} props.onApprove - Callback invoked when approving the request
+ *   @param {Function} props.onReject - Callback invoked when rejecting the request
+ *   @param {Function} props.onDelete - Callback invoked when permanently deleting a rejected event
+ * ============================================================================
  */
-function EventTableRow({ event, onView, onApprove, onReject }) {
+
+import React from "react";
+import { Eye, X, Trash2, AlertTriangle } from "lucide-react";
+import StatusBadge from "./StatusBadge";
+
+function EventTableRow({ event, collisions = [], onView, onReject, onDelete }) {
+  // --------------------------------------------------------------------------
+  // 1. DATA EXTRACTION & DEFAULTS
+  // --------------------------------------------------------------------------
   const evId = event.id || "EVT-001";
   const status = String(event.status || "pending").toLowerCase();
 
+  // --------------------------------------------------------------------------
+  // 2. SCHEDULE DATE FORMATTING HELPER
+  // --------------------------------------------------------------------------
   // Helper to format ISO dates into friendly readable strings (e.g., "Oct 24, 2026")
   const formatDate = (dateValue) => {
     if (!dateValue) return "Date TBD";
@@ -25,6 +54,10 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       ? dateValue
       : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
+
+  // --------------------------------------------------------------------------
+  // 3. RENDER TABLE ROW
+  // --------------------------------------------------------------------------
 
   return (
     <tr>
@@ -47,7 +80,18 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       <td>{formatDate(event.date)}</td>
 
       {/* Venue Location */}
-      <td>{event.venue || "Venue TBD"}</td>
+      <td>
+        <div>{event.venue || "Venue TBD"}</div>
+        {status === "pending" && collisions.length > 0 && (
+          <div
+            className="venue-collision-subtext"
+            title={collisions[0].desc}
+          >
+            <AlertTriangle size={11} />
+            <span>Collides with {collisions[0].conflictingEvent?.name || collisions[0].conflictingEvent?.id}</span>
+          </div>
+        )}
+      </td>
 
       {/* Expected Attendance / Guest Count */}
       <td>{event.attendees || event.people || event.guests || "—"}</td>
@@ -55,41 +99,47 @@ function EventTableRow({ event, onView, onApprove, onReject }) {
       {/* Reusable Status Badge Component */}
       <td>
         <StatusBadge status={event.status} />
+        {status === "pending" && collisions.length > 0 && (
+          <div
+            className={`collision-warning-pill ${
+              collisions[0].severity === "high" ? "high" : "medium"
+            }`}
+            title={collisions.map((c) => c.desc).join("\n")}
+          >
+            <AlertTriangle size={11} />
+            <span>{collisions[0].type}</span>
+          </div>
+        )}
       </td>
 
-      {/* Action Buttons: View (Review Page), Approve, Reject */}
+      {/* Action Buttons: View (Review Page to Approve/Manage), Reject/Delete */}
       <td className="table-actions-cell">
         <div className="table-actions">
-          {/* Slot 1: View / Review Event Button (Always in Column 1) */}
+          {/* Slot 1: View / Review Event Button (Approval is handled in Event Review) */}
           <button
             className="action-btn view"
             title="Review Event"
             onClick={() => onView && onView(event)}
           >
-            <Eye size={16} />
+            <Eye size={20} />
           </button>
 
-          {/* Slot 2: Approve Button (Fixed in Column 2; placeholder keeps alignment if already confirmed) */}
-          {status !== "confirmed" ? (
+          {/* Slot 2: Reject Button when pending / Delete Button when rejected */}
+          {status === "rejected" ? (
             <button
-              className="action-btn approve"
-              title="Approve Request"
-              onClick={() => onApprove && onApprove(evId)}
+              className="action-btn delete"
+              title="Permanently Delete Event"
+              onClick={() => onDelete && onDelete(event)}
             >
-              <Check size={16} />
+              <Trash2 size={20} />
             </button>
-          ) : (
-            <span className="action-btn-placeholder" aria-hidden="true" />
-          )}
-
-          {/* Slot 3: Reject Button (Fixed in Column 3; placeholder keeps alignment if already rejected) */}
-          {status !== "rejected" ? (
+          ) : status === "pending" ? (
             <button
               className="action-btn reject"
               title="Reject Request"
               onClick={() => onReject && onReject(evId)}
             >
-              <X size={16} />
+              <X size={20} />
             </button>
           ) : (
             <span className="action-btn-placeholder" aria-hidden="true" />

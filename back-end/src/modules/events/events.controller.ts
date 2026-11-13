@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -37,6 +37,8 @@ export class EventsController {
   // The approval step. Clients are deliberately excluded -- a client must not be
   // able to approve their own request. This is the call that triggers billing.
   @Patch(':id/status') @Roles('vendor', 'admin', 'superuser') status(@Param() { id }: IdParamDto, @Body() dto: StatusDto) { return this.service.updateStatus(id, dto); }
+
+  @Patch(':id/cancel') @Roles('client') cancel(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.cancel(id, req.user); }
 
   @Delete(':id') @Roles('vendor', 'admin', 'superuser', 'client') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
 }

@@ -6,27 +6,40 @@
  * Location: src/components/vendor/EventReviewActionBar.jsx
  *
  * Purpose:
- *   Renders the bottom action bar containing the primary decision triggers:
- *     1. Back button (navigates back to the event requests list).
- *     2. Reject Event button (updates status to 'rejected').
- *     3. Accept Event button (updates status to 'confirmed').
- *   Both action buttons automatically disable if the event is already in
- *   that status to prevent duplicate submissions.
- *
- * Props:
- *   @param {string} props.eventStatus - Current status of the event ('pending', 'confirmed', etc.)
- *   @param {Function} props.onBack - Handler to return to the requests table
- *   @param {Function} props.onReject - Handler to execute event rejection
- *   @param {Function} props.onAccept - Handler to execute event acceptance
+ *   Bottom Action Bar with conditional workflow triggers:
+ *     - Back to Requests button
+ *     - If conflicts exist: "Keep Waiting" (reason to client) and "Reject Event"
+ *     - If no conflicts: "Approve Event" and "Reject Event"
  * ============================================================================
  */
 
 import React from "react";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
 
-function EventReviewActionBar({ eventStatus, onBack, onReject, onAccept }) {
-  const isConfirmed = eventStatus === "confirmed";
-  const isRejected = eventStatus === "rejected";
+function EventReviewActionBar({
+  eventStatus,
+  hasConflicts = false,
+  hasAllocatedResources = true,
+  hasAllocatedStaff = true,
+  hasAllocatedVenue = true,
+  onBack,
+  onApprove,
+  onReject,
+  onOpenKeepWaiting,
+}) {
+  const isAlreadyProcessed =
+    eventStatus === "confirmed" ||
+    eventStatus === "approved" ||
+    eventStatus === "rejected" ||
+    eventStatus === "completed";
+
+  const isFullyAllocated = hasAllocatedResources && hasAllocatedStaff && hasAllocatedVenue;
+  const canApprove = !isAlreadyProcessed && !hasConflicts && isFullyAllocated;
+  const missingAllocations = [
+    !hasAllocatedResources && "Resource",
+    !hasAllocatedStaff && "Staff",
+    !hasAllocatedVenue && "Venue",
+  ].filter(Boolean);
 
   return (
     <div className="action-bar" role="toolbar" aria-label="Event Review Actions">
@@ -40,29 +53,71 @@ function EventReviewActionBar({ eventStatus, onBack, onReject, onAccept }) {
         <ArrowLeft size={16} /> Back to Requests
       </button>
 
-      {/* ── Action 2: Reject Event ── */}
-      <button
-        type="button"
-        className="btn-reject"
-        onClick={onReject}
-        disabled={isRejected}
-        title={isRejected ? "Event is already rejected" : "Reject this event request"}
-      >
-        <X size={16} /> Reject Event
-      </button>
+      {/* ── State A: Disallow Approval Notice if missing resources or staff ── */}
+      {!isAlreadyProcessed && !hasConflicts && !isFullyAllocated && (
+        <div
+          className="allocation-required-badge"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "7px",
+            padding: "8px 14px",
+            borderRadius: "8px",
+            background: "rgba(234, 179, 8, 0.12)",
+            border: "1px solid rgba(234, 179, 8, 0.35)",
+            color: "#fde047",
+            fontSize: "12.5px",
+            fontWeight: 500,
+          }}
+          title="Events require at least one allocated resource, one assigned staff member and a confirmed venue before approval"
+        >
+          <AlertCircle size={15} color="#eab308" />
+          <span>
+            {[missingAllocations.slice(0, -1).join(", "), missingAllocations.at(-1)]
+              .filter(Boolean)
+              .join(" & ")}{" "}
+            allocation required before approval
+          </span>
+        </div>
+      )}
 
-      {/* ── Action 3: Accept / Confirm Event ── */}
-      <button
-        type="button"
-        className="btn-approve"
-        onClick={onAccept}
-        disabled={isConfirmed}
-        title={isConfirmed ? "Event is already confirmed" : "Accept and confirm this event"}
-      >
-        <Check size={16} /> Accept Event
-      </button>
+      {/* ── Action 2: Approve Event (Only rendered when conflicts resolved AND both resources & staff allocated) ── */}
+      {canApprove && (
+        <button
+          type="button"
+          className="btn-approve"
+          onClick={onApprove}
+          title="Approve and confirm this event request"
+        >
+          <CheckCircle size={17} /> Approve Event
+        </button>
+      )}
+
+      {/* ── Action 3: Keep Waiting (When conflicts remain) ── */}
+      {!isAlreadyProcessed && hasConflicts && (
+        <button
+          type="button"
+          className="btn-keep-waiting"
+          onClick={onOpenKeepWaiting}
+          title="Put event on wait and notify client with a reason"
+        >
+          <Clock size={16} /> Keep Waiting
+        </button>
+      )}
+
+      {/* ── Action 4: Reject Event ── */}
+      {!isAlreadyProcessed && (
+        <button
+          type="button"
+          className="btn-reject"
+          onClick={onReject}
+          title="Reject this event request"
+        >
+          <XCircle size={17} /> Reject Event
+        </button>
+      )}
     </div>
   );
 }
 
-export default EventReviewActionBar;
+export default React.memo(EventReviewActionBar);

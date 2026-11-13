@@ -82,6 +82,7 @@ export function filterMyIssues(issues, session) {
 
   const role = (s.role || s.user?.role || '').toLowerCase();
   const user = s.user || s;
+  const userId = (user.id || user.userId || '').toLowerCase();
   const userName = (user.name || user.user || '').toLowerCase();
   const userEmail = (user.email || '').toLowerCase();
 
@@ -90,11 +91,12 @@ export function filterMyIssues(issues, session) {
   return issues.filter((iss) => {
     const issReporter = (iss.reporter || '').toLowerCase();
     const issEmail = (iss.email || '').toLowerCase();
+    const issUserId = (iss.userId || iss.reporterId || '').toLowerCase();
 
-    return (
-      (userName && (issReporter === userName || issReporter.includes(userName))) ||
-      (userEmail && issEmail === userEmail)
-    );
+    if (userId && issUserId && issUserId === userId) return true;
+    if (userEmail && issEmail && issEmail === userEmail) return true;
+    if (!issUserId && !issEmail && userName && issReporter === userName) return true;
+    return false;
   });
 }
 

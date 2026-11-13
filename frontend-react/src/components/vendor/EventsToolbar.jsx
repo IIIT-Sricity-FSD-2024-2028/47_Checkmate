@@ -5,6 +5,13 @@
  * Role: Modular Search & Multi-Criteria Filtering Bar (Vendor Events Portal)
  * Location: src/components/vendor/EventsToolbar.jsx
  *
+ * Parent / Invocation Context:
+ *   - Called By: src/pages/vendor/Events.jsx (Lines 105–115)
+ *   - Also Reused In: src/pages/client/MyEvents.jsx
+ *   - Parent Page: Vendor Event Requests (src/pages/vendor/Events.jsx, Component 3)
+ *   - Where in Code: Positioned directly between <EventsStatsGrid> and <EventsTable>
+ *     in the Vendor Events page to provide real-time search, status/type filters, and reset.
+ *
  * Purpose:
  *   Provides interactive filtering controls for the Event Requests catalog:
  *     1. Real-time search box matching event names, unique IDs, or venues.

@@ -216,7 +216,7 @@ This Event Management System aims to streamline the end-to-end event lifecycle b
 
 Each team member lists the work they did and the files they created or changed.
 
-### epictwodude
+### Nitish Gorontala Badrinarayanan (S20240010165)
 
 **React frontend: Admin module** (`frontend-react/`)
 

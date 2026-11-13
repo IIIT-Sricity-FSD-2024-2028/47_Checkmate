@@ -34,15 +34,19 @@ import { getCurrentUser, formatTime12 } from "../../utils/clientHelpers";
 
 export const STEP_LABELS = ["Event Details", "Resources", "Staff", "Review"];
 
+// Stock and staff on these events are free again
+const FINISHED_EVENT_STATUSES = ["rejected", "completed", "cancelled"];
+
 const REQUIRED_FIELDS = {
   name: "Event name is required.",
   type: "Please select an event type.",
   date: "Please select a date.",
+  endTime: "Please enter an end time.",
   people: "Please enter guest count.",
 };
 
 const EMPTY_FORM = {
-  name: "", type: "", date: "", time: "09:00", people: "",
+  name: "", type: "", date: "", time: "09:00", endTime: "", people: "",
   venue: "", budget: "", customBudget: "", notes: "",
 };
 
@@ -121,8 +125,11 @@ export function useCreateEventWizard() {
   const validateStep1 = () => {
     const newErrors = {};
     Object.entries(REQUIRED_FIELDS).forEach(([field, message]) => {
-      if (!String(form[field]).trim()) newErrors[field] = message;
+      if (!String(form[field] || "").trim()) newErrors[field] = message;
     });
+    if (form.endTime && form.endTime <= form.time) {
+      newErrors.endTime = "End time must be after the start time.";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -137,19 +144,19 @@ export function useCreateEventWizard() {
 
   // Budget text shown on the review step and sent to the backend
   const budgetText = form.budget === "custom"
-    ? (form.customBudget ? `$${form.customBudget}` : "")
+    ? (form.customBudget ? `₹${form.customBudget}` : "")
     : form.budget;
 
   // --------------------------------------------------------------------------
   // 4. STEP 2 — RESOURCES
   // --------------------------------------------------------------------------
-  // Units free = total minus what confirmed/live events already use.
+  // Units free = total minus what unfinished events already hold, as on the vendor side.
   // With a date chosen we only count events on that same date.
   const getAvailable = (resource) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const busyEvents = allEvents.filter((e) => {
-      if (e.status !== "live" && e.status !== "confirmed") return false;
+      if (FINISHED_EVENT_STATUSES.includes(String(e.status).toLowerCase())) return false;
       if (!e.date) return false;
       if (form.date) return e.date === form.date;
       return new Date(e.date + "T00:00:00") <= today;
@@ -157,7 +164,7 @@ export function useCreateEventWizard() {
     let used = 0;
     busyEvents.forEach((ev) => {
       (allocations[ev.id] || []).forEach((a) => {
-        if (a.resourceId === resource.id) used += a.quantity || a.qty || 0;
+        if (a.resourceId === resource.id && a.status !== "released") used += a.quantity || a.qty || 0;
       });
     });
     const total = resource.total || resource.quantity || 0;
@@ -202,15 +209,26 @@ export function useCreateEventWizard() {
   // --------------------------------------------------------------------------
   // 5. STEP 3 — STAFF
   // --------------------------------------------------------------------------
-  const visibleStaff = staff.filter((s) => {
-    const q = staffSearch.trim().toLowerCase();
-    return !q || s.name.toLowerCase().includes(q) || (s.role || "").toLowerCase().includes(q);
-  });
+  // The unfinished event a staff member is already working on, if any
+  const getBusyEvent = (member) =>
+    allEvents.find(
+      (e) =>
+        !FINISHED_EVENT_STATUSES.includes(String(e.status).toLowerCase()) &&
+        (member.assignedEvents || []).includes(e.id)
+    );
+
+  const visibleStaff = staff
+    .filter((s) => {
+      const q = staffSearch.trim().toLowerCase();
+      return !q || s.name.toLowerCase().includes(q) || (s.role || "").toLowerCase().includes(q);
+    })
+    .map((s) => ({ ...s, isBusy: Boolean(getBusyEvent(s)) }));
   const chosenStaff = staff.filter((s) => selectedStaff[s.id]);
 
   const toggleStaff = (id) => {
     const updated = { ...selectedStaff };
     if (updated[id]) delete updated[id];
+    else if (visibleStaff.find((s) => s.id === id)?.isBusy) return;
     else updated[id] = true;
     setSelectedStaff(updated);
   };
@@ -219,7 +237,30 @@ export function useCreateEventWizard() {
   // 6. NAVIGATION BETWEEN STEPS
   // --------------------------------------------------------------------------
   const goToStep = (next) => {
-    if (step === 1 && next > 1 && !validateStep1()) return;
+    if (step === 1 && next > 1 && !validateStep1()) {
+      showToast("Please fix the required fields (Name, Type, Date, End Time, Guests).", "danger");
+      setTimeout(() => {
+        const errorInput = document.querySelector(".input-error, input:invalid");
+        if (errorInput) {
+          errorInput.focus();
+          errorInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
+      return;
+    }
+    // A new date can mean less stock, so re-check what was already picked
+    if (step === 1) {
+      const adjusted = { ...selectedQty };
+      resources.forEach((r) => {
+        if (!adjusted[r.id]) return;
+        const available = getAvailable(r);
+        if (adjusted[r.id] <= available) return;
+        if (available > 0) adjusted[r.id] = available;
+        else delete adjusted[r.id];
+        showToast(`${r.name} reduced to ${available}: less stock on this date.`, "danger");
+      });
+      setSelectedQty(adjusted);
+    }
     setStep(next);
     // The layout's <main> is the element that scrolls, not the window
     document.querySelector(".main-content")?.scrollTo({ top: 0, behavior: "smooth" });
@@ -255,7 +296,9 @@ export function useCreateEventWizard() {
     const picked = [...requestedResources, ...requestedStaff];
     const vendorIds = [...new Set(picked.map((x) => x.vendorId))];
     const vendors = [...new Set(picked.map((x) => x.vendor))];
-    const numericBudget = budgetText ? Number(budgetText.replace(/[^0-9]/g, "")) : undefined;
+    // The top of the range: "$1,000 - $5,000" -> 5000
+    const maxBudget = getMaxBudget();
+    const numericBudget = Number.isFinite(maxBudget) && maxBudget > 0 ? maxBudget : undefined;
 
     // FACULTY MAY ASK: Why is there no "id" in this object?
     // HOW TO CHANGE: The backend gives the next number (EVT008, EVT009, ...) itself,
@@ -265,6 +308,7 @@ export function useCreateEventWizard() {
       type: form.type,
       date: form.date,
       time: formatTime12(form.time),
+      endTime: formatTime12(form.endTime),
       venue: form.venue.trim() || "TBD",
       people,
       guests: people,

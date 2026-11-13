@@ -169,7 +169,7 @@ export function useVendorPackagesData() {
     // Calculate average price
     const sumPrice = packages.reduce((acc, p) => acc + (Number(p.price) || 0), 0);
     const avg = total > 0 ? Math.round(sumPrice / total) : 0;
-    const avgPrice = `$${avg.toLocaleString()}`;
+    const avgPrice = `₹${avg.toLocaleString("en-IN")}`;
 
     // Calculate most frequent category
     const catTally = {};

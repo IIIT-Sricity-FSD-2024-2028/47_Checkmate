@@ -67,6 +67,10 @@ export async function patchEvent(id, eventData, options = {}) {
  * @param {Object} [options] - Additional request options
  * @returns {Promise<Object>}
  */
+export async function cancelEvent(id, options = {}) {
+  return patch(`/events/${encodeURIComponent(id)}/cancel`, {}, options);
+}
+
 export async function updateEventStatus(id, statusOrPayload, note, options = {}) {
   let body;
   let requestOptions = options;
@@ -130,7 +134,7 @@ export function filterMyEvents(events, session) {
       const evCreated = (ev.createdBy || '').toLowerCase();
 
       if (vendorId && evVId === vendorId) return true;
-      if (vendorName && (evVName === vendorName || evVName.includes(vendorName) || vendorName.includes(evVName))) return true;
+      if (vendorName && evVName && (evVName === vendorName || evVName.includes(vendorName) || vendorName.includes(evVName))) return true;
       if (userEmail && (evVEmail === userEmail || evCreated === userEmail)) return true;
       if (userId && (evCreated === userId || ev.createdBy === user.id)) return true;
       if (Array.isArray(ev.vendorIds) && vendorId && ev.vendorIds.map((v) => String(v).toLowerCase()).includes(vendorId)) return true;
@@ -157,10 +161,13 @@ export function filterMyEvents(events, session) {
       const evCName = (ev.client || '').toLowerCase();
       const evCreated = (ev.createdBy || '').toLowerCase();
 
-      if (userId && evCId === userId) return true;
+      // Explicit match: client ID, client email, or createdBy user ID
+      if (userId && evCId && evCId === userId) return true;
       if (userEmail && (evCEmail === userEmail || evCreated === userEmail)) return true;
-      if (userName && (evCName === userName || evCName.includes(userName) || userName.includes(evCName))) return true;
-      if (evCreated === 'client' && (!ev.clientEmail || ev.clientEmail.toLowerCase() === userEmail)) return true;
+      if (userId && evCreated === userId) return true;
+      // Exact name match ONLY IF no ID or email was recorded on this event
+      if (!evCId && !evCEmail && userName && evCName === userName) return true;
+
       return false;
     });
   }
@@ -190,6 +197,116 @@ export async function getMyEvents(options = {}) {
   return filterMyEvents(events, options.session || getAuthSession());
 }
 
+/**
+ * Parses time strings like "18:00", "6:00 PM", "09:30", "6pm", "18:00:00" into minutes from midnight (0–1439).
+ *
+ * @param {string} timeStr - Time string
+ * @returns {number|null} Minutes from midnight or null if invalid
+ */
+export function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return null;
+  const clean = String(timeStr).trim().toLowerCase();
+  const match = clean.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?(?:\s*(am|pm))?/i);
+  if (!match) return null;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  const meridiem = match[3]?.toLowerCase();
+  if (meridiem === 'pm' && hours < 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+// When an event ends. Older events have no end time, so they are given 4 hours.
+function getEndMinutes(event, startMinutes) {
+  const end = parseTimeToMinutes(event.endTime);
+  return end !== null && end > startMinutes ? end : startMinutes + 240;
+}
+
+/**
+ * Checks for a venue, date, and time collision between an incoming/pending event request
+ * and an existing confirmed/live event.
+ *
+ * @param {Object} pendingEvent - The incoming event being reviewed
+ * @param {Object} confirmedEvent - An existing event in the database
+ * @returns {Object|null} Collision detail object or null if no conflict
+ */
+export function checkEventCollision(pendingEvent, confirmedEvent) {
+  if (!pendingEvent || !confirmedEvent) return null;
+  if (pendingEvent.id === confirmedEvent.id) return null;
+
+  // Only check against confirmed, approved, or live events
+  const confStatus = String(confirmedEvent.status || '').toLowerCase();
+  if (!['confirmed', 'approved', 'live'].includes(confStatus)) return null;
+
+  // Both must have dates
+  if (!pendingEvent.date || !confirmedEvent.date) return null;
+  const pDate = String(pendingEvent.date).split('T')[0];
+  const cDate = String(confirmedEvent.date).split('T')[0];
+  if (pDate !== cDate) return null;
+
+  // Both must have venues (ignore unassigned/TBD venues)
+  const pVenue = String(pendingEvent.venue || '').trim().toLowerCase();
+  const cVenue = String(confirmedEvent.venue || '').trim().toLowerCase();
+  if (!pVenue || !cVenue || pVenue === 'venue tbd' || cVenue === 'venue tbd' || pVenue === 'tbd' || cVenue === 'tbd') return null;
+  if (pVenue !== cVenue) return null;
+
+  // Same date and venue confirmed! Inspect time overlap
+  const pTimeRaw = pendingEvent.time || pendingEvent.startTime;
+  const cTimeRaw = confirmedEvent.time || confirmedEvent.startTime;
+  const pMinutes = parseTimeToMinutes(pTimeRaw);
+  const cMinutes = parseTimeToMinutes(cTimeRaw);
+
+  let isDirectTimeOverlap = false;
+  let timeDesc = '';
+  let severity = 'high';
+
+  if (pMinutes !== null && cMinutes !== null) {
+    if (pMinutes < getEndMinutes(confirmedEvent, cMinutes) && cMinutes < getEndMinutes(pendingEvent, pMinutes)) {
+      isDirectTimeOverlap = true;
+      timeDesc = `at ${pTimeRaw || 'scheduled time'} (overlaps with ${cTimeRaw || 'existing booking'})`;
+      severity = 'high';
+    } else {
+      isDirectTimeOverlap = false;
+      timeDesc = `on same date (request at ${pTimeRaw}, confirmed at ${cTimeRaw})`;
+      severity = 'medium';
+    }
+  } else {
+    // If either event does not specify an exact time slot, treat as full-day reservation
+    isDirectTimeOverlap = true;
+    timeDesc = `on ${pDate} (shared date slot)`;
+    severity = 'high';
+  }
+
+  return {
+    type: isDirectTimeOverlap ? 'Venue & Time Collision' : 'Same-Day Venue Collision',
+    category: 'venue',
+    venue: pendingEvent.venue,
+    date: pDate,
+    timeDesc,
+    conflictingEvent: confirmedEvent,
+    desc: `Venue "${pendingEvent.venue}" is already booked ${timeDesc} by confirmed event "${confirmedEvent.name || confirmedEvent.id}" (${confirmedEvent.id})`,
+    severity,
+  };
+}
+
+/**
+ * Scans an array of all events to find any confirmed/live event colliding with a pending request.
+ *
+ * @param {Object} pendingEvent - The event to check
+ * @param {Array<Object>} allEvents - All events in the database
+ * @returns {Array<Object>} List of collisions found
+ */
+export function findEventCollisions(pendingEvent, allEvents) {
+  if (!pendingEvent || !Array.isArray(allEvents)) return [];
+  const collisions = [];
+  allEvents.forEach((existing) => {
+    const col = checkEventCollision(pendingEvent, existing);
+    // Same venue at different times on one day is fine; only overlaps count
+    if (col?.severity === 'high') collisions.push(col);
+  });
+  return collisions;
+}
+
 const eventService = {
   getEvents,
   getEventById,
@@ -200,6 +317,9 @@ const eventService = {
   deleteEvent,
   filterMyEvents,
   getMyEvents,
+  parseTimeToMinutes,
+  checkEventCollision,
+  findEventCollisions,
 };
 
 export default eventService;

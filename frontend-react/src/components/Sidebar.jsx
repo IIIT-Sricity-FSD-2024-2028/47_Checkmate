@@ -52,7 +52,7 @@ function Sidebar({ role, menuItems = [], userName, userEmail: propUserEmail }) {
   const handleLogout = (e) => {
     e.preventDefault();
     clearAuthSession();
-    navigate("/signin");
+    navigate("/");
   };
 
   return (

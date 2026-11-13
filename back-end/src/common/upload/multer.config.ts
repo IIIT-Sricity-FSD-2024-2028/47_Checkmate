@@ -3,9 +3,10 @@ import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/m
 import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { diskStorage } from 'multer';
-import { UPLOAD_DIR } from '../paths';
+import { UPLOAD_DIR, STAFF_DOCS_DIR } from '../paths';
 
 mkdirSync(UPLOAD_DIR, { recursive: true });
+mkdirSync(STAFF_DOCS_DIR, { recursive: true });
 
 const ALLOWED = new Map([
   ['image/png', '.png'],
@@ -30,4 +31,23 @@ export const avatarMulterOptions: MulterOptions = {
     ALLOWED.has(file.mimetype)
       ? cb(null, true)
       : cb(new BadRequestException(`Unsupported file type ${file.mimetype}. Allowed: PNG, JPEG, WebP.`), false),
+};
+
+const DOCUMENT_TYPES = new Map([
+  ['application/pdf', '.pdf'],
+  ['image/png', '.png'],
+  ['image/jpeg', '.jpg'],
+]);
+
+// Staff application documents: private folder, random names, up to 3 files.
+export const staffDocumentMulterOptions: MulterOptions = {
+  storage: diskStorage({
+    destination: (_req, _file, cb) => cb(null, STAFF_DOCS_DIR),
+    filename: (_req, file, cb) => cb(null, `${randomUUID()}${DOCUMENT_TYPES.get(file.mimetype) ?? '.bin'}`),
+  }),
+  limits: { fileSize: Number(process.env.UPLOAD_MAX_BYTES) || 5 * 1024 * 1024, files: 3 },
+  fileFilter: (_req, file, cb) =>
+    DOCUMENT_TYPES.has(file.mimetype)
+      ? cb(null, true)
+      : cb(new BadRequestException(`Unsupported file type ${file.mimetype}. Allowed: PDF, PNG, JPEG.`), false),
 };

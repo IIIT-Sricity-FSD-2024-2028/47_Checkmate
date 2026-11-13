@@ -10,7 +10,7 @@
  *   2. Computes the 3 summary numbers: outstanding balance (+ next due date),
  *      total paid, and how many invoices still have a balance.
  *   3. Search (invoice #, event, status) and a Paid / Unpaid filter.
- *   4. "Pay Now": a simulated payment, exactly like the original page.
+ *   4. "Pay Now": a simulated gateway; the payment itself is saved on the booking.
  *   5. "Invoice" download: builds a text invoice in the browser.
  *
  * Connected Backend Endpoints:
@@ -20,7 +20,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { getMyBookings } from "../../services/bookingService";
+import { getMyBookings, payBooking } from "../../services/bookingService";
 import { getMyEvents } from "../../services/eventService";
 import { describeError, formatDate, getCurrentUser, money } from "../../utils/clientHelpers";
 
@@ -142,22 +142,26 @@ export function useClientBillingData() {
   }, [invoices, searchTerm, statusFilter]);
 
   // --------------------------------------------------------------------------
-  // 4. PAY NOW (simulated)
+  // 4. PAY NOW
   // FACULTY MAY ASK: Is the payment saved to the backend?
-  // HOW TO CHANGE: No — like the original page it is a simulated payment gateway.
-  // The backend only lets vendors/admins edit bookings, so a real version would
-  // call patchBooking() from a payment webhook on the server instead.
+  // HOW TO CHANGE: Yes, the booking is marked paid, which the admin needs before
+  // releasing the vendor payout. No real gateway is charged: a real version would
+  // record the payment from a gateway webhook on the server instead.
   // --------------------------------------------------------------------------
-  const payNow = (invoice) => {
+  const payNow = async (invoice) => {
     setPayingId(invoice.id);
     setToast({ type: "info", text: `Processing payment of ${money(invoice.balance)}...` });
 
-    setTimeout(() => {
+    try {
+      await payBooking(invoice.id);
       setInvoices((current) => current.map((i) => (i.id === invoice.id ? { ...i, paid: i.amount, balance: 0 } : i)));
-      setPayingId(null);
       setToast({ type: "success", text: "Payment Successful! Thank you." });
       setTimeout(() => setToast(null), 3500);
-    }, 2000);
+    } catch (err) {
+      setToast({ type: "error", text: describeError(err) });
+    } finally {
+      setPayingId(null);
+    }
   };
 
   return {
