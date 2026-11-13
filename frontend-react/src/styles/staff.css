@@ -1495,3 +1495,126 @@
 .sp-save { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #fff; background: var(--pink, #e91e8c); }
 .sp-save:disabled { opacity: 0.5; cursor: not-allowed; }
 .sp-last { margin-top: 8px; font-size: 12px; color: var(--text3, #6b5d7e); }
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN COORDINATION (pages/staff/MessagesAdmin.jsx)
+   Converted from front-end/pages/staff/MessagesAdmin.html.
+   The HTML used .chat-msg / .msg-self / .msg-other but never styled
+   them; these rules give them the same look as the .me / .them bubbles.
+══════════════════════════════════════════════════════════════ */
+.msg-shell.msg-shell--single { grid-template-columns: 1fr; }
+.chat-kebab {
+  background: none; border: none; color: var(--text2);
+  font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: var(--rx);
+  transition: color .13s;
+}
+.chat-kebab:hover { color: var(--text); background: var(--bg3); }
+.chat-role-tag {
+  font-size: 10px; background: var(--cyan-dim); color: var(--cyan);
+  padding: 1px 6px; border-radius: 10px; font-weight: 700; vertical-align: middle;
+}
+.chat-msg { display: flex; flex-direction: column; max-width: 75%; }
+.chat-msg.msg-other { align-self: flex-start; }
+.chat-msg.msg-self { align-self: flex-end; }
+.chat-msg .msg-bubble { padding: 10px 13px; border-radius: 10px; font-size: 12.5px; line-height: 1.55; }
+.chat-msg.msg-other .msg-bubble { background: var(--bg3); color: var(--text); border-bottom-left-radius: 3px; }
+.chat-msg.msg-self .msg-bubble { background: var(--pink); color: #fff; border-bottom-right-radius: 3px; }
+.chat-msg.msg-self .msg-time { text-align: right; }
+.chat-system-note {
+  align-self: center; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.25);
+  color: var(--orange); border-radius: 8px; font-size: 12.5px; text-align: center; padding: 12px; margin: 10px 0;
+}
+.chat-system-note__time { font-size: 11px; margin-top: 4px; }
+.chat-empty { text-align: center; color: var(--text3); font-size: 13px; margin-top: 20px; }
+.chat-error { padding: 8px 14px; font-size: 12px; color: var(--red); border-top: 1px solid var(--border); }
+
+/* ══════════════════════════════════════════════════════════════
+   REPORT ISSUE TO ADMIN (pages/staff/ReportAdmin.jsx)
+   Converted from the inline <style> of front-end/pages/staff/ReportAdmin.html.
+   Scoped under .ri-admin-page because "Issue on Event" (ReportIssue.jsx)
+   already uses .ri-submit / .ri-reporter with a different meaning.
+══════════════════════════════════════════════════════════════ */
+.ri-admin-page .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.ri-admin-page .topbar__right { display: flex; align-items: center; gap: 12px; }
+.ri-admin-page .notif-btn {
+  position: relative; width: 40px; height: 40px; background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border); border-radius: var(--rs); display: flex; align-items: center;
+  justify-content: center; color: var(--text); cursor: pointer; transition: all 0.2s ease;
+}
+.ri-admin-page .notif-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(233, 30, 140, 0.4); }
+.ri-admin-page .notif-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; background: var(--pink);
+  border-radius: 99px; font-size: 10px; font-weight: 700; color: #fff; display: flex;
+  align-items: center; justify-content: center; padding: 0 4px;
+}
+.ri-admin-page .ri-wrapper { display: flex; align-items: flex-start; justify-content: center; padding: 10px 0 30px; }
+.ri-admin-page .ri-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r);
+  width: 100%; max-width: 680px; overflow: hidden; padding: 0;
+}
+.ri-admin-page .ri-card__header {
+  display: flex; align-items: center; gap: 14px; padding: 22px 28px; border-bottom: 1px solid var(--border);
+}
+.ri-admin-page .ri-header-icon {
+  width: 40px; height: 40px; border-radius: 10px; background: rgba(233, 30, 140, 0.12);
+  border: 1px solid rgba(233, 30, 140, 0.3); display: flex; align-items: center; justify-content: center;
+  color: var(--pink); flex-shrink: 0;
+}
+.ri-admin-page .ri-header-text h3 { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+.ri-admin-page .ri-header-text p { font-size: 12.5px; color: var(--text2); margin: 0; }
+.ri-admin-page .ri-body { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+.ri-admin-page .ri-form-group { display: flex; flex-direction: column; gap: 7px; }
+.ri-admin-page .ri-label { font-size: 12.5px; font-weight: 600; color: var(--text2); }
+.ri-admin-page .ri-input,
+.ri-admin-page .ri-textarea,
+.ri-admin-page .ri-select {
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: var(--rs);
+  padding: 11px 14px; color: var(--text); font-family: var(--font); font-size: 13.5px;
+  outline: none; width: 100%; box-sizing: border-box; transition: border-color 0.18s;
+}
+.ri-admin-page .ri-input:focus,
+.ri-admin-page .ri-textarea:focus,
+.ri-admin-page .ri-select:focus { border-color: rgba(233, 30, 140, 0.5); }
+.ri-admin-page .ri-input::placeholder,
+.ri-admin-page .ri-textarea::placeholder { color: var(--text3); }
+.ri-admin-page .ri-textarea { min-height: 110px; resize: vertical; }
+.ri-admin-page .ri-select-wrap { position: relative; }
+.ri-admin-page .ri-select { appearance: none; cursor: pointer; padding-right: 36px; }
+.ri-admin-page .ri-select option { background: #2e1c40; }
+.ri-admin-page .ri-select-wrap svg {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text3);
+}
+.ri-admin-page .ri-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .ri-admin-page .ri-row { grid-template-columns: 1fr; } }
+.ri-admin-page .ri-reporter {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: var(--rs);
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;
+}
+.ri-admin-page .ri-reporter__title { font-size: 12.5px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.ri-admin-page .ri-reporter__row { display: flex; gap: 40px; flex-wrap: wrap; }
+.ri-admin-page .ri-reporter__field { font-size: 13px; color: var(--text3); }
+.ri-admin-page .ri-reporter__field span { color: var(--text2); font-weight: 500; }
+.ri-admin-page .ri-footer { display: flex; align-items: center; gap: 12px; padding: 0 28px 28px; }
+.ri-admin-page .ri-submit {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;
+  background: var(--pink); border: none; border-radius: var(--rs); color: #fff; font-family: var(--font);
+  font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 18px var(--pink-glow); transition: background 0.18s;
+}
+.ri-admin-page .ri-submit:hover { background: var(--pink2); }
+.ri-admin-page .ri-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.ri-admin-page .ri-cancel {
+  padding: 12px 22px; background: transparent; border: 1px solid var(--border); border-radius: var(--rs);
+  color: var(--text2); font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.18s;
+}
+.ri-admin-page .ri-cancel:hover { border-color: rgba(255, 255, 255, 0.2); color: var(--text); }
+.ri-admin-page .ri-error {
+  padding: 10px 14px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--rs);
+  font-size: 13px; color: #fff;
+}
+.ri-admin-page .ri-toast {
+  position: fixed; bottom: 28px; right: 28px; background: #15803d; color: #fff; padding: 12px 20px;
+  border-radius: var(--rs); font-size: 13.5px; font-weight: 500; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); transform: translateY(80px); opacity: 0; transition: all 0.3s;
+  z-index: 999; pointer-events: none;
+}
+.ri-admin-page .ri-toast.show { transform: translateY(0); opacity: 1; }

@@ -1069,6 +1069,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .cl-res-card__price { font-size: 13px; font-weight: 600; color: var(--pink-light); }
+/* Units free on the chosen event date */
+.cl-res-card__avail { margin-top: 6px; font-size: 12px; color: var(--green, #22c55e); }
+.cl-res-card__avail.none { color: var(--red, #ef4444); }
 
 .cl-qty {
     display: flex;
@@ -1520,6 +1523,8 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   color: var(--pink); background: rgba(233, 30, 140, 0.12);
 }
 .cl-form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Event Date / Start Time / End Date / End Time */
+.cl-form-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cl-chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .cl-chip-option {
   padding: 8px 16px; border-radius: 999px; cursor: pointer;
@@ -1529,6 +1534,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 .cl-chip-option:hover { color: var(--text-primary); border-color: var(--pink); }
 .cl-chip-option.selected { color: #fff; background: var(--pink); border-color: var(--pink); }
+@media (max-width: 1100px) {
+  .cl-form-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 720px) {
-  .cl-form-grid--3 { grid-template-columns: 1fr; }
+  .cl-form-grid--3, .cl-form-grid--4 { grid-template-columns: 1fr; }
 }

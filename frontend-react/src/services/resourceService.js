@@ -23,6 +23,36 @@ export async function getResourceById(id, options = {}) {
 }
 
 /**
+ * Ask the backend how many units of every resource are free for a date window.
+ * A resource booked on another date counts as free here.
+ *
+ * @param {Object} query - { date, endDate, time, endTime, excludeEventId } or { eventId }
+ *   eventId alone = that event's own date/time, ignoring its own allocations.
+ * @param {Object} [options] - Additional request options
+ * @returns {Promise<Array<{resourceId, name, total, allocated, available, date, endDate}>>}
+ */
+export async function getResourceAvailability(query, options = {}) {
+  return get('/resources/availability', { ...options, params: query });
+}
+
+/**
+ * Same as getResourceAvailability, but returned as { [resourceId]: availableUnits }
+ * so a page can look a number up directly.
+ *
+ * @param {Object} query - See getResourceAvailability
+ * @param {Object} [options] - Additional request options
+ * @returns {Promise<Object<string, number>>}
+ */
+export async function getResourceAvailabilityMap(query, options = {}) {
+  const rows = await getResourceAvailability(query, options);
+  const map = {};
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    map[row.resourceId] = Number(row.available) || 0;
+  });
+  return map;
+}
+
+/**
  * Create a new inventory resource (Vendors, Admins, Superusers).
  *
  * @param {Object} resourceData - Resource creation data
@@ -123,6 +153,8 @@ export async function getMyResources(options = {}) {
 const resourceService = {
   getResources,
   getResourceById,
+  getResourceAvailability,
+  getResourceAvailabilityMap,
   createResource,
   updateResource,
   patchResource,

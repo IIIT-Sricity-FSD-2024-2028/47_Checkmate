@@ -45,8 +45,8 @@ function ReviewStep({ form, budgetText, resources, staff, subtotal, submitState,
         <div className="cl-review__grid">
           <ReviewField label="Event Name" value={form.name.trim() || "Untitled Event"} />
           <ReviewField label="Type" value={form.type || "—"} />
-          <ReviewField label="Date" value={form.date || "—"} />
-          <ReviewField label="Time" value={formatTime12(form.time)} />
+          <ReviewField label="Date" value={form.endDate > form.date ? `${form.date} → ${form.endDate}` : form.date || "—"} />
+          <ReviewField label="Time" value={form.endTime ? `${formatTime12(form.time)} – ${formatTime12(form.endTime)}` : formatTime12(form.time)} />
           <ReviewField label="Venue" value={form.venue.trim() || "TBD"} />
           <ReviewField label="Expected Guests" value={form.people || "—"} />
           <ReviewField label="Budget Range" value={budgetText || "—"} full />

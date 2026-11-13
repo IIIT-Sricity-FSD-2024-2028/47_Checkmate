@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../../database/database.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { getJwtSecret } from '../../common/security/jwt-secret';
 import { JwtStrategy } from './jwt.strategy';
 
 // Registering JwtModule here is what makes JwtService injectable, and listing
@@ -15,7 +16,7 @@ import { JwtStrategy } from './jwt.strategy';
     DatabaseModule,
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'eventpro_secret_key',
+      secret: getJwtSecret(), // never a hard-coded fallback (see jwt-secret.ts)
       // Cast needed because @types/ms types this as a template-literal union
       // ('12h', '7d', ...), which an env-var string cannot be narrowed to.
       signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN || '12h') as any },

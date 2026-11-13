@@ -3,5 +3,5 @@ import { DatabaseModule } from '../../database/database.module';
 import { ResourcesController } from './resources.controller';
 import { ResourcesService } from './resources.service';
 
-@Module({ imports: [DatabaseModule], controllers: [ResourcesController], providers: [ResourcesService] })
+@Module({ imports: [DatabaseModule], controllers: [ResourcesController], providers: [ResourcesService], exports: [ResourcesService] })
 export class ResourcesModule {}

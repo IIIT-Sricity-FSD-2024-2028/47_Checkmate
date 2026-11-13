@@ -1,12 +1,19 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
+import { ResourcesService } from '../resources/resources.service';
 import { DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } from '../../common/constants/finance.constants';
 
 // The revenue model + dashboard KPIs. Everything here is derived live from the
 // bookings/events/resources collections -- nothing is stored pre-computed.
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly data: DataService) {}
+  // Nest injects ResourcesService. Scripts that build this service by hand with
+  // only a DataService (e.g. the root test-*.js files) get one made from it.
+  private readonly resources: ResourcesService;
+
+  constructor(private readonly data: DataService, resources?: ResourcesService) {
+    this.resources = resources ?? new ResourcesService(data);
+  }
 
   summary() {
     const snapshot = this.data.snapshot();
@@ -124,8 +131,39 @@ export class AnalyticsService {
     return this.scrubCollection(name, this.data.getValue(name));
   }
 
-  setStateKey(key: string, value: unknown) {
+  // Which loosely-structured keys each role may REPLACE through PUT /state/:key.
+  // Everything else (users, events, bookings, resources, staff, vendors, …) has
+  // its own endpoint with proper checks, so it can never be overwritten here.
+  // The roles come from where the React app writes each key.
+  private static readonly WRITABLE_KEYS: Record<string, string[]> = {
+    adminChatMessages: ['admin', 'superuser', 'vendor', 'client', 'staff'],
+    coordinationMessages: ['admin', 'superuser', 'vendor', 'client', 'staff'],
+    notifications: ['admin', 'superuser', 'vendor', 'client', 'staff'],
+    resourceAllocations: ['vendor', 'admin', 'superuser'],
+    venueAllocations: ['vendor', 'admin', 'superuser'],
+    contingencyPlans: ['vendor', 'admin', 'superuser'],
+    monitorProgress: ['vendor', 'admin', 'superuser'],
+    staffRequests: ['vendor', 'staff', 'admin', 'superuser'],
+    platformSettings: ['admin', 'superuser'],
+    vendorNotifications: ['admin', 'superuser'],
+    recruitments: ['admin', 'superuser'],
+    superuserEngineSettings: ['superuser', 'admin'],
+  };
+
+  setStateKey(key: string, value: unknown, user?: { role?: string }) {
     this.assertNotPrivate(key);
+    const allowedRoles = AnalyticsService.WRITABLE_KEYS[this.normalizeKey(key)];
+    if (!allowedRoles) {
+      throw new ForbiddenException(`"${key}" cannot be changed here; use its own endpoint.`);
+    }
+    if (!allowedRoles.includes(String(user?.role || '').toLowerCase())) {
+      throw new ForbiddenException(`Your role cannot change "${key}".`);
+    }
+    // Allocations decide who gets stock, so they are checked against the
+    // date-based availability rules before anything is saved (400 if not).
+    if (this.normalizeKey(key) === 'resourceAllocations') {
+      this.resources.assertAllocationMapValid(value);
+    }
     return this.data.setValue(this.normalizeKey(key), value);
   }
 

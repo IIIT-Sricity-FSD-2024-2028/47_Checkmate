@@ -158,15 +158,17 @@ export default function SuperuserEvents() {
   // Opens modal for registering a new event
   const handleOpenAdd = () => {
     setEditingId(null);
+    // New records start on the empty "Select..." choice, as in the HTML page,
+    // so the required-field checks in validateForm() actually apply.
     setFormData({
       name: '',
       venue: '',
       client: '',
-      vendor: vendors.length > 0 ? vendors[0].name : '',
+      vendor: '',
       date: new Date().toISOString().split('T')[0],
-      type: 'Wedding',
+      type: '',
       guests: '',
-      status: 'Pending',
+      status: '',
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -444,6 +446,7 @@ export default function SuperuserEvents() {
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Wedding">Wedding</option>
                     <option value="Birthday">Birthday</option>
                     <option value="Conference">Conference</option>
@@ -473,6 +476,7 @@ export default function SuperuserEvents() {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Confirmed">Confirmed</option>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>

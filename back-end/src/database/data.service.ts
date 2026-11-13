@@ -419,8 +419,13 @@ export class DataService implements OnModuleInit {
     staff.assignedEvents = activeAssignments.map((a) => a.eventId || a.eventName);
   }
 
-  // Recomputes availability for every resource: total stock minus whatever is
-  // currently allocated to an event. Damaged/maintenance stock is never available.
+  // Recomputes the date-less stock figures for every resource:
+  //   avail / quantityAvailable = total stock minus everything still allocated to
+  //   any event (a summary number for dashboards and low-stock alerts).
+  //   available = the item can be booked at all (has stock, not Maintenance/Damaged).
+  // `available` deliberately ignores allocations: stock booked on one date is
+  // still free on other dates. Whether units are free on a SPECIFIC date is
+  // decided by modules/resources/resource-availability.ts.
   public triggerAllResourceAllocations() {
     const allocatedTotals: Record<string, number> = {};
 
@@ -439,7 +444,7 @@ export class DataService implements OnModuleInit {
 
       res.avail = avail;
       res.quantityAvailable = avail;
-      res.available = avail > 0 && res.conditionStatus !== 'Maintenance' && res.conditionStatus !== 'Damaged';
+      res.available = total > 0 && res.conditionStatus !== 'Maintenance' && res.conditionStatus !== 'Damaged';
     });
   }
 

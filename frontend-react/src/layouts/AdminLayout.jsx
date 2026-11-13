@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { adminMenuItems } from "../routes/roleRoutes";
 import { getAuthSession } from "../services/auth/authStorage";
+import WelcomeOverlay from "../components/WelcomeOverlay";
 
 
 function AdminLayout() {
@@ -20,6 +21,8 @@ function AdminLayout() {
             <main className="main-content">
                 <Outlet />
             </main>
+            {/* Welcome popup: shown once per browser session, on whichever page opens first */}
+            <WelcomeOverlay />
         </div>
     );
 }

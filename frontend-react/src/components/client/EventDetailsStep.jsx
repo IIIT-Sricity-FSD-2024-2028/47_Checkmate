@@ -23,6 +23,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import VenuePicker from "./VenuePicker";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, MapPin, Sparkles, Wallet } from "lucide-react";
+import { describeEventDuration } from "../../utils/clientHelpers";
 
 const EVENT_TYPES = ["Wedding", "Birthday", "Conference", "Party", "Corporate"];
 const BUDGET_RANGES = ["₹1,000 - ₹5,000", "₹5,000 - ₹15,000", "₹15,000 - ₹30,000", "₹30,000 - ₹50,000", "₹50,000+"];
@@ -46,11 +47,9 @@ const openPicker = (e) => {
 };
 
 // "18:00" to "21:30" -> "3h 30m"
-function describeDuration(start, end) {
-  if (!start || !end || end <= start) return "";
-  const toMinutes = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-  const minutes = toMinutes(end) - toMinutes(start);
-  return `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ""}`;
+// Duration hint, e.g. "3h 30m"; counts the End Date so overnight events work
+function describeDuration(form) {
+  return describeEventDuration(form);
 }
 
 function Section({ icon: Icon, title, hint, children }) {
@@ -72,7 +71,7 @@ function EventDetailsStep({ form, errors, onChange, onNext }) {
   const inputClass = (field) => `cl-input ${errors[field] ? "input-error" : ""}`;
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const duration = describeDuration(form.time, form.endTime);
+  const duration = describeDuration(form);
 
   return (
     <div className="card cl-details-card">
@@ -101,7 +100,7 @@ function EventDetailsStep({ form, errors, onChange, onNext }) {
       </Section>
 
       <Section icon={Clock} title="When" hint={duration ? `Duration: ${duration}` : undefined}>
-        <div className="cl-form-grid cl-form-grid--3">
+        <div className="cl-form-grid cl-form-grid--4">
           <Field label="Event Date *" error={errors.date}>
             <input id="fieldEventDate" name="date" className={inputClass("date")} type="date" min={todayStr}
               value={form.date} onChange={(e) => onChange("date", e.target.value)} onClick={openPicker} />
@@ -109,6 +108,11 @@ function EventDetailsStep({ form, errors, onChange, onNext }) {
           <Field label="Start Time">
             <input id="fieldEventTime" name="time" className="cl-input" type="time" value={form.time}
               onChange={(e) => onChange("time", e.target.value)} onClick={openPicker} />
+          </Field>
+          {/* Only needed when the event ends on a later day (e.g. 9 PM to 12 AM) */}
+          <Field label="End Date" error={errors.endDate}>
+            <input id="fieldEndDate" name="endDate" className={inputClass("endDate")} type="date" min={form.date || todayStr}
+              value={form.endDate} placeholder="Same day" onChange={(e) => onChange("endDate", e.target.value)} onClick={openPicker} />
           </Field>
           <Field label="End Time *" error={errors.endTime}>
             <input id="fieldEndTime" name="endTime" className={inputClass("endTime")} type="time" value={form.endTime}

@@ -1,6 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { getJwtSecret } from '../../common/security/jwt-secret';
 import { DataService } from '../../database/data.service';
 
 // Teaches passport how to find and check a token. PassportStrategy(Strategy)
@@ -12,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Read the token from the "Authorization: Bearer <token>" header.
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'eventpro_secret_key',
+      secretOrKey: getJwtSecret(), // same secret that signs the tokens
     });
   }
 

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashPassword, verifyPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
@@ -10,7 +10,10 @@ import { LoginDto, RegisterDto, ResetPasswordDto } from './dto';
 // object, and the frontend stores it in sessionStorage.
 @Injectable()
 export class AuthService {
-  private otpStore = new Map<string, { otp: string; expiresAt: number }>();
+  private readonly logger = new Logger(AuthService.name);
+  // Reset codes by email. `attempts` counts wrong guesses (max MAX_OTP_ATTEMPTS).
+  private otpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
+  private static readonly MAX_OTP_ATTEMPTS = 5;
 
   constructor(
     private readonly data: DataService,
@@ -105,15 +108,23 @@ export class AuthService {
 
     // Generate random 6-digit verification code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    this.otpStore.set(cleanEmail, { otp, expiresAt: Date.now() + 15 * 60 * 1000 });
+    this.otpStore.set(cleanEmail, { otp, expiresAt: Date.now() + 15 * 60 * 1000, attempts: 0 });
+
+    // The code must reach only the account owner, so it is NEVER put in the
+    // HTTP response. There is no email service yet: in development it is printed
+    // to the backend console instead; in production it is not shown anywhere.
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.warn(`[DEV ONLY] Password reset code for ${user.email}: ${otp}`);
+    }
 
     const rawPhone = String(user.phone || '').replace(/\D/g, '');
     const phoneLast4 = rawPhone.length >= 4 ? rawPhone.slice(-4) : '****';
 
     return {
       success: true,
-      message: `Verification code generated for ${user.email}.`,
-      otp, // Provided directly for immediate demonstration / testing
+      message: process.env.NODE_ENV !== 'production'
+        ? 'Verification code created. Development mode: it is printed in the backend console.'
+        : 'A verification code was sent to your registered contact.',
       email: user.email,
       phoneLast4,
     };
@@ -126,9 +137,16 @@ export class AuthService {
       throw new NotFoundException('No account found with this email address.');
     }
 
+    // Only the code generated for THIS email is accepted (no master code).
     const record = this.otpStore.get(cleanEmail);
-    const validOtp = (record && record.otp === dto.otp.trim() && Date.now() < record.expiresAt) || dto.otp === '123456';
-    if (!validOtp) {
+    if (!record || Date.now() >= record.expiresAt) {
+      this.otpStore.delete(cleanEmail);
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+    if (record.otp !== String(dto.otp || '').trim()) {
+      record.attempts += 1;
+      // Too many wrong guesses: throw the code away so it cannot be brute-forced
+      if (record.attempts >= AuthService.MAX_OTP_ATTEMPTS) this.otpStore.delete(cleanEmail);
       throw new BadRequestException('Invalid or expired verification code.');
     }
 

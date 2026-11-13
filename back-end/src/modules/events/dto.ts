@@ -15,6 +15,7 @@ export class CreateEventDto {
   @ApiProperty({ example: 'Investor Meetup' }) @IsString() name: string;
   @ApiProperty({ example: 'Corporate' }) @IsString() type: string;
   @ApiProperty({ example: '2026-06-12' }) @IsString() date: string;
+  @ApiPropertyOptional({ example: '2026-06-13', description: 'Last day of a multi-day event (same as date if omitted)' }) @IsOptional() @IsString() endDate?: string;
   @ApiPropertyOptional({ example: '18:00' }) @IsOptional() @IsString() time?: string;
   @ApiPropertyOptional({ example: '10:00 PM' }) @IsOptional() @IsString() endTime?: string;
   @ApiProperty({ example: 'Skyline Ballroom' }) @IsString() venue: string;

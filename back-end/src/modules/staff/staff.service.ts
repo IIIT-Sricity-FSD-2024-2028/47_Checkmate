@@ -6,6 +6,8 @@ import { CreateStaffAssignmentDto, CreateStaffDto, StaffProgressDto, UpdateStaff
 
 const CLOSED_ASSIGNMENTS = ['rejected', 'declined', 'completed'];
 const FINISHED_EVENTS = ['rejected', 'completed', 'cancelled'];
+// Fields a staff member may change on their own staff record
+const STAFF_SELF_FIELDS = ['workload'];
 
 // Staff are stored twice on purpose: a `users` row (so they can log in) and a
 // `staff` row (the operational record vendors assign work to). Both are
@@ -24,7 +26,19 @@ export class StaffService {
   findAll() { return this.data.collection('staff'); }
   findOne(id: string) { return this.data.find('staff', id); }
   create(dto: CreateStaffDto) { return this.data.create('staff', 'S', dto); }
-  update(id: string, dto: UpdateStaffDto) { return this.data.update('staff', id, dto); }
+  // Vendors/admins may edit any staff record. A staff member may only edit
+  // their OWN record, and only the fields the staff portal needs (workload,
+  // which the Task Board adjusts) -- never role, vendor, status or name.
+  update(id: string, dto: UpdateStaffDto, user?: { id?: string; email?: string; role?: string }) {
+    if (String(user?.role || '').toLowerCase() === 'staff') {
+      const member = this.data.find('staff', id);
+      const isOwner = (member.userId && member.userId === user?.id) || (member.email && member.email.toLowerCase() === String(user?.email || '').toLowerCase());
+      if (!isOwner) throw new ForbiddenException('You can only update your own staff record.');
+      const notAllowed = Object.keys(dto).filter((field) => !STAFF_SELF_FIELDS.includes(field));
+      if (notAllowed.length) throw new ForbiddenException(`Staff cannot change: ${notAllowed.join(', ')}.`);
+    }
+    return this.data.update('staff', id, dto);
+  }
   remove(id: string) { return this.data.remove('staff', id); }
   
   // Separate from /auth/login so a non-staff account cannot sign in through the

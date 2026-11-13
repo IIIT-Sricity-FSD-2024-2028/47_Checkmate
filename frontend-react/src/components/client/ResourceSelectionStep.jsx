@@ -8,8 +8,9 @@
  * Purpose:
  *   Optional step to request equipment / furniture / decor:
  *     1. Search box + category pills to filter the catalogue.
- *     2. A card per resource with price and a −/+ quantity control.
- *        "+" is blocked past the available units (toast) or when over budget.
+ *     2. A card per resource with price, the units free on the event date,
+ *        and a −/+ quantity control. "+" is disabled at the free units and
+ *        when over budget.
  *     3. "Selected Resources" summary with remove (✕), subtotal per day and
  *        a yellow warning that also disables "Next" when over budget.
  *
@@ -24,7 +25,7 @@ import { money } from "../../utils/clientHelpers";
 function ResourceSelectionStep({
   categories, resources, search, onSearch, category, onCategory,
   selectedQty, onChangeQty, chosen, onRemove, subtotal, maxBudget, overBudget,
-  onBack, onNext,
+  eventDate, onBack, onNext,
 }) {
   return (
     <div className="card">
@@ -52,19 +53,24 @@ function ResourceSelectionStep({
         {resources.length === 0 && <div className="cl-client-muted cl-full">No resources found.</div>}
         {resources.map((r) => {
           const qty = selectedQty[r.id] || 0;
+          // Units free on the event date (from the backend availability check)
+          const free = Number(r.availableQty ?? 0);
           return (
             <div className={`cl-res-card ${qty > 0 ? "selected" : ""}`} key={r.id}>
               <div>
                 <div className="cl-res-card__name">{r.name}</div>
                 <span className={`cl-cat cl-cat--${r.category.toLowerCase()}`}>{r.category}</span>
+                <div className={`cl-res-card__avail ${free === 0 ? "none" : ""}`}>
+                  {free === 0 ? "Fully booked" : `${free} available`}{eventDate ? ` on ${eventDate}` : ""}
+                </div>
               </div>
               <div className="cl-res-card__bottom">
                 <div className="cl-res-card__price">₹{r.price}/{r.unit || "day"}</div>
                 <div className="cl-qty">
                   <button type="button" onClick={() => onChangeQty(r, -1)}>−</button>
                   <span>{qty}</span>
-                  {/* + is disabled once the budget is exceeded */}
-                  <button type="button" disabled={overBudget} onClick={() => onChangeQty(r, 1)}>+</button>
+                  {/* + is disabled at the free units for the date, or once the budget is exceeded */}
+                  <button type="button" disabled={overBudget || qty >= free} onClick={() => onChangeQty(r, 1)}>+</button>
                 </div>
               </div>
             </div>

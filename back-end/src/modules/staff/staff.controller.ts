@@ -15,7 +15,7 @@ export class StaffController {
   @Get('staff/:id') @Roles('admin', 'superuser', 'vendor', 'staff') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
   @Post('staff') @Roles('admin', 'superuser') create(@Body() dto: CreateStaffDto) { return this.service.create(dto); }
   @Put('staff/:id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto) { return this.service.update(id, dto); }
-  @Patch('staff/:id') @Roles('vendor', 'admin', 'superuser', 'staff') update(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto) { return this.service.update(id, dto); }
+  @Patch('staff/:id') @Roles('vendor', 'admin', 'superuser', 'staff') update(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
   @Delete('staff/:id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
 
   @Post('staff/login') @Public() login(@Body() dto: StaffLoginDto) { return this.service.login(dto); }
