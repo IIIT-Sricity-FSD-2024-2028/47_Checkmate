@@ -7,8 +7,11 @@
  *   vendor / id, 10 per page.
  * - Stat cards: pending, approved/confirmed, live, completed, cancelled/rejected.
  * - View opens the event details (venue, guests, budget, requested resources and staff).
- * - Approve (pending) -> PATCH /events/:id/status { status: "approved" }.
- * - Refund (approved/confirmed) -> asks for confirmation, then sets status "cancelled".
+ * - Approve (pending) -> PATCH /events/:id/status { status: "approved" }. The backend
+ *   then creates the booking (with the platform commission).
+ * - Refund (approved/confirmed, not started yet) -> PATCH /events/:id/refund { reason }.
+ *   The backend cancels the event, cancels its booking (refunding what the client paid and
+ *   calling off the vendor payout), frees the resources and staff, and notifies the client.
  *
  * Differences from legacy:
  * - Stat cards and the status filter use the statuses the backend actually stores
@@ -16,7 +19,7 @@
  * - Refund needs confirming and is also offered for confirmed events, not just approved.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarCheck, CheckCircle2, CheckSquare, Clock, Eye, Radio, RefreshCcw, XCircle } from "lucide-react";
 
 import "../../styles/dashboard.css";
@@ -31,9 +34,9 @@ import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
-import { usePagination } from "../../hooks/usePagination";
-import { getEvents, updateEventStatus } from "../../services";
+import { getEvents, refundEvent, updateEventStatus } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { paginate } from "../../utils/paginate";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -141,6 +144,8 @@ function EventDetailsModal({ event, onClose }) {
 }
 
 function RefundModal({ event, onClose, onConfirm, saving, error }) {
+  const [reason, setReason] = useState("");
+
   return (
     <Modal
       open={Boolean(event)}
@@ -151,17 +156,28 @@ function RefundModal({ event, onClose, onConfirm, saving, error }) {
           <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={saving}>
             Keep Event
           </button>
-          <button type="button" className="ui-btn ui-btn--danger" onClick={onConfirm} disabled={saving}>
+          <button type="button" className="ui-btn ui-btn--danger" onClick={() => onConfirm(reason)} disabled={saving}>
             <RefreshCcw size={14} /> {saving ? "Refunding..." : "Cancel & Refund"}
           </button>
         </>
       }
     >
       {event && (
-        <p className="modal-text">
-          Cancel <strong>{event.name}</strong> ({event.id}) and refund {formatCurrency(event.budget)} to{" "}
-          {event.client || "the client"}? The event will be marked <strong>cancelled</strong>.
-        </p>
+        <>
+          <p className="modal-text">
+            Cancel <strong>{event.name}</strong> ({event.id}) for {event.client || "the client"}? Anything they
+            paid is refunded, the vendor payout is called off, and the client gets a notification.
+          </p>
+          <div className="modal-field" style={{ marginTop: 16, marginBottom: 0 }}>
+            <label htmlFor="refund-reason">Reason (shown to the client)</label>
+            <textarea
+              id="refund-reason"
+              value={reason}
+              placeholder="e.g. Venue unavailable on the booked date"
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </div>
+        </>
       )}
       {error && (
         <div className="admin-error" style={{ marginTop: 16 }}>
@@ -179,72 +195,76 @@ function MonitorEvents() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const [viewId, setViewId] = useState(null);
   const [refundId, setRefundId] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [notice, setNotice] = useState("");
 
+  // Load the events once, when the page opens.
   useEffect(() => {
-    let cancelled = false;
     getEvents()
-      .then((data) => {
-        if (!cancelled) setEvents(sortEvents(data || []));
-      })
+      .then((data) => setEvents(sortEvents(data || [])))
       .catch((err) => {
         console.error("Failed to load events:", err);
-        if (!cancelled) setError("Could not load events.");
+        setError("Could not load events.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  const stats = useMemo(() => {
-    const count = (...statuses) => events.filter((e) => statuses.includes(lower(e.status))).length;
-    return {
-      pending: count("pending"),
-      approved: count("approved", "confirmed"),
-      live: count("live"),
-      completed: count("completed"),
-      cancelled: count("cancelled", "rejected"),
-    };
-  }, [events]);
+  const count = (...statuses) => events.filter((e) => statuses.includes(lower(e.status))).length;
+  const stats = {
+    pending: count("pending"),
+    approved: count("approved", "confirmed"),
+    live: count("live"),
+    completed: count("completed"),
+    cancelled: count("cancelled", "rejected"),
+  };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return events.filter(
-      (e) =>
-        (statusFilter === "all" || lower(e.status) === statusFilter) &&
-        (!q || [e.id, e.name, e.client, e.clientId, e.vendor].some((v) => lower(v).includes(q)))
-    );
-  }, [events, statusFilter, query]);
+  const q = query.trim().toLowerCase();
+  const filtered = events.filter(
+    (e) =>
+      (statusFilter === "all" || lower(e.status) === statusFilter) &&
+      (!q || [e.id, e.name, e.client, e.clientId, e.vendor].some((v) => lower(v).includes(q)))
+  );
 
-  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
+  const pageInfo = paginate(filtered, page);
 
-  const setStatus = async (event, status) => {
+  // Swap the changed event into the list (the backend sends back the updated event).
+  const replaceEvent = (updated) =>
+    setEvents((prev) => sortEvents(prev.map((e) => (e.id === updated.id ? { ...e, ...updated } : e))));
+
+  const approve = async (event) => {
     setBusyId(event.id);
     setError("");
+    setNotice("");
     try {
-      const updated = await updateEventStatus(event.id, status);
-      setEvents((prev) =>
-        sortEvents(prev.map((e) => (e.id === event.id ? { ...e, ...(updated || { status }) } : e)))
-      );
-      return true;
+      replaceEvent(await updateEventStatus(event.id, "approved"));
+      setNotice(`${event.name} approved. A booking was created for it.`);
     } catch (err) {
-      console.error("Event status update failed:", err);
-      setError(`Could not update ${event.name}: ${err?.message || "request failed"}.`);
-      return false;
+      console.error("Event approval failed:", err);
+      setError(`Could not approve ${event.name}: ${err?.message || "request failed"}.`);
     } finally {
       setBusyId(null);
     }
   };
 
-  const confirmRefund = async () => {
+  const confirmRefund = async (reason) => {
     const event = events.find((e) => e.id === refundId);
-    if (event && (await setStatus(event, "cancelled"))) setRefundId(null);
+    setBusyId(event.id);
+    setError("");
+    setNotice("");
+    try {
+      replaceEvent(await refundEvent(event.id, reason.trim() || undefined));
+      setRefundId(null);
+      setNotice(`${event.name} was cancelled and refunded. The client has been notified.`);
+    } catch (err) {
+      console.error("Refund failed:", err);
+      setError(`Could not refund ${event.name}: ${err?.message || "request failed"}.`);
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const onFilter = (setter) => (value) => {
@@ -284,7 +304,7 @@ function MonitorEvents() {
                 type="button"
                 className="ui-btn ui-btn--success"
                 disabled={busyId === e.id}
-                onClick={() => setStatus(e, "approved")}
+                onClick={() => approve(e)}
               >
                 <CheckSquare size={14} /> Approve
               </button>
@@ -315,7 +335,8 @@ function MonitorEvents() {
       <AdminTopBar title="Monitor Events" />
 
       <div className="content">
-        {error && <div className="admin-error">{error}</div>}
+        {error && !refundId && <div className="admin-error">{error}</div>}
+        {notice && <div className="admin-success">{notice}</div>}
 
         <div className="stats-grid">
           <StatisticCard title="Pending" value={statValue(stats.pending)} icon={Clock} color="orange" />
@@ -333,13 +354,14 @@ function MonitorEvents() {
             ]}
             search={{ value: query, placeholder: "Search events, clients...", onChange: onFilter(setQuery) }}
           />
-          <DataTable columns={columns} rows={pageItems} loading={loading} emptyMessage="No events match your filters." />
-          <Pagination {...pagination} onPageChange={setPage} />
+          <DataTable columns={columns} rows={pageInfo.items} loading={loading} emptyMessage="No events match your filters." />
+          <Pagination {...pageInfo} onPageChange={setPage} />
         </div>
       </div>
 
       <EventDetailsModal event={events.find((e) => e.id === viewId) || null} onClose={() => setViewId(null)} />
       <RefundModal
+        key={refundId || "none"}
         event={events.find((e) => e.id === refundId) || null}
         onClose={() => setRefundId(null)}
         onConfirm={confirmRefund}

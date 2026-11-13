@@ -9,11 +9,12 @@
  *   Approve / Reject call PATCH /vendor-applications/:id/decision. Approving makes the
  *   backend create the vendor + user account, so it is not undoable from the UI.
  * - Processed applications open read-only (who/when decided, note).
- * - Deep links: ?review=<id> opens that application; ?action=review (legacy) opens the
- *   first pending one. The query param is cleared when the modal closes.
+ * - Deep link: /admin/vendor-approvals?review=<id> (from the Dashboard and the bell)
+ *   opens that application straight away. The ?review is removed when the modal closes.
+ * - The backend never sends the applicant's password (it is hashed on arrival).
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle, Eye, FileText, XCircle } from "lucide-react";
 
@@ -27,8 +28,8 @@ import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
-import { usePagination } from "../../hooks/usePagination";
 import { decideVendorApplication, getVendorApplications } from "../../services";
+import { paginate } from "../../utils/paginate";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -169,62 +170,38 @@ function VendorApprovals() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
-  const [activeId, setActiveId] = useState(null);
+  // Which application's modal is open. Starts from ?review=<id> if the link had one.
+  const [selectedId, setSelectedId] = useState(searchParams.get("review"));
   const [saving, setSaving] = useState(false);
   const [decisionError, setDecisionError] = useState("");
 
+  // Load the applications once, when the page opens.
   useEffect(() => {
-    let cancelled = false;
     getVendorApplications()
-      .then((data) => {
-        if (!cancelled) setApplications(sortPendingFirst(data || []));
-      })
+      .then((data) => setApplications(sortPendingFirst(data || [])))
       .catch((err) => {
         console.error("Failed to load vendor applications:", err);
-        if (!cancelled) setLoadError("Could not load vendor applications.");
+        setLoadError("Could not load vendor applications.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return applications.filter(
-      (a) =>
-        (statusFilter === "all" || a.status === statusFilter) &&
-        (!q ||
-          [a.vendorName, a.businessName, a.email].some((v) =>
-            String(v || "").toLowerCase().includes(q)
-          ))
-    );
-  }, [applications, statusFilter, query]);
+  const q = query.trim().toLowerCase();
+  const filtered = applications.filter(
+    (a) =>
+      (statusFilter === "all" || a.status === statusFilter) &&
+      (!q || [a.vendorName, a.businessName, a.email].some((v) => String(v || "").toLowerCase().includes(q)))
+  );
+  const pageInfo = paginate(filtered, page);
 
-  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
-
-  // Deep links are derived, not copied into state: ?review=<id> or legacy ?action=review.
-  const reviewParam = searchParams.get("review");
-  const legacyReview = searchParams.get("action") === "review";
-  const hasDeepLink = Boolean(reviewParam || legacyReview);
-  const deepLinked = loading
-    ? null
-    : reviewParam
-      ? applications.find((a) => a.id === reviewParam)
-      : legacyReview
-        ? applications.find((a) => a.status === "pending")
-        : null;
-
-  const selectedId = activeId ?? deepLinked?.id ?? null;
   const activeApplication = applications.find((a) => a.id === selectedId) || null;
 
   const closeReview = () => {
-    setActiveId(null);
+    setSelectedId(null);
     setDecisionError("");
-    if (hasDeepLink) setSearchParams({}, { replace: true });
+    if (searchParams.get("review")) setSearchParams({}, { replace: true });
   };
 
   const decide = async (status, note) => {
@@ -275,7 +252,7 @@ function VendorApprovals() {
           <button
             type="button"
             className={`ui-btn ${a.status === "pending" ? "ui-btn--blue" : "ui-btn--ghost"}`}
-            onClick={() => setActiveId(a.id)}
+            onClick={() => setSelectedId(a.id)}
           >
             <Eye size={14} /> {a.status === "pending" ? "Review Application" : "View"}
           </button>
@@ -316,11 +293,11 @@ function VendorApprovals() {
           />
           <DataTable
             columns={columns}
-            rows={pageItems}
+            rows={pageInfo.items}
             loading={loading}
             emptyMessage="No vendor applications match your filters."
           />
-          <Pagination {...pagination} onPageChange={setPage} />
+          <Pagination {...pageInfo} onPageChange={setPage} />
         </div>
       </div>
 

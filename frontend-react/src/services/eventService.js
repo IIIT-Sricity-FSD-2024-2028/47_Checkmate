@@ -58,6 +58,17 @@ export async function patchEvent(id, eventData, options = {}) {
 }
 
 /**
+ * Admin refund: cancels an approved event, refunds its booking and notifies the client.
+ *
+ * @param {string} id - Event ID
+ * @param {string} [reason] - Shown to the client
+ * @returns {Promise<Object>} The cancelled event
+ */
+export async function refundEvent(id, reason) {
+  return patch(`/events/${encodeURIComponent(id)}/refund`, { reason });
+}
+
+/**
  * Update event lifecycle status (e.g., approved, confirmed, live, completed, rejected).
  * Can be called as updateEventStatus(id, { status, note }) or updateEventStatus(id, 'approved', 'Note').
  *

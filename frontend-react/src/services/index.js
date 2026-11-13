@@ -62,6 +62,7 @@ export {
   getMyEvents,
   parseTimeToMinutes,
   patchEvent,
+  refundEvent,
   updateEvent,
   updateEventStatus,
 } from './eventService';
@@ -205,4 +206,12 @@ export {
   setStateKey,
 } from './stateService';
 
-
+// Global Settings, announcements and support replies (admin platform controls)
+export {
+  createAnnouncement,
+  deleteAnnouncement,
+  getAnnouncements,
+  getSettings,
+  replyToClient,
+  saveSettings,
+} from './platformService';

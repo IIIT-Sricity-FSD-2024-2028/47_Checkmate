@@ -7,7 +7,7 @@
  *
  * Purpose:
  *   Loads the logged-in user's notifications for the bell in <ClientTopbar>
- *   (same idea as hooks/useAdminNotifications.js on the admin side):
+ *   (same idea as the bell in components/admin/AdminTopBar.jsx):
  *     1. Reads the shared notifications list from the backend state store.
  *     2. Keeps only this user's items, newest first.
  *     3. Marks one or all items as read and saves the list back.

@@ -17,7 +17,7 @@
  * from inside the review modal.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Ban, Check, CheckCircle2, Clock, Eye, X, XCircle } from "lucide-react";
 
 import "../../styles/dashboard.css";
@@ -32,9 +32,9 @@ import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
-import { usePagination } from "../../hooks/usePagination";
 import { decidePackage, getPackages } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { paginate } from "../../utils/paginate";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -169,46 +169,32 @@ function ServiceModeration() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const [reviewId, setReviewId] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
+  // Load the packages once, when the page opens.
   useEffect(() => {
-    let cancelled = false;
     getPackages()
-      .then((data) => {
-        if (!cancelled) setPackages(sortPendingFirst(data || []));
-      })
+      .then((data) => setPackages(sortPendingFirst(data || [])))
       .catch((err) => {
         console.error("Failed to load packages:", err);
-        if (!cancelled) setError("Could not load packages.");
+        setError("Could not load packages.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  const stats = useMemo(() => {
-    const count = (status) => packages.filter((p) => statusOf(p) === status).length;
-    return { pending: count("pending"), approved: count("approved"), rejected: count("rejected") };
-  }, [packages]);
+  const count = (status) => packages.filter((p) => statusOf(p) === status).length;
+  const stats = { pending: count("pending"), approved: count("approved"), rejected: count("rejected") };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return packages.filter(
-      (p) =>
-        (statusFilter === "all" || statusOf(p) === statusFilter) &&
-        (!q ||
-          [p.name, p.vendorName, p.vendorId, p.category].some((v) =>
-            String(v || "").toLowerCase().includes(q)
-          ))
-    );
-  }, [packages, statusFilter, query]);
-
-  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
+  const q = query.trim().toLowerCase();
+  const filtered = packages.filter(
+    (p) =>
+      (statusFilter === "all" || statusOf(p) === statusFilter) &&
+      (!q || [p.name, p.vendorName, p.vendorId, p.category].some((v) => String(v || "").toLowerCase().includes(q)))
+  );
+  const pageInfo = paginate(filtered, page);
 
   const decide = async (pkg, status) => {
     setBusyId(pkg.id);
@@ -284,8 +270,8 @@ function ServiceModeration() {
             ]}
             search={{ value: query, placeholder: "Search packages, vendors...", onChange: onFilter(setQuery) }}
           />
-          <DataTable columns={columns} rows={pageItems} loading={loading} emptyMessage="No packages match your filters." />
-          <Pagination {...pagination} onPageChange={setPage} />
+          <DataTable columns={columns} rows={pageInfo.items} loading={loading} emptyMessage="No packages match your filters." />
+          <Pagination {...pageInfo} onPageChange={setPage} />
         </div>
       </div>
 

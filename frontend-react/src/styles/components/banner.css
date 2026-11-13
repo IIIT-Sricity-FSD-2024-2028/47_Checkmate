@@ -1,0 +1,31 @@
+/* components/PlatformBanner.jsx */
+.platform-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 28px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.platform-banner__lines { display: flex; flex-direction: column; gap: 6px; }
+.platform-banner__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+.platform-banner__line svg { flex-shrink: 0; }
+.platform-banner__line--warning { color: var(--orange); }
+.platform-banner__close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+}
+@media (max-width: 640px) { .platform-banner { margin: 12px 16px 0; } }

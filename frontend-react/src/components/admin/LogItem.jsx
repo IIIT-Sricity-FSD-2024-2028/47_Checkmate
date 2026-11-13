@@ -1,5 +1,5 @@
 import React from "react";
-import { Activity, CalendarDays, FileText, Settings, ShieldCheck } from "lucide-react";
+import { Activity, CalendarDays, FileText, IndianRupee, Megaphone, Settings, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { logDescription, logTitle } from "../../utils/logText";
 
 // One colour + icon per entityType so the list scans quickly.
@@ -8,6 +8,9 @@ const TYPES = {
   VENDOR_APPLICATION: { tone: "green", icon: ShieldCheck },
   HTTP: { tone: "orange", icon: Activity },
   SYSTEM: { tone: "pink", icon: Settings },
+  BOOKING: { tone: "green", icon: IndianRupee },
+  SETTINGS: { tone: "pink", icon: SlidersHorizontal },
+  ANNOUNCEMENT: { tone: "blue", icon: Megaphone },
 };
 const FALLBACK = { tone: "gray", icon: FileText };
 

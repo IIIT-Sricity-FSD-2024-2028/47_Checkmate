@@ -2,8 +2,9 @@
  * ADMIN · SYSTEM LOGS (pages/admin/SystemLogs.jsx)
  * Replaces legacy: front-end/pages/admin/audit-logs.html (inline script).
  *
- * - Reads the audit trail from GET /state/activityLogs. The backend's DataService appends a
- *   row on every event status change, vendor decision and audited API mutation.
+ * - Reads the audit trail from GET /state/activityLogs. The backend appends a row on every
+ *   event status change, refund, vendor decision, payout, settings change, announcement
+ *   and audited API mutation.
  * - Newest first, filterable by type (events / vendor approvals / API calls / system) and
  *   searchable by title or details.
  * - Shows 10 entries, then "Load Older Logs (N more)" adds 10 at a time.
@@ -11,7 +12,7 @@
  * Read-only: nothing on this page changes data.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, RefreshCw } from "lucide-react";
 
 import "../../styles/dashboard.css";
@@ -30,6 +31,9 @@ const TYPE_OPTIONS = [
   { value: "all", label: "All Activity" },
   { value: "EVENT", label: "Events" },
   { value: "VENDOR_APPLICATION", label: "Vendor Approvals" },
+  { value: "BOOKING", label: "Payments & Payouts" },
+  { value: "SETTINGS", label: "Settings" },
+  { value: "ANNOUNCEMENT", label: "Announcements" },
   { value: "HTTP", label: "API Calls" },
   { value: "SYSTEM", label: "System" },
 ];
@@ -41,40 +45,28 @@ function SystemLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
 
   const [typeFilter, setTypeFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [shown, setShown] = useState(PAGE);
 
+  // Load the logs once, when the page opens.
   useEffect(() => {
-    let cancelled = false;
     getStateKey("activityLogs")
-      .then((data) => {
-        if (cancelled) return;
-        setLogs(newestFirst(Array.isArray(data) ? data : []));
-        setError("");
-      })
+      .then((data) => setLogs(newestFirst(Array.isArray(data) ? data : [])))
       .catch((err) => {
         console.error("Failed to load activity logs:", err);
-        if (!cancelled) setError("Could not load system logs.");
+        setError("Could not load system logs.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
+      .finally(() => setLoading(false));
+  }, []);
 
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return logs.filter(
-      (log) =>
-        (typeFilter === "all" || log.entityType === typeFilter) &&
-        (!q || `${logTitle(log)} ${logDescription(log)}`.toLowerCase().includes(q))
-    );
-  }, [logs, typeFilter, query]);
+  const q = query.trim().toLowerCase();
+  const matches = logs.filter(
+    (log) =>
+      (typeFilter === "all" || log.entityType === typeFilter) &&
+      (!q || `${logTitle(log)} ${logDescription(log)}`.toLowerCase().includes(q))
+  );
 
   const visible = matches.slice(0, shown);
   const remaining = matches.length - visible.length;
@@ -84,10 +76,19 @@ function SystemLogs() {
     setShown(PAGE);
   };
 
-  const refresh = () => {
+  const refresh = async () => {
     setLoading(true);
+    setError("");
     setShown(PAGE);
-    setReloadKey((k) => k + 1);
+    try {
+      const data = await getStateKey("activityLogs");
+      setLogs(newestFirst(Array.isArray(data) ? data : []));
+    } catch (err) {
+      console.error("Failed to refresh activity logs:", err);
+      setError("Could not load system logs.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

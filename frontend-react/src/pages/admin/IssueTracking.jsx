@@ -8,21 +8,20 @@
  * - Stat cards: open, investigating, resolved.
  * - Workflow: Open --Investigate--> Investigating --Resolve--> Resolved
  *   via PATCH /issues/:id { status }.
- * - Each status change also posts a "System" message into the admin coordination chat
- *   (state key adminChatMessages), the same as legacy, so the reporter sees the update there.
- *   Failing to post that message doesn't undo the status change.
+ * - Each status change also drops a "System" message into the reporter's support chat.
+ *   The backend does that (IssuesService.update), so it can't be lost or overwritten.
+ * - "Message Reporter" opens their conversation in the Coordination Hub.
  *
  * Differences from legacy:
  * - Legacy only listed tickets addressed to admin (target === "admin"); this page shows all
  *   tickets with an "Addressed To" filter, so admins can oversee vendor-handled issues too.
  * - Buttons are named for what they do (legacy's "Resolve" moved a ticket to investigating).
  * - "in_progress" (used by the vendor portal) is treated as Investigating.
- * - The Reply button (to the Coordination Hub) waits for that page; the details modal shows the
- *   reporter's email instead.
  */
 
-import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, Eye, Minus, Search, Wrench } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, Eye, MessageSquare, Minus, Search, Wrench } from "lucide-react";
 
 import "../../styles/dashboard.css";
 import "../../styles/admin.css";
@@ -36,9 +35,8 @@ import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
-import { usePagination } from "../../hooks/usePagination";
-import { getAuthUser } from "../../services/auth/authStorage";
-import { getStateKey, getIssues, patchIssue, setStateKey } from "../../services";
+import { getIssues, patchIssue } from "../../services";
+import { paginate } from "../../utils/paginate";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -90,26 +88,6 @@ function RoleTag({ role }) {
   return <span className={`role-tag role-tag--${r}`}>{r}</span>;
 }
 
-// Legacy behaviour: tell the reporter about the change in the admin coordination chat.
-async function postStatusMessage(issue, status) {
-  const messages = await getStateKey("adminChatMessages");
-  const admin = getAuthUser();
-  const next = [
-    ...(Array.isArray(messages) ? messages : []),
-    {
-      id: `msg_${Date.now()}`,
-      sender: "System",
-      senderRole: "Admin",
-      senderEmail: admin?.email || "",
-      recipientEmail: issue.email || "",
-      text: `🔧 Issue "${issue.title || issue.id}" status updated to: ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
-      timestamp: new Date().toISOString(),
-      type: "system",
-    },
-  ];
-  await setStateKey("adminChatMessages", next);
-}
-
 /** The next workflow step for an issue, shared by the row and the modal. */
 function NextStepButton({ issue, onAdvance, busy }) {
   const status = statusOf(issue);
@@ -143,6 +121,11 @@ function IssueDetailsModal({ issue, onClose, onAdvance, busy, error }) {
             <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={busy}>
               Close
             </button>
+            {issue.email && (
+              <Link className="ui-btn ui-btn--ghost" to={`/admin/coordination?email=${encodeURIComponent(issue.email)}`}>
+                <MessageSquare size={14} /> Message Reporter
+              </Link>
+            )}
             <NextStepButton issue={issue} onAdvance={onAdvance} busy={busy} />
           </>
         )
@@ -199,65 +182,43 @@ function IssueTracking() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [targetFilter, setTargetFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const [viewId, setViewId] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
+  // Load the tickets once, when the page opens.
   useEffect(() => {
-    let cancelled = false;
     getIssues()
-      .then((data) => {
-        if (!cancelled) setIssues(sortIssues(data || []));
-      })
+      .then((data) => setIssues(sortIssues(data || [])))
       .catch((err) => {
         console.error("Failed to load issues:", err);
-        if (!cancelled) setError("Could not load issues.");
+        setError("Could not load issues.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  const stats = useMemo(() => {
-    const count = (status) => issues.filter((i) => statusOf(i) === status).length;
-    return { open: count("open"), investigating: count("investigating"), resolved: count("resolved") };
-  }, [issues]);
+  const count = (status) => issues.filter((i) => statusOf(i) === status).length;
+  const stats = { open: count("open"), investigating: count("investigating"), resolved: count("resolved") };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return issues.filter(
-      (i) =>
-        (statusFilter === "all" || statusOf(i) === statusFilter) &&
-        (targetFilter === "all" || lower(i.target) === targetFilter) &&
-        (!q || [i.id, i.title, i.reporter, i.email, i.event, i.eventId].some((v) => lower(v).includes(q)))
-    );
-  }, [issues, statusFilter, targetFilter, query]);
-
-  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
+  const q = query.trim().toLowerCase();
+  const filtered = issues.filter(
+    (i) =>
+      (statusFilter === "all" || statusOf(i) === statusFilter) &&
+      (targetFilter === "all" || lower(i.target) === targetFilter) &&
+      (!q || [i.id, i.title, i.reporter, i.email, i.event, i.eventId].some((v) => lower(v).includes(q)))
+  );
+  const pageInfo = paginate(filtered, page);
 
   const advance = async (issue, status) => {
     setBusyId(issue.id);
     setError("");
     try {
       const updated = await patchIssue(issue.id, { status });
-      setIssues((prev) =>
-        sortIssues(prev.map((i) => (i.id === issue.id ? { ...i, ...(updated || { status }) } : i)))
-      );
+      setIssues((prev) => sortIssues(prev.map((i) => (i.id === issue.id ? { ...i, ...updated } : i))));
     } catch (err) {
       console.error("Issue update failed:", err);
       setError(`Could not update ${issue.id}: ${err?.message || "request failed"}.`);
-      setBusyId(null);
-      return;
-    }
-
-    try {
-      await postStatusMessage(issue, status);
-    } catch (err) {
-      // The ticket is already updated; the chat message is a courtesy.
-      console.error("Could not post issue update to the coordination chat:", err);
     } finally {
       setBusyId(null);
     }
@@ -338,8 +299,8 @@ function IssueTracking() {
             ]}
             search={{ value: query, placeholder: "Search tickets, reporters...", onChange: onFilter(setQuery) }}
           />
-          <DataTable columns={columns} rows={pageItems} loading={loading} emptyMessage="No tickets match your filters." />
-          <Pagination {...pagination} onPageChange={setPage} />
+          <DataTable columns={columns} rows={pageInfo.items} loading={loading} emptyMessage="No tickets match your filters." />
+          <Pagination {...pageInfo} onPageChange={setPage} />
         </div>
       </div>
 

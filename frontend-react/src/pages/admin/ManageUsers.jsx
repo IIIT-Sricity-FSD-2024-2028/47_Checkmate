@@ -10,10 +10,11 @@
  * Differences from legacy:
  * - Inactive users can be re-enabled (legacy could only disable).
  * - You cannot disable your own account, and Superuser accounts are read-only here.
+ *   The backend enforces both rules too (UsersService.update), so the UI isn't the only guard.
  * - "Active Staff" counts Staff only; legacy also counted Admins.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock, Edit3, Power, ShieldCheck, Store, User, UserX } from "lucide-react";
 
 import "../../styles/dashboard.css";
@@ -27,9 +28,9 @@ import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
-import { usePagination } from "../../hooks/usePagination";
 import { getAuthUser } from "../../services/auth/authStorage";
 import { getUsers, patchUser } from "../../services";
+import { paginate } from "../../utils/paginate";
 
 const ROLE_FILTER_OPTIONS = [
   { value: "all", label: "All Roles" },
@@ -53,6 +54,21 @@ const EDITABLE_ROLES = ["Client", "Vendor", "Staff", "Admin"];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const lower = (v) => String(v || "").toLowerCase();
+
+// Numbers for the stat cards. Pending and inactive users are counted whatever their role.
+function countUsers(users) {
+  const counts = { clients: 0, vendors: 0, staff: 0, pending: 0, inactive: 0 };
+  users.forEach((u) => {
+    const status = lower(u.status);
+    const role = lower(u.role);
+    if (status === "inactive") counts.inactive++;
+    else if (status === "pending") counts.pending++;
+    else if (status === "active" && role === "client") counts.clients++;
+    else if (status === "active" && role === "vendor") counts.vendors++;
+    else if (status === "active" && role === "staff") counts.staff++;
+  });
+  return counts;
+}
 
 function EditUserModal({ user, onClose, onSave, saving, error }) {
   const [form, setForm] = useState({
@@ -128,57 +144,36 @@ function ManageUsers() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
   const [busyId, setBusyId] = useState(null); // row with an in-flight enable/disable
 
+  // Load the users once, when the page opens ([] = run once).
   useEffect(() => {
-    let cancelled = false;
     getUsers()
-      .then((data) => {
-        if (!cancelled) setUsers(data || []);
-      })
+      .then((data) => setUsers(data || []))
       .catch((err) => {
         console.error("Failed to load users:", err);
-        if (!cancelled) setError("Could not load users.");
+        setError("Could not load users.");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  const stats = useMemo(() => {
-    const counts = { clients: 0, vendors: 0, staff: 0, pending: 0, inactive: 0 };
-    users.forEach((u) => {
-      const status = lower(u.status);
-      const role = lower(u.role);
-      if (status === "inactive") counts.inactive++;
-      else if (status === "pending") counts.pending++;
-      else if (status === "active") {
-        if (role === "client") counts.clients++;
-        else if (role === "vendor") counts.vendors++;
-        else if (role === "staff") counts.staff++;
-      }
-    });
-    return counts;
-  }, [users]);
+  // Everything below is worked out from state on every render; nothing is stored twice.
+  const stats = countUsers(users);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return users.filter(
-      (u) =>
-        (roleFilter === "all" || lower(u.role) === roleFilter) &&
-        (statusFilter === "all" || lower(u.status) === statusFilter) &&
-        (!q || [u.name, u.email, u.id].some((v) => lower(v).includes(q)))
-    );
-  }, [users, roleFilter, statusFilter, query]);
+  const q = query.trim().toLowerCase();
+  const filtered = users.filter(
+    (u) =>
+      (roleFilter === "all" || lower(u.role) === roleFilter) &&
+      (statusFilter === "all" || lower(u.status) === statusFilter) &&
+      (!q || [u.name, u.email, u.id].some((v) => lower(v).includes(q)))
+  );
 
-  const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
+  const pageInfo = paginate(filtered, page);
 
   const replaceUser = (id, patch) =>
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
@@ -309,11 +304,11 @@ function ManageUsers() {
           />
           <DataTable
             columns={columns}
-            rows={pageItems}
+            rows={pageInfo.items}
             loading={loading}
             emptyMessage="No users match your filters."
           />
-          <Pagination {...pagination} onPageChange={setPage} />
+          <Pagination {...pageInfo} onPageChange={setPage} />
         </div>
       </div>
 
