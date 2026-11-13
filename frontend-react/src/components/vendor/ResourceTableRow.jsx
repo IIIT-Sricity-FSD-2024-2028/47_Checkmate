@@ -25,7 +25,7 @@
  *
  * Props:
  *   @param {Object} props.resource - The inventory resource data object
- *   @param {number} props.effectiveAvail - Available units after accounting for active event allocations
+ *   @param {number} props.effectiveAvail - Units free TODAY (stock booked on other dates is not subtracted)
  *   @param {Function} props.onAllocate - Callback triggered when clicking the Allocate button
  *   @param {Function} props.onEdit - Callback triggered when clicking the Edit button
  *   @param {Function} props.onDelete - Callback triggered when clicking the Delete button
@@ -57,9 +57,10 @@ function ResourceTableRow({ resource, effectiveAvail, onAllocate, onEdit, onDele
   // Safe numeric available count (defaults to total stock if effective availability is not calculated)
   const currentAvailable = typeof effectiveAvail === "number" ? effectiveAvail : totalStock;
 
-  // Determine if the item can currently be allocated:
-  // Must have available stock > 0 AND not be explicitly flagged unavailable
-  const canAllocate = currentAvailable > 0 && available !== false;
+  // Determine if the item can be allocated at all: it needs usable stock and must
+  // not be flagged unavailable. Being booked today does not block it, because
+  // the units may be free on the event's date (checked inside the modal).
+  const canAllocate = totalStock > 0 && available !== false;
 
   // Format availability text label
   const availStatus = available === false ? "unavailable" : currentAvailable > 0 ? "available" : "unavailable";
@@ -128,7 +129,7 @@ function ResourceTableRow({ resource, effectiveAvail, onAllocate, onEdit, onDele
           <button
             type="button"
             className="mr-action-btn allocate"
-            title={canAllocate ? "Allocate to Event" : "Item is out of stock"}
+            title={canAllocate ? "Allocate to Event" : "Item has no usable stock"}
             disabled={!canAllocate}
             onClick={() => onAllocate && onAllocate(resource, currentAvailable)}
           >

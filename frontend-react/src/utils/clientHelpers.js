@@ -115,3 +115,34 @@ export function getEventProgress(event, allocations, assignments) {
         percent: Math.round((stepsComplete / 5) * 100),
     };
 }
+
+// ── Event start / end checks (used by Create Event and Edit Event) ──
+
+// Minutes between start and end. An event may end on a later day (endDate),
+// e.g. 9:00 PM on the 10th to 12:00 AM on the 11th = 3 hours.
+// date/endDate are "YYYY-MM-DD", time/endTime are "HH:MM" (24h, from <input type="time">).
+export function eventDurationMinutes({ date, time, endDate, endTime }) {
+    if (!date || !time || !endTime) return null;
+    const toMinutes = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const dayDiff = endDate && endDate > date
+        ? Math.round((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000)
+        : 0;
+    return dayDiff * 24 * 60 + toMinutes(endTime) - toMinutes(time);
+}
+
+// Error text for an impossible start/end, or "" when it is fine
+export function eventEndError({ date, time, endDate, endTime }) {
+    if (endDate && date && endDate < date) return "End date cannot be before the event date.";
+    const minutes = eventDurationMinutes({ date, time, endDate, endTime });
+    if (minutes !== null && minutes <= 0) {
+        return "End time must be after the start time. If the event ends after midnight, set the End Date to the next day.";
+    }
+    return "";
+}
+
+// "3h 30m" for the duration hint; "" when it cannot be worked out
+export function describeEventDuration(times) {
+    const minutes = eventDurationMinutes(times);
+    if (!minutes || minutes <= 0) return "";
+    return `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ""}`;
+}

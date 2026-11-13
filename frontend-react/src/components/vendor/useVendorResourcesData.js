@@ -28,6 +28,7 @@ import {
 } from "../../services/resourceService";
 import { getMyEvents } from "../../services/eventService";
 import { getResourceAllocations, setResourceAllocations } from "../../services/stateService";
+import { getResourceAvailabilityMap } from "../../services/resourceService";
 import { getAuthSession } from "../../services/auth/authStorage";
 
 // Stock on these events has been handed back
@@ -108,10 +109,13 @@ export default function useVendorResourcesData() {
   // ==========================================================================
 
   /**
-   * Computes available units for a given resource after deducting active event allocations.
+   * Local estimate of units free for a resource on one date: total stock minus
+   * what unfinished events on that date hold. Stock booked on other dates is free.
+   * With no date it means "free today" (used by the inventory table).
+   * The exact answer for an allocation comes from the backend (see below).
    *
    * @param {string} resId - Unique resource identifier
-   * @param {string} [targetDate] - Optional specific date to evaluate conflicts
+   * @param {string} [targetDate] - Date to check (YYYY-MM-DD); defaults to today
    * @param {string} [currentEvId] - Event ID to exclude from allocated sum (if editing)
    * @returns {number} Effective quantity remaining in stock
    */
@@ -121,14 +125,17 @@ export default function useVendorResourcesData() {
       if (!item) return 0;
 
       const totalStock = item.total ?? item.quantity ?? 0;
+      const day = targetDate || new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 
-      // Every unfinished event holds its stock, pending ones included
+      // Unfinished events (pending included) hold their stock, but only on their own dates
       let totalAllocated = 0;
       Object.entries(allocations).forEach(([eventId, evAllocs]) => {
         if (eventId === currentEvId) return;
         const ev = events.find((e) => e.id === eventId);
-        if (FINISHED_EVENT_STATUSES.includes(String(ev?.status).toLowerCase())) return;
-        if (targetDate && ev?.date !== targetDate) return;
+        if (!ev) return; // not one of this vendor's events: the backend check covers it
+        if (FINISHED_EVENT_STATUSES.includes(String(ev.status).toLowerCase())) return;
+        const lastDay = ev.endDate && ev.endDate > ev.date ? ev.endDate : ev.date;
+        if (!(ev.date <= day && day <= lastDay)) return;
 
         evAllocs.forEach((a) => {
           if (a.resourceId === resId && a.status !== "released") {
@@ -438,15 +445,49 @@ export default function useVendorResourcesData() {
     return events.find((e) => e.id === selectedEventId) || null;
   }, [events, selectedEventId]);
 
+  // Free units per resource in the selected event's window, from the backend
+  // ({ resourceId: units }, the event's own units left out). null = not loaded.
+  const [selectedEventAvailability, setSelectedEventAvailability] = useState(null);
+
+  // Ask the backend each time a different event is picked in the modal
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAvailability() {
+      setSelectedEventAvailability(null);
+      if (!selectedEventId) return;
+      try {
+        const map = await getResourceAvailabilityMap({ eventId: selectedEventId });
+        if (isMounted) setSelectedEventAvailability(map);
+      } catch (err) {
+        console.error("Failed to load availability for the event date:", err);
+      }
+    }
+    loadAvailability();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedEventId, allocations]);
+
+  // Units that can still be ADDED to the selected event: free on its date
+  // (backend answer, local estimate as fallback) minus what it already holds,
+  // because confirming adds to the existing allocation.
   const availableForSelectedEvent = useMemo(() => {
     if (!allocatingResource) return 0;
-    const targetDate = selectedEvent ? selectedEvent.date : null;
-    return getEffectiveAvail(allocatingResource.id, targetDate, selectedEventId);
-  }, [allocatingResource, selectedEvent, selectedEventId, getEffectiveAvail]);
+    const fromBackend = selectedEventAvailability?.[allocatingResource.id];
+    const freeOnDate = fromBackend !== undefined
+      ? fromBackend
+      : getEffectiveAvail(allocatingResource.id, selectedEvent ? selectedEvent.date : null, selectedEventId);
+    const alreadyHeld = (allocations[selectedEventId] || [])
+      .filter((a) => a.resourceId === allocatingResource.id && a.status !== "released")
+      .reduce((sum, a) => sum + Number(a.qty || a.quantity || 0), 0);
+    return Math.max(0, freeOnDate - alreadyHeld);
+  }, [allocatingResource, selectedEvent, selectedEventId, selectedEventAvailability, allocations, getEffectiveAvail]);
 
-  const handleOpenAllocateModal = useCallback((resource, effectiveAvail) => {
-    if (effectiveAvail <= 0 || resource.available === false) {
-      triggerToast(`"${resource.name}" has 0 available units and cannot be allocated.`, "danger");
+  // Opens the allocation wizard. Being fully booked today does not block it:
+  // the stock may be free on the event's date, which is checked in step 1.
+  const handleOpenAllocateModal = useCallback((resource) => {
+    if (resource.available === false || Number(resource.total ?? resource.quantity ?? 0) <= 0) {
+      triggerToast(`"${resource.name}" has no usable stock and cannot be allocated.`, "danger");
       return;
     }
     setAllocatingResource(resource);
@@ -536,7 +577,8 @@ export default function useVendorResourcesData() {
       await setResourceAllocations(updatedAllocations);
     } catch (err) {
       console.error("Failed to save allocation:", err);
-      setAllocError("Could not save this allocation. Please try again.");
+      // A 400 carries the backend's reason, e.g. "Only 2 of 5 Projectors are free on 2026-04-15"
+      setAllocError(err?.status === 400 && err.message ? err.message : "Could not save this allocation. Please try again.");
       return;
     }
 

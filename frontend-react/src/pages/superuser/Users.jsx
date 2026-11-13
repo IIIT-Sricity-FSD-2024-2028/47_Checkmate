@@ -145,11 +145,13 @@ export default function SuperuserUsers() {
   // Opens modal for creating a new user
   const handleOpenAdd = () => {
     setEditingId(null);
+    // New records start on the empty "Select..." choice, as in the HTML page,
+    // so the required-field checks in validateForm() actually apply.
     setFormData({
       name: '',
       email: '',
-      role: 'Client',
-      status: 'Active',
+      role: '',
+      status: '',
       password: '',
     });
     setFormErrors({});
@@ -343,6 +345,7 @@ export default function SuperuserUsers() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   >
+                    <option value="">Select role...</option>
                     <option value="Admin">Admin</option>
                     <option value="Vendor">Vendor</option>
                     <option value="Staff">Staff</option>
@@ -358,6 +361,7 @@ export default function SuperuserUsers() {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>

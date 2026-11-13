@@ -25,6 +25,7 @@ import SuperuserBookings from "../pages/superuser/Bookings";
 import SuperuserReports from "../pages/superuser/Reports";
 import SuperuserSettings from "../pages/superuser/Settings";
 import SuperuserReportIssue from "../pages/superuser/ReportIssue";
+import SuperuserStaff from "../pages/superuser/Staff";
 
 import VendorDashboard from "../pages/vendor/Dashboard";
 
@@ -45,6 +46,8 @@ import StaffSchedule from "../pages/staff/Schedule";
 import StaffPerformance from "../pages/staff/Performance";
 import StaffReportIssue from "../pages/staff/ReportIssue";
 import StaffMessages from "../pages/staff/Messages";
+import StaffMessagesAdmin from "../pages/staff/MessagesAdmin";
+import StaffReportAdmin from "../pages/staff/ReportAdmin";
 
 import AdminLayout from "../layouts/AdminLayout";
 import VendorLayout from "../layouts/VendorLayout";
@@ -130,6 +133,8 @@ function AppRoutes() {
             <Route path="performance" element={<StaffPerformance />} />
             <Route path="report-issue" element={<StaffReportIssue />} />
             <Route path="messages" element={<StaffMessages />} />
+            <Route path="admin-messages" element={<StaffMessagesAdmin />} />
+            <Route path="report-admin" element={<StaffReportAdmin />} />
           </Route>
         </Route>
 
@@ -141,6 +146,7 @@ function AppRoutes() {
             <Route path="users" element={<SuperuserUsers />} />
             <Route path="events" element={<SuperuserEvents />} />
             <Route path="resources" element={<SuperuserResources />} />
+            <Route path="staff" element={<SuperuserStaff />} />
             <Route path="bookings" element={<SuperuserBookings />} />
             <Route path="reports" element={<SuperuserReports />} />
             <Route path="settings" element={<SuperuserSettings />} />

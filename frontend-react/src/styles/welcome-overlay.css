@@ -1,0 +1,74 @@
+/* ══════════════════════════════════════════════════════════════
+   WELCOME POPUP (components/WelcomeOverlay.jsx) — used by every portal.
+   Colours have fallbacks because each portal defines different CSS variables.
+══════════════════════════════════════════════════════════════ */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(6, 10, 20, 0.75);
+  backdrop-filter: blur(8px);
+  animation: welcome-fade 0.25s ease;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  text-align: center;
+  background: var(--bg-sidebar, #150d1e);
+  border: 1px solid rgba(233, 30, 140, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(233, 30, 140, 0.15);
+  animation: welcome-rise 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.welcome-card__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pink, #e91e8c), var(--purple, #a855f7));
+  color: #fff;
+}
+
+.welcome-card h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #f0ecff);
+}
+
+.welcome-card p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary, #9b93b8);
+}
+
+.welcome-card__btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--pink, #e91e8c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(233, 30, 140, 0.3);
+  transition: filter 0.2s;
+}
+
+.welcome-card__btn:hover { filter: brightness(1.1); }
+
+@keyframes welcome-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes welcome-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

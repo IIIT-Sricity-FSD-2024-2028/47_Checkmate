@@ -62,7 +62,7 @@ function ResourceTable({
             <tr>
               <th>Resource Name</th>
               <th>Category</th>
-              <th>Quantity (Avail / Total)</th>
+              <th>Quantity (Free Today / Total)</th>
               <th>Rental Price</th>
               <th>Availability</th>
               <th>Actions</th>

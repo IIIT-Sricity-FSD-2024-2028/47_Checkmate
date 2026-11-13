@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { hashPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto, PROFILE_FIELDS, UpdateProfileDto, UpdateUserDto } from './dto';
 
 @Injectable()
 export class UsersService {
@@ -54,21 +54,26 @@ export class UsersService {
     return user ? this.sanitize(user) : null;
   }
 
-  updateProfile(email: string, dto: { 
-    name?: string;
-    bio?: string; 
-    phone?: string;
-    location?: string;
-    address?: string;
-    date_of_birth?: string;
-    years_experience?: number;
-    skills?: string;
-    website_url?: string;
-    linkedin_url?: string;
-  }) {
+  // Updates the signed-in user's own profile. Only PROFILE_FIELDS are copied,
+  // so even a request that slipped past validation can never change role,
+  // status, email or password here.
+  updateProfile(email: string, dto: UpdateProfileDto) {
     const user = this.data.collection('users').find(u => u.email.toLowerCase() === email.toLowerCase());
     if (!user) return null;
-    return this.sanitize(this.data.update('users', user.id, dto));
+    const patch: Record<string, unknown> = {};
+    PROFILE_FIELDS.forEach((field) => {
+      if ((dto as any)[field] !== undefined) patch[field] = (dto as any)[field];
+    });
+
+    // The Profile pages always send the email. A changed email must not belong
+    // to another account, otherwise two users would share one login.
+    const newEmail = String(dto.email || '').trim().toLowerCase();
+    if (newEmail && newEmail !== user.email.toLowerCase()) {
+      const taken = this.data.collection('users').some((u) => u.id !== user.id && u.email.toLowerCase() === newEmail);
+      if (taken) throw new BadRequestException('This email is already used by another account.');
+      patch.email = newEmail;
+    }
+    return this.sanitize(this.data.update('users', user.id, patch as any));
   }
 
   updateAvatar(email: string, avatarUrl: string) {

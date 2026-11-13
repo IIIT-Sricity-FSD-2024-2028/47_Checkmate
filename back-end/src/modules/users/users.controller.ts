@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto, UpdateProfileDto, UpdateUserDto } from './dto';
 import { UsersService } from './users.service';
 import { avatarMulterOptions } from '../../common/upload/multer.config';
 
@@ -21,18 +21,7 @@ export class UsersController {
   }
 
   @Put('profile')
-  updateProfile(@Req() req: any, @Body() dto: { 
-    name?: string;
-    bio?: string; 
-    phone?: string;
-    location?: string;
-    address?: string;
-    date_of_birth?: string;
-    years_experience?: number;
-    skills?: string;
-    website_url?: string;
-    linkedin_url?: string;
-  }) {
+  updateProfile(@Req() req: any, @Body() dto: UpdateProfileDto) {
     return this.service.updateProfile(req.user?.email, dto);
   }
 

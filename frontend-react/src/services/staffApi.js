@@ -199,3 +199,34 @@ export async function createStaffRequest(requestData) {
 
   return issueResult;
 }
+
+// ── Admin Coordination chat (shared state key "adminChatMessages") ──
+// The same list is read by the admin Coordination Hub and Issue Tracking pages.
+
+// Loads the whole admin support chat list
+export async function fetchAdminChat() {
+  const response = await fetch(`${API_BASE}/state/adminChatMessages`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load admin chat: ${response.status}`);
+  }
+  const list = await response.json();
+  return Array.isArray(list) ? list : [];
+}
+
+// Adds one message to the admin support chat. It re-reads the latest list
+// first so messages sent by others in the meantime are not overwritten.
+export async function postAdminChatMessage(message) {
+  const latest = await fetchAdminChat();
+  const updated = [...latest, message];
+  const response = await fetch(`${API_BASE}/state/adminChatMessages`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ value: updated }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to send message: ${response.status}`);
+  }
+  return updated;
+}

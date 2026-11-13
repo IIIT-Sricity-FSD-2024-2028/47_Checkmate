@@ -23,6 +23,11 @@
  *   8. EventContingencyPlanning: Interactive CRUD table with problem, trigger, solution.
  *   9. EventReviewActionBar: Conditional Approve and Reject decision buttons.
  *  10. Extra Resource, Extra Staff, Keep Waiting & Reject Reason Modals.
+ *
+ * Resource availability is date-based: GET /api/resources/availability?eventId=
+ * returns the units free in THIS event's date/time window (stock booked on
+ * other dates is free). The backend re-checks every allocation and answers
+ * 400 with a readable message if it would over-book that date.
  * ============================================================================
  */
 
@@ -60,7 +65,7 @@ import {
   updateEventStatus,
   patchEvent,
 } from "../../services/eventService";
-import { getResources } from "../../services/resourceService";
+import { getResources, getResourceAvailabilityMap } from "../../services/resourceService";
 import {
   createStaffAssignment,
   deleteStaffAssignment,
@@ -136,6 +141,9 @@ function EventReview() {
   const [staffList, setStaffList] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [resourceAllocations, setLocalResourceAllocations] = useState({});
+  // Free units per resource in this event's window, from the backend ({ resourceId: units }).
+  // null until loaded; the local estimate below is used meanwhile.
+  const [eventAvailability, setEventAvailability] = useState(null);
   const [contingencyMap, setLocalContingencyMap] = useState({});
   const [venues, setVenues] = useState([]);
   const [venueAllocations, setLocalVenueAllocations] = useState({});
@@ -272,11 +280,42 @@ function EventReview() {
     };
   }, [eventId]);
 
+  // Re-asks the backend what is free for this event whenever its date or the
+  // allocations change. The backend leaves this event's own units out.
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAvailability() {
+      if (!event?.id || !event?.date) return;
+      try {
+        const map = await getResourceAvailabilityMap({ eventId: event.id });
+        if (isMounted) setEventAvailability(map);
+      } catch (err) {
+        console.error("Failed to load date availability:", err);
+        if (isMounted) setEventAvailability(null);
+      }
+    }
+    loadAvailability();
+    return () => {
+      isMounted = false;
+    };
+  }, [event?.id, event?.date, event?.time, event?.endTime, resourceAllocations]);
+
   // --------------------------------------------------------------------------
   // 3. DATE-BASED RESOURCE AVAILABILITY CALCULATOR (Legacy Parity)
   // --------------------------------------------------------------------------
+  // Units of a resource free for an event. For this page's own event the
+  // backend answer is used; otherwise a local same-date estimate.
   const getResourceAvailableForEvent = useCallback(
     (resId, targetDate, currentEventId) => {
+      if (
+        eventAvailability &&
+        event &&
+        currentEventId === event.id &&
+        targetDate === event.date &&
+        eventAvailability[resId] !== undefined
+      ) {
+        return eventAvailability[resId];
+      }
       const db = resources.find((x) => x.id === resId);
       if (!db) return 0;
       const totalStock = Number(db.total || db.quantity || db.avail || 0);
@@ -310,7 +349,7 @@ function EventReview() {
 
       return Math.max(0, totalStock - allocated);
     },
-    [resources, allEvents, resourceAllocations]
+    [resources, allEvents, resourceAllocations, eventAvailability, event]
   );
 
   // --------------------------------------------------------------------------
@@ -780,7 +819,8 @@ function EventReview() {
         await setResourceAllocations(updatedAllocs);
       } catch (err) {
         console.error("Failed to allocate resource:", err);
-        showToast(`Could not allocate ${res.name}. Please try again.`, "danger");
+        // A 400 carries the backend's reason, e.g. "Only 2 of 5 Projectors are free on 2026-04-15"
+        showToast(err?.status === 400 && err.message ? err.message : `Could not allocate ${res.name}. Please try again.`, "danger");
         return;
       }
       setLocalResourceAllocations(updatedAllocs);
@@ -963,7 +1003,7 @@ function EventReview() {
         await setResourceAllocations(updatedAllocs);
       } catch (err) {
         console.error("Failed to allocate resource:", err);
-        showToast(`Could not allocate ${resource.name}. Please try again.`, "danger");
+        showToast(err?.status === 400 && err.message ? err.message : `Could not allocate ${resource.name}. Please try again.`, "danger");
         return;
       }
 

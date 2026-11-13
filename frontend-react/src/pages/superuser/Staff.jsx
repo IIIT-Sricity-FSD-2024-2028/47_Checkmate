@@ -154,13 +154,15 @@ export default function SuperuserStaff() {
   // Opens modal for adding a new staff member
   const handleOpenAdd = () => {
     setEditingId(null);
+    // New records start on the empty "Select..." choice, as in the HTML page,
+    // so the required-field checks in validateForm() actually apply.
     setFormData({
       name: '',
       role: '',
-      vendor: vendors.length > 0 ? vendors[0].name : '',
+      vendor: '',
       phone: '',
-      avail: 'Available',
-      status: 'Active',
+      avail: '',
+      status: '',
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -421,6 +423,7 @@ export default function SuperuserStaff() {
                     value={formData.avail}
                     onChange={(e) => setFormData({ ...formData, avail: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Available">Available</option>
                     <option value="Busy">Busy</option>
                     <option value="On Leave">On Leave</option>
@@ -435,6 +438,7 @@ export default function SuperuserStaff() {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>

@@ -81,6 +81,7 @@ function CreateEvent() {
             subtotal={wizard.subtotal}
             maxBudget={wizard.maxBudget}
             overBudget={wizard.overBudget}
+            eventDate={wizard.form.date}
             onBack={() => goToStep(1)}
             onNext={() => goToStep(3)}
           />

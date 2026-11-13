@@ -145,6 +145,16 @@ export const staffMenuItems = [
         path: "/staff/report-issue",
         icon: AlertCircle,
     },
+    {
+        label: "Issue to Admin",
+        path: "/staff/report-admin",
+        icon: Flag,
+    },
+    {
+        label: "Admin Coordination",
+        path: "/staff/admin-messages",
+        icon: Shield,
+    },
 ];
 
 export const adminMenuItems = [
@@ -225,6 +235,11 @@ export const superuserMenuItems = [
         label: "Resources",
         path: "/superuser/resources",
         icon: Package
+    },
+    {
+        label: "Staff",
+        path: "/superuser/staff",
+        icon: UserPlus
     },
     {
         label: "Bookings",

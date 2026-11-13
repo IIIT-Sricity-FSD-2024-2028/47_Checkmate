@@ -27,12 +27,13 @@ export class EventsController {
   @Get(':id') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
 
   // Clients raise event requests; vendors/admins can also create them directly.
-  @Post() @Roles('client', 'vendor', 'admin', 'superuser') create(@Body() dto: CreateEventDto) { return this.service.create(dto); }
+  @Post() @Roles('client', 'vendor', 'admin', 'superuser') create(@Body() dto: CreateEventDto, @Req() req: any) { return this.service.create(dto, req.user); }
 
-  // PUT and PATCH both map to the same partial update here -- the frontend uses
+  // req.user is passed on so the service can check that a client only touches
+  // their own events. PUT and PATCH both map to the same partial update here -- the frontend uses
   // whichever it prefers, so both are accepted.
-  @Put(':id') @Roles('client', 'vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateEventDto) { return this.service.update(id, dto); }
-  @Patch(':id') @Roles('client', 'vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateEventDto) { return this.service.update(id, dto); }
+  @Put(':id') @Roles('client', 'vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateEventDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Patch(':id') @Roles('client', 'vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateEventDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
 
   // The approval step. Clients are deliberately excluded -- a client must not be
   // able to approve their own request. This is the call that triggers billing.
@@ -40,5 +41,5 @@ export class EventsController {
 
   @Patch(':id/cancel') @Roles('client') cancel(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.cancel(id, req.user); }
 
-  @Delete(':id') @Roles('vendor', 'admin', 'superuser', 'client') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+  @Delete(':id') @Roles('vendor', 'admin', 'superuser', 'client') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 }

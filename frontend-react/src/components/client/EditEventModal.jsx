@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import Modal from "../Modal";
 import VenuePicker from "./VenuePicker";
 import { parseTimeToMinutes } from "../../services/eventService";
-import { formatTime12 } from "../../utils/clientHelpers";
+import { formatTime12, eventEndError } from "../../utils/clientHelpers";
 
 // "6:30 PM" -> "18:30", the format a time input needs
 function toInputTime(time) {
@@ -20,6 +20,8 @@ function toInputTime(time) {
 function EditEventForm({ event, onClose, onSave }) {
   const [form, setForm] = useState({
     date: event.date || "",
+    // Last day of an event that runs past midnight; empty = same day
+    endDate: event.endDate && event.endDate > event.date ? event.endDate : "",
     time: toInputTime(event.time),
     endTime: toInputTime(event.endTime),
     venue: event.venue === "TBD" ? "" : event.venue || "",
@@ -35,14 +37,18 @@ function EditEventForm({ event, onClose, onSave }) {
       setError("Date, start time, end time and guests are required.");
       return;
     }
-    if (form.endTime <= form.time) {
-      setError("End time must be after the start time.");
+    // The end may be on a later day (End Date), e.g. 9 PM to 12 AM next day
+    const endError = eventEndError(form);
+    if (endError) {
+      setError(endError);
       return;
     }
 
     setSaving(true);
     const saved = await onSave(event.id, {
       date: form.date,
+      // "" clears an old end date when the event now ends on the same day
+      endDate: form.endDate > form.date ? form.endDate : "",
       time: formatTime12(form.time),
       endTime: formatTime12(form.endTime),
       venue: form.venue.trim() || "TBD",
@@ -78,6 +84,10 @@ function EditEventForm({ event, onClose, onSave }) {
         <div className="cl-field">
           <label>Start Time *</label>
           <input className="cl-input" type="time" value={form.time} onChange={(e) => update("time", e.target.value)} />
+        </div>
+        <div className="cl-field">
+          <label>End Date (if it ends on a later day)</label>
+          <input className="cl-input" type="date" min={form.date} value={form.endDate} onChange={(e) => update("endDate", e.target.value)} />
         </div>
         <div className="cl-field">
           <label>End Time *</label>

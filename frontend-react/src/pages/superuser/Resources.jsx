@@ -173,10 +173,12 @@ export default function SuperuserResources() {
   // Opens modal for creating a new resource
   const handleOpenAdd = () => {
     setEditingId(null);
+    // New records start on the empty "Select..." choice, as in the HTML page,
+    // so the required-field checks in validateForm() actually apply.
     setFormData({
       name: '',
-      category: 'Furniture',
-      vendor: vendors.length > 0 ? vendors[0].name : '',
+      category: '',
+      vendor: '',
       total: '',
       avail: '',
       price: '',
@@ -431,6 +433,7 @@ export default function SuperuserResources() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Furniture">Furniture</option>
                     <option value="Audio">Audio</option>
                     <option value="Visual">Visual</option>

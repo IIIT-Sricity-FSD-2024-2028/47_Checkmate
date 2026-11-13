@@ -178,11 +178,13 @@ export default function SuperuserBookings() {
   // Opens the modal for adding a new booking
   const handleOpenAdd = () => {
     setEditingId(null);
+    // New records start on the empty "Select..." choice, as in the HTML page,
+    // so the required-field checks in validateForm() actually apply.
     setFormData({
       eventName: '',
       client: '',
-      vendor: vendors.length > 0 ? vendors[0].name : '',
-      status: 'Pending',
+      vendor: '',
+      status: '',
       cost: '',
     });
     setFormErrors({});
@@ -447,6 +449,7 @@ export default function SuperuserBookings() {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
+                    <option value="">Select...</option>
                     <option value="Confirmed">Confirmed</option>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>

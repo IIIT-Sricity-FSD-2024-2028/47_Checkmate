@@ -131,6 +131,7 @@ export interface EventRecord {
   name: string;
   type: string;
   date: string;
+  endDate?: string; // Last day of a multi-day event; missing means one day
   time?: string;
   startTime?: string;
   endTime?: string;

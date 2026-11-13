@@ -11,12 +11,14 @@
  *     1. Loads the resource catalogue, staff list, events and allocations.
  *     2. Step 1: form values, required-field validation, budget limit maths.
  *     3. Step 2: resource search / category filter, +/- quantity limited by
- *        real availability on the chosen date, subtotal and over-budget check.
+ *        real availability on the chosen date and time (asked from the
+ *        backend), subtotal and over-budget check.
  *     4. Step 3: staff search and select / unselect.
  *     5. Step 4: builds the event payload and POSTs it, with submit states.
  *
  * Connected Backend Endpoints:
  *   - GET  /api/resources                 -> resource catalogue
+ *   - GET  /api/resources/availability    -> free units per resource on the chosen date/time
  *   - GET  /api/snapshot                  -> staff list (clients can't call /api/staff)
  *   - GET  /api/events                    -> confirmed/live events (for availability)
  *   - GET  /api/state/resourceAllocations -> units those events already use
@@ -26,11 +28,11 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getResources } from "../../services/resourceService";
+import { getResources, getResourceAvailabilityMap } from "../../services/resourceService";
 import { getSnapshot } from "../../services/analyticsService";
 import { getEvents, createEvent } from "../../services/eventService";
 import { getResourceAllocations } from "../../services/stateService";
-import { getCurrentUser, formatTime12 } from "../../utils/clientHelpers";
+import { getCurrentUser, formatTime12, eventEndError } from "../../utils/clientHelpers";
 
 export const STEP_LABELS = ["Event Details", "Resources", "Staff", "Review"];
 
@@ -46,7 +48,7 @@ const REQUIRED_FIELDS = {
 };
 
 const EMPTY_FORM = {
-  name: "", type: "", date: "", time: "09:00", endTime: "", people: "",
+  name: "", type: "", date: "", time: "09:00", endDate: "", endTime: "", people: "",
   venue: "", budget: "", customBudget: "", notes: "",
 };
 
@@ -65,6 +67,10 @@ export function useCreateEventWizard() {
   const [staff, setStaff] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
   const [allocations, setAllocations] = useState({});
+
+  // Free units per resource for the chosen date/time, from the backend:
+  // { resourceId: units }. null until loaded (or if the request failed).
+  const [dateAvailability, setDateAvailability] = useState(null);
 
   // Selections: { resourceId: quantity } and { staffId: true }
   // FACULTY MAY ASK: Why store selections as objects instead of arrays?
@@ -104,6 +110,34 @@ export function useCreateEventWizard() {
     };
   }, []);
 
+  // Ask the backend what is free whenever the date or times change. Stock that
+  // is booked on another date is free on this one.
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAvailability() {
+      if (!form.date) {
+        setDateAvailability(null);
+        return;
+      }
+      try {
+        const map = await getResourceAvailabilityMap({
+          date: form.date,
+          endDate: form.endDate > form.date ? form.endDate : undefined,
+          time: form.time || undefined,
+          endTime: form.endTime || undefined,
+        });
+        if (isMounted) setDateAvailability(map);
+      } catch {
+        // Fall back to the local estimate in getAvailable()
+        if (isMounted) setDateAvailability(null);
+      }
+    }
+    loadAvailability();
+    return () => {
+      isMounted = false;
+    };
+  }, [form.date, form.endDate, form.time, form.endTime]);
+
   const showToast = (text, type = "info") => {
     setToast({ type, text });
     setTimeout(() => setToast(null), 3000);
@@ -113,11 +147,16 @@ export function useCreateEventWizard() {
   // 3. STEP 1 — FORM + VALIDATION + BUDGET
   // --------------------------------------------------------------------------
   // Updates one field and clears its error as soon as it has a value
+  // The start/end fields are checked together, so changing any of them
+  // clears the end-time / end-date message as well.
+  const TIME_FIELDS = ["date", "time", "endDate", "endTime"];
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
-    if (errors[field] && String(value).trim()) {
+    const linked = TIME_FIELDS.includes(field) ? ["endTime", "endDate"] : [];
+    if ((errors[field] && String(value).trim()) || linked.some((f) => errors[f])) {
       const remaining = { ...errors };
-      delete remaining[field];
+      if (String(value).trim()) delete remaining[field];
+      linked.forEach((f) => delete remaining[f]);
       setErrors(remaining);
     }
   };
@@ -127,8 +166,11 @@ export function useCreateEventWizard() {
     Object.entries(REQUIRED_FIELDS).forEach(([field, message]) => {
       if (!String(form[field] || "").trim()) newErrors[field] = message;
     });
-    if (form.endTime && form.endTime <= form.time) {
-      newErrors.endTime = "End time must be after the start time.";
+    // The end may be on a later day (End Date), e.g. 9 PM to 12 AM next day
+    const endError = eventEndError(form);
+    if (endError) {
+      if (form.endDate && form.endDate < form.date) newErrors.endDate = endError;
+      else newErrors.endTime = endError;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -150,9 +192,13 @@ export function useCreateEventWizard() {
   // --------------------------------------------------------------------------
   // 4. STEP 2 — RESOURCES
   // --------------------------------------------------------------------------
-  // Units free = total minus what unfinished events already hold, as on the vendor side.
-  // With a date chosen we only count events on that same date.
+  // Units free on the chosen date. The backend answer is used when we have it;
+  // otherwise (offline / still loading) we estimate locally: total minus what
+  // unfinished events on that same date already hold.
   const getAvailable = (resource) => {
+    if (dateAvailability && dateAvailability[resource.id] !== undefined) {
+      return dateAvailability[resource.id];
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const busyEvents = allEvents.filter((e) => {
@@ -172,12 +218,15 @@ export function useCreateEventWizard() {
   };
 
   const categories = ["All", ...new Set(resources.map((r) => r.category))];
-  const visibleResources = resources.filter((r) => {
-    const q = resSearch.trim().toLowerCase();
-    const categoryOk = resCategory === "All" || r.category === resCategory;
-    const searchOk = !q || r.name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q);
-    return categoryOk && searchOk;
-  });
+  // Each card also carries `availableQty`, so the step can show it and stop "+" there
+  const visibleResources = resources
+    .filter((r) => {
+      const q = resSearch.trim().toLowerCase();
+      const categoryOk = resCategory === "All" || r.category === resCategory;
+      const searchOk = !q || r.name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q);
+      return categoryOk && searchOk;
+    })
+    .map((r) => ({ ...r, availableQty: getAvailable(r) }));
 
   // Chosen resources with their cost (used by summary, review and submit)
   const chosenResources = resources
@@ -191,7 +240,7 @@ export function useCreateEventWizard() {
     const current = selectedQty[resource.id] || 0;
     const available = getAvailable(resource);
     if (change > 0 && current >= available) {
-      showToast(`Only ${available} unit(s) available for this resource.`, "danger");
+      showToast(`Only ${available} unit(s) of ${resource.name} are free on ${form.date || "this date"}.`, "danger");
       return;
     }
     const next = Math.max(0, current + change);
@@ -307,6 +356,8 @@ export function useCreateEventWizard() {
       name: form.name.trim(),
       type: form.type,
       date: form.date,
+      // Only sent for events that finish on a later day
+      endDate: form.endDate > form.date ? form.endDate : undefined,
       time: formatTime12(form.time),
       endTime: formatTime12(form.endTime),
       venue: form.venue.trim() || "TBD",
@@ -336,8 +387,10 @@ export function useCreateEventWizard() {
       await createEvent(newEvent);
       setSubmitState("success");
       setTimeout(() => navigate("/client/events"), 1500);
-    } catch {
-      // Only claim success when the backend actually saved it
+    } catch (err) {
+      // Only claim success when the backend actually saved it. A 400 from the
+      // availability check says exactly which resource is short on that date.
+      if (err?.status === 400 && err.message) showToast(err.message, "danger");
       setSubmitState("error");
       setTimeout(() => setSubmitState("idle"), 3000);
     }
