@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
 import { login } from "../../services/auth/authService";
+import { getProfile } from "../../services/userService";
 import {
   saveAuthSession,
   getAuthToken,
@@ -28,14 +29,24 @@ function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If already authenticated with a valid session, automatically redirect to user's dashboard
+  // Go straight to the dashboard only if the backend still accepts the saved sign-in.
+  // A rejected one is cleared (see apiClient), so the form shows instead.
   useEffect(() => {
+    if (new URLSearchParams(location.search).get("expired")) {
+      setErrorMessage("Your session has ended. Please sign in again.");
+      return;
+    }
     const token = getAuthToken();
     const role = getAuthRole();
-    if (token && role) {
-      navigate(`/${role.toLowerCase()}/dashboard`, { replace: true });
-    }
-  }, [navigate]);
+    if (!token || !role) return;
+    let isMounted = true;
+    getProfile()
+      .then(() => isMounted && navigate(`/${role.toLowerCase()}/dashboard`, { replace: true }))
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, location.search]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();

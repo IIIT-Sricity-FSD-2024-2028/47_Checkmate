@@ -16,6 +16,14 @@
  */
 
 import { getBaseUrl } from './apiClient';
+import { endExpiredSession } from './auth/authStorage';
+
+// fetch that forgets a sign-in the backend no longer accepts
+async function authFetch(url, options) {
+  const response = await fetch(url, options);
+  if (response.status === 401) endExpiredSession();
+  return response;
+}
 
 const API_BASE = getBaseUrl();
 
@@ -68,7 +76,7 @@ export function getAuthHeaders() {
  */
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}/${endpoint}`;
-  const response = await fetch(url, {
+  const response = await authFetch(url, {
     ...options,
     headers: {
       ...getAuthHeaders(),

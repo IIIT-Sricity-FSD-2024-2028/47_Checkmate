@@ -1,4 +1,4 @@
-import { getAuthEmail, getAuthRole, getAuthToken } from './auth/authStorage';
+import { endExpiredSession, getAuthEmail, getAuthRole, getAuthToken } from './auth/authStorage';
 
 /**
  * Custom error class for API errors that preserves HTTP status code,
@@ -169,6 +169,11 @@ export async function request(endpoint, options = {}) {
       const text = await response.text();
       data = text || null;
     }
+  }
+
+  // The saved sign-in is no longer valid: forget it instead of failing every page
+  if (response.status === 401 && shouldAuthenticate) {
+    endExpiredSession();
   }
 
   if (!response.ok) {

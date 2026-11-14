@@ -3,8 +3,15 @@
  * Handles async REST API communication with the backend
  */
 
-import { getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from './auth/authStorage';
+import { endExpiredSession, getAuthSession, getAuthToken, getAuthRole, getAuthEmail } from './auth/authStorage';
 import { getBaseUrl } from './apiClient';
+
+// fetch that forgets a sign-in the backend no longer accepts
+async function authFetch(url, options) {
+  const response = await fetch(url, options);
+  if (response.status === 401) endExpiredSession();
+  return response;
+}
 
 const API_BASE = getBaseUrl();
 
@@ -42,7 +49,7 @@ export function getAuthHeaders() {
 }
 
 export async function fetchStaffAssignments() {
-  const response = await fetch(`${API_BASE}/staff-assignments`, {
+  const response = await authFetch(`${API_BASE}/staff-assignments`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -52,7 +59,7 @@ export async function fetchStaffAssignments() {
 }
 
 export async function updateStaffAssignment(id, patch) {
-  const response = await fetch(`${API_BASE}/staff-assignments/${id}`, {
+  const response = await authFetch(`${API_BASE}/staff-assignments/${id}`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(patch),
@@ -65,7 +72,7 @@ export async function updateStaffAssignment(id, patch) {
 
 /** Reports how the signed-in staff member is getting on with a live event. */
 export async function updateStaffProgress(id, progress) {
-  const response = await fetch(`${API_BASE}/staff-assignments/${encodeURIComponent(id)}/progress`, {
+  const response = await authFetch(`${API_BASE}/staff-assignments/${encodeURIComponent(id)}/progress`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(progress),
@@ -76,7 +83,7 @@ export async function updateStaffProgress(id, progress) {
 }
 
 export async function fetchStaffList() {
-  const response = await fetch(`${API_BASE}/staff`, {
+  const response = await authFetch(`${API_BASE}/staff`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -86,7 +93,7 @@ export async function fetchStaffList() {
 }
 
 export async function updateStaffMember(id, patch) {
-  const response = await fetch(`${API_BASE}/staff/${id}`, {
+  const response = await authFetch(`${API_BASE}/staff/${id}`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(patch),
@@ -98,7 +105,7 @@ export async function updateStaffMember(id, patch) {
 }
 
 export async function fetchEvents() {
-  const response = await fetch(`${API_BASE}/events`, {
+  const response = await authFetch(`${API_BASE}/events`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -108,7 +115,7 @@ export async function fetchEvents() {
 }
 
 export async function fetchIssues() {
-  const response = await fetch(`${API_BASE}/issues`, {
+  const response = await authFetch(`${API_BASE}/issues`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -118,7 +125,7 @@ export async function fetchIssues() {
 }
 
 export async function createIssue(data) {
-  const response = await fetch(`${API_BASE}/issues`, {
+  const response = await authFetch(`${API_BASE}/issues`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -130,7 +137,7 @@ export async function createIssue(data) {
 }
 
 export async function fetchMessageThread(threadId) {
-  const response = await fetch(`${API_BASE}/messages/${encodeURIComponent(threadId)}`, {
+  const response = await authFetch(`${API_BASE}/messages/${encodeURIComponent(threadId)}`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -141,7 +148,7 @@ export async function fetchMessageThread(threadId) {
 }
 
 export async function sendMessage(messageData) {
-  const response = await fetch(`${API_BASE}/messages`, {
+  const response = await authFetch(`${API_BASE}/messages`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(messageData),

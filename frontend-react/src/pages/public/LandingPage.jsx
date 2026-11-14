@@ -18,6 +18,7 @@ import {
 } from "../../services/auth/authStorage";
 
 import { getPublicDesignations } from "../../services/staffOnboardingService";
+import { getProfile } from "../../services/userService";
 
 import "../../styles/landingpage.css";
 
@@ -25,7 +26,19 @@ function LandingPage() {
   const navigate = useNavigate();
   const token = getAuthToken();
   const role = getAuthRole();
-  const isLoggedIn = Boolean(token && role);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Show the signed-in buttons only if the backend still accepts the saved sign-in
+  useEffect(() => {
+    if (!token || !role) return;
+    let isMounted = true;
+    getProfile()
+      .then(() => isMounted && setIsLoggedIn(true))
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [token, role]);
 
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");

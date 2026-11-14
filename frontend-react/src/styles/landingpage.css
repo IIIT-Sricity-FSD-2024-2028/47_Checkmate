@@ -371,6 +371,10 @@
 
 /* Statistics */
 .landing-page .stats {
+  /* Undo superuser.css, whose unscoped .stats is a 4-column grid */
+  display: block;
+  grid-template-columns: none;
+  margin-bottom: 0;
   padding: 80px 0;
   background: #121824;
   border-top: 1px solid var(--border-color);
@@ -388,6 +392,11 @@
   display: block;
   width: 100%;
   margin: 48px auto 0;
+}
+
+.landing-page .stats-box h2 {
+  margin: 0 0 32px;
+  text-align: center;
 }
 
 .landing-page .stats-grid {
@@ -834,5 +843,17 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* Stats on smaller screens: heading above a 2x2 grid, not squeezed beside it */
+@media (max-width: 1024px) {
+  .landing-page .stats-box {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .landing-page .stats-box h2 {
+    text-align: center;
   }
 }

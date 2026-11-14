@@ -53,6 +53,21 @@ export function clearAuthSession() {
   }
 }
 
+// Pages anyone may see; a dead sign-in is cleared on these without leaving the page
+const PUBLIC_PATHS = ["/", "/landing", "/signin", "/signup-details", "/signup-password", "/join-staff"];
+
+/**
+ * Called when the backend rejects the saved sign-in (expired, or made by a server
+ * with a different JWT secret). Forgets it and, on a signed-in page, goes to Sign In.
+ */
+export function endExpiredSession() {
+  if (!getAuthToken()) return;
+  clearAuthSession();
+  if (typeof window !== "undefined" && !PUBLIC_PATHS.includes(window.location.pathname)) {
+    window.location.assign("/signin?expired=1");
+  }
+}
+
 export function getAuthToken() {
   const session = getAuthSession();
   return session?.token || session?.accessToken || session?.access_token || null;
