@@ -114,15 +114,18 @@ export function useClientEventsData() {
     }
   };
 
-  const handleCancelEvent = async (event) => {
-    if (!window.confirm(`Cancel "${event.name}"? This cannot be undone.`)) return;
-    try {
-      const updated = await cancelEvent(event.id);
-      setEvents((prev) => prev.map((ev) => (ev.id === event.id ? { ...ev, ...updated } : ev)));
-      setError(null);
-    } catch (err) {
-      setError(err.message || "Could not cancel this event.");
-    }
+  // Cancel asks for a reason first (ReasonModal on the page). handleCancelEvent
+  // only opens it; confirmCancel(reason) does the API call.
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const handleCancelEvent = (event) => setCancelTarget(event);
+
+  // Saves the cancel + reason; errors are thrown so the modal can show them
+  const confirmCancel = async (reason) => {
+    const event = cancelTarget;
+    const updated = await cancelEvent(event.id, reason);
+    setEvents((prev) => prev.map((ev) => (ev.id === event.id ? { ...ev, ...updated } : ev)));
+    setError(null);
+    setCancelTarget(null);
   };
 
   // --------------------------------------------------------------------------
@@ -137,6 +140,9 @@ export function useClientEventsData() {
   return {
     handleEditEvent,
     handleCancelEvent,
+    cancelTarget,
+    setCancelTarget,
+    confirmCancel,
     events,
     filteredEvents,
     loading,

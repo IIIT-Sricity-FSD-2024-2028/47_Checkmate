@@ -4,16 +4,37 @@ import { CreateBookingDto, SettlePayoutDto, UpdateBookingDto } from './dto';
 import { calculateCommissionSplit } from '../../common/constants/finance.constants';
 import { Booking } from '../../domain/models';
 
+type Caller = { id?: string; role?: string } | undefined;
+
 @Injectable()
 export class BookingsService {
   constructor(private readonly data: DataService) {}
 
-  findAll() {
-    return this.data.collection('bookings');
+  // Who may see a booking: admins/superusers all; a client their own; a vendor
+  // the ones they supplied (directly or as one of several vendors).
+  private vendorIdOf(user?: Caller) {
+    return this.data.collection('vendors').find((v: any) => v.userId === user?.id)?.id;
   }
 
-  findOne(id: string) {
-    return this.data.find('bookings', id);
+  private canSee(booking: Booking, user?: Caller) {
+    const role = String(user?.role || '').toLowerCase();
+    if (!user || ['admin', 'superuser'].includes(role)) return true;
+    if (role === 'client') return booking.clientId === user.id;
+    if (role === 'vendor') {
+      const vendorId = this.vendorIdOf(user);
+      return Boolean(vendorId) && (booking.vendorId === vendorId || (booking.vendorSplits || []).some((s) => s.vendorId === vendorId));
+    }
+    return false;
+  }
+
+  findAll(user?: Caller) {
+    return this.data.collection('bookings').filter((b) => this.canSee(b as Booking, user));
+  }
+
+  findOne(id: string, user?: Caller) {
+    const booking = this.data.find('bookings', id) as Booking;
+    if (!this.canSee(booking, user)) throw new ForbiddenException('You can only view your own bookings.');
+    return booking;
   }
 
   create(dto: CreateBookingDto) {
@@ -63,8 +84,9 @@ export class BookingsService {
   /**
    * Returns filtered commission and settlement records with financial summaries
    */
-  findCommissions(query?: { vendorId?: string; payoutStatus?: string; eventId?: string }) {
-    let bookings = this.data.collection('bookings') as Booking[];
+  // A vendor always gets only their own ledger, whatever vendorId they ask for.
+  findCommissions(query?: { vendorId?: string; payoutStatus?: string; eventId?: string }, user?: Caller) {
+    let bookings = (this.data.collection('bookings') as Booking[]).filter((b) => this.canSee(b, user));
 
     if (query?.vendorId) {
       const vId = query.vendorId.toLowerCase();
@@ -107,9 +129,13 @@ export class BookingsService {
    * Why a booking's payout cannot be released yet, or null when it can. The vendor
    * is paid only after the client has paid in full and the event has finished.
    */
+  // A cancelled booking with a cancellation fee can also be paid out (the vendor's
+  // share of the fee) once the client has paid that fee.
   private getSettleBlockReason(booking: Booking): string | null {
     if (booking.payoutStatus === 'settled') return 'Payout already settled';
+    if (Number(booking.vendorPayoutAmount || 0) <= 0) return 'Nothing to pay out';
     if (booking.paymentStatus !== 'paid') return 'Client has not paid in full';
+    if (booking.status === 'Cancelled') return null;
     const event = this.data.collection('events').find((e) => e.id === booking.eventId);
     if (String(event?.status ?? booking.status).toLowerCase() !== 'completed') return 'Event is not completed';
     return null;
@@ -128,6 +154,9 @@ export class BookingsService {
     }
     if (booking.paymentStatus === 'paid') {
       throw new BadRequestException('This booking is already paid.');
+    }
+    if (Number(booking.cost || 0) <= 0) {
+      throw new BadRequestException('Nothing is due on this booking.');
     }
 
     const updated = this.data.update('bookings', id, { advancePaid: booking.cost, paymentStatus: 'paid' } as any);

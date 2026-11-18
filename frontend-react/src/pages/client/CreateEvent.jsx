@@ -15,7 +15,7 @@
  *         - <EventsToastFeedback>: warnings such as "Only 6 unit(s) available".
  *
  * Connected Backend Endpoints:
- *   - GET /resources, /snapshot, /events, /state/resourceAllocations
+ *   - GET /resources, /staff-profiles, /events, /state/resourceAllocations
  *   - POST /events -> creates the pending event request
  * ============================================================================
  */
@@ -95,6 +95,8 @@ function CreateEvent() {
             selected={wizard.selectedStaff}
             onToggle={wizard.toggleStaff}
             chosen={wizard.chosenStaff}
+            profileStaffId={wizard.profileStaffId}
+            onOpenProfile={wizard.setProfileStaffId}
             onBack={() => goToStep(2)}
             onNext={() => goToStep(4)}
           />

@@ -35,12 +35,13 @@ import {
 } from 'lucide-react';
 import '../../styles/staff.css';
 import Toast from './components/Toast';
+import useLiveChat, { formatMessageTime } from '../../hooks/useLiveChat';
+import useUnreadCounts from '../../hooks/useUnreadCounts';
+import '../../styles/chat-live.css';
 import {
   getSessionUser,
   fetchStaffAssignments,
   fetchEvents,
-  fetchMessageThread,
-  sendMessage,
   createStaffRequest,
 } from '../../services/staffApi';
 
@@ -55,8 +56,6 @@ export default function StaffMessages() {
   const [selectedEventId, setSelectedEventId] = useState(null);
 
   // Chat messages
-  const [messages, setMessages] = useState([]);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const chatBottomRef = useRef(null);
@@ -151,31 +150,14 @@ export default function StaffMessages() {
     );
   }, [selectedEventId, allEvents, assignments]);
 
-  // 2. Fetch messages for the active thread & poll every 4 seconds
-  useEffect(() => {
-    let mounted = true;
+  // 2. Messages of the open conversation, delivered live by the socket
+  //    (hooks/useLiveChat.js polls every 3 seconds only if the socket is down)
+  const chat = useLiveChat({ kind: 'thread', threadId: currentThreadKey });
+  const messages = chat.messages;
+  const loadingMessages = false;
 
-    async function loadThread() {
-      if (!currentThreadKey) return;
-      try {
-        const data = await fetchMessageThread(currentThreadKey);
-        if (mounted) setMessages(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      } finally {
-        if (mounted) setLoadingMessages(false);
-      }
-    }
-
-    setLoadingMessages(true);
-    loadThread();
-
-    const pollInterval = setInterval(loadThread, 4000);
-    return () => {
-      mounted = false;
-      clearInterval(pollInterval);
-    };
-  }, [currentThreadKey]);
+  // Unread counts per conversation (the badges in the list)
+  const unread = useUnreadCounts();
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -209,7 +191,7 @@ export default function StaffMessages() {
           .join('')
           .slice(0, 2)
           .toUpperCase(),
-        unread: 0,
+        unread: unread.threads[`staff-${evId}`] || 0,
       };
     });
 
@@ -222,7 +204,7 @@ export default function StaffMessages() {
         c.vendor.toLowerCase().includes(query) ||
         c.status.toLowerCase().includes(query)
     );
-  }, [assignments, allEvents, searchQuery]);
+  }, [assignments, allEvents, searchQuery, unread.threads]);
 
   // 3. Handle sending a chat message
   const handleSendMessage = async (e) => {
@@ -230,43 +212,12 @@ export default function StaffMessages() {
     const text = inputText.trim();
     if (!text || sending || !currentThreadKey) return;
 
-    const myInitials = (session.name || 'Staff')
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-
-    const newMsg = {
-      threadId: currentThreadKey,
-      sender: session.name,
-      initials: myInitials,
-      self: true,
-      text: text,
-      avatar: 'pink',
-    };
-
-    // Optimistic update
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...newMsg,
-        id: `local_${Date.now()}`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
+    // The hook POSTs the message and adds the saved copy to the list
     setInputText('');
-
-    try {
-      setSending(true);
-      await sendMessage(newMsg);
-    } catch (err) {
-      console.error('Failed to post message to backend:', err);
-      setMessages((prev) => prev.filter((m) => m.text !== text || !String(m.id).startsWith("local_")));
-      setInputText(text);
-    } finally {
-      setSending(false);
-    }
+    setSending(true);
+    const ok = await chat.send(text);
+    if (!ok) setInputText(text); // put the text back so nothing is lost
+    setSending(false);
   };
 
   // 4. Handle dispatching an on-site staff request
@@ -305,22 +256,8 @@ export default function StaffMessages() {
       });
       setTimeout(() => setToastMessage(null), 4000);
 
-      // Add to local chat feed
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `req_${Date.now()}`,
-          sender: session.name || 'Mike Johnson',
-          initials: 'MJ',
-          self: true,
-          text: `📋 Dispatch Request: ${reqQty}x ${reqItem} (${reqType})${
-            reqDesc ? ' — "' + reqDesc + '"' : ''
-          }`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          avatar: 'pink',
-          isRequest: true,
-        },
-      ]);
+      // The request is posted into this event's staff conversation, so it
+      // arrives in the chat by itself (live) -- no local copy needed.
 
       // Reset modal
       setReqItem('');
@@ -466,6 +403,7 @@ export default function StaffMessages() {
             ) : (
               messages.map((m, idx) => {
                 const isMe =
+                  m.senderEmail === session.email ||
                   (m.sender &&
                     session.name &&
                     m.sender.toLowerCase().includes(session.name.toLowerCase()));
@@ -500,7 +438,7 @@ export default function StaffMessages() {
                       {m.text}
                     </div>
 
-                    <div className="msg-time">{m.time || 'Just now'}</div>
+                    <div className="msg-time">{formatMessageTime(m.createdAt || m.timestamp) || m.time || 'Just now'}</div>
                   </div>
                 );
               })

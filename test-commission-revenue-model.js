@@ -11,12 +11,12 @@ console.log('EventPro Commission-Based Revenue Model End-to-End Test Suite');
 console.log('Platform Commission: 10% | Vendor Net Payout: 90%');
 console.log('================================================================\n');
 
-// Clean test database for fresh cold boot
-const dataDir = path.join(__dirname, 'back-end', 'data');
+// SAFETY: these scripts used to DELETE back-end/data/database.json (the real
+// data). They now run against a throw-away folder via EMS_DATA_DIR, which
+// DataService reads, so the real database is never touched.
+process.env.EMS_DATA_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ems-script-'));
+const dataDir = process.env.EMS_DATA_DIR;
 const dbFile = path.join(dataDir, 'database.json');
-if (fs.existsSync(dbFile)) {
-  fs.unlinkSync(dbFile);
-}
 
 // --------------------------------------------------------------------------
 // TEST 1: Mathematical Accuracy of Commission Split Helper
@@ -162,6 +162,12 @@ console.log(`[PASS] Test 5: Commission ledger aggregated ${fullLedger.items.leng
 // --------------------------------------------------------------------------
 console.log('\n[TEST 6] Testing Admin Payout Settlement Action (Release Funds)...');
 const bookingToSettle = createdBooking.id;
+// Current rule (REVENUE_MODEL.md): a payout is released only after the client
+// has paid in full AND the event is completed, so set both up first.
+bookingsService.update(bookingToSettle, { paymentStatus: 'paid', advancePaid: createdBooking.cost, status: 'Completed' });
+if (createdBooking.eventId && ds.collection('events').some((e) => e.id === createdBooking.eventId)) {
+  ds.update('events', createdBooking.eventId, { status: 'completed' });
+}
 const settledResult = bookingsService.settlePayout(bookingToSettle, {
   settledBy: 'U001',
   note: 'Direct ACH payout transfer released by Admin'

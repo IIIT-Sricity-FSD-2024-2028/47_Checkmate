@@ -25,6 +25,8 @@ import { getMyEvents } from "../../services/eventService";
 import { describeError, formatDate, getCurrentUser, money } from "../../utils/clientHelpers";
 
 /** Turns a booking into an invoice row */
+// A cancelled booking's cost is already cut to the cancellation fee by the
+// backend (booking-rules.ts); originalCost and refundAmount explain the change.
 function toInvoice(booking) {
   const amount = Number(booking.cost || 0);
   const paid = Number(booking.advancePaid || 0);
@@ -37,11 +39,19 @@ function toInvoice(booking) {
     amount,
     paid,
     balance: Math.max(0, amount - paid),
+    cancelled: booking.status === "Cancelled",
+    originalAmount: Number(booking.originalCost || amount),
+    refund: Number(booking.refundAmount || 0),
   };
 }
 
 /** Status pill text + colour for an invoice */
 export function invoiceStatus(invoice) {
+  if (invoice.cancelled && invoice.amount === 0) {
+    return { text: invoice.refund > 0 ? "Cancelled · Refunded" : "Cancelled · No Charge", cls: "rejected" };
+  }
+  if (invoice.cancelled && invoice.balance > 0) return { text: "Cancellation Fee Due", cls: "pending" };
+  if (invoice.cancelled) return { text: "Cancelled · Fee Paid", cls: "rejected" };
   if (invoice.balance === 0) return { text: "Paid in Full", cls: "approved" };
   if (invoice.paid > 0) return { text: "Partially Paid", cls: "pending" };
   return { text: "Pending Payment", cls: "pending" };
@@ -63,7 +73,9 @@ export function downloadInvoice(invoice) {
     `Event:       ${invoice.eventName}`,
     `Issued:      ${formatDate(invoice.issued)}`,
     "",
+    ...(invoice.cancelled ? [`Original:    ${money(invoice.originalAmount)} (event cancelled)`] : []),
     `Amount:      ${money(invoice.amount)}`,
+    ...(invoice.refund > 0 ? [`Refunded:    ${money(invoice.refund)}`] : []),
     `Paid:        ${money(invoice.paid)}`,
     `Balance due: ${money(invoice.balance)}`,
     `Status:      ${invoiceStatus(invoice).text}`,

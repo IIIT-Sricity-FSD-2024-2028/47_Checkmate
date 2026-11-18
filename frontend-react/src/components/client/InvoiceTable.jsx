@@ -43,7 +43,17 @@ function InvoiceTable({ invoices, loading, searchTerm, onSearchChange, statusFil
     { key: "number", header: "Invoice #", className: "col-id" },
     { key: "eventName", header: "Event" },
     { key: "issued", header: "Issue Date", render: (row) => formatDate(row.issued) },
-    { key: "amount", header: "Amount", render: (row) => <strong>{money(row.amount)}</strong> },
+    {
+      key: "amount",
+      header: "Amount",
+      // Cancelled: show the original price struck through, then the fee still owed
+      render: (row) => row.cancelled ? (
+        <span>
+          <s className="cl-muted-text">{money(row.originalAmount)}</s> <strong>{money(row.amount)}</strong>
+          {row.refund > 0 && <div className="cl-muted-text">Refund {money(row.refund)}</div>}
+        </span>
+      ) : <strong>{money(row.amount)}</strong>,
+    },
     { key: "balance", header: "Balance", render: (row) => money(row.balance) },
     {
       key: "status",

@@ -6,18 +6,16 @@ import {
 import { getStateKey, setStateKey } from '../../services/stateService';
 import { getAuthSession } from '../../services/auth/authStorage';
 import '../../styles/admin.css';
+import AdminChatPanel from '../../components/admin/AdminChatPanel';
 
 export default function CoordinationHub() {
   const session = getAuthSession();
   const adminName = session?.user?.name || session?.name || 'Aarav Mehta';
 
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'announcements' | 'recruitments'
-  const [messages, setMessages] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [recruitments, setRecruitments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [inputText, setInputText] = useState('');
-  const [sending, setSending] = useState(false);
 
   // Modals
   const [showAnnounceModal, setShowAnnounceModal] = useState(false);
@@ -34,12 +32,11 @@ export default function CoordinationHub() {
   const fetchHubData = async () => {
     try {
       setLoading(true);
-      const [chatRes, notifRes, recruitRes] = await Promise.all([
-        getStateKey('adminChatMessages').catch(() => []),
+      // The admin chat itself is loaded by AdminChatPanel (GET /api/admin-chat)
+      const [notifRes, recruitRes] = await Promise.all([
         getStateKey('vendorNotifications').catch(() => []),
         getStateKey('recruitments').catch(() => []),
       ]);
-      setMessages(Array.isArray(chatRes) ? chatRes : []);
       setAnnouncements(Array.isArray(notifRes) ? notifRes : []);
       setRecruitments(Array.isArray(recruitRes) ? recruitRes : []);
     } catch (err) {
@@ -54,34 +51,6 @@ export default function CoordinationHub() {
     const interval = setInterval(fetchHubData, 8000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    const text = inputText.trim();
-    if (!text || sending) return;
-
-    const newMsg = {
-      id: `msg_${Date.now()}`,
-      sender: adminName,
-      senderRole: 'Admin',
-      text: text,
-      timestamp: new Date().toISOString(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    const updated = [...messages, newMsg];
-    setMessages(updated);
-    setInputText('');
-
-    try {
-      setSending(true);
-      await setStateKey('adminChatMessages', updated);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    } finally {
-      setSending(false);
-    }
-  };
 
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
@@ -279,90 +248,8 @@ export default function CoordinationHub() {
       </div>
 
       {/* Tab 1: Admin Chat */}
-      {activeTab === 'chat' && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', height: '620px', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', background: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>Operations Dispatch Log</span>
-            <span style={{ fontSize: '12px', color: '#00e676', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00e676' }} /> Live Synced
-            </span>
-          </div>
-
-          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {messages.length === 0 ? (
-              <div style={{ margin: 'auto', color: 'var(--text-muted)', textAlign: 'center', fontSize: '13.5px' }}>
-                No operations messages yet. Post an update below.
-              </div>
-            ) : (
-              messages.map((m, idx) => {
-                const isSelf = m.sender === adminName;
-                return (
-                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', gap: '6px' }}>
-                      <span style={{ color: isSelf ? '#ec4899' : '#60a5fa', fontWeight: '600' }}>{m.sender}</span>
-                      <span>({m.senderRole || 'Admin'})</span>
-                      <span>{m.time || (m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}</span>
-                    </div>
-                    <div
-                      style={{
-                        maxWidth: '75%',
-                        padding: '10px 14px',
-                        borderRadius: '10px',
-                        background: isSelf ? 'rgba(236, 72, 153, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                        border: isSelf ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid var(--border)',
-                        color: '#fff',
-                        fontSize: '13.5px',
-                        lineHeight: '1.45',
-                      }}
-                    >
-                      {m.text}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <form onSubmit={handleSendMessage} style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderTop: '1px solid var(--border)', display: 'flex', gap: '12px' }}>
-            <input
-              type="text"
-              placeholder="Send message to admin coordination log..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                color: '#fff',
-                fontSize: '13.5px',
-                outline: 'none',
-              }}
-            />
-            <button
-              type="submit"
-              disabled={sending || !inputText.trim()}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '10px 18px',
-                background: '#ec4899',
-                border: 'none',
-                borderRadius: '8px',
-                color: '#fff',
-                fontSize: '13.5px',
-                fontWeight: '600',
-                cursor: !inputText.trim() ? 'not-allowed' : 'pointer',
-                opacity: !inputText.trim() ? 0.6 : 1,
-              }}
-            >
-              <Send size={15} /> Send
-            </button>
-          </form>
-        </div>
-      )}
+      {/* One conversation per person; replies are addressed to them (live) */}
+      {activeTab === 'chat' && <AdminChatPanel />}
 
       {/* Tab 2: Broadcast Announcements */}
       {activeTab === 'announcements' && (

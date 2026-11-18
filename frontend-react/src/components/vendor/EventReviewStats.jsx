@@ -40,7 +40,11 @@ function EventReviewStats({ event }) {
         </div>
         <div>
           <div className="ev-meta-label">Date</div>
-          <div className="ev-meta-value">{formatDisplayDate(event.date)}</div>
+          {/* Overnight / multi-day events also show their last day */}
+          <div className="ev-meta-value">
+            {formatDisplayDate(event.date)}
+            {event.endDate && event.endDate > event.date ? ` → ${formatDisplayDate(event.endDate)}` : ""}
+          </div>
         </div>
       </div>
 

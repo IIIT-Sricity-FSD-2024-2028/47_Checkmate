@@ -19,6 +19,7 @@ import StatCard from './components/StatCard';
 import Toast from './components/Toast';
 import StaffProgressPanel from './components/StaffProgressPanel';
 import { getSessionUser, fetchEvents, fetchStaffAssignments, fetchStaffList, updateStaffAssignment } from '../../services/staffApi';
+import ReasonModal from '../../components/ReasonModal';
 
 // Array of vibrant gradients applied cyclically across event card banners
 // FACULTY MAY ASK: How do you change the banner colors or add a new gradient theme?
@@ -119,11 +120,16 @@ export default function StaffAssignedEvents() {
   // Handles staff member clicking "Accept" or "Reject" on an assignment card
   // FACULTY MAY ASK: How do you add a confirmation dialog before rejecting an event?
   // HOW TO CHANGE: At the start of handleRespond, add: if (decision === 'rejected' && !window.confirm('Reject this event?')) return;
-  const handleRespond = async (id, decision) => {
+  // The assignment whose Reject (decline) reason popup is open (null = closed)
+  const [decliningId, setDecliningId] = useState(null);
+
+  // reason: required when declining; the backend saves it and tells the vendor
+  const handleRespond = async (id, decision, reason = '') => {
     try {
       const patch = {
         status: decision,
         respondedAt: new Date().toISOString(),
+        ...(decision === 'rejected' ? { declineReason: reason } : {}),
       };
 
       // Persist to backend via PATCH /api/staff-assignments/:id
@@ -174,6 +180,19 @@ export default function StaffAssignedEvents() {
     <div className="staff-page-container">
       {/* Toast alert popup */}
       {toastMessage && <Toast message={toastMessage.text} type={toastMessage.type} />}
+
+      {/* Declining asks why; the vendor sees the reason in their notifications */}
+      <ReasonModal
+        open={Boolean(decliningId)}
+        title="Decline this assignment"
+        hint="Your vendor will see this reason."
+        confirmLabel="Decline Assignment"
+        onClose={() => setDecliningId(null)}
+        onConfirm={async (reason) => {
+          await handleRespond(decliningId, 'rejected', reason);
+          setDecliningId(null);
+        }}
+      />
 
       {/* SECTION: Page Title & Subtitle */}
       {/* FACULTY MAY ASK: How do you change the page header? */}
@@ -373,7 +392,7 @@ export default function StaffAssignedEvents() {
                         </button>
                         <button
                           className="ae-btn ae-btn--reject"
-                          onClick={() => handleRespond(a.id, 'rejected')}
+                          onClick={() => setDecliningId(a.id)}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -407,6 +426,7 @@ export default function StaffAssignedEvents() {
                     ) : (
                       <div style={{ fontSize: '12px', color: 'var(--text3)', padding: '6px 0' }}>
                         Assignment declined. No action needed.
+                        {a.declineReason && <div style={{ marginTop: '3px', color: '#f87171' }}>Your reason: {a.declineReason}</div>}
                       </div>
                     )}
                   </div>

@@ -4,6 +4,7 @@ import { CalendarCheck, ChevronDown, LogOut } from "lucide-react";
 
 import "../styles/sidebar.css";
 import { clearAuthSession, getAuthSession } from "../services/auth/authStorage";
+import { closeRealtime } from "../services/realtime";
 
 const ROLE_SUBTITLES = {
   vendor: "Event Coordinator",
@@ -51,6 +52,7 @@ function Sidebar({ role, menuItems = [], userName, userEmail: propUserEmail }) {
 
   const handleLogout = (e) => {
     e.preventDefault();
+    closeRealtime(); // stop live messages for the user who is leaving
     clearAuthSession();
     navigate("/");
   };

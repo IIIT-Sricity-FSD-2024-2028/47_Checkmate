@@ -13,7 +13,7 @@
  *         - <QuickCreateModal>: Turns a package into an event request.
  *
  * Connected Backend Endpoints:
- *   - GET /packages, /resources, /snapshot  ·  POST /events
+ *   - GET /packages, /resources, /staff-profiles  ·  POST /events
  * ============================================================================
  */
 

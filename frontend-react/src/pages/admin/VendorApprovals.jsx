@@ -22,6 +22,7 @@ import "../../styles/admin.css";
 
 import AdminTopBar from "../../components/admin/AdminTopBar";
 import Modal from "../../components/Modal";
+import ReasonModal from "../../components/ReasonModal";
 import DataTable from "../../components/table/DataTable";
 import TableToolbar from "../../components/table/TableToolbar";
 import Pagination from "../../components/table/Pagination";
@@ -54,6 +55,8 @@ function formatDateTime(value) {
 
 function ReviewModal({ application, onClose, onDecide, saving, error }) {
   const [note, setNote] = useState("");
+  // Reject opens the shared reason popup; the applicant sees the reason at sign-in
+  const [rejecting, setRejecting] = useState(false);
   const isPending = application?.status === "pending";
   const docs = application?.documents || [];
 
@@ -73,7 +76,7 @@ function ReviewModal({ application, onClose, onDecide, saving, error }) {
               type="button"
               className="ui-btn ui-btn--danger"
               disabled={saving}
-              onClick={() => onDecide("rejected", note)}
+              onClick={() => setRejecting(true)}
             >
               <XCircle size={15} /> Reject Application
             </button>
@@ -145,7 +148,12 @@ function ReviewModal({ application, onClose, onDecide, saving, error }) {
             <div className="review-decided">
               <StatusBadge status={application.status} />{" "}
               {application.decidedAt && <>on {formatDateTime(application.decidedAt)}</>}
-              {application.note && <div style={{ marginTop: 8 }}>Note: {application.note}</div>}
+              {application.decidedBy && <> by {application.decidedBy}</>}
+              {application.status === "rejected" && application.rejectionReason ? (
+                <div style={{ marginTop: 8 }}>Reason: {application.rejectionReason}</div>
+              ) : (
+                application.note && <div style={{ marginTop: 8 }}>Note: {application.note}</div>
+              )}
             </div>
           )}
 
@@ -154,6 +162,19 @@ function ReviewModal({ application, onClose, onDecide, saving, error }) {
               {error}
             </div>
           )}
+
+          {/* Reject: pick a standard reason (shown to the applicant at sign-in) */}
+          <ReasonModal
+            open={rejecting}
+            title={`Reject ${application.businessName || "application"}`}
+            hint="The applicant sees this reason when they try to sign in."
+            confirmLabel="Reject Application"
+            onClose={() => setRejecting(false)}
+            onConfirm={async (reason) => {
+              await onDecide("rejected", reason);
+              setRejecting(false);
+            }}
+          />
         </>
       )}
     </Modal>

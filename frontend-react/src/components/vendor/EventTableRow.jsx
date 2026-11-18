@@ -35,6 +35,7 @@
 import React from "react";
 import { Eye, X, Trash2, AlertTriangle } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import "../../styles/reason-modal.css";
 
 function EventTableRow({ event, collisions = [], onView, onReject, onDelete }) {
   // --------------------------------------------------------------------------
@@ -67,7 +68,16 @@ function EventTableRow({ event, collisions = [], onView, onReject, onDelete }) {
       </td>
 
       {/* Primary Event Name */}
-      <td className="col-primary">{event.name || "Untitled Event"}</td>
+      <td className="col-primary">
+        {event.name || "Untitled Event"}
+        {/* Who cancelled / rejected and why (saved with the status change) */}
+        {String(event.status).toLowerCase() === "cancelled" && event.cancellationReason && (
+          <div className="reason-line">Cancelled by {event.cancelledBy?.name || event.cancelledBy?.role || "—"}: {event.cancellationReason}</div>
+        )}
+        {String(event.status).toLowerCase() === "rejected" && event.rejectionReason && (
+          <div className="reason-line">Rejected: {event.rejectionReason}</div>
+        )}
+      </td>
 
       {/* Category / Type badge (Conference, Wedding, etc.) */}
       <td>
@@ -77,7 +87,8 @@ function EventTableRow({ event, collisions = [], onView, onReject, onDelete }) {
       </td>
 
       {/* Scheduled Date */}
-      <td>{formatDate(event.date)}</td>
+      {/* Overnight / multi-day events also show their last day */}
+      <td>{formatDate(event.date)}{event.endDate && event.endDate > event.date ? ` → ${formatDate(event.endDate)}` : ""}</td>
 
       {/* Venue Location */}
       <td>

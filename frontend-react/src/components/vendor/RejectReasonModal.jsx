@@ -6,8 +6,9 @@
  * Location: src/components/vendor/RejectReasonModal.jsx
  *
  * Purpose:
- *   Client <-> vendor bridge: before rejecting an event the vendor writes a
- *   reason (or taps a quick reason). The reason is sent with the status change
+ *   Client <-> vendor bridge: before rejecting an event the vendor picks one of
+ *   the standard reasons (ReasonPicker: Schedule conflict, Budget issue,
+ *   Venue/resource unavailable, Personal reason, Other + text). The reason is sent with the status change
  *   (PATCH /events/:id/status { status: "rejected", note }), saved as the event's
  *   `rejectionReason`, shown in the client's "View Reason" popup and put in the
  *   client's notification.
@@ -25,23 +26,23 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import Modal from "../Modal";
-
-const QUICK_REASONS = [
-  "Venue is unavailable on the requested date",
-  "Requested resources are not available on that date",
-  "Our staff are fully booked for that date",
-  "Request is outside our service area",
-];
+import { ReasonPicker, reasonText } from "../ReasonModal";
 
 function RejectReasonModal({ event, onClose, onConfirm }) {
-  const [reason, setReason] = useState("");
+  // Chosen reason option + optional details
+  const [value, setValue] = useState({ option: "", details: "" });
+
+  // True while the rejection is being saved
   const [saving, setSaving] = useState(false);
 
+  const reason = reasonText(value);
+
+  // Sends the reason with the rejection, then clears the picker
   const handleConfirm = async () => {
     setSaving(true);
-    await onConfirm(reason.trim());
+    await onConfirm(reason);
     setSaving(false);
-    setReason("");
+    setValue({ option: "", details: "" });
   };
 
   return (
@@ -54,28 +55,14 @@ function RejectReasonModal({ event, onClose, onConfirm }) {
         <>
           <button type="button" className="btn-back" onClick={onClose}>Cancel</button>
           {/* A reason is required so the client always gets an explanation */}
-          <button type="button" className="btn-reject" disabled={!reason.trim() || saving} onClick={handleConfirm}>
+          <button type="button" className="btn-reject" disabled={!reason || saving} onClick={handleConfirm}>
             <X size={15} /> {saving ? "Rejecting..." : "Reject Event"}
           </button>
         </>
       }
     >
       <p className="reject-modal__hint">The client will see this reason on their My Events page and in their notifications.</p>
-
-      {/* Quick reasons fill the text box with one click */}
-      <div className="reject-modal__chips">
-        {QUICK_REASONS.map((text) => (
-          <button type="button" key={text} className="reject-modal__chip" onClick={() => setReason(text)}>{text}</button>
-        ))}
-      </div>
-
-      <textarea
-        className="reject-modal__input"
-        rows="4"
-        placeholder="Explain why this request is being rejected..."
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-      />
+      <ReasonPicker value={value} onChange={setValue} />
     </Modal>
   );
 }

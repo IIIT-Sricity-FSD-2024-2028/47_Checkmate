@@ -34,6 +34,7 @@ function ConversationList({
   onSearch,
   getSubtitle = (ev) => ev.vendor || "Event Coordinator",
   single,
+  getBadge = () => 0, // unread count for a row (0 = no badge)
 }) {
   // ── Single fixed conversation (e.g. Admin Support) ──
   if (single) {
@@ -62,7 +63,10 @@ function ConversationList({
         <div key={ev.id} className={`cl-chat-item ${ev.id === selectedId ? "active" : ""}`} onClick={() => onSelect(ev.id)}>
           <div className="cl-avatar cl-avatar--purple">{initials(ev.name)}<span className="cl-online-dot" /></div>
           <div className="cl-chat-item__info">
-            <div className="cl-chat-item__top"><h4>{ev.name}</h4><span>{ev.status}</span></div>
+            <div className="cl-chat-item__top">
+              <h4>{ev.name}</h4>
+              {getBadge(ev) > 0 ? <span className="chat-unread-badge">{getBadge(ev)}</span> : <span>{ev.status}</span>}
+            </div>
             <p>{getSubtitle(ev)}</p>
           </div>
         </div>

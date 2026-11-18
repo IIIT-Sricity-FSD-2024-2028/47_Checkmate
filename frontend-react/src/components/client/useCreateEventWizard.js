@@ -13,13 +13,15 @@
  *     3. Step 2: resource search / category filter, +/- quantity limited by
  *        real availability on the chosen date and time (asked from the
  *        backend), subtotal and over-budget check.
- *     4. Step 3: staff search and select / unselect.
+ *     4. Step 3: staff search; clicking a card opens the staff profile, where the
+ *        client adds or removes that person as a PREFERENCE (the vendor confirms
+ *        or replaces them in Event Review). Busy = working at the same time.
  *     5. Step 4: builds the event payload and POSTs it, with submit states.
  *
  * Connected Backend Endpoints:
  *   - GET  /api/resources                 -> resource catalogue
  *   - GET  /api/resources/availability    -> free units per resource on the chosen date/time
- *   - GET  /api/snapshot                  -> staff list (clients can't call /api/staff)
+ *   - GET  /api/staff-profiles            -> staff profiles + who is busy on the chosen date
  *   - GET  /api/events                    -> confirmed/live events (for availability)
  *   - GET  /api/state/resourceAllocations -> units those events already use
  *   - POST /api/events                    -> creates the request (status "pending")
@@ -29,10 +31,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getResources, getResourceAvailabilityMap } from "../../services/resourceService";
-import { getSnapshot } from "../../services/analyticsService";
+import { getStaffProfiles } from "../../services/staffService";
 import { getEvents, createEvent } from "../../services/eventService";
 import { getResourceAllocations } from "../../services/stateService";
 import { getCurrentUser, formatTime12, eventEndError } from "../../utils/clientHelpers";
+import { bookingDateError } from "../../utils/dateRules";
 
 export const STEP_LABELS = ["Event Details", "Resources", "Staff", "Review"];
 
@@ -96,11 +99,11 @@ export function useCreateEventWizard() {
     async function loadData() {
       // allSettled: one failing request (e.g. snapshot) shouldn't break the others
       const [res, snap, evs, allocs] = await Promise.allSettled([
-        getResources(), getSnapshot(), getEvents(), getResourceAllocations(),
+        getResources(), getStaffProfiles(), getEvents(), getResourceAllocations(),
       ]);
       if (!isMounted) return;
       if (res.status === "fulfilled") setResources(res.value || []);
-      if (snap.status === "fulfilled") setStaff(snap.value?.staff || []);
+      if (snap.status === "fulfilled") setStaff(Array.isArray(snap.value) ? snap.value : []);
       if (evs.status === "fulfilled") setAllEvents(evs.value || []);
       if (allocs.status === "fulfilled") setAllocations(allocs.value || {});
     }
@@ -133,6 +136,30 @@ export function useCreateEventWizard() {
       }
     }
     loadAvailability();
+    return () => {
+      isMounted = false;
+    };
+  }, [form.date, form.endDate, form.time, form.endTime]);
+
+  // Re-ask the backend who is busy whenever the date or times change. A person
+  // working on ANOTHER day (or later the same day) is free for this event.
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStaffForDate() {
+      if (!form.date) return;
+      try {
+        const profiles = await getStaffProfiles({
+          date: form.date,
+          endDate: form.endDate > form.date ? form.endDate : undefined,
+          time: form.time || undefined,
+          endTime: form.endTime || undefined,
+        });
+        if (isMounted && Array.isArray(profiles)) setStaff(profiles);
+      } catch {
+        // keep the list we already have
+      }
+    }
+    loadStaffForDate();
     return () => {
       isMounted = false;
     };
@@ -172,6 +199,9 @@ export function useCreateEventWizard() {
       if (form.endDate && form.endDate < form.date) newErrors.endDate = endError;
       else newErrors.endTime = endError;
     }
+    // Rule: at least 7 days' notice (the backend checks this too)
+    const dateError = bookingDateError(form.date);
+    if (dateError) newErrors.date = dateError;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -258,20 +288,17 @@ export function useCreateEventWizard() {
   // --------------------------------------------------------------------------
   // 5. STEP 3 — STAFF
   // --------------------------------------------------------------------------
-  // The unfinished event a staff member is already working on, if any
-  const getBusyEvent = (member) =>
-    allEvents.find(
-      (e) =>
-        !FINISHED_EVENT_STATUSES.includes(String(e.status).toLowerCase()) &&
-        (member.assignedEvents || []).includes(e.id)
-    );
+  // Which staff profile is open in the modal (null = closed)
+  const [profileStaffId, setProfileStaffId] = useState(null);
 
+  // busyOn comes from the backend: the event this person works on at the
+  // chosen date/time (null = free). Work on another date never blocks.
   const visibleStaff = staff
     .filter((s) => {
       const q = staffSearch.trim().toLowerCase();
       return !q || s.name.toLowerCase().includes(q) || (s.role || "").toLowerCase().includes(q);
     })
-    .map((s) => ({ ...s, isBusy: Boolean(getBusyEvent(s)) }));
+    .map((s) => ({ ...s, isBusy: Boolean(s.busyOn) }));
   const chosenStaff = staff.filter((s) => selectedStaff[s.id]);
 
   const toggleStaff = (id) => {
@@ -332,10 +359,13 @@ export function useCreateEventWizard() {
       vendorId: r.vendorId || "V001",
       vendorEmail: r.vendorEmail || "",
     }));
+    // preference: true -> the client asked for this person; the vendor
+    // confirms them or picks someone else in Event Review.
     const requestedStaff = chosenStaff.map((s) => ({
       staffId: s.id,
       staffName: s.name,
       role: s.role,
+      preference: true,
       vendor: s.vendor || "Elite Events Co.",
       vendorId: s.vendorId || "V001",
       vendorEmail: s.vendorEmail || "",
@@ -406,6 +436,7 @@ export function useCreateEventWizard() {
     selectedQty, changeQty, removeResource, chosenResources, subtotal, maxBudget, overBudget,
     // step 3
     visibleStaff, staffSearch, setStaffSearch, selectedStaff, toggleStaff, chosenStaff,
+    profileStaffId, setProfileStaffId,
     // step 4
     submitState, handleSubmit,
   };

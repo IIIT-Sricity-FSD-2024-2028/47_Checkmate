@@ -697,3 +697,141 @@ Fixed during this session: date-blind resource blocking (section 2), missing sta
 - Overnight / multi-day events: optional **End Date** in Create Event (`EventDetailsStep.jsx`, `useCreateEventWizard.js`, `ReviewStep.jsx`, `client.css`) and Edit Event (`EditEventModal.jsx`); shared rule in `utils/clientHelpers.js` (`eventEndError`, `eventDurationMinutes`); backend `events.service.ts` schedules the real end (e.g. 9 PM → 12 AM next day) and rejects an end date before the start; 6 tests in `back-end/src/modules/events/event-schedule.spec.ts` (Jest now 5 suites, 45/45).
 
 Not in the repository (git-ignored / temporary): `back-end/data/database.json` was restored to its pre-test copy; dummy PDFs uploaded by the tests were removed; test scripts live outside the project.
+
+---
+
+## 8. Phase 2 — audit fixes (2026-11-18)
+
+Audit: `AUDIT.md`. Each step was tested on an **isolated copy** of the stack: the API on :3001 with its own copy of `database.json`, the UI on :5174. The owner's running servers and data were not touched. Browser tests use Playwright with dates in 2027.
+
+Jest no longer touches the real data: `data.service.spec.ts` and `middleware.e2e.spec.ts` now point `EMS_DATA_DIR` at a temp folder. Before this, every `npx jest` rewrote `back-end/data/database.json`.
+
+### 8.1 Step 1 — Money flow (19/19 browser + API checks pass)
+| Check | Result |
+|---|---|
+| Admin saves Cancellation Fee 20% on Global Settings (UI) | PASS |
+| Vendor approves at ₹10,000 → booking 10,000 / commission 1,000 / payout 9,000 | PASS |
+| Client Billing shows ₹10,000 · Pending Payment | PASS |
+| Vendor Event Review shows Booking id, "Your payout ₹9,000", payment + payout status | PASS |
+| Admin Monitor Events → View shows "Commission earned (10%) ₹1,000" | PASS |
+| Client Pay Now → booking `paid` | PASS |
+| Admin Refund (cancel) → booking `Cancelled`, cost 2,000, commission 200, payout 1,800, refund 8,000 | PASS |
+| The fee payout can be released (no block reason) | PASS |
+| Client Billing shows ~~₹10,000~~ ₹2,000 · Refund ₹8,000 · "Cancelled · Fee Paid" | PASS |
+| Admin Financial Payouts shows "Cancelled · was ₹10,000, fee kept ₹2,000" | PASS |
+| Fee 0% → rejected confirmed booking: cost 0, `not_due`, nothing to pay out | PASS |
+| Vendor `PATCH /bookings/:id` → 403; vendor `POST /bookings` → 403 | PASS |
+| Superuser `PUT /events/:id {status:'confirmed'}` goes through updateStatus (approvedAt set) | PASS |
+| No page errors (admin, client, vendor) | PASS |
+
+Unit tests: `back-end/src/database/booking-rules.spec.ts` (9 tests). Jest: 6 suites, 54 tests pass. `nest build` and `npm run build` succeed.
+
+### 8.2 Step 2 — Staff profiles and vendor ratings (21/21 pass)
+New: `GET /api/staff-profiles[?date&time&endTime…]` and `GET /api/staff-profiles/:id` (every role; no phone or email), `POST /api/staff/:id/ratings` (**vendor only**), and `GET /api/events/:id/staff-ratings`. Model: `StaffMember.experienceYears / skills / bio` and a new `staffRatings` collection; the seed has profiles for all 6 staff. Rules: `back-end/src/modules/staff/staff-profile.ts` (11 unit tests in `staff-profile.spec.ts`).
+
+Also fixed: "Unavailable" and the backend `assertFree` are now **date-based**. Work on another day no longer blocks someone (this was the owner's Mike Johnson screenshot). Completing an event no longer marks *declined* assignments as completed.
+
+| Check | Result |
+|---|---|
+| Mike busy on the same evening as his 2027 fixture event, free the next day (API) | PASS |
+| Client sees profiles without phone/email; Liam (0 completed) is New with no rating | PASS |
+| Client, staff and admin `POST /staff/S001/ratings` → 403 | PASS |
+| Vendor rating before completion → 400; 6 stars → 400; second rating for same event → 400 | PASS |
+| Wizard: Mike greyed "Unavailable" on the busy evening; modal shows the busy note, and the action is disabled | PASS |
+| Profile modal shows experience, skills, events completed, rating | PASS |
+| Wizard: Mike available the next day; "Add as preference" selects him; Liam shows "New" | PASS |
+| Vendor Manage Staff: clicking the avatar/name opens the profile | PASS |
+| Vendor Event Review (completed EVT002): Rate Staff card → 5 stars + comment → "Rated" | PASS |
+| Mike's rating becomes 5.0 (1 rating) with the comment in reviews | PASS |
+| No page errors (client, vendor) | PASS |
+
+### 8.3 Step 3 — Client staff preferences → vendor confirms or replaces (8/8 pass)
+The client wizard step is now "Preferred Staff". Every pick is saved with `preference: true`. In Event Review, the vendor sees a "Client preference" tag with **✓ Confirm** (assigns that person and records `vendorStatus: 'confirmed'`) and **Replace** (picks someone else, records `vendorStatus: 'replaced'` + `replacedPreference`, and notifies the client). The vendor's Assign check is now date-based too (`frontend-react/src/utils/eventWindow.js`, the same rule as the backend).
+
+| Check | Result |
+|---|---|
+| Client request with 2 staff preferences | PASS |
+| Event Review tags both rows "Client preference" with Confirm + Replace | PASS |
+| Confirm assigns Marcus; request records `vendorStatus: confirmed` | PASS |
+| Replace swaps Chloe for Elena; records `replaced` / `replacedPreference: Chloe Bennett` | PASS |
+| Elena's row shows "Replaced Chloe Bennett" | PASS |
+| Client gets a notification naming Elena | PASS |
+| No page errors | PASS |
+
+### 8.4 Step 4 — Reject / Cancel / Decline with reasons (24/24 browser + API, 7 unit tests)
+There is one shared `components/ReasonModal.jsx` (and `ReasonPicker`): Schedule conflict · Budget issue · Venue/resource unavailable · Personal reason · Other (+ text, required). Each choice can carry details, and the saved text looks like "Budget issue: costs went over our limit".
+
+| Role | Action | Saved | The other party sees |
+|---|---|---|---|
+| Client | My Events → Cancel (pending/waiting) | `cancellationReason`, `cancelledBy`, `cancelledAt` | Vendor: a notification and a line in the Events list |
+| Vendor | Event Review → Reject Event | `rejectionReason`, `rejectedBy` | Client: the My Events line, the "View Reason" popup and a notification |
+| Staff | Assigned Events → Reject (decline) | `declineReason`, `declinedBy`, `declinedAt` | Vendor: a notification and "Declined: …" on the Event Review staff row |
+| Admin | Vendor Approvals → Reject Application | `rejectionReason`, `decidedBy` | Applicant: the reason when they try to sign in (only with the right password) |
+| Admin | Monitor Events → Cancel & Refund | `cancellationReason`, `cancelledBy` | Client and vendor: a notification |
+| Superuser | Events → ⊘ Cancel | `cancellationReason`, `cancelledBy` | Client and vendor: a notification |
+
+Resources, staff and the booking are released by the existing DataService triggers (the booking becomes `Cancelled` with the fee rule from step 1). The backend now requires a reason for client cancels and staff declines (400 without one). Staff may answer **only their own** assignment, and only with accept/decline (403 otherwise; this closes audit item D5).
+
+All 24 checks pass. The first run found one real bug: a staff member who declined disappeared from the vendor's Event Review table, so the reason was invisible. Fixed and re-run.
+
+### 8.5 Step 5 — Date rules (13/13 browser + API, 10 unit tests)
+Rules live in `back-end/src/modules/events/event-date-rules.ts` (backend) and `frontend-react/src/utils/dateRules.js` (frontend, same rules). Tests: `event-date-rules.spec.ts` (10).
+
+| Check | Result |
+|---|---|
+| Client create 3 days out → 400 "…earliest date you can choose is <today+7>"; 6 days → 400; exactly 7 days → 201 | PASS |
+| Vendor may still create an event 2 days out (rule is clients only, as the owner decided) | PASS |
+| Client moving a date inside 7 days → 400 | PASS |
+| Client cancel 2 days out → 400 "…please contact the admin to cancel it" | PASS |
+| Wizard date `min` = today + 7; a close date shows the 7-day message and stays on step 1 | PASS |
+| Wizard submits an event 8 days out | PASS |
+| My Events: an event 2 days out shows "Contact Admin to Cancel" instead of Cancel; 7 days out keeps Cancel | PASS |
+| Edit modal: moving to 2 days out shows the 7-day message | PASS |
+| No page errors | PASS |
+
+### 8.6 Step 6 — Real messaging (24/24 two-browser test, 7 unit tests)
+**What changed**
+- **Live delivery:** a NestJS Socket.IO gateway (`back-end/src/modules/messages/messages.gateway.ts`) checks the JWT on connect and puts each socket in a private `user:<id>` room. A message is pushed **only** to the people in that conversation:
+  - `client-EVT`: the client plus the vendor
+  - `staff-EVT`: the vendor plus the assigned staff
+  - admin chat: the person plus the admin team
+
+  Sending stays a normal REST POST with all the existing checks.
+- **Fallback:** `frontend-react/src/hooks/useLiveChat.js` polls every 3 s only while the socket is down. The chat header shows "Live" or "Refreshing every 3s".
+- **Admin chat** moved to `GET/POST /api/admin-chat`. Each person gets only their own conversation, and messages are appended one at a time (no more overwriting the whole list). **An admin reply must name its `recipientEmail`.** This was the bug where replies never reached anyone. The admin Coordination Hub now has one conversation per person (`components/admin/AdminChatPanel.jsx`). `/state/adminChatMessages` is now admin/superuser only (closes audit D3).
+- **Unread counts:** `GET /api/messages/unread` and `POST /api/messages/:thread/read`, shown as badges on the client page, the vendor hub (including the new Admin Support tab), Staff Messages and the admin hub.
+- **Timestamps:** every chat shows the time, plus the date for older messages.
+- Also fixed: a staff "Dispatch Request" was posted to a thread nobody reads, and the client had no way to chat with the admin (there is now a pinned "Admin Support" conversation).
+
+| Check | Result |
+|---|---|
+| Socket with a bad token is refused | PASS |
+| Vendor → client message arrives without refresh in **26 ms** (socket, not polling) | PASS |
+| Client → vendor reply arrives live; messages show a timestamp | PASS |
+| Unread badge "1" appears on the event, and clears when opened | PASS (first run found the badge did not clear; fixed) |
+| Mike's socket never receives the client↔vendor conversation | PASS |
+| Vendor → staff (live event) arrives live; Mike's socket gets it | PASS |
+| Staff → admin: admin sees Mike's conversation with an unread badge | PASS |
+| Admin reply reaches Mike live; saved with `recipientEmail`; a reply without a recipient → 400 | PASS |
+| Client cannot see Mike's admin conversation; client GET and staff PUT `/state/adminChatMessages` → 403 | PASS |
+| Socket blocked → header "Refreshing every 3s" and the message still arrives by polling | PASS |
+| No page errors (client, vendor, staff, admin) | PASS |
+
+New packages: `@nestjs/websockets@11.1.19` and `@nestjs/platform-socket.io@11.1.19` (back-end), `socket.io-client@4.8.1` (frontend-react).
+
+### 8.7 Step 7 — Remaining open items (30/30 browser + API)
+| Item | Fix | Result |
+|---|---|---|
+| Users / snapshot exposure (D1) | `GET /snapshot` is admin/superuser only; `/state/users`, `vendorApplications`, `bookings`, `activityLogs` and `messageReads` are admin/superuser only for reading. The client packages page now uses `/staff-profiles`. | client/vendor/staff → 403; admin still 200 — PASS |
+| Clients reading every event / booking (D2) | `GET /events` and `/bookings` return only the client's own; another client's event → 403. Bookings are vendor-scoped too. | 40 of 43 events, own bookings only — PASS |
+| Vendor reading other vendors' payouts (D4) | `/vendors/:id/payouts` → 403 unless it is the vendor's own; `/bookings/commissions` always returns only the vendor's own ledger | PASS (own ledger: 19 items, all V001) |
+| Package decision had no DTO (C5) | `DecisionDto` (approved / rejected only) | "garbage" → 400, "approved" → 200 — PASS |
+| Conclude Event silent when not live (A6) | Explains "only a live event can be concluded…" in the alert feed | modal path tested (a live event was selected); the not-live message was **not** exercised by the test |
+| Staff Schedule Day/Week (A7) | Day / Week / Month change the calendar (35 / 7 / 1 cells) and ‹ › move by a month, week or day. Starts on today. **Removed fake data**: a hard-coded "Johnson Wedding", a demo marker, fixed "10:00 AM – 6:00 PM" and "Live" badges — real event times and statuses are shown now. | PASS |
+| Overnight end date display (C6) | "start → end" on client My Events, vendor Events, vendor Event Review and the admin event modal | PASS |
+| Outdated root scripts (A8) | Updated `test-auth-flow.js` (JwtService), `test-commission-revenue-model.js` (pay + complete before settling), `test-issue-render.js` (mock bug, exits cleanly). | all 6 node scripts PASS |
+| **New: vendor applications** | The password is hashed when submitted (it used to sit in plain text until an admin decided). A public application can no longer set its own `status: "approved"`. | stored as pending; the approved applicant can still log in — PASS |
+
+**Safety incident (found and fixed during this step).** Four root scripts (`test-auth-flow.js`, `test-commission-revenue-model.js`, `test-persistence-integrity.js`, `test-client-event-flow.js`) **deleted or wrote to the real `back-end/data/database.json`**. I ran two of them before reading them closely. The data was restored by making the running backend rewrite the file from memory, and it was verified identical (0 diff lines) to the backup taken before testing. All of them now run against a temp folder (`EMS_DATA_DIR`). A checksum check confirms the real file stays untouched across Jest, all root scripts and the browser tests.
+
+**Regression:** after step 7, the browser tests of steps 1–6 all pass again (19, 21, 8, 24, 13, 24). Two tests had to be updated for the newer rules: Cancel & Refund now needs a reason, and the rating test now uses a fresh completed event because "one rating per event" correctly blocked a re-run.

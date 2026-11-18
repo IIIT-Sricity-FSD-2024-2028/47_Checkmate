@@ -55,6 +55,8 @@ import EventExtraResourceModal from "../../components/vendor/EventExtraResourceM
 import EventExtraStaffModal from "../../components/vendor/EventExtraStaffModal";
 import EventKeepWaitingModal from "../../components/vendor/EventKeepWaitingModal";
 import RejectReasonModal from "../../components/vendor/RejectReasonModal";
+import StaffRatingCard from "../../components/vendor/StaffRatingCard";
+import { eventsOverlap } from "../../utils/eventWindow";
 
 // Backend API services
 import {
@@ -66,6 +68,7 @@ import {
   patchEvent,
 } from "../../services/eventService";
 import { getResources, getResourceAvailabilityMap } from "../../services/resourceService";
+import { getBookingsCommissions } from "../../services/bookingService";
 import {
   createStaffAssignment,
   deleteStaffAssignment,
@@ -149,6 +152,9 @@ function EventReview() {
   const [venueAllocations, setLocalVenueAllocations] = useState({});
   const [quoteInput, setQuoteInput] = useState(null);
   const [commissionPercent, setCommissionPercent] = useState(DEFAULT_COMMISSION_PERCENT);
+
+  // The booking created when this event was approved (price, commission, payout)
+  const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
@@ -279,6 +285,25 @@ function EventReview() {
       isMounted = false;
     };
   }, [eventId]);
+
+  // Loads this event's booking whenever the event's status changes (approving
+  // creates it; completing or cancelling changes its money). No booking = null.
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBooking() {
+      if (!event?.id) return;
+      try {
+        const ledger = await getBookingsCommissions({ eventId: event.id });
+        if (isMounted) setBooking(ledger?.items?.[0] || null);
+      } catch {
+        if (isMounted) setBooking(null);
+      }
+    }
+    loadBooking();
+    return () => {
+      isMounted = false;
+    };
+  }, [event?.id, event?.status]);
 
   // Re-asks the backend what is free for this event whenever its date or the
   // allocations change. The backend leaves this event's own units out.
@@ -460,7 +485,9 @@ function EventReview() {
           (e) =>
             e.id !== event?.id &&
             !FINISHED_EVENT_STATUSES.includes(String(e.status).toLowerCase()) &&
-            (refs.has(e.id) || refs.has(e.name))
+            (refs.has(e.id) || refs.has(e.name)) &&
+            // Only work at the SAME time blocks them (same rule as the backend)
+            (!event || eventsOverlap(e, event))
         ) || null
       );
     },
@@ -474,7 +501,8 @@ function EventReview() {
       if (member.status === "off") return "off duty";
       const otherEvent = getOtherActiveEvent(member);
       if (otherEvent) return `already assigned to ${otherEvent.name}`;
-      if (member.status === "busy" || member.avail === "Busy") return "marked as busy";
+      // status "assigned"/"busy" is set whenever someone has ANY event, so it is not
+      // used here; the date check above decides. Only "off" (off duty) blocks.
       const workload = Number(member.workload || 0);
       if (workload >= 80) return `workload is at ${workload}% (limit 80%)`;
       return null;
@@ -526,6 +554,15 @@ function EventReview() {
       }
     });
 
+    // People who declined their assignment on this event stay listed (with
+    // their reason) so the vendor can see why and assign someone else.
+    assignments
+      .filter((a) => a.eventId === event.id && ["rejected", "declined"].includes(String(a.status).toLowerCase()))
+      .forEach((a) => {
+        const alreadyInList = list.some((item) => typeof item === "object" && (item.staffId || item.id) === a.staffId);
+        if (!alreadyInList) list.push({ id: a.staffId, staffId: a.staffId, name: a.staffName, role: a.role || "Event Staff" });
+      });
+
     return list.map((item, requestIndex) => {
       let name = "";
       let role = "Event Staff";
@@ -551,18 +588,26 @@ function EventReview() {
       const isAssigned = Boolean(st) && isOnThisEvent(st);
       const isConflicted = !st || Boolean(getAssignBlockReason(st));
 
+      // preference: picked by the client in the Create Event wizard. The vendor
+      // confirms it (Assign) or replaces it with someone else.
+      const isRequest = typeof item === "object" && requestIndex < (Array.isArray(rawList) ? rawList.length : 0);
       return {
         id: staffId || role,
         requestIndex,
         staffId,
         role,
         name,
+        isPreference: isRequest && (item.preference === true || event.createdBy === "client") && item.vendorStatus !== "replaced",
+        // Set when this person declined their assignment on this event (with their reason)
+        declineReason: (assignments.find((a) => a.eventId === event.id && a.staffId === staffId && ["rejected", "declined"].includes(String(a.status).toLowerCase())) || {}).declineReason || "",
+        vendorStatus: typeof item === "object" ? item.vendorStatus || "" : "",
+        replacedName: typeof item === "object" ? item.replacedPreference || "" : "",
         isBusy: isConflicted && !isAssigned,
         isAssigned,
         isAvailable: isAssigned || !isConflicted,
       };
     });
-  }, [event, staffList, isOnThisEvent, getAssignBlockReason, findRequestedMember]);
+  }, [event, staffList, assignments, isOnThisEvent, getAssignBlockReason, findRequestedMember]);
 
   // --------------------------------------------------------------------------
   // 5B. VENUE OPTIONS & ALLOCATION STATE
@@ -935,7 +980,21 @@ function EventReview() {
         return;
       }
 
-      showToast(`✓ ${db.name} assigned!`, "success");
+      // Assigning a client preference = confirming it; remember that on the request
+      if (st.isPreference && Number.isInteger(st.requestIndex)) {
+        const requested = Array.isArray(event.requestedStaff) ? event.requestedStaff : [];
+        const updatedReqs = requested.map((item, i) =>
+          i === st.requestIndex && typeof item === "object" ? { ...item, vendorStatus: "confirmed" } : item
+        );
+        try {
+          await patchEvent(event.id, { requestedStaff: updatedReqs });
+          setEvent((prev) => ({ ...prev, requestedStaff: updatedReqs }));
+        } catch (err) {
+          console.error("Could not record the confirmation:", err);
+        }
+      }
+
+      showToast(st.isPreference ? `✓ ${db.name} confirmed (client preference)` : `✓ ${db.name} assigned!`, "success");
     },
     [event, staffList, getAssignBlockReason, saveStaffAssignment, showToast]
   );
@@ -1134,7 +1193,7 @@ function EventReview() {
       const updatedReqs = (Array.isArray(requested) ? requested : [])
         .map((item, i) =>
           i === index
-            ? { staffId: member.id, staffName: member.name, role: member.role || "Event Staff" }
+            ? { staffId: member.id, staffName: member.name, role: member.role || "Event Staff", vendorStatus: "replaced", replacedPreference: replacingStaff.name }
             : item
         )
         // Drop any other request for the same member, so they get a single row
@@ -1596,8 +1655,19 @@ function EventReview() {
           onOpenExtraModal={() => setIsExtraStaffOpen(true)}
         />
 
+        {/* ── Section 6A: Rate the staff who worked it (completed events only) ── */}
+        {String(event.status).toLowerCase() === "completed" && (
+          <StaffRatingCard
+            event={event}
+            workedStaff={assignments
+              .filter((a) => a.eventId === event.id && !["rejected", "declined"].includes(String(a.status).toLowerCase()))
+              .map((a) => ({ staffId: a.staffId, staffName: a.staffName, role: a.role }))
+              .filter((a, i, list) => list.findIndex((x) => x.staffId === a.staffId) === i)}
+          />
+        )}
+
         {/* ── Section 6B: Final Price (billed to the client on approval) ── */}
-        {event.status !== "rejected" && (
+        {(event.status !== "rejected" || booking) && (
           <EventQuoteCard
             resourcesTotal={resourcesTotal}
             venueTotal={venueTotal}
@@ -1606,6 +1676,7 @@ function EventReview() {
             commissionPercent={commissionPercent}
             isLocked={isVenueLocked}
             onChange={setQuoteInput}
+            booking={booking}
           />
         )}
 

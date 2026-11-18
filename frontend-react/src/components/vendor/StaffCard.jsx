@@ -27,6 +27,7 @@
  *   @param {Function} props.onSchedule - Callback when clicking Schedule
  *   @param {Function} props.onEdit - Callback when clicking Edit
  *   @param {Function} props.onDelete - Callback when clicking Delete
+ *   @param {Function} props.onProfile - Callback when clicking the avatar / name (opens the profile)
  * ============================================================================
  */
 
@@ -50,6 +51,7 @@ function StaffCard({
   onSchedule,
   onEdit,
   onDelete,
+  onProfile,
 }) {
   const {
     name = "Staff Member",
@@ -100,7 +102,11 @@ function StaffCard({
     <div className="staff-card" data-id={staff.id}>
       {/* ── 1. Card Header: Avatar, Name, Role & Status Badge ── */}
       <div className="staff-card__header">
-        <div className="staff-card__info">
+        <div
+          className="staff-card__info staff-card__info--clickable"
+          onClick={() => onProfile && onProfile(staff)}
+          title={`View ${name}'s profile`}
+        >
           <div className={`staff-avatar avatar--${avatarClass}`}>
             {displayInitials}
           </div>

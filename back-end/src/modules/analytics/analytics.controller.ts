@@ -33,16 +33,18 @@ export class AnalyticsController {
     return this.service.financialSummary();
   }
 
+  // The whole database: admins / superusers only. Other roles use endpoints
+  // that return just their own data (e.g. /staff-profiles, /events).
   @Get('snapshot')
-  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  @Roles('admin', 'superuser')
   snapshot() {
     return this.service.snapshot();
   }
 
   @Get('state/:key')
   @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
-  stateKey(@Param('key') key: string) {
-    return this.service.stateKey(key);
+  stateKey(@Param('key') key: string, @Req() req: any) {
+    return this.service.stateKey(key, req.user);
   }
 
   @Put('state/:key')

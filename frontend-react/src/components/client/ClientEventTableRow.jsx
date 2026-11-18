@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { canClientCancel } from "../../utils/dateRules";
 import { AlertCircle, CheckCircle2, Hourglass, LineChart } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatDate } from "../../utils/clientHelpers";
@@ -31,7 +32,7 @@ function ActionButton({ event, onViewReason }) {
   if (event.status === "confirmed" || event.status === "approved") {
     return <Link to={trackLink} className="cl-btn-sm cl-btn-ghost"><LineChart size={14} /> Track</Link>;
   }
-  if (event.status === "rejected") {
+  if (event.status === "rejected" || (event.status === "cancelled" && event.cancellationReason)) {
     return (
       <button type="button" className="cl-btn-sm cl-btn-danger" onClick={() => onViewReason(event)}>
         <AlertCircle size={14} /> View Reason
@@ -53,6 +54,12 @@ function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
       {/* Name (+ short rejection reason) */}
       <td className="col-primary">
         {event.name || "—"}
+        {event.status === "cancelled" && event.cancellationReason && (
+          <div className="cl-reject-line">
+            <AlertCircle size={12} />
+            Cancelled by {event.cancelledBy?.role === "client" ? "you" : event.cancelledBy?.name || "the platform"}: {event.cancellationReason}
+          </div>
+        )}
         {event.status === "rejected" && reason && (
           <div className="cl-reject-line">
             <AlertCircle size={12} />
@@ -64,7 +71,8 @@ function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
       {/* Type pill */}
       <td><span className={`cl-type cl-type--${(event.type || "").toLowerCase()}`}>{event.type || "—"}</span></td>
 
-      <td>{formatDate(event.date)}</td>
+      {/* Overnight / multi-day events also show their last day */}
+      <td>{formatDate(event.date)}{event.endDate && event.endDate > event.date ? ` → ${formatDate(event.endDate)}` : ""}</td>
       <td>{event.venue || "—"}</td>
       <td>{event.people || event.guests || "—"}</td>
       <td><StatusBadge status={event.status} /></td>
@@ -76,7 +84,18 @@ function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
           <>
             {" "}
             <button type="button" className="cl-btn-sm cl-btn-ghost" onClick={() => onEdit(event)}>Edit</button>{" "}
-            <button type="button" className="cl-btn-sm cl-btn-danger" onClick={() => onCancel(event)}>Cancel</button>
+            {/* Rule: clients cancel only more than 3 days ahead; after that the admin does it */}
+            {canClientCancel(event.date) ? (
+              <button type="button" className="cl-btn-sm cl-btn-danger" onClick={() => onCancel(event)}>Cancel</button>
+            ) : (
+              <Link
+                to="/client/report-issue"
+                className="cl-btn-sm cl-btn-ghost"
+                title="This event is 3 days away or less. Please contact the admin to cancel it."
+              >
+                Contact Admin to Cancel
+              </Link>
+            )}
           </>
         )}
       </td>

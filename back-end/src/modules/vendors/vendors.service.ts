@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { hashPassword } from '../../common/security/password';
 import { DecisionDto } from '../../common/dto/action.dto';
 import { DataService } from '../../database/data.service';
@@ -23,36 +23,42 @@ export class VendorsService {
   applications() { return this.data.collection('vendorApplications'); }
   findApplication(id: string) { return this.data.find('vendorApplications', id); }
   createApplication(dto: CreateVendorApplicationDto) {
-    // Store the raw password separately so we can hash it on approval.
-    // The passwordHash field here actually contains the raw password from the signup form.
+    // The signup form sends the raw password in `passwordHash`. It is hashed
+    // straight away (it used to sit in database.json as plain text until an admin
+    // decided), and `passwordHashed` tells decideApplication not to hash it twice.
+    // The status is always "pending": an applicant cannot approve themselves.
     const rawPassword = dto.passwordHash;
     const appPayload = {
-      status: 'pending' as const,
       submittedAt: new Date().toISOString(),
       ...dto,
-      // Keep the raw password in passwordHash field for now; it will be hashed on approval
-      passwordHash: rawPassword || '',
+      status: 'pending' as const,
+      passwordHash: rawPassword ? hashPassword(rawPassword) : '',
+      passwordHashed: true,
     };
     const app = this.data.create('vendorApplications', 'VAPP', appPayload);
     this.data.setValue('vendorDocSubmission', app);
     return app;
   }
   updateApplication(id: string, dto: UpdateVendorApplicationDto) { return this.data.update('vendorApplications', id, dto); }
-  decideApplication(id: string, dto: DecisionDto) {
+  // `user` is the admin/superuser deciding; a rejection keeps the reason so the
+  // applicant is shown it when they try to sign in (AuthService.login).
+  decideApplication(id: string, dto: DecisionDto, user?: { id?: string; name?: string; role?: string }) {
     // Hash the raw password stored in the application BEFORE updating status.
     // This ensures the DataService trigger (triggerVendorApplicationUpdated) uses the hashed value.
     const currentApp = this.data.find('vendorApplications', id);
     const rawPassword = currentApp.passwordHash || '';
     // Only hash if it still looks like plain text -- guards against hashing twice
     // if an application is approved, reopened, and approved again.
-    const hashedPassword = rawPassword && !rawPassword.startsWith('$2b$') && rawPassword.length < 128
-      ? hashPassword(rawPassword)
-      : rawPassword; // Already hashed or is a hash
+    const hashedPassword = (currentApp as any).passwordHashed || !rawPassword
+      ? rawPassword // hashed when the application was submitted
+      : hashPassword(rawPassword); // older applications still hold the raw text
 
     // Pre-set the hashed password on the application before the status change triggers auto-provisioning
     const app = this.data.update('vendorApplications', id, {
       status: dto.status,
       note: dto.note,
+      rejectionReason: dto.status === 'rejected' ? dto.note || 'No reason given' : undefined,
+      decidedBy: user?.name ? `${user.name} (${String(user.role || '').toLowerCase()})` : undefined,
       decidedAt: new Date().toISOString(),
       passwordHash: hashedPassword,
     });
@@ -74,7 +80,14 @@ export class VendorsService {
   /**
    * Retrieves financial earnings, platform commission deductions, and payout history for a vendor
    */
-  getVendorPayouts(vendorId: string) {
+  // A vendor may only read their own earnings (admins/superusers: anyone's)
+  getVendorPayouts(vendorId: string, user?: { id?: string; role?: string }) {
+    if (String(user?.role || '').toLowerCase() === 'vendor') {
+      const own = this.data.collection('vendors').find((v: any) => v.userId === user?.id);
+      if (!own || own.id.toLowerCase() !== vendorId.toLowerCase()) {
+        throw new ForbiddenException("You can only view your own payouts.");
+      }
+    }
     const vendor = this.findVendor(vendorId);
     const allBookings = this.data.collection('bookings');
     const vendorBookings = allBookings.filter(
@@ -85,7 +98,11 @@ export class VendorsService {
     ).map((b) => {
       // On a shared booking, this vendor only earns their part
       const share = b.vendorSplits?.find((s) => s.vendorId.toLowerCase() === vendorId.toLowerCase());
-      return share ? { ...b, ...share, vendorSplits: undefined } : b;
+      if (!share) return b;
+      // A cancelled booking keeps only the fee, so each vendor's share shrinks by the same ratio
+      const ratio = b.originalCost ? Number(b.cost || 0) / b.originalCost : 1;
+      const scaled = (n: number) => Number((Number(n || 0) * ratio).toFixed(2));
+      return { ...b, ...share, cost: scaled(share.cost), commissionAmount: scaled(share.commissionAmount), vendorPayoutAmount: scaled(share.vendorPayoutAmount), vendorSplits: undefined };
     });
 
     const totalEarnedGross = vendorBookings.reduce((sum, b) => sum + Number(b.cost || 0), 0);

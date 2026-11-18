@@ -40,6 +40,7 @@ import ClientEventsToolbar from "../../components/client/ClientEventsToolbar";
 import ClientEventsTable from "../../components/client/ClientEventsTable";
 import RejectionReasonModal from "../../components/client/RejectionReasonModal";
 import EditEventModal from "../../components/client/EditEventModal";
+import ReasonModal from "../../components/ReasonModal";
 
 function MyEvents() {
   const {
@@ -57,6 +58,9 @@ function MyEvents() {
     handleResetFilters,
     handleEditEvent,
     handleCancelEvent,
+    cancelTarget,
+    setCancelTarget,
+    confirmCancel,
   } = useClientEventsData();
 
   // The rejected event whose reason popup is open (null = closed)
@@ -102,6 +106,16 @@ function MyEvents() {
         {/* ── Component 4: Rejection Reason Popup ── */}
         <RejectionReasonModal event={reasonEvent} onClose={() => setReasonEvent(null)} />
         <EditEventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleEditEvent} />
+
+        {/* ── Component 5: Cancel needs a reason (shown to the vendor) ── */}
+        <ReasonModal
+          open={Boolean(cancelTarget)}
+          title={cancelTarget ? `Cancel "${cancelTarget.name}"` : ""}
+          hint="Your vendor will see this reason. This cannot be undone."
+          confirmLabel="Cancel Event"
+          onClose={() => setCancelTarget(null)}
+          onConfirm={confirmCancel}
+        />
       </div>
     </div>
   );

@@ -11,30 +11,27 @@
      - "issue-report" messages (posted by Report Issue to Admin) are shown
        as centred orange system notes, exactly like the HTML page.
    API ENDPOINTS USED (through services/staffApi.js):
-     - GET /api/state/adminChatMessages : load the chat (every 3 seconds)
-     - PUT /api/state/adminChatMessages : save the chat with a new message
+     - GET  /api/admin-chat : this staff member's conversation (hooks/useLiveChat.js)
+     - POST /api/admin-chat : send one message
+     New messages arrive live through the socket; the page polls every 3 seconds
+     only while the socket is down.
 ============================================================ */
 
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/staff.css';
-import { getSessionUser, fetchAdminChat, postAdminChatMessage } from '../../services/staffApi';
+import { getSessionUser } from '../../services/staffApi';
+import useLiveChat, { formatMessageTime } from '../../hooks/useLiveChat';
 
-// The HTML page re-read the chat every 3 seconds
-const POLL_INTERVAL_MS = 3000;
-
-// "2026-05-01T10:15:00Z" -> "10:15 AM"; empty text if unreadable
-function timeStr(iso) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
+// "2026-05-01T10:15:00Z" -> "10:15 AM" today, "1 May, 10:15 AM" otherwise
+const timeStr = formatMessageTime;
 
 export default function StaffMessagesAdmin() {
   // Signed-in staff member (name, email, role) read once from the session
   const [session] = useState(() => getSessionUser());
 
-  // Every message in the shared admin chat list (filtered below)
-  const [messages, setMessages] = useState([]);
+  // This staff member's conversation with the admin team, delivered live
+  const chat = useLiveChat({ kind: 'admin' });
+  const messages = chat.messages;
 
   // Text in the message box
   const [inputText, setInputText] = useState('');
@@ -47,30 +44,6 @@ export default function StaffMessagesAdmin() {
 
   // The scrolling message area, so we can keep the newest message in view
   const messagesRef = useRef(null);
-
-  // Load the chat now and then every 3 seconds, like the HTML page
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadChat() {
-      try {
-        const list = await fetchAdminChat();
-        if (isMounted) {
-          setMessages(list);
-          setError('');
-        }
-      } catch (err) {
-        if (isMounted) setError(err.message);
-      }
-    }
-
-    loadChat();
-    const timer = setInterval(loadChat, POLL_INTERVAL_MS);
-    return () => {
-      isMounted = false;
-      clearInterval(timer);
-    };
-  }, []);
 
   // Only this staff member's conversation, oldest first (same filter as the HTML page)
   const myEmail = String(session.email || '').toLowerCase();
@@ -94,27 +67,15 @@ export default function StaffMessagesAdmin() {
     const text = inputText.trim();
     if (!text || sending) return;
 
-    const newMessage = {
-      id: 'msg_' + Date.now(),
-      sender: session.name,
-      senderRole: session.role || 'Staff',
-      senderEmail: session.email,
-      text,
-      timestamp: new Date().toISOString(),
-      type: 'message',
-    };
-
     setSending(true);
-    try {
-      const updated = await postAdminChatMessage(newMessage);
-      setMessages(updated);
+    const ok = await chat.send(text);
+    if (ok) {
       setInputText('');
       setError('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSending(false);
+    } else {
+      setError('Message not sent. Please try again.');
     }
+    setSending(false);
   }
 
   return (

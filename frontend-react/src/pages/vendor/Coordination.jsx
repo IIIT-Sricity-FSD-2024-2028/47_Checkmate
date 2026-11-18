@@ -18,6 +18,9 @@ import VendorTopBar from '../../components/vendor/VendorTopBar';
 import ConversationList from '../../components/chat/ConversationList';
 import ChatWindow from '../../components/chat/ChatWindow';
 import useThreadChat from '../../hooks/useThreadChat';
+import useLiveChat from '../../hooks/useLiveChat';
+import useUnreadCounts from '../../hooks/useUnreadCounts';
+import '../../styles/chat-live.css';
 import { getMyEvents } from '../../services/eventService';
 import { getStaffAssignments } from '../../services/staffService';
 import { getAuthUser } from '../../services/auth/authStorage';
@@ -61,6 +64,13 @@ export default function Coordination() {
     };
   }, []);
 
+  // Unread messages per conversation (badges), pushed live
+  const unread = useUnreadCounts();
+
+  // The vendor's own conversation with the admin team
+  const adminChat = useLiveChat({ kind: 'admin' });
+  const isAdminSection = section === 'admin';
+
   const isLiveSection = section === 'live';
   const liveEvents = useMemo(() => events.filter((e) => statusOf(e) === 'live'), [events]);
   const enquiryEvents = useMemo(() => events.filter((e) => ENQUIRY_STATUSES.includes(statusOf(e))), [events]);
@@ -92,7 +102,7 @@ export default function Coordination() {
     ? 'No messages yet. Say hello to the team.'
     : 'No messages yet. Say hello to your client.';
 
-  const error = loadError || chat.error;
+  const error = loadError || (isAdminSection ? adminChat.error : chat.error);
 
   return (
     <div className="vendor-dashboard">
@@ -119,6 +129,17 @@ export default function Coordination() {
           >
             <Radio size={16} />
             <span>Live Events ({liveEvents.length})</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isAdminSection}
+            className={`ch-section-tab ${isAdminSection ? 'active' : ''}`}
+            onClick={() => setSection('admin')}
+          >
+            <User size={16} />
+            <span>Admin Support</span>
+            {unread.threads['admin-chat'] > 0 && <span className="chat-unread-badge">{unread.threads['admin-chat']}</span>}
           </button>
         </div>
 
@@ -154,6 +175,20 @@ export default function Coordination() {
           </div>
         )}
 
+        {isAdminSection ? (
+          <div className="cl-chat-layout">
+            <ConversationList single={{ initials: 'AD', title: 'Admin Support', subtitle: 'Platform administrators' }} />
+            <ChatWindow
+              title="Admin Support"
+              subtitle="Questions about payouts, accounts or the platform"
+              showOnline
+              messages={adminChat.messages}
+              emptyText="No messages yet. Ask the admin team anything."
+              isMine={(m) => String(m.senderEmail || '').toLowerCase() === String(user?.email || '').toLowerCase()}
+              onSend={adminChat.send}
+            />
+          </div>
+        ) : (
         <div className="cl-chat-layout">
           <ConversationList
             events={visibleEvents}
@@ -162,6 +197,7 @@ export default function Coordination() {
             search={search}
             onSearch={setSearch}
             getSubtitle={(ev) => `Client: ${ev.client || 'Unknown'}`}
+            getBadge={(ev) => unread.threads[`${isStaffChat ? 'staff' : 'client'}-${ev.id}`] || 0}
           />
           <ChatWindow
             title={event ? (isStaffChat ? `${event.name} Team` : event.client || 'Client') : 'No conversation'}
@@ -174,6 +210,7 @@ export default function Coordination() {
             onSend={chat.send}
           />
         </div>
+        )}
       </div>
     </div>
   );

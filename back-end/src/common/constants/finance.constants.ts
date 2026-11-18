@@ -13,6 +13,15 @@ export function commissionRateFromPercent(percent: unknown): number {
   return Number.isFinite(value) && value >= 0 && value <= 100 ? value / 100 : DEFAULT_COMMISSION_RATE;
 }
 
+/**
+ * Converts the Global Settings "Cancellation fee %" into a rate (20 -> 0.2).
+ * Missing or invalid means 0: a cancelled event earns nobody anything.
+ */
+export function cancellationFeeFromPercent(percent: unknown): number {
+  const value = Number(percent);
+  return Number.isFinite(value) && value > 0 && value <= 100 ? value / 100 : 0;
+}
+
 export interface CommissionCalculation {
   totalCost: number;
   commissionRate: number;

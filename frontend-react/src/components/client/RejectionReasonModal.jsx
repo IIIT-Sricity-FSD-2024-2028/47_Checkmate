@@ -27,15 +27,27 @@ function RejectionReasonModal({ event, onClose }) {
   return (
     <Modal
       open={Boolean(event)}
-      title={event ? `Event Rejected · ${event.name} (${event.id})` : ""}
+      title={event ? `Event ${event.status === "cancelled" ? "Cancelled" : "Rejected"} · ${event.name} (${event.id})` : ""}
       onClose={onClose}
       width={520}
       footer={<button type="button" className="cl-btn-ghost" onClick={onClose}>Close</button>}
     >
       {event && (
         <>
-          <div className="cl-label">Rejection Reason</div>
-          <div className="cl-reason-box">{event.rejectionReason || "Rejected by vendor."}</div>
+          {/* Cancelled events show who cancelled and why; rejected ones the vendor's reason */}
+          {event.status === "cancelled" ? (
+            <>
+              <div className="cl-label">Cancelled by</div>
+              <div className="cl-reason-box">{event.cancelledBy ? `${event.cancelledBy.name || "—"} (${event.cancelledBy.role})` : "—"}</div>
+              <div className="cl-label">Reason</div>
+              <div className="cl-reason-box">{event.cancellationReason}</div>
+            </>
+          ) : (
+            <>
+              <div className="cl-label">Rejection Reason</div>
+              <div className="cl-reason-box">{event.rejectionReason || "Rejected by vendor."}</div>
+            </>
+          )}
 
           {conflicts.length > 0 && (
             <>

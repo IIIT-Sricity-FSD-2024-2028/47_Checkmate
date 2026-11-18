@@ -1,4 +1,11 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { DataService } from './data.service';
+
+// Each run gets its own empty folder (seeded from seed.ts), so these tests never
+// write into the real back-end/data/database.json while the app is running.
+process.env.EMS_DATA_DIR = mkdtempSync(join(tmpdir(), 'ems-test-'));
 
 describe('DataService Persistence & Trigger Integrity', () => {
   let service: DataService;

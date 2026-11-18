@@ -10,6 +10,9 @@
  *   price starts at the allocated resources plus the venue; staff and labour
  *   are added by the vendor. The client is billed this amount, and the vendor
  *   receives it minus the platform commission.
+ *   After approval the real booking is shown (booking prop): the amounts are the
+ *   ones saved on the booking, plus whether the client paid and whether the
+ *   admin has released the payout.
  * ============================================================================
  */
 
@@ -25,6 +28,7 @@ function EventQuoteCard({
   commissionPercent = 10,
   isLocked = false,
   onChange,
+  booking = null,
 }) {
   const price = Number(quote) > 0 ? Number(quote) : 0;
   const platformFee = Number(((price * commissionPercent) / 100).toFixed(2));
@@ -92,6 +96,38 @@ function EventQuoteCard({
           </div>
         </div>
       </div>
+
+      {/* The saved booking: what the client owes, the platform keeps and you get */}
+      {booking && (
+        <div className="client-req-extras" style={{ marginTop: "12px" }}>
+          <div className="client-extra-item">
+            <div>
+              <div className="client-extra-label">Booking {booking.id} · {booking.status}</div>
+              <div className="client-extra-value">
+                Client pays {formatCurrency(booking.cost)}
+                {booking.status === "Cancelled" && ` (was ${formatCurrency(booking.originalCost)})`}
+              </div>
+            </div>
+          </div>
+          <div className="client-extra-item">
+            <div>
+              <div className="client-extra-label">Platform commission ({Math.round(Number(booking.commissionRate || 0) * 100)}%)</div>
+              <div className="client-extra-value">{formatCurrency(booking.commissionAmount)}</div>
+            </div>
+          </div>
+          <div className="client-extra-item client-extra-payout">
+            <div>
+              <div className="client-extra-label">Your payout</div>
+              <div className="client-extra-value">
+                {formatCurrency(booking.vendorPayoutAmount)}{" "}
+                <span className="client-extra-fee">
+                  (client {String(booking.paymentStatus || "unpaid").replace("_", " ")} · payout {String(booking.payoutStatus || "pending").replace("_", " ")})
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!isLocked && (
         <p style={{ margin: "12px 0 0", fontSize: "12px", color: "var(--text-muted, #6b5d7e)" }}>

@@ -22,6 +22,7 @@ export class AuthService {
 
   login(dto: LoginDto) {
     const user = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
+    if (!user) this.explainVendorApplication(dto);
     if (!user || !verifyPassword(dto.password, user.passwordHash)) {
       throw new UnauthorizedException('Invalid email or password.');
     }
@@ -30,6 +31,23 @@ export class AuthService {
       throw new UnauthorizedException('This account is not active.');
     }
     return this.session(user);
+  }
+
+  // A vendor applicant has no account until approved. If the email + password
+  // match their application, say where it stands (and the admin's reason when
+  // rejected) instead of a bare "Invalid email or password".
+  private explainVendorApplication(dto: LoginDto) {
+    const app: any = this.data.collection('vendorApplications')
+      .filter((a) => String(a.email).toLowerCase() === dto.email.toLowerCase())
+      .pop();
+    if (!app || !app.passwordHash) return;
+    // Decided applications hold the hashed password; older pending ones the raw text
+    const matches = verifyPassword(dto.password, app.passwordHash) || app.passwordHash === dto.password;
+    if (!matches) return;
+    if (app.status === 'rejected') {
+      throw new UnauthorizedException(`Your vendor application was rejected. Reason: ${app.rejectionReason || app.note || 'No reason given'}`);
+    }
+    if (app.status === 'pending') throw new UnauthorizedException('Your vendor application is still under review.');
   }
 
   register(dto: RegisterDto) {

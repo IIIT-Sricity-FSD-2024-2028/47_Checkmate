@@ -108,6 +108,24 @@ export interface StaffMember {
   events?: number;
   avatar?: string;
   assignedEvents?: string[];
+  // Profile shown to clients and vendors (see modules/staff/staff-profile.ts)
+  experienceYears?: number;
+  skills?: string[];
+  bio?: string;
+}
+
+/** One vendor rating of a staff member for one completed event (1-5 stars). */
+export interface StaffRating {
+  id: string;
+  staffId: string;
+  eventId: string;
+  eventName?: string;
+  vendorId?: string;
+  ratedBy: string;       // user id of the vendor who rated
+  ratedByName?: string;
+  stars: number;         // 1..5
+  comment?: string;
+  createdAt: string;
 }
 
 export interface PackageRecord {
@@ -222,7 +240,7 @@ export interface StaffTask {
   completedAt?: string;
 }
 
-export type PayoutStatus = 'pending' | 'processing' | 'settled' | 'cancelled';
+export type PayoutStatus = 'pending' | 'processing' | 'settled' | 'cancelled' | 'not_due';
 
 // One vendor's part of a booking whose items came from several vendors
 export interface VendorSplit {
@@ -244,7 +262,7 @@ export interface Booking {
   status: string;
   cost: number;
   advancePaid?: number;
-  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | 'refunded' | 'not_due';
   // ── Commission Revenue Model (10% platform commission / 90% vendor payout) ──
   commissionRate?: number;       // e.g. 0.10
   commissionAmount?: number;     // 10% platform commission
@@ -253,6 +271,11 @@ export interface Booking {
   vendorSplits?: VendorSplit[];  // Only when several vendors supplied the event
   settledAt?: string;            // Timestamp when payout released
   settledBy?: string;            // Admin User ID who authorized settlement
+  // ── Cancellation (see database/booking-rules.ts) ──
+  originalCost?: number;         // Price before the event was cancelled
+  cancellationFeeRate?: number;  // Share of originalCost the client still owes (0.2 = 20%)
+  refundAmount?: number;         // Paid money returned to the client (simulated)
+  cancelledAt?: string;
   created: string;
 }
 
@@ -309,6 +332,7 @@ export interface VendorApplication {
   decidedAt?: string;
   decidedBy?: string;
   note?: string;
+  rejectionReason?: string; // shown to the applicant when they try to sign in
   passwordHash?: string;
 }
 
@@ -395,6 +419,7 @@ export interface AppData {
   monitorProgress: Record<string, { setup: number; registration: number; event: number; breakdown: number }>;
   staffRequests: Array<Record<string, unknown>>;
   staffTasks: Array<StaffTask>;
+  staffRatings: StaffRating[];
   vendorDocSubmission: VendorApplication | null;
   session: { id?: string; user: string; name?: string; email: string; role: string; vendorId?: string; vendorName?: string; businessName?: string; staffId?: string };
   liveEvents: Array<Record<string, unknown>>;

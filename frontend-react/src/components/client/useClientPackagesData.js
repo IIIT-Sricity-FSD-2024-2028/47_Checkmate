@@ -14,7 +14,7 @@
  * Connected Backend Endpoints:
  *   - GET  /api/packages  -> only approved packages (getMarketplacePackages)
  *   - GET  /api/resources -> to match package services to real resources
- *   - GET  /api/snapshot  -> staff list, to match package staff to real staff
+ *   - GET  /api/staff-profiles -> staff list, to match package staff to real staff
  *   - POST /api/events    -> creates the event request
  *
  * Returns:
@@ -26,7 +26,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getMarketplacePackages } from "../../services/packageService";
 import { getResources } from "../../services/resourceService";
-import { getSnapshot } from "../../services/analyticsService";
+import { getStaffProfiles } from "../../services/staffService";
 import { createEvent } from "../../services/eventService";
 import { describeError, formatTime12, getCurrentUser } from "../../utils/clientHelpers";
 
@@ -81,13 +81,13 @@ export function useClientPackagesData() {
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
-      const [pkgs, res, snap] = await Promise.allSettled([getMarketplacePackages(), getResources(), getSnapshot()]);
+      const [pkgs, res, snap] = await Promise.allSettled([getMarketplacePackages(), getResources(), getStaffProfiles()]);
       if (!isMounted) return;
       if (pkgs.status === "fulfilled") setPackages(pkgs.value || []);
       // allSettled gives the error in .reason instead of throwing
       else setError(describeError(pkgs.reason, "packages"));
       if (res.status === "fulfilled") setResources(res.value || []);
-      if (snap.status === "fulfilled") setStaff(snap.value?.staff || []);
+      if (snap.status === "fulfilled") setStaff(Array.isArray(snap.value) ? snap.value : []);
       setLoading(false);
     }
     loadData();

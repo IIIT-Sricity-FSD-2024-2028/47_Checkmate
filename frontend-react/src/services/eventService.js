@@ -67,8 +67,9 @@ export async function patchEvent(id, eventData, options = {}) {
  * @param {Object} [options] - Additional request options
  * @returns {Promise<Object>}
  */
-export async function cancelEvent(id, options = {}) {
-  return patch(`/events/${encodeURIComponent(id)}/cancel`, {}, options);
+// The client must give a reason; the backend saves it with who cancelled
+export async function cancelEvent(id, reason = "", options = {}) {
+  return patch(`/events/${encodeURIComponent(id)}/cancel`, { reason }, options);
 }
 
 export async function updateEventStatus(id, statusOrPayload, note, options = {}) {

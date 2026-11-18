@@ -14,66 +14,27 @@
  *
  * Connected Backend Endpoints:
  *   - everything in hooks/useEventChat.js
- *   - GET/PUT /api/state/adminChatMessages -> admin support messages
+ *   - GET/POST /api/admin-chat -> admin support messages (live)
  * ============================================================================
  */
 
-import { useEffect, useState } from "react";
 import useEventChat from "../../hooks/useEventChat";
-import { getStateKey, setStateKey } from "../../services/stateService";
+import { useLiveChat } from "../../hooks/useLiveChat";
 
-const ADMIN_KEY = "adminChatMessages";
-const CHAT_REFRESH_MS = 3000;
 
 export function useClientMessagesData() {
   // Event chat (shared with the vendor side)
   const eventChat = useEventChat();
   const { user, setError } = eventChat;
 
-  // Admin support chat
-  const [adminMessages, setAdminMessages] = useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-    const load = () =>
-      getStateKey(ADMIN_KEY)
-        .then((list) => {
-          if (isMounted) setAdminMessages(Array.isArray(list) ? list : []);
-        })
-        .catch(() => {});
-    load();
-    const timer = setInterval(load, CHAT_REFRESH_MS);
-    return () => {
-      isMounted = false;
-      clearInterval(timer);
-    };
-  }, []);
-
-  // Messages I sent to the admins or that they sent to me
-  const adminChat = adminMessages
-    .filter((m) => m.senderEmail === user.email || m.recipientEmail === user.email)
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  // Admin support chat: GET/POST /api/admin-chat, delivered live (useLiveChat)
+  const admin = useLiveChat({ kind: "admin" });
+  const adminChat = [...admin.messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
   const sendAdminMessage = async (text) => {
-    try {
-      const message = {
-        id: "msg_" + Date.now(),
-        sender: user.name,
-        senderRole: user.roleLabel,
-        senderEmail: user.email,
-        text,
-        timestamp: new Date().toISOString(),
-        type: "message",
-      };
-      const latest = (await getStateKey(ADMIN_KEY)) || [];
-      const updated = [...latest, message];
-      await setStateKey(ADMIN_KEY, updated);
-      setAdminMessages(updated);
-      return true;
-    } catch {
-      setError("Message not sent. Please try again.");
-      return false;
-    }
+    const ok = await admin.send(text);
+    if (!ok) setError("Message not sent. Please try again.");
+    return ok;
   };
 
   return { ...eventChat, adminChat, sendAdminMessage };

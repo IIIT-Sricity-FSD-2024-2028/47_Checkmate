@@ -1,0 +1,52 @@
+/* ══════════════════════════════════════════════════════════════
+   REASON MODAL (components/ReasonModal.jsx) — Reject / Cancel / Decline
+   in every portal, so every colour has a fallback.
+══════════════════════════════════════════════════════════════ */
+.reason-hint { margin: 0 0 12px; font-size: 13px; color: var(--text-secondary, #9b93b8); }
+
+.reason-picker { display: flex; flex-direction: column; gap: 8px; }
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13.5px;
+  color: var(--text-primary, #f0ecff);
+  cursor: pointer;
+}
+.reason-option--on { border-color: var(--pink, #e91e8c); background: rgba(233, 30, 140, 0.08); }
+.reason-option input { accent-color: var(--pink, #e91e8c); }
+
+.reason-details {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #f0ecff);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.reason-error { margin-top: 10px; color: #f87171; font-size: 13px; }
+
+.reason-btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.reason-btn--ghost { background: transparent; color: var(--text-primary, #f0ecff); }
+.reason-btn--danger { background: #dc2626; border-color: #dc2626; color: #fff; }
+.reason-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* "Cancelled by … · reason" line under an event / assignment name */
+.reason-line { margin-top: 3px; font-size: 11.5px; color: #f87171; }

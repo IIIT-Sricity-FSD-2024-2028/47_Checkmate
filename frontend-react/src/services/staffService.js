@@ -291,3 +291,33 @@ const staffService = {
 };
 
 export default staffService;
+
+/**
+ * Public staff profiles (experience, skills, events completed, rating, New badge).
+ * Every role may call it; no phone/email is returned.
+ * Pass { date, endDate, time, endTime, excludeEventId } to get `busyOn` for that window.
+ *
+ * @param {Object} [window] - optional date/time window
+ * @returns {Promise<Array>}
+ */
+export async function getStaffProfiles(window = {}, options = {}) {
+  return get('/staff-profiles', { ...options, params: window });
+}
+
+/** One staff member's public profile, with their latest reviews. */
+export async function getStaffProfileById(id, options = {}) {
+  return get(`/staff-profiles/${encodeURIComponent(id)}`, options);
+}
+
+/**
+ * Vendor rates a staff member for a COMPLETED event (1-5 stars, optional comment).
+ * The backend rejects other roles (403), unfinished events and repeat ratings (400).
+ */
+export async function rateStaff(staffId, { eventId, stars, comment }, options = {}) {
+  return post(`/staff/${encodeURIComponent(staffId)}/ratings`, { eventId, stars, comment }, options);
+}
+
+/** Ratings already given on one event: { staffId: { stars, comment } } */
+export async function getEventStaffRatings(eventId, options = {}) {
+  return get(`/events/${encodeURIComponent(eventId)}/staff-ratings`, options);
+}

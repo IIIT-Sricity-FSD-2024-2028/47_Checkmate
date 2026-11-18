@@ -13,9 +13,13 @@
  *     - Status badges: Safe, Risk, Critical
  *     - Action controls: Direct "+ Assign" button, "✓ Assigned", or "⚠ Conflict"
  *       with a "Replace" button
+ *     - Client preferences (picked in the client's Create Event wizard) carry a
+ *       "Client preference" tag and get "✓ Confirm" + "Replace" buttons; the
+ *       vendor's decision (confirmed / replaced) is shown under the name
  * ============================================================================
  */
 
+import "../../styles/reason-modal.css";
 import React from "react";
 import { Users, Plus } from "lucide-react";
 
@@ -75,8 +79,13 @@ function EventStaffRequirementsTable({
 
                 return (
                   <tr key={st.id || index}>
-                    {/* Staff Name */}
-                    <td>{st.name}</td>
+                    {/* Staff Name + client preference / vendor decision */}
+                    <td>
+                      {st.name}
+                      {st.isPreference && <div className="er-pref-tag">Client preference{st.vendorStatus === "confirmed" ? " · confirmed" : ""}</div>}
+                      {st.vendorStatus === "replaced" && <div className="er-pref-tag er-pref-tag--replaced">Replaced {st.replacedName || "client preference"}</div>}
+                      {st.declineReason && !st.isAssigned && <div className="reason-line">Declined: {st.declineReason}</div>}
+                    </td>
 
                     {/* Assigned / Requested Role */}
                     <td>{st.role || "Event Staff"}</td>
@@ -123,6 +132,25 @@ function EventStaffRequirementsTable({
                             className="er-btn-action-assign"
                             onClick={() => onReplace && onReplace(st)}
                             title={`Replace ${st.name} with an available staff member`}
+                          >
+                            Replace
+                          </button>
+                        </>
+                      ) : st.isPreference ? (
+                        <>
+                          <button
+                            type="button"
+                            className="er-btn-action-assign"
+                            onClick={() => onAssign && onAssign(st)}
+                            title={`Confirm ${st.name} (the client's preference)`}
+                          >
+                            ✓ Confirm
+                          </button>{" "}
+                          <button
+                            type="button"
+                            className="er-btn-action-assign"
+                            onClick={() => onReplace && onReplace(st)}
+                            title={`Replace ${st.name} with another staff member`}
                           >
                             Replace
                           </button>

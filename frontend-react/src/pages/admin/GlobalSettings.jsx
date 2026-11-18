@@ -15,6 +15,7 @@ export default function GlobalSettings() {
     platformName: 'Checkmate Event Management',
     supportEmail: 'support@checkmate.com',
     commissionRate: 10,
+    cancellationFeePercent: 0,
     autoApproveVendors: false,
     maintenanceMode: false,
     emergencyBanner: '',
@@ -143,6 +144,22 @@ export default function GlobalSettings() {
                 style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '13.5px' }}
               />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Default: 10% retained from vendor gross</span>
+            </div>
+
+            {/* Share of the price a client still owes when a CONFIRMED event is
+                cancelled or rejected (back-end/src/database/booking-rules.ts).
+                0 = cancelled events earn nobody anything. */}
+            <div>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Cancellation Fee (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={settings.cancellationFeePercent}
+                onChange={(e) => handleChange('cancellationFeePercent', Math.min(100, Math.max(0, Number(e.target.value))))}
+                style={{ width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', color: '#fff', fontSize: '13.5px' }}
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Kept from a confirmed booking that is cancelled. 0% = no charge, full refund.</span>
             </div>
 
             <div>

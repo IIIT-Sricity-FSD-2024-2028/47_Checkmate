@@ -9,6 +9,9 @@
  *   Real-time coordination channel for clients to message directly
  *   with their event vendors, coordinators, and on-site staff.
  *   Uses the shared backend /api/messages endpoints.
+ *   Live: new messages arrive through the socket (hooks/useLiveChat.js), with
+ *   3-second polling only if the socket is down. Each event shows its unread
+ *   count; the pinned "Admin Support" conversation talks to the admin team.
  * ============================================================================
  */
 
@@ -28,7 +31,9 @@ import {
 import '../../styles/client.css';
 import { getAuthSession, getAuthUser } from '../../services/auth/authStorage';
 import { getMyEvents } from '../../services/eventService';
-import { getMessageThread, sendMessage } from '../../services/messageService';
+import useLiveChat, { formatMessageTime } from '../../hooks/useLiveChat';
+import useUnreadCounts from '../../hooks/useUnreadCounts';
+import '../../styles/chat-live.css';
 
 export default function ClientCoordination() {
   const session = getAuthSession();
@@ -43,7 +48,6 @@ export default function ClientCoordination() {
 
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,36 +86,27 @@ export default function ClientCoordination() {
   }, []);
 
   const selectedEvent = useMemo(() => {
+    if (selectedEventId === 'admin') return { id: null, name: 'Admin Support', vendor: 'Admin Team' };
     return (
       events.find((e) => e.id === selectedEventId) ||
       events[0] || { id: null, name: 'No events yet', vendor: '' }
     );
   }, [events, selectedEventId]);
 
+  // "admin" = the pinned Admin Support conversation is open
+  const isAdminChat = selectedEventId === 'admin';
+
   // Each event has its own conversation with the vendor
-  const activeThreadId = selectedEvent.id ? `client-${selectedEvent.id}` : null;
+  const activeThreadId = !isAdminChat && selectedEvent.id ? `client-${selectedEvent.id}` : null;
 
-  // Load and poll messages
-  useEffect(() => {
-    let mounted = true;
+  // Live messages of the open conversation (socket + 3 s fallback polling)
+  const eventChat = useLiveChat({ kind: 'thread', threadId: activeThreadId });
+  const adminChat = useLiveChat({ kind: 'admin' });
+  const chat = isAdminChat ? adminChat : eventChat;
+  const messages = chat.messages;
 
-    async function loadMessages() {
-      if (!activeThreadId) return;
-      try {
-        const thread = await getMessageThread(activeThreadId);
-        if (mounted) setMessages(Array.isArray(thread) ? thread : []);
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      }
-    }
-
-    loadMessages();
-    const interval = setInterval(loadMessages, 4000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, [activeThreadId]);
+  // Unread counts for the badges in the list
+  const unread = useUnreadCounts();
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -136,38 +131,14 @@ export default function ClientCoordination() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const text = inputText.trim();
-    if (!text || sending || !activeThreadId) return;
+    if (!text || sending || (!activeThreadId && !isAdminChat)) return;
 
-    const newMsg = {
-      threadId: activeThreadId,
-      sender: clientName,
-      initials: clientInitials,
-      self: true,
-      text: text,
-      avatar: 'blue',
-    };
-
-    // Optimistic update
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...newMsg,
-        id: `local_${Date.now()}`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
+    // The hook POSTs the message and adds the saved copy to the list
     setInputText('');
-
-    try {
-      setSending(true);
-      await sendMessage(newMsg);
-    } catch (err) {
-      console.error('Failed to post client message:', err);
-      setMessages((prev) => prev.filter((m) => m.text !== text || !String(m.id).startsWith("local_")));
-      setInputText(text);
-    } finally {
-      setSending(false);
-    }
+    setSending(true);
+    const ok = await chat.send(text);
+    if (!ok) setInputText(text); // put the text back so nothing is lost
+    setSending(false);
   };
 
   return (
@@ -203,6 +174,20 @@ export default function ClientCoordination() {
           </div>
 
           <div className="msg-conv-list">
+            {/* Pinned conversation with the admin team */}
+            <div
+              className={`msg-conv-item ${isAdminChat ? 'active' : ''}`}
+              onClick={() => setSelectedEventId('admin')}
+            >
+              <div className="msg-conv-avatar">AD</div>
+              <div className="msg-conv-body">
+                <div className="msg-conv-name">
+                  <span>Admin Support</span>
+                  {unread.threads['admin-chat'] > 0 && <span className="chat-unread-badge">{unread.threads['admin-chat']}</span>}
+                </div>
+                <div className="msg-conv-preview">Platform administrators</div>
+              </div>
+            </div>
             {filteredEvents.map((ev) => {
               const isActive = (selectedEvent?.id || '') === ev.id;
               const initials = (ev.name || 'EV')
@@ -225,9 +210,11 @@ export default function ClientCoordination() {
                   <div className="msg-conv-body">
                     <div className="msg-conv-name">
                       <span>{ev.name}</span>
-                      <span className="msg-conv-time">
-                        {String(ev.status || 'Active').toUpperCase()}
-                      </span>
+                      {unread.threads[`client-${ev.id}`] > 0 ? (
+                        <span className="chat-unread-badge">{unread.threads[`client-${ev.id}`]}</span>
+                      ) : (
+                        <span className="msg-conv-time">{String(ev.status || 'Active').toUpperCase()}</span>
+                      )}
                     </div>
                     <div className="msg-conv-preview">
                       Coordinator: {ev.vendor || 'Elite Events Co.'}
@@ -268,7 +255,10 @@ export default function ClientCoordination() {
                       fontWeight: 700,
                     }}
                   >
-                    Vendor Desk
+                    {isAdminChat ? 'Admin Team' : 'Vendor Desk'}
+                  </span>
+                  <span className={`chat-live-pill ${chat.connected ? '' : 'chat-live-pill--off'}`}>
+                    {chat.connected ? 'Live' : 'Refreshing every 3s'}
                   </span>
                 </div>
                 <div className="chat-status">● Online • {selectedEvent.name}</div>
@@ -280,6 +270,8 @@ export default function ClientCoordination() {
           <div className="chat-messages">
             {messages.map((m, idx) => {
               const isMe =
+                m.senderId === user?.id ||
+                String(m.senderEmail || '').toLowerCase() === String(user?.email || '').toLowerCase() ||
                 m.sender?.toLowerCase() === clientName.toLowerCase();
 
               return (
@@ -291,12 +283,12 @@ export default function ClientCoordination() {
                         isMe ? 'badge-client' : 'badge-vendor'
                       }`}
                     >
-                      {m.role || (isMe ? 'Client' : 'Vendor Lead')}
+                      {m.senderRole || m.role || (isMe ? 'Client' : 'Vendor Lead')}
                     </span>
                   </div>
 
                   <div className="msg-bubble">{m.text}</div>
-                  <div className="msg-time">{m.time || 'Just now'}</div>
+                  <div className="msg-time">{formatMessageTime(m.createdAt || m.timestamp) || m.time || 'Just now'}</div>
                 </div>
               );
             })}

@@ -66,7 +66,7 @@ function ReviewStep({ form, budgetText, resources, staff, subtotal, submitState,
       {/* ── Staff ── */}
       {staff.length > 0 && (
         <div className="card cl-review">
-          <div className="cl-review__title"><UsersRound size={16} /> Requested Staff</div>
+          <div className="cl-review__title"><UsersRound size={16} /> Preferred Staff (vendor confirms)</div>
           <div className="cl-chip-list">
             {staff.map((s) => <span className="cl-chip" key={s.id}><User size={14} /> {s.name} — {s.role}</span>)}
           </div>

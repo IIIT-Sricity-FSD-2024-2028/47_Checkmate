@@ -178,7 +178,9 @@ export async function createStaffRequest(requestData) {
   if (requestData.eventId) {
     try {
       await sendMessage({
-        threadId: requestData.eventId,
+        // The vendor <-> staff conversation of this event (was the bare event id,
+        // a thread nobody reads, so the vendor never saw the request)
+        threadId: `staff-${requestData.eventId}`,
         sender: session.name,
         initials: (session.name || 'Staff')
           .split(' ')
@@ -200,12 +202,14 @@ export async function createStaffRequest(requestData) {
   return issueResult;
 }
 
-// ── Admin Coordination chat (shared state key "adminChatMessages") ──
-// The same list is read by the admin Coordination Hub and Issue Tracking pages.
+// ── Admin Coordination chat (GET/POST /api/admin-chat) ──
+// The server returns only this person's conversation with the admin team and
+// appends one message at a time (the old PUT of the whole list could overwrite
+// other people's messages and let anyone read every chat).
 
-// Loads the whole admin support chat list
+// Loads this user's admin support conversation
 export async function fetchAdminChat() {
-  const response = await fetch(`${API_BASE}/state/adminChatMessages`, {
+  const response = await fetch(`${API_BASE}/admin-chat`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -215,18 +219,15 @@ export async function fetchAdminChat() {
   return Array.isArray(list) ? list : [];
 }
 
-// Adds one message to the admin support chat. It re-reads the latest list
-// first so messages sent by others in the meantime are not overwritten.
+// Sends one message to the admin team; returns the saved message
 export async function postAdminChatMessage(message) {
-  const latest = await fetchAdminChat();
-  const updated = [...latest, message];
-  const response = await fetch(`${API_BASE}/state/adminChatMessages`, {
-    method: 'PUT',
+  const response = await fetch(`${API_BASE}/admin-chat`, {
+    method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ value: updated }),
+    body: JSON.stringify({ text: message.text, type: message.type, issueId: message.issueId }),
   });
   if (!response.ok) {
     throw new Error(`Failed to send message: ${response.status}`);
   }
-  return updated;
+  return response.json();
 }

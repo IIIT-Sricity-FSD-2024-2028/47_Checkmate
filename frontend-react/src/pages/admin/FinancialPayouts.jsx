@@ -35,6 +35,12 @@ export default function FinancialPayouts() {
 
   const commissions = data.items || [];
   const aggregates = data.summary || {};
+  // Live commission % from Global Settings (the API sends a fraction, e.g. 0.1)
+  const ratePct = Math.round(Number(aggregates.platformCommissionRate ?? 0.1) * 100);
+  // Commission on bookings the client has actually paid
+  const commissionCollected = commissions
+    .filter((b) => b.paymentStatus === 'paid')
+    .reduce((sum, b) => sum + Number(b.commissionAmount || 0), 0);
 
   const pendingBookings = useMemo(() => {
     return commissions.filter((b) => (b.payoutStatus || 'pending').toLowerCase() === 'pending');
@@ -143,7 +149,7 @@ export default function FinancialPayouts() {
             ₹{Number(aggregates.platformCommissionEarned || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: '#ec4899', marginTop: '4px' }}>
-            10% platform revenue share
+            {ratePct}% platform share · ₹{commissionCollected.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} collected (client paid)
           </div>
         </div>
       </div>
@@ -223,8 +229,8 @@ export default function FinancialPayouts() {
                 <th style={{ padding: '14px 16px', fontWeight: '600' }}>Event & Date</th>
                 <th style={{ padding: '14px 16px', fontWeight: '600' }}>Vendor</th>
                 <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Total Gross</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Fee (10%)</th>
-                <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Net Payout (90%)</th>
+                <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Fee ({ratePct}%)</th>
+                <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Net Payout ({100 - ratePct}%)</th>
                 <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
@@ -241,6 +247,12 @@ export default function FinancialPayouts() {
                     <td style={{ padding: '14px 16px', fontWeight: '600', color: '#fff' }}>{bId}</td>
                     <td style={{ padding: '14px 16px' }}>
                       <div style={{ color: '#fff', fontWeight: '500' }}>{b.eventName || b.event || b.eventId}</div>
+                      {/* A cancelled booking keeps only the cancellation fee */}
+                      {b.status === 'Cancelled' && (
+                        <div style={{ fontSize: '11px', color: '#f87171' }}>
+                          Cancelled · was ₹{Number(b.originalCost || 0).toLocaleString("en-IN")}, fee kept ₹{Number(b.cost || 0).toLocaleString("en-IN")}
+                        </div>
+                      )}
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{b.created ? new Date(b.created).toLocaleDateString() : 'Active'}</div>
                     </td>
                     <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>

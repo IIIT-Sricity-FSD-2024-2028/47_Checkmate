@@ -27,9 +27,11 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  cancelEventWithReason,
   fetchVendors,
   normalizeDate,
 } from '../../services/superuserApi';
+import ReasonModal from '../../components/ReasonModal';
 
 export default function SuperuserEvents() {
   // Stores raw list of all platform events loaded from the backend
@@ -87,6 +89,9 @@ export default function SuperuserEvents() {
 
   // Target event marked for deletion
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Event whose Cancel reason popup is open (null = closed)
+  const [cancelTarget, setCancelTarget] = useState(null);
 
   // User action feedback toast message
   const [toast, setToast] = useState(null);
@@ -347,6 +352,17 @@ export default function SuperuserEvents() {
                 >
                   ✏
                 </button>
+                {/* Cancel (with a reason) while the event can still be called off */}
+                {['pending', 'waiting', 'confirmed', 'approved'].includes(String(e.status).toLowerCase()) && (
+                  <button
+                    className="ib ib-d"
+                    onClick={() => setCancelTarget(e)}
+                    title="Cancel event"
+                    type="button"
+                  >
+                    ⊘
+                  </button>
+                )}
                 <button
                   className="ib ib-d"
                   onClick={() => setDeleteTarget(e)}
@@ -360,6 +376,20 @@ export default function SuperuserEvents() {
           </tr>
         ))}
       </DataTable>
+
+      {/* Cancel with a reason (client and vendor are notified) */}
+      <ReasonModal
+        open={Boolean(cancelTarget)}
+        title={cancelTarget ? `Cancel "${cancelTarget.name}"` : ''}
+        hint="The client and the vendor will see who cancelled and why."
+        confirmLabel="Cancel Event"
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async (reason) => {
+          await cancelEventWithReason(cancelTarget.id, reason);
+          setCancelTarget(null);
+          loadData();
+        }}
+      />
 
       {/* Add / Edit Event Modal */}
       {isModalOpen && (

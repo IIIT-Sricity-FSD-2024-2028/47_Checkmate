@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppData, ActivityLog, Booking, EventRecord, Resource, StaffMember, VendorApplication } from '../domain/models';
 import { seedData } from './seed';
-import { calculateCommissionSplit, commissionRateFromPercent, DEFAULT_COMMISSION_RATE } from '../common/constants/finance.constants';
+import { calculateCommissionSplit, cancellationFeeFromPercent, commissionRateFromPercent, DEFAULT_COMMISSION_RATE } from '../common/constants/finance.constants';
+import { syncBookingWithEvent } from './booking-rules';
 
 export type ArrayCollectionName =
   | 'users'
@@ -20,7 +21,8 @@ export type ArrayCollectionName =
   | 'venues'
   | 'notifications'
   | 'activityLogs'
-  | 'staffTasks';
+  | 'staffTasks'
+  | 'staffRatings';
 
 // The whole "database". There is no SQL server: every collection lives in one
 // JSON file (back-end/data/database.json) that is read once at startup, kept in
@@ -29,7 +31,8 @@ export type ArrayCollectionName =
 @Injectable()
 export class DataService implements OnModuleInit {
   private readonly logger = new Logger(DataService.name);
-  private readonly dataDir = join(__dirname, '..', '..', 'data');
+  // EMS_DATA_DIR lets tests use a throw-away folder instead of the real data/
+  private readonly dataDir = process.env.EMS_DATA_DIR || join(__dirname, '..', '..', 'data');
   private readonly dbFilePath = join(this.dataDir, 'database.json');
 
   private data: AppData;
@@ -37,7 +40,20 @@ export class DataService implements OnModuleInit {
   constructor() {
     this.data = this.loadPersistentData();
     this.ensureStaffAccounts();
+    this.fillMissingStaffProfiles();
     this.normalizeBookingCommissions();
+  }
+
+  // Staff rows saved before profiles existed get the seed's experience/skills/bio
+  // (matched by id). Only empty fields are filled; nothing is overwritten.
+  private fillMissingStaffProfiles() {
+    this.data.staff.forEach((member) => {
+      const seedRow: any = seedData.staff.find((s) => s.id === member.id);
+      if (!seedRow) return;
+      if (member.experienceYears === undefined) member.experienceYears = seedRow.experienceYears;
+      if (!member.skills) member.skills = seedRow.skills;
+      if (!member.bio) member.bio = seedRow.bio;
+    });
   }
 
   onModuleInit() {
@@ -53,6 +69,8 @@ export class DataService implements OnModuleInit {
   private recomputeDerivedFields() {
     this.data.staff.forEach((member) => this.triggerStaffAssignmentChanged(member.id));
     this.triggerAllResourceAllocations();
+    // Bookings saved before booking-rules.ts existed may not match their event yet
+    this.data.events.forEach((event) => this.syncEventBooking(event));
   }
 
   /**
@@ -285,6 +303,22 @@ export class DataService implements OnModuleInit {
     return commissionRateFromPercent(settings?.commissionRate);
   }
 
+  /** Global Settings "Cancellation fee %" as a fraction (0 when not set). */
+  public getCancellationFeeRate(): number {
+    const settings = this.getValue('platformSettings') as { cancellationFeePercent?: unknown } | undefined;
+    return cancellationFeeFromPercent(settings?.cancellationFeePercent);
+  }
+
+  // Keeps an event's booking in step with the event (live -> In Progress,
+  // completed -> Completed, cancelled/rejected -> only the cancellation fee).
+  // The rules themselves live in booking-rules.ts.
+  private syncEventBooking(event: EventRecord) {
+    const booking = this.data.bookings.find((b) => b.eventId === event.id);
+    if (!booking) return;
+    const patch = syncBookingWithEvent(booking, String(event.status), this.getCancellationFeeRate());
+    if (Object.keys(patch).length) Object.assign(booking, patch);
+  }
+
   // Shares a booking between vendors in proportion to the value of the items each
   // supplied. Returns undefined when one vendor supplied everything.
   private buildVendorSplits(eventId: string, cost: number, rate: number) {
@@ -344,6 +378,9 @@ export class DataService implements OnModuleInit {
         });
       }
     }
+
+    // The booking (if there is one) follows the event's new status.
+    if (oldEvent.status !== newEvent.status) this.syncEventBooking(newEvent);
 
     // A finished event gives its stock and staff back, however it finished.
     const finishedStatuses = ['completed', 'rejected', 'cancelled'];
@@ -459,8 +496,10 @@ export class DataService implements OnModuleInit {
       this.triggerAllResourceAllocations();
     }
 
+    // Declined / rejected assignments stay as they are: that person never worked
+    // the event, so it must not count as one they completed.
     this.data.staffAssignments
-      .filter((a) => a.eventId === eventId || a.eventName === eventId)
+      .filter((a) => (a.eventId === eventId || a.eventName === eventId) && !['rejected', 'declined'].includes(String(a.status).toLowerCase()))
       .forEach((a) => {
         a.status = 'completed';
         a.completedAt = new Date().toISOString();
@@ -499,6 +538,17 @@ export class DataService implements OnModuleInit {
   private cascadeDeleteStaff(staffId: string) {
     this.data.staffAssignments = this.data.staffAssignments.filter((a) => a.staffId !== staffId);
     this.data.staffTasks = this.data.staffTasks.filter((t) => t.staffId !== staffId);
+  }
+
+  /** Drops a bell notification for one user (no-op without a user id). */
+  public notifyUser(userId: string | undefined, title: string, message: string, type: 'success' | 'error' | 'info' = 'info', linkUrl?: string) {
+    if (!userId) return;
+    this.create('notifications', 'NOTIF', { userId, title, message, type, isRead: false, linkUrl, createdAt: new Date().toISOString() } as any);
+  }
+
+  /** The login (user id) of a vendor company, if it has one. */
+  public vendorUserId(vendorId?: string): string | undefined {
+    return this.data.vendors.find((v: any) => v.id === vendorId)?.userId;
   }
 
   public logActivity(action: string, entityType: string, entityId: string, details?: Record<string, unknown>, userId?: string, userRole?: string) {

@@ -51,6 +51,7 @@ function StaffGrid({
   onSchedule,
   onEdit,
   onDelete,
+  onProfile,
 }) {
   return (
     <>
@@ -70,6 +71,7 @@ function StaffGrid({
               onSchedule={onSchedule}
               onEdit={onEdit}
               onDelete={onDelete}
+              onProfile={onProfile}
             />
           ))}
         </div>

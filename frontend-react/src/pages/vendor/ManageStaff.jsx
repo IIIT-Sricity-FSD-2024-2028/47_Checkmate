@@ -31,7 +31,7 @@
  * ============================================================================
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
@@ -49,6 +49,7 @@ import useVendorStaffData from "../../components/vendor/useVendorStaffData";
 import StaffStatsGrid from "../../components/vendor/StaffStatsGrid";
 import StaffToolbar from "../../components/vendor/StaffToolbar";
 import StaffGrid from "../../components/vendor/StaffGrid";
+import StaffProfileModal from "../../components/StaffProfileModal";
 import StaffFormModal from "../../components/vendor/StaffFormModal";
 import StaffAssignModal from "../../components/vendor/StaffAssignModal";
 import StaffScheduleModal from "../../components/vendor/StaffScheduleModal";
@@ -63,6 +64,9 @@ function ManageStaff() {
   const returnEventId =
     searchParams.get("fromReview") || location.state?.fromReviewEventId || null;
   const returnEventName = location.state?.fromReviewEventName || "";
+
+  // Which staff profile is open in the modal (null = closed)
+  const [profileStaffId, setProfileStaffId] = useState(null);
 
   const {
     // Primary Data State
@@ -195,8 +199,12 @@ function ManageStaff() {
           onSchedule={handleOpenScheduleModal}
           onEdit={handleOpenEditModal}
           onDelete={handleOpenDeleteModal}
+          onProfile={(member) => setProfileStaffId(member.id)}
         />
       </div>
+
+      {/* ── Staff profile (experience, skills, events completed, rating) ── */}
+      <StaffProfileModal staffId={profileStaffId} onClose={() => setProfileStaffId(null)} />
 
       {/* ── COMPONENT 5: ADD / EDIT STAFF MODAL DIALOG ── */}
       <StaffFormModal

@@ -20,7 +20,7 @@
  *   - GET  /api/events                         -> your live events
  *   - POST /api/issues                         -> saves the issue
  *   - GET/PUT /api/state/coordinationMessages  -> event chat
- *   - GET/PUT /api/state/adminChatMessages     -> admin support chat
+ *   - POST /api/admin-chat                      -> admin support chat
  * ============================================================================
  */
 
@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { getMyEvents } from "../../services/eventService";
 import { createIssue } from "../../services/issueService";
 import { getStateKey, setStateKey } from "../../services/stateService";
+import { postAdminChat } from "../../services/messageService";
 import { getCurrentUser, initials } from "../../utils/clientHelpers";
 
 const EMPTY_FORM = { title: "", desc: "", priority: "", eventId: "", category: "" };
@@ -144,13 +145,9 @@ export function useReportIssueForm() {
         email: user.email,
         createdAt: new Date().toISOString(),
       });
-      await appendToChat("adminChatMessages", {
-        id: "msg_" + Date.now(),
-        sender: user.name,
-        senderRole: user.roleLabel,
-        senderEmail: user.email,
+      // One message into this client's admin conversation (sender comes from the login)
+      await postAdminChat({
         text: `📋 Issue Reported: ${form.title.trim()} | Priority: ${form.priority} | Category: ${form.category}`,
-        timestamp: new Date().toISOString(),
         type: "issue-report",
       });
 

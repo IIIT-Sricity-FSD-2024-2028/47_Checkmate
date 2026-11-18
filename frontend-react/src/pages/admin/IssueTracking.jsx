@@ -37,8 +37,8 @@ import Pagination from "../../components/table/Pagination";
 import StatusBadge from "../../components/vendor/StatusBadge";
 
 import { usePagination } from "../../hooks/usePagination";
-import { getAuthUser } from "../../services/auth/authStorage";
-import { getStateKey, getIssues, patchIssue, setStateKey } from "../../services";
+import { postAdminChat } from "../../services/messageService";
+import { getIssues, patchIssue } from "../../services";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -90,24 +90,16 @@ function RoleTag({ role }) {
   return <span className={`role-tag role-tag--${r}`}>{r}</span>;
 }
 
-// Legacy behaviour: tell the reporter about the change in the admin coordination chat.
+// Tell the reporter about the change in their admin chat (POST /api/admin-chat,
+// addressed with recipientEmail, so it reaches them live).
 async function postStatusMessage(issue, status) {
-  const messages = await getStateKey("adminChatMessages");
-  const admin = getAuthUser();
-  const next = [
-    ...(Array.isArray(messages) ? messages : []),
-    {
-      id: `msg_${Date.now()}`,
-      sender: "System",
-      senderRole: "Admin",
-      senderEmail: admin?.email || "",
-      recipientEmail: issue.email || "",
-      text: `🔧 Issue "${issue.title || issue.id}" status updated to: ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
-      timestamp: new Date().toISOString(),
-      type: "system",
-    },
-  ];
-  await setStateKey("adminChatMessages", next);
+  if (!issue.email) return; // nobody to address the note to
+  await postAdminChat({
+    recipientEmail: issue.email,
+    text: `🔧 Issue "${issue.title || issue.id}" status updated to: ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
+    type: "system",
+    issueId: issue.id,
+  });
 }
 
 /** The next workflow step for an issue, shared by the row and the modal. */

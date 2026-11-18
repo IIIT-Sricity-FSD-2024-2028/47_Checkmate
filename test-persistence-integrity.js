@@ -6,13 +6,12 @@ console.log('====================================================');
 console.log('EMS Backend Persistence & Integrity Test Suite');
 console.log('====================================================');
 
-const dataDir = path.join(__dirname, 'back-end', 'data');
+// SAFETY: these scripts used to DELETE back-end/data/database.json (the real
+// data). They now run against a throw-away folder via EMS_DATA_DIR, which
+// DataService reads, so the real database is never touched.
+process.env.EMS_DATA_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ems-script-'));
+const dataDir = process.env.EMS_DATA_DIR;
 const dbFile = path.join(dataDir, 'database.json');
-
-// Helper to clean test database file if desired
-if (fs.existsSync(dbFile)) {
-  fs.unlinkSync(dbFile);
-}
 
 // 1. Test Startup & Initialization Persistence
 console.log('\n[TEST 1] Initializing DataService (Cold Boot)...');

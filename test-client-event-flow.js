@@ -1,3 +1,8 @@
+const fs = require('fs');
+const path = require('path');
+// SAFETY: run against a throw-away copy of the data (EMS_DATA_DIR), never the
+// real back-end/data/database.json -- this script creates test events.
+process.env.EMS_DATA_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ems-script-'));
 const { DataService } = require('./back-end/dist/database/data.service');
 const { EventsService } = require('./back-end/dist/modules/events/events.service');
 

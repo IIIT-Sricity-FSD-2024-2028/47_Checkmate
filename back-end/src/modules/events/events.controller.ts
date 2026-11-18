@@ -3,7 +3,7 @@ import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { StatusDto } from '../../common/dto/action.dto';
-import { CreateEventDto, UpdateEventDto } from './dto';
+import { CancelEventDto, CreateEventDto, UpdateEventDto } from './dto';
 import { EventsService } from './events.service';
 
 // Every module in this project follows this same controller shape, so reading
@@ -23,8 +23,9 @@ export class EventsController {
   // @Param() destructures the URL id and validates it via IdParamDto;
   // @Body() does the same for the JSON body. Validation happens automatically
   // because main.ts installs a global ValidationPipe.
-  @Get() @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findAll() { return this.service.findAll(); }
-  @Get(':id') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
+  // A client only ever receives their own events (others' names, budgets and venues stay private)
+  @Get() @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findAll(@Req() req: any) { return this.service.findAll(req.user); }
+  @Get(':id') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findOne(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.findOne(id, req.user); }
 
   // Clients raise event requests; vendors/admins can also create them directly.
   @Post() @Roles('client', 'vendor', 'admin', 'superuser') create(@Body() dto: CreateEventDto, @Req() req: any) { return this.service.create(dto, req.user); }
@@ -37,9 +38,9 @@ export class EventsController {
 
   // The approval step. Clients are deliberately excluded -- a client must not be
   // able to approve their own request. This is the call that triggers billing.
-  @Patch(':id/status') @Roles('vendor', 'admin', 'superuser') status(@Param() { id }: IdParamDto, @Body() dto: StatusDto) { return this.service.updateStatus(id, dto); }
+  @Patch(':id/status') @Roles('vendor', 'admin', 'superuser') status(@Param() { id }: IdParamDto, @Body() dto: StatusDto, @Req() req: any) { return this.service.updateStatus(id, dto, req.user); }
 
-  @Patch(':id/cancel') @Roles('client') cancel(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.cancel(id, req.user); }
+  @Patch(':id/cancel') @Roles('client') cancel(@Param() { id }: IdParamDto, @Body() dto: CancelEventDto, @Req() req: any) { return this.service.cancel(id, req.user, dto.reason); }
 
   @Delete(':id') @Roles('vendor', 'admin', 'superuser', 'client') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 }

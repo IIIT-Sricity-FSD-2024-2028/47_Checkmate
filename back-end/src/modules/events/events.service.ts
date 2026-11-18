@@ -3,6 +3,7 @@ import { DataService } from '../../database/data.service';
 import { StatusDto } from '../../common/dto/action.dto';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { ResourcesService } from '../resources/resources.service';
+import { assertBookingNotice, assertClientCanCancel } from './event-date-rules';
 
 const SCHEDULE_CHECK_MS = 30 * 1000;
 const DEFAULT_EVENT_MINUTES = 4 * 60; // Older events have no end time
@@ -26,6 +27,8 @@ const CLIENT_LOCKED_FIELDS = [
 
 // Who is calling (req.user from the verified token)
 type Caller = { id?: string; role?: string; name?: string; email?: string } | undefined;
+// "who did it", saved on the event next to the reason
+const actorOf = (user: Caller) => (user?.id ? { id: user.id, name: user.name || '', role: String(user.role || '').toLowerCase() } : undefined);
 const isClient = (user: Caller) => String(user?.role || '').toLowerCase() === 'client';
 
 // Controllers handle HTTP; services hold the business rules. This one owns the
@@ -90,8 +93,14 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  findAll() { return this.data.collection('events'); }
-  findOne(id: string) { return this.data.find('events', id); }
+  findAll(user?: Caller) {
+    const all = this.data.collection('events');
+    return isClient(user) ? all.filter((e) => e.clientId === user!.id) : all;
+  }
+  findOne(id: string, user?: Caller) {
+    if (isClient(user)) this.assertClientOwns(id, user);
+    return this.data.find('events', id);
+  }
 
   create(dto: CreateEventDto, user?: Caller) {
     // Pull presetPackageId out of the payload; `...event` is everything else.
@@ -102,6 +111,8 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       event.status = 'pending';
       event.clientId = user!.id;
       event.clientEmail = user!.email || event.clientEmail;
+      // Rule: clients book at least 7 days ahead (event-date-rules.ts)
+      assertBookingNotice(event.date);
     }
     this.assertEndDateValid(event);
     // A request for more units than are free on that date can never be met,
@@ -136,6 +147,8 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       if (locked.length) {
         throw new ForbiddenException(`Clients cannot change: ${locked.join(', ')}.`);
       }
+      // Moving the date follows the same 7-day rule as a new request
+      if (dto.date !== undefined && dto.date !== this.data.find('events', id).date) assertBookingNotice(dto.date);
     }
     const scheduleFields = ['date', 'endDate', 'time', 'endTime'] as const;
     if (scheduleFields.some((field) => dto[field] !== undefined)) {
@@ -143,22 +156,49 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       this.assertEndDateValid({ ...current, ...dto });
       this.resources.assertEventStillFits({ ...current, ...dto });
     }
-    return this.data.update('events', id, dto);
+    // A status change sent through the general edit (e.g. the superuser Events
+    // form) goes through updateStatus too, so it gets the same timestamps and
+    // client notification as the vendor's Approve / Reject buttons.
+    const { status, ...details } = dto;
+    const current = this.data.find('events', id);
+    let updated: any = Object.keys(details).length ? this.data.update('events', id, details) : current;
+    if (status !== undefined && String(status) !== String(current.status)) {
+      updated = this.updateStatus(id, { status: String(status), note: details.rejectionReason }, user);
+    }
+    return updated;
   }
 
-  // A client can withdraw their own request until the vendor approves it.
-  cancel(id: string, user?: { id: string }) {
+  // A client can withdraw their own request until the vendor approves it. The
+  // reason and who cancelled are saved, and the vendor is told.
+  cancel(id: string, user?: Caller, reason = '') {
     const event = this.data.find('events', id);
     if (!event.clientId || event.clientId !== user?.id) throw new ForbiddenException('You can only cancel your own events.');
     if (!['pending', 'waiting'].includes(String(event.status).toLowerCase())) {
       throw new BadRequestException('Only events awaiting approval can be cancelled.');
     }
-    return this.data.update('events', id, { status: 'cancelled' } as any);
+    // Rule: inside 3 days only the admin can cancel (event-date-rules.ts)
+    assertClientCanCancel(String(event.date));
+    if (!String(reason).trim()) throw new BadRequestException('Please give a reason for cancelling.');
+    const updated: any = this.data.update('events', id, {
+      status: 'cancelled',
+      cancellationReason: String(reason).trim(),
+      cancelledBy: actorOf(user),
+      cancelledAt: new Date().toISOString(),
+    } as any);
+    this.data.notifyUser(
+      this.data.vendorUserId(updated.vendorId),
+      `${updated.name} Cancelled by Client`,
+      `${user?.name || 'The client'} cancelled ${updated.name}. Reason: ${updated.cancellationReason}`,
+      'error',
+      `/vendor/events/${updated.id}/review`,
+    );
+    return updated;
   }
 
   // Status changes also stamp the matching timestamp, so the timeline shown on
   // the monitoring pages is recorded rather than guessed.
-  updateStatus(id: string, dto: StatusDto) {
+  // `user` (optional) is who made the change; the scheduler passes none.
+  updateStatus(id: string, dto: StatusDto, user?: Caller) {
     const patch: Record<string, unknown> = { status: dto.status };
     const now = new Date().toISOString();
     // Lowercase once: different portals send 'Confirmed' vs 'confirmed'.
@@ -177,13 +217,28 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     } else if (s === 'rejected') {
       patch.rejectedAt = now;
       if (dto.note) patch.rejectionReason = dto.note;
+      if (user) patch.rejectedBy = actorOf(user);
+    } else if (s === 'cancelled') {
+      patch.cancelledAt = now;
+      patch.cancellationReason = dto.note || 'No reason given';
+      if (user) patch.cancelledBy = actorOf(user);
     } else if (s === 'waiting') {
       patch.reviewedAt = now;
       if (dto.note) patch.waitingReason = dto.note;
     }
 
-    const updated = this.data.update('events', id, patch as any);
-    this.notifyClient(updated as any, s, dto.note);
+    const updated: any = this.data.update('events', id, patch as any);
+    this.notifyClient(updated as any, s, dto.note, user);
+    // An admin/superuser cancelling also tells the vendor who was running it
+    if (s === 'cancelled' && user && ['admin', 'superuser'].includes(String(user.role).toLowerCase())) {
+      this.data.notifyUser(
+        this.data.vendorUserId(updated.vendorId),
+        `${updated.name} Cancelled`,
+        `${updated.name} was cancelled by ${user.name || 'an administrator'}. Reason: ${patch.cancellationReason}`,
+        'error',
+        `/vendor/events/${updated.id}/review`,
+      );
+    }
     return updated;
   }
 
@@ -212,7 +267,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
   // Client <-> vendor bridge: when the vendor changes an event's status, drop a
   // notification for the client who owns it. The client portal's bell reads
   // these from the `notifications` collection (filtered by userId).
-  private notifyClient(event: { id: string; name: string; clientId?: string; vendor?: string; quotedPrice?: number }, status: string, note?: string) {
+  private notifyClient(event: { id: string; name: string; clientId?: string; vendor?: string; quotedPrice?: number }, status: string, note?: string, user?: Caller) {
     if (!event?.clientId) return;
 
     const price = event.quotedPrice ? ` at ₹${Number(event.quotedPrice).toLocaleString('en-IN')}` : '';
@@ -221,6 +276,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       approved: { title: `${event.name} Approved`, message: `${event.vendor || 'The vendor'} approved your request for ${event.name}${price}.`, type: 'success' },
       waiting: { title: `${event.name} Placed on Hold`, message: note ? `Reason: ${note}` : `${event.name} was reviewed by the vendor and placed on hold pending preparations.`, type: 'info' },
       rejected: { title: `${event.name} Rejected`, message: note ? `Reason: ${note}` : `${event.name} was declined by the vendor.`, type: 'error' },
+      cancelled: { title: `${event.name} Cancelled`, message: `${event.name} was cancelled by ${user?.name || 'the platform'}${user?.role ? ` (${user.role})` : ''}. Reason: ${note || 'No reason given'}`, type: 'error' },
       live: { title: `${event.name} is Live`, message: `${event.name} is now in live execution mode.`, type: 'info' },
       completed: { title: `${event.name} Completed`, message: `${event.name} has finished. Thank you for using EventPro!`, type: 'success' },
     };

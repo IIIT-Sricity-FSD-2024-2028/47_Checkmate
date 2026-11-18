@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -22,8 +22,8 @@ export class VendorsController {
   @Get('vendors/:id/payouts')
   @Roles('admin', 'superuser', 'vendor')
   @ApiOperation({ summary: 'Get financial payouts and commission breakdown for a vendor' })
-  findVendorPayouts(@Param() { id }: IdParamDto) {
-    return this.service.getVendorPayouts(id);
+  findVendorPayouts(@Param() { id }: IdParamDto, @Req() req: any) {
+    return this.service.getVendorPayouts(id, req.user);
   }
 
   @Get('vendors/:id')
@@ -88,8 +88,8 @@ export class VendorsController {
 
   @Patch('vendor-applications/:id/decision')
   @Roles('admin', 'superuser')
-  decideApplication(@Param() { id }: IdParamDto, @Body() dto: DecisionDto) {
-    return this.service.decideApplication(id, dto);
+  decideApplication(@Param() { id }: IdParamDto, @Body() dto: DecisionDto, @Req() req: any) {
+    return this.service.decideApplication(id, dto, req.user);
   }
 
   @Delete('vendor-applications/:id')

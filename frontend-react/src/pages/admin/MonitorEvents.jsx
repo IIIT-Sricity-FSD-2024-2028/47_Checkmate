@@ -17,6 +17,8 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { getBookingsCommissions } from "../../services/bookingService";
+import { ReasonPicker, reasonText } from "../../components/ReasonModal";
 import { CalendarCheck, CheckCircle2, CheckSquare, Clock, Eye, Radio, RefreshCcw, XCircle } from "lucide-react";
 
 import "../../styles/dashboard.css";
@@ -64,6 +66,20 @@ function EventDetailsModal({ event, onClose }) {
   const resources = event?.requestedResources || [];
   const staff = event?.requestedStaff || [];
 
+  // This event's booking (only exists once a vendor approved it)
+  const [booking, setBooking] = useState(null);
+
+  // Loads the booking each time a different event is opened
+  useEffect(() => {
+    let isMounted = true;
+    setBooking(null);
+    if (!event?.id) return undefined;
+    getBookingsCommissions({ eventId: event.id })
+      .then((ledger) => { if (isMounted) setBooking(ledger?.items?.[0] || null); })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [event?.id]);
+
   return (
     <Modal
       open={Boolean(event)}
@@ -91,12 +107,30 @@ function EventDetailsModal({ event, onClose }) {
             <DetailField label="Vendor">{event.vendor}</DetailField>
             <DetailField label="Date">
               {event.date} {event.time}
+              {(event.endDate && event.endDate > event.date) || event.endTime ? ` → ${event.endDate && event.endDate > event.date ? event.endDate + " " : ""}${event.endTime || ""}` : ""}
             </DetailField>
             <DetailField label="Venue">{event.venue}</DetailField>
             <DetailField label="Guests">{event.guests ?? event.people}</DetailField>
             <DetailField label="Budget">
               <span className="detail-money">{formatCurrency(event.budget)}</span>
             </DetailField>
+            {/* Money: what the client is billed, the platform earns and the vendor gets */}
+            {booking && (
+              <>
+                <DetailField label={`Booking ${booking.id}`}>
+                  <span className="detail-money">{formatCurrency(booking.cost)}</span>{" "}
+                  <span className="cell-muted">
+                    {booking.status}{booking.status === "Cancelled" ? ` (was ${formatCurrency(booking.originalCost)})` : ""} · client {String(booking.paymentStatus || "unpaid").replace("_", " ")}
+                  </span>
+                </DetailField>
+                <DetailField label={`Commission earned (${Math.round(Number(booking.commissionRate || 0) * 100)}%)`}>
+                  <span className="detail-money">{formatCurrency(booking.commissionAmount)}</span>
+                </DetailField>
+                <DetailField label="Vendor payout">
+                  {formatCurrency(booking.vendorPayoutAmount)} <span className="cell-muted">({String(booking.payoutStatus || "pending").replace("_", " ")})</span>
+                </DetailField>
+              </>
+            )}
             {event.notes && (
               <DetailField label="Notes" wide>
                 {event.notes}
@@ -141,6 +175,10 @@ function EventDetailsModal({ event, onClose }) {
 }
 
 function RefundModal({ event, onClose, onConfirm, saving, error }) {
+  // Why the event is cancelled (saved on the event, sent to client + vendor)
+  const [reason, setReason] = useState({ option: "", details: "" });
+  const text = reasonText(reason);
+
   return (
     <Modal
       open={Boolean(event)}
@@ -151,7 +189,7 @@ function RefundModal({ event, onClose, onConfirm, saving, error }) {
           <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={saving}>
             Keep Event
           </button>
-          <button type="button" className="ui-btn ui-btn--danger" onClick={onConfirm} disabled={saving}>
+          <button type="button" className="ui-btn ui-btn--danger" onClick={() => onConfirm(text)} disabled={saving || !text}>
             <RefreshCcw size={14} /> {saving ? "Refunding..." : "Cancel & Refund"}
           </button>
         </>
@@ -163,6 +201,7 @@ function RefundModal({ event, onClose, onConfirm, saving, error }) {
           {event.client || "the client"}? The event will be marked <strong>cancelled</strong>.
         </p>
       )}
+      {event && <ReasonPicker value={reason} onChange={setReason} />}
       {error && (
         <div className="admin-error" style={{ marginTop: 16 }}>
           {error}
@@ -224,11 +263,11 @@ function MonitorEvents() {
 
   const { pageItems, setPage, ...pagination } = usePagination(filtered, 10);
 
-  const setStatus = async (event, status) => {
+  const setStatus = async (event, status, note) => {
     setBusyId(event.id);
     setError("");
     try {
-      const updated = await updateEventStatus(event.id, status);
+      const updated = await updateEventStatus(event.id, status, note);
       setEvents((prev) =>
         sortEvents(prev.map((e) => (e.id === event.id ? { ...e, ...(updated || { status }) } : e)))
       );
@@ -242,9 +281,9 @@ function MonitorEvents() {
     }
   };
 
-  const confirmRefund = async () => {
+  const confirmRefund = async (reason) => {
     const event = events.find((e) => e.id === refundId);
-    if (event && (await setStatus(event, "cancelled"))) setRefundId(null);
+    if (event && (await setStatus(event, "cancelled", reason))) setRefundId(null);
   };
 
   const onFilter = (setter) => (value) => {
@@ -340,6 +379,7 @@ function MonitorEvents() {
 
       <EventDetailsModal event={events.find((e) => e.id === viewId) || null} onClose={() => setViewId(null)} />
       <RefundModal
+        key={refundId || "none"}
         event={events.find((e) => e.id === refundId) || null}
         onClose={() => setRefundId(null)}
         onConfirm={confirmRefund}

@@ -24,6 +24,7 @@ import { Link } from "react-router-dom";
 import VenuePicker from "./VenuePicker";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, MapPin, Sparkles, Wallet } from "lucide-react";
 import { describeEventDuration } from "../../utils/clientHelpers";
+import { minBookingDate } from "../../utils/dateRules";
 
 const EVENT_TYPES = ["Wedding", "Birthday", "Conference", "Party", "Corporate"];
 const BUDGET_RANGES = ["₹1,000 - ₹5,000", "₹5,000 - ₹15,000", "₹15,000 - ₹30,000", "₹30,000 - ₹50,000", "₹50,000+"];
@@ -70,6 +71,8 @@ function Section({ icon: Icon, title, hint, children }) {
 function EventDetailsStep({ form, errors, onChange, onNext }) {
   const inputClass = (field) => `cl-input ${errors[field] ? "input-error" : ""}`;
   const todayStr = new Date().toISOString().split("T")[0];
+  // Rule: events are booked at least 7 days ahead (utils/dateRules.js)
+  const earliest = minBookingDate();
 
   const duration = describeDuration(form);
 
@@ -101,8 +104,8 @@ function EventDetailsStep({ form, errors, onChange, onNext }) {
 
       <Section icon={Clock} title="When" hint={duration ? `Duration: ${duration}` : undefined}>
         <div className="cl-form-grid cl-form-grid--4">
-          <Field label="Event Date *" error={errors.date}>
-            <input id="fieldEventDate" name="date" className={inputClass("date")} type="date" min={todayStr}
+          <Field label={`Event Date * (from ${earliest})`} error={errors.date}>
+            <input id="fieldEventDate" name="date" className={inputClass("date")} type="date" min={earliest}
               value={form.date} onChange={(e) => onChange("date", e.target.value)} onClick={openPicker} />
           </Field>
           <Field label="Start Time">

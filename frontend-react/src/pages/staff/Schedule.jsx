@@ -13,7 +13,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import '../../styles/staff.css';
 import StatCard from './components/StatCard';
-import { getSessionUser, fetchStaffAssignments, fetchStaffList } from '../../services/staffApi';
+import { getSessionUser, fetchStaffAssignments, fetchStaffList, fetchEvents } from '../../services/staffApi';
 
 // Month names list used for calendar header and selected date label
 // FACULTY MAY ASK: How do you show 3-letter month abbreviations instead of full names?
@@ -49,25 +49,27 @@ export default function StaffSchedule() {
   // HOW TO CHANGE: In the "{error && ...}" JSX block below, edit the inline style or class.
   const [error, setError] = useState(null);
 
-  // Active view toggle: 'Day' | 'Week' | 'Month'
+  // Active view toggle: 'Day' | 'Week' | 'Month'. It decides which days the
+  // calendar shows (one day, the week of the selected day, or the whole month)
+  // and how far the ‹ › arrows move.
   // FACULTY MAY ASK: How do you make "Day" view active by default?
   // HOW TO CHANGE: Change initial state useState('Month') to useState('Day').
   const [viewMode, setViewMode] = useState('Month');
 
   // Currently viewed calendar year
-  // FACULTY MAY ASK: How do you initialize the calendar to the real current year dynamically?
-  // HOW TO CHANGE: Change useState(2026) to useState(() => new Date().getFullYear()).
-  const [curYear, setCurYear] = useState(2026);
+  // Starts on today's year (it used to be fixed to 2026)
+  const [curYear, setCurYear] = useState(() => new Date().getFullYear());
 
   // Currently viewed calendar month (0-indexed: 0 = Jan, 2 = March)
-  // FACULTY MAY ASK: How do you initialize the calendar to the real current month?
-  // HOW TO CHANGE: Change useState(2) to useState(() => new Date().getMonth()).
-  const [curMonth, setCurMonth] = useState(2);
+  // Starts on today's month (it used to be fixed to March)
+  const [curMonth, setCurMonth] = useState(() => new Date().getMonth());
 
   // Day number currently selected in the calendar grid
-  // FACULTY MAY ASK: How do you change the default selected day to the 1st of the month?
-  // HOW TO CHANGE: Change initial state useState(30) to useState(1).
-  const [selectedDay, setSelectedDay] = useState(30);
+  // Starts on today
+  const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
+
+  // Events by id, for the real start/end time and status of each assignment
+  const [eventsById, setEventsById] = useState({});
 
   // Fetches assignments from backend and filters only accepted ones for this staff member
   // FACULTY MAY ASK: How often does the schedule refresh from the server?
@@ -76,10 +78,14 @@ export default function StaffSchedule() {
     async function loadData() {
       try {
         setError(null);
-        const [allAssignments, staffList] = await Promise.all([
+        const [allAssignments, staffList, events] = await Promise.all([
           fetchStaffAssignments(),
           fetchStaffList().catch(() => []),
+          fetchEvents().catch(() => []),
         ]);
+        const byId = {};
+        (Array.isArray(events) ? events : []).forEach((e) => { byId[e.id] = e; });
+        setEventsById(byId);
 
         const myName = (session.name || '').trim().toLowerCase();
         const myEmail = (session.email || '').toLowerCase();
@@ -133,8 +139,33 @@ export default function StaffSchedule() {
     setCurYear(nextYear);
   };
 
+  // Moves the selected date by `days` (Week = 7, Day = 1); the month follows
+  const shiftSelectedDate = (days) => {
+    const next = new Date(curYear, curMonth, selectedDay + days);
+    setCurYear(next.getFullYear());
+    setCurMonth(next.getMonth());
+    setSelectedDay(next.getDate());
+  };
+
+  // The ‹ › arrows: a month, a week or a day depending on the view
+  const handleStep = (direction) => {
+    if (viewMode === 'Month') handleMonthChange(direction);
+    else shiftSelectedDate(direction * (viewMode === 'Week' ? 7 : 1));
+  };
+
   // Total count of accepted events on this staff member's schedule
   const totalAcceptedEvents = assignments.length;
+
+  // Events from today onwards
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  const upcomingCount = assignments.filter((a) => a.eventDate && a.eventDate >= todayStr).length;
+
+  // "6:00 PM – 10:00 PM" from the real event, or "" when it has no times
+  const timeRangeOf = (a) => {
+    const ev = eventsById[a.eventId];
+    if (!ev?.time) return '';
+    return ev.endTime ? `${ev.time} – ${ev.endTime}` : ev.time;
+  };
 
   // Calculates how many events occur within the next 7 days
   // FACULTY MAY ASK: How do you change the "This Week" range to check the next 14 days?
@@ -185,7 +216,7 @@ export default function StaffSchedule() {
         isOther: false,
         isToday: isCurrentMonthThisMonth && today.getDate() === d,
         isSelected: selectedDay === d,
-        hasEvent: hasEvent || (d === 15 && curMonth === 3), // Legacy demo event marker
+        hasEvent,
       });
     }
 
@@ -201,6 +232,15 @@ export default function StaffSchedule() {
 
     return cells;
   }, [curYear, curMonth, selectedDay, assignments]);
+
+  // The cells the current view shows: whole month, the selected day's week row, or just that day
+  const visibleDays = useMemo(() => {
+    if (viewMode === 'Month') return calendarDays;
+    const index = calendarDays.findIndex((c) => !c.isOther && c.dayNumber === selectedDay);
+    if (viewMode === 'Day') return index >= 0 ? [calendarDays[index]] : [];
+    const rowStart = Math.floor(index / 7) * 7;
+    return calendarDays.slice(rowStart, rowStart + 7);
+  }, [calendarDays, viewMode, selectedDay]);
 
   // Formatted date string for the selected day header (e.g. "Monday, March 30, 2026")
   const selectedDateObj = new Date(curYear, curMonth, selectedDay);
@@ -272,7 +312,7 @@ export default function StaffSchedule() {
         />
         <StatCard
           label="Upcoming"
-          value={loading ? '...' : totalAcceptedEvents}
+          value={loading ? '...' : upcomingCount}
           icon="🕐"
           iconClass="ico-green"
           valueClass="c-green"
@@ -295,9 +335,11 @@ export default function StaffSchedule() {
 
           {/* Month navigation header */}
           <div className="cal-head">
-            <button className="cal-nav" onClick={() => handleMonthChange(-1)}>‹</button>
-            <span className="cal-month">{MONTH_NAMES[curMonth]} {curYear}</span>
-            <button className="cal-nav" onClick={() => handleMonthChange(1)}>›</button>
+            <button className="cal-nav" onClick={() => handleStep(-1)} title={`Previous ${viewMode.toLowerCase()}`}>‹</button>
+            <span className="cal-month">
+              {viewMode === 'Day' ? selectedDateLabel : viewMode === 'Week' ? `Week of ${MONTH_NAMES[curMonth]} ${selectedDay}, ${curYear}` : `${MONTH_NAMES[curMonth]} ${curYear}`}
+            </span>
+            <button className="cal-nav" onClick={() => handleStep(1)} title={`Next ${viewMode.toLowerCase()}`}>›</button>
           </div>
 
           {/* 7-Day Header */}
@@ -312,8 +354,8 @@ export default function StaffSchedule() {
           </div>
 
           {/* Days Grid */}
-          <div className="cal-grid">
-            {calendarDays.map((c, i) => (
+          <div className="cal-grid" data-view={viewMode}>
+            {visibleDays.map((c, i) => (
               <div
                 key={i}
                 className={`cal-day ${c.isOther ? 'other' : ''} ${c.isToday ? 'today' : ''} ${c.isSelected ? 'selected' : ''} ${c.hasEvent ? 'has-event' : ''}`}
@@ -330,8 +372,8 @@ export default function StaffSchedule() {
         {/* Right Panel: Selected Date Agenda and Upcoming Events */}
         <div className="sch-right">
           {/* Selected Date Agenda Card */}
-          {/* FACULTY MAY ASK: How do you customize the working hours displayed for an event on this date? */}
-          {/* HOW TO CHANGE: Search for "10:00 AM - 6:00 PM" in the dayEvents JSX below and change the text. */}
+          {/* FACULTY MAY ASK: Where do the working hours shown for an event come from? */}
+          {/* HOW TO CHANGE: timeRangeOf(a) reads the real event's time and endTime (it used to be fixed text). */}
           <div className="card">
             <div className="card-head">
               <div className="card-title">
@@ -350,26 +392,15 @@ export default function StaffSchedule() {
                     <div style={{ flex: 1 }}>
                       <div className="sch-event-name">{a.eventName}</div>
                       <div className="sch-event-role">{a.taskDesc || a.role || 'Event Duties'}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px' }}>
-                        10:00 AM - 6:00 PM
-                      </div>
+                      {timeRangeOf(a) && (
+                        <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px' }}>
+                          {timeRangeOf(a)}
+                        </div>
+                      )}
                     </div>
-                    <span className="badge badge-pink">Live</span>
+                    <span className="badge badge-pink">{eventsById[a.eventId]?.status || a.status}</span>
                   </div>
                 ))
-              ) : selectedDay === 15 && curMonth === 3 ? (
-                <div style={{ padding: '10px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 'var(--rs)', marginTop: '6px' }}>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--pink)' }}>Johnson Wedding</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px' }}>1:00 PM - 11:00 PM</div>
-                </div>
-              ) : selectedDay === 30 && curMonth === 2 && curYear === 2026 ? (
-                <div className="sch-empty">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: '30px', height: '30px', margin: '0 auto 8px' }}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                  <p>Task Board sync completed today.</p>
-                </div>
               ) : (
                 <div className="sch-empty">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -421,7 +452,7 @@ export default function StaffSchedule() {
                         </div>
                       </div>
                     </div>
-                    <span className="badge badge-pink" style={{ flexShrink: 0 }}>Accepted</span>
+                    <span className="badge badge-pink" style={{ flexShrink: 0 }}>{a.status}</span>
                     <span className="sch-event-arrow">›</span>
                   </div>
                 ))
@@ -447,6 +478,9 @@ export default function StaffSchedule() {
    TOP 5 QUESTIONS FACULTY IS MOST LIKELY TO ASK:
    1. "How do you navigate months in the calendar?":
       -> Look at handleMonthChange(delta): it increments or decrements curMonth, wrapping around 0 and 11.
+   2b. Day / Week / Month really change the calendar: visibleDays keeps the whole
+       month, the selected day's week row, or only that day; ‹ › move by a month,
+       a week or a day (handleStep).
    2. "How do you set 'Day' view as the default?":
       -> Edit line with 'const [viewMode, setViewMode] = useState('Month');' and change to 'Day'.
    3. "How does the calendar know which days have an event marker?":

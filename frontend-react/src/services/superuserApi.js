@@ -155,6 +155,14 @@ export async function updateEvent(id, payload) {
   });
 }
 
+// Cancels an event with a reason (saved with who cancelled; client + vendor are told)
+export async function cancelEventWithReason(id, reason) {
+  return request(`events/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'cancelled', note: reason }),
+  });
+}
+
 export async function deleteEvent(id) {
   return request(`events/${id}`, {
     method: 'DELETE',

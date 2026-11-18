@@ -326,7 +326,12 @@ export default function Monitoring() {
           onUpdateEvent={() => setIsUpdateModalOpen(true)}
           onAllocateResources={openEventReview}
           onAllocateStaff={openEventReview}
-          onEndEvent={() => isLive && setIsEndEventModalOpen(true)}
+          onEndEvent={() => {
+            // Only a live event can be concluded; say why instead of doing nothing
+            if (isLive) setIsEndEventModalOpen(true);
+            else if (!selectedEvent) addAlert('warning', 'Pick an event first.', 'Operations');
+            else addAlert('warning', `${selectedEvent.name} is ${selectedEvent.status}, not live — only a live event can be concluded. It goes live automatically at its start time.`, 'Operations');
+          }}
         />
 
         {/* Event Performance & Health KPI Card */}

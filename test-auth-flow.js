@@ -5,9 +5,11 @@ const { AuthService } = require('./back-end/dist/modules/auth/auth.service');
 const fs = require('fs');
 const path = require('path');
 
-// Clean database for fresh test
-const dbFile = path.join(__dirname, 'back-end', 'data', 'database.json');
-if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile);
+// SAFETY: these scripts used to DELETE back-end/data/database.json (the real
+// data). They now run against a throw-away folder via EMS_DATA_DIR, which
+// DataService reads, so the real database is never touched.
+process.env.EMS_DATA_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ems-script-'));
+const dbFile = path.join(process.env.EMS_DATA_DIR, 'database.json');
 
 console.log('====================================================');
 console.log('Vendor Signup → Approval → Login E2E Test');
@@ -16,7 +18,9 @@ console.log('====================================================');
 const ds = new DataService();
 ds.onModuleInit();
 const vs = new VendorsService(ds);
-const auth = new AuthService(ds);
+// AuthService now signs real JWTs, so it needs a JwtService (test-only secret)
+const { JwtService } = require('./back-end/node_modules/@nestjs/jwt');
+const auth = new AuthService(ds, new JwtService({ secret: 'test-only-secret-for-root-scripts-0123456789' }));
 
 // Step 1: Submit Vendor Application (simulates frontend signup-step4)
 console.log('\n--- Step 1: Submit Vendor Application ---');

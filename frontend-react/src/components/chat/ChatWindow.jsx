@@ -28,7 +28,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Send } from "lucide-react";
-import { formatClock, initials } from "../../utils/clientHelpers";
+import { initials } from "../../utils/clientHelpers";
+import { formatMessageTime } from "../../hooks/useLiveChat";
 
 // One chat bubble. Our own messages sit on the right in pink.
 function Bubble({ message, mine }) {
@@ -40,7 +41,7 @@ function Bubble({ message, mine }) {
           <div className="cl-msg__sender"><strong>{message.sender}</strong> <span>{message.senderRole}</span></div>
         )}
         <div className="cl-msg__bubble">{message.text}</div>
-        <div className="cl-msg__time">{formatClock(message.createdAt || message.timestamp)}</div>
+        <div className="cl-msg__time">{formatMessageTime(message.createdAt || message.timestamp)}</div>
       </div>
       {mine && <div className="cl-avatar cl-avatar--sm cl-avatar--pink">{initials(message.sender)}</div>}
     </div>
@@ -54,7 +55,7 @@ function SystemMessage({ message, onView }) {
       <AlertTriangle size={13} />
       <span>{message.text}</span>
       {onView && message.issueId && <button type="button" onClick={() => onView(message.issueId)}>View Report</button>}
-      <span className="cl-msg__time">{formatClock(message.createdAt || message.timestamp)}</span>
+      <span className="cl-msg__time">{formatMessageTime(message.createdAt || message.timestamp)}</span>
     </div>
   );
 }

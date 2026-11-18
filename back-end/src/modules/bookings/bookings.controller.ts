@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -21,30 +21,34 @@ export class BookingsController {
     @Query('vendorId') vendorId?: string,
     @Query('payoutStatus') payoutStatus?: string,
     @Query('eventId') eventId?: string,
+    @Req() req?: any,
   ) {
-    return this.service.findCommissions({ vendorId, payoutStatus, eventId });
+    return this.service.findCommissions({ vendorId, payoutStatus, eventId }, req?.user);
   }
 
   @Get()
   @Roles('admin', 'superuser', 'vendor', 'client')
-  findAll() {
-    return this.service.findAll();
+  findAll(@Req() req: any) {
+    return this.service.findAll(req.user);
   }
 
   @Get(':id')
   @Roles('admin', 'superuser', 'vendor', 'client')
-  findOne(@Param() { id }: IdParamDto) {
-    return this.service.findOne(id);
+  findOne(@Param() { id }: IdParamDto, @Req() req: any) {
+    return this.service.findOne(id, req.user);
   }
 
+  // Bookings are created by the approval trigger (DataService). Only admins and
+  // superusers may add or edit one by hand: a vendor changing cost or
+  // commission here could cut the platform's fee to zero.
   @Post()
-  @Roles('admin', 'superuser', 'vendor')
+  @Roles('admin', 'superuser')
   create(@Body() dto: CreateBookingDto) {
     return this.service.create(dto);
   }
 
   @Put(':id')
-  @Roles('admin', 'superuser', 'vendor')
+  @Roles('admin', 'superuser')
   updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateBookingDto) {
     return this.service.update(id, dto);
   }
@@ -60,16 +64,13 @@ export class BookingsController {
   @Patch(':id/settle')
   @Roles('admin', 'superuser')
   @ApiOperation({ summary: 'Settle and release vendor payout for a confirmed booking' })
-  settlePayout(
-    @Param() { id }: IdParamDto,
-    @Body() dto: SettlePayoutDto,
-    @Headers('x-user-id') adminUserId?: string,
-  ) {
-    return this.service.settlePayout(id, dto, adminUserId);
+  // settledBy comes from the signed-in admin (token), never from a header
+  settlePayout(@Param() { id }: IdParamDto, @Body() dto: SettlePayoutDto, @Req() req: any) {
+    return this.service.settlePayout(id, { ...dto, settledBy: req.user?.id }, req.user?.id);
   }
 
   @Patch(':id')
-  @Roles('admin', 'superuser', 'vendor')
+  @Roles('admin', 'superuser')
   update(@Param() { id }: IdParamDto, @Body() dto: UpdateBookingDto) {
     return this.service.update(id, dto);
   }

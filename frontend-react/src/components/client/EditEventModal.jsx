@@ -8,6 +8,7 @@ import Modal from "../Modal";
 import VenuePicker from "./VenuePicker";
 import { parseTimeToMinutes } from "../../services/eventService";
 import { formatTime12, eventEndError } from "../../utils/clientHelpers";
+import { bookingDateError, minBookingDate } from "../../utils/dateRules";
 
 // "6:30 PM" -> "18:30", the format a time input needs
 function toInputTime(time) {
@@ -41,6 +42,11 @@ function EditEventForm({ event, onClose, onSave }) {
     const endError = eventEndError(form);
     if (endError) {
       setError(endError);
+      return;
+    }
+    // Moving the date: same 7-day notice rule as a new request
+    if (form.date !== event.date && bookingDateError(form.date)) {
+      setError(bookingDateError(form.date));
       return;
     }
 
@@ -79,7 +85,7 @@ function EditEventForm({ event, onClose, onSave }) {
       <div className="cl-form-grid">
         <div className="cl-field cl-full">
           <label>Event Date *</label>
-          <input className="cl-input" type="date" min={new Date().toLocaleDateString("en-CA")} value={form.date} onChange={(e) => update("date", e.target.value)} />
+          <input className="cl-input" type="date" min={minBookingDate()} value={form.date} onChange={(e) => update("date", e.target.value)} />
         </div>
         <div className="cl-field">
           <label>Start Time *</label>

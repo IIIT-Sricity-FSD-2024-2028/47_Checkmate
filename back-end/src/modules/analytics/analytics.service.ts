@@ -21,7 +21,9 @@ export class AnalyticsService {
     // Bookings are the billable records. One is created automatically whenever an
     // event flips to confirmed/approved (see DataService.triggerEventUpdated),
     // so revenue follows the event lifecycle without any manual bookkeeping.
-    const confirmedStatuses = ['Confirmed', 'Completed', 'confirmed', 'completed', 'In Progress', 'live'];
+    // A Cancelled booking's cost is already reduced to the cancellation fee
+    // (booking-rules.ts), so it counts only that fee -- 0 when no fee is set.
+    const confirmedStatuses = ['Confirmed', 'Completed', 'confirmed', 'completed', 'In Progress', 'live', 'Cancelled'];
 
     // Total = every booking. Confirmed = only the ones that actually count as earned.
     const totalRevenue = snapshot.bookings.reduce((sum, booking) => sum + Number(booking.cost || 0), 0);
@@ -42,6 +44,11 @@ export class AnalyticsService {
         (sum, b) => sum + Number(b.commissionAmount !== undefined ? b.commissionAmount : (b.cost || 0) * DEFAULT_COMMISSION_RATE),
         0,
       );
+
+    // Commission on bookings the client has actually paid (money "in the bank")
+    const commissionCollected = snapshot.bookings
+      .filter((b) => b.paymentStatus === 'paid')
+      .reduce((sum, b) => sum + Number(b.commissionAmount || 0), 0);
 
     const totalVendorPayouts = snapshot.bookings.reduce(
       (sum, b) => sum + Number(b.vendorPayoutAmount !== undefined ? b.vendorPayoutAmount : (b.cost || 0) * VENDOR_SHARE_RATE),
@@ -90,6 +97,7 @@ export class AnalyticsService {
       commissionRate: this.data.getCommissionRate(),
       platformCommissionEarned,
       confirmedCommissionEarned,
+      commissionCollected,
       totalVendorPayouts,
       pendingVendorPayouts,
       settledVendorPayouts,
@@ -108,6 +116,7 @@ export class AnalyticsService {
       platformCommissionRate: sum.commissionRate,
       platformCommissionEarned: sum.platformCommissionEarned,
       confirmedCommissionEarned: sum.confirmedCommissionEarned,
+      commissionCollected: sum.commissionCollected,
       totalVendorPayoutObligations: sum.totalVendorPayouts,
       pendingVendorPayouts: sum.pendingVendorPayouts,
       settledVendorPayouts: sum.settledVendorPayouts,
@@ -125,8 +134,12 @@ export class AnalyticsService {
 
   // Generic key/value read+write, used for the loosely-structured collections
   // (chat threads, progress bars, allocations) that have no dedicated module.
-  stateKey(key: string) {
+  stateKey(key: string, user?: { role?: string }) {
     this.assertNotPrivate(key);
+    const readers = AnalyticsService.READ_RESTRICTED[this.normalizeKey(key)];
+    if (readers && !readers.includes(String(user?.role || '').toLowerCase())) {
+      throw new ForbiddenException(`Your role cannot read "${key}".`);
+    }
     const name = this.normalizeKey(key);
     return this.scrubCollection(name, this.data.getValue(name));
   }
@@ -135,8 +148,21 @@ export class AnalyticsService {
   // Everything else (users, events, bookings, resources, staff, vendors, …) has
   // its own endpoint with proper checks, so it can never be overwritten here.
   // The roles come from where the React app writes each key.
+  // Keys only some roles may READ. Everyone else uses an endpoint that returns
+  // just their own part (e.g. GET /admin-chat returns your own conversation).
+  private static readonly READ_RESTRICTED: Record<string, string[]> = {
+    adminChatMessages: ['admin', 'superuser'],
+    // Contact details / money / audit trail: never for clients, vendors or staff
+    users: ['admin', 'superuser'],
+    vendorApplications: ['admin', 'superuser'],
+    bookings: ['admin', 'superuser'],
+    activityLogs: ['admin', 'superuser'],
+    messageReads: ['admin', 'superuser'],
+  };
+
   private static readonly WRITABLE_KEYS: Record<string, string[]> = {
-    adminChatMessages: ['admin', 'superuser', 'vendor', 'client', 'staff'],
+    // Everyone else posts through POST /admin-chat (one message, own conversation)
+    adminChatMessages: ['admin', 'superuser'],
     coordinationMessages: ['admin', 'superuser', 'vendor', 'client', 'staff'],
     notifications: ['admin', 'superuser', 'vendor', 'client', 'staff'],
     resourceAllocations: ['vendor', 'admin', 'superuser'],

@@ -10,6 +10,13 @@ import { requestIdMiddleware } from './logging/request-id.middleware';
 import { morganFormat, morganOptions } from './logging/http-logger';
 import { helmetOptions } from './security/helmet.config';
 import { corsOptions } from './security/cors.config';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+// The whole app boots here; point its DataService at a throw-away folder so the
+// real back-end/data/database.json is never rewritten by a test run.
+process.env.EMS_DATA_DIR = mkdtempSync(join(tmpdir(), 'ems-e2e-'));
 
 describe('middleware stack (e2e)', () => {
   let app: INestApplication;
