@@ -20,15 +20,15 @@ export class ResourcesService {
   findAll() { return this.data.collection('resources'); }
   findOne(id: string) { return this.data.find('resources', id); }
   // Vendors create, edit and delete only their own inventory (vendor-ownership.ts)
-  create(dto: CreateResourceDto, user?: { id?: string; role?: string }) {
-    return this.data.create('resources', 'R', { unit: 'day', ...stampOwnVendor(this.data, user, dto) });
+  async create(dto: CreateResourceDto, user?: { id?: string; role?: string }) {
+    return this.data.create('resources', 'R', { unit: 'day', ...(await stampOwnVendor(this.data, user, dto)) });
   }
-  update(id: string, dto: UpdateResourceDto, user?: { id?: string; role?: string }) {
-    assertVendorOwns(this.data, user, this.data.find('resources', id), 'resource', dto.vendorId);
+  async update(id: string, dto: UpdateResourceDto, user?: { id?: string; role?: string }) {
+    await assertVendorOwns(this.data, user, await this.data.find('resources', id), 'resource', dto.vendorId);
     return this.data.update('resources', id, dto);
   }
-  remove(id: string, user?: { id?: string; role?: string }) {
-    assertVendorOwns(this.data, user, this.data.find('resources', id), 'resource');
+  async remove(id: string, user?: { id?: string; role?: string }) {
+    await assertVendorOwns(this.data, user, await this.data.find('resources', id), 'resource');
     return this.data.remove('resources', id);
   }
 
@@ -38,27 +38,27 @@ export class ResourcesService {
 
   // The live records the availability rules read. `allocationsOverride` lets a
   // caller check a map that has not been saved yet.
-  private availabilityData(allocationsOverride?: AvailabilityData['resourceAllocations']): AvailabilityData {
+  private async availabilityData(allocationsOverride?: AvailabilityData['resourceAllocations']): Promise<AvailabilityData> {
     return {
-      resources: this.data.collection('resources') as any,
-      events: this.data.collection('events') as any,
-      resourceAllocations: allocationsOverride || ((this.data.getValue('resourceAllocations') as any) ?? {}),
+      resources: (await this.data.collection('resources')) as any,
+      events: (await this.data.collection('events')) as any,
+      resourceAllocations: allocationsOverride || (((await this.data.getValue('resourceAllocations')) as any) ?? {}),
     };
   }
 
   /** Units of one resource free on a date (or window), ignoring excludeEventId. */
-  getAvailableQuantity(resourceId: string, eventDate: string | BookingWindow, excludeEventId?: string): number {
-    return getAvailableQuantity(this.availabilityData(), resourceId, eventDate, excludeEventId);
+  async getAvailableQuantity(resourceId: string, eventDate: string | BookingWindow, excludeEventId?: string): Promise<number> {
+    return getAvailableQuantity(await this.availabilityData(), resourceId, eventDate, excludeEventId);
   }
 
   // Turns the query string into a window. `eventId` alone means "that event's
   // window, not counting that event"; explicit fields override it.
-  private windowFromQuery(query: AvailabilityQueryDto): { window: BookingWindow; excludeEventId?: string } {
+  private async windowFromQuery(query: AvailabilityQueryDto): Promise<{ window: BookingWindow; excludeEventId?: string }> {
     let base: BookingWindow | null = null;
     let excludeEventId = query.excludeEventId;
 
     if (query.eventId) {
-      const event = this.data.find('events', query.eventId) as any;
+      const event = (await this.data.find('events', query.eventId)) as any;
       base = eventWindow(event);
       excludeEventId = excludeEventId || event.id;
     }
@@ -80,16 +80,16 @@ export class ResourcesService {
   }
 
   /** GET /resources/availability: every resource with its free units for the window. */
-  availabilityReport(query: AvailabilityQueryDto): AvailabilityResult[] {
-    const { window, excludeEventId } = this.windowFromQuery(query);
-    const data = this.availabilityData();
+  async availabilityReport(query: AvailabilityQueryDto): Promise<AvailabilityResult[]> {
+    const { window, excludeEventId } = await this.windowFromQuery(query);
+    const data = await this.availabilityData();
     return data.resources.map((r) => getAvailability(data, r.id, window, excludeEventId)!);
   }
 
   /** GET /resources/:id/availability: one resource. */
-  availabilityFor(resourceId: string, query: AvailabilityQueryDto): AvailabilityResult {
-    const { window, excludeEventId } = this.windowFromQuery(query);
-    const result = getAvailability(this.availabilityData(), resourceId, window, excludeEventId);
+  async availabilityFor(resourceId: string, query: AvailabilityQueryDto): Promise<AvailabilityResult> {
+    const { window, excludeEventId } = await this.windowFromQuery(query);
+    const result = getAvailability(await this.availabilityData(), resourceId, window, excludeEventId);
     if (!result) throw new NotFoundException(`resources item ${resourceId} was not found.`);
     return result;
   }
@@ -98,10 +98,10 @@ export class ResourcesService {
    * Throws a 400 when the requested units do not fit in the event's window.
    * Used when an event is created with requested resources.
    */
-  assertRequestFits(items: any[] | undefined, window: BookingWindow, excludeEventId?: string) {
+  async assertRequestFits(items: any[] | undefined, window: BookingWindow, excludeEventId?: string) {
     if (!Array.isArray(items) || items.length === 0) return;
     if (!isValidDate(window.date)) return; // DTO validation reports a bad date separately
-    const problems = findOverAllocations(this.availabilityData(), items, window, excludeEventId);
+    const problems = findOverAllocations(await this.availabilityData(), items, window, excludeEventId);
     if (problems.length) throw new BadRequestException(problems.join(' '));
   }
 
@@ -109,11 +109,11 @@ export class ResourcesService {
    * Throws a 400 when an existing event, moved to a new window, would need more
    * units than are free there. `updatedEvent` is the event after the change.
    */
-  assertEventStillFits(updatedEvent: any) {
+  async assertEventStillFits(updatedEvent: any) {
     if (!eventHoldsStock(updatedEvent)) return;
-    const allocations = ((this.data.getValue('resourceAllocations') as any) ?? {})[updatedEvent.id] || [];
+    const allocations = (((await this.data.getValue('resourceAllocations')) as any) ?? {})[updatedEvent.id] || [];
     if (!allocations.length) return;
-    const problems = findOverAllocations(this.availabilityData(), allocations, eventWindow(updatedEvent), updatedEvent.id);
+    const problems = findOverAllocations(await this.availabilityData(), allocations, eventWindow(updatedEvent), updatedEvent.id);
     if (problems.length) {
       throw new BadRequestException(`Cannot move ${updatedEvent.name || updatedEvent.id}: ${problems.join(' ')}`);
     }
@@ -125,13 +125,13 @@ export class ResourcesService {
    * old data never blocks an unrelated save. Other events are read from the NEW
    * map, so two events changed in one request are both counted.
    */
-  assertAllocationMapValid(next: unknown) {
+  async assertAllocationMapValid(next: unknown) {
     if (!next || typeof next !== 'object' || Array.isArray(next)) {
       throw new BadRequestException('resourceAllocations must be an object keyed by event id.');
     }
     const nextMap = next as Record<string, any>;
-    const current = ((this.data.getValue('resourceAllocations') as any) ?? {}) as Record<string, any>;
-    const data = this.availabilityData(nextMap);
+    const current = (((await this.data.getValue('resourceAllocations')) as any) ?? {}) as Record<string, any>;
+    const data = await this.availabilityData(nextMap);
     const problems: string[] = [];
 
     Object.entries(nextMap).forEach(([eventId, items]) => {

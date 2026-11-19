@@ -55,92 +55,92 @@ const emily = { id: 'U004', email: 'emily@x.com', role: 'client' };
 const mike = { id: 'U003', email: 'mike@x.com', role: 'staff' };
 
 describe('profile update', () => {
-  it('ignores role/status even if they reach the service', () => {
+  it('ignores role/status even if they reach the service', async () => {
     const data = fakeData();
-    new UsersService(data).updateProfile('emily@x.com', { name: 'Em', role: 'Admin', status: 'Inactive' } as any);
+    (await new UsersService(data).updateProfile('emily@x.com', { name: 'Em', role: 'Admin', status: 'Inactive' } as any));
     expect(data.db.users[1]).toMatchObject({ name: 'Em', role: 'Client', status: 'Active' });
   });
-  it('refuses an email that belongs to another account', () => {
-    expect(() => new UsersService(fakeData()).updateProfile('emily@x.com', { email: 'admin@x.com' })).toThrow(BadRequestException);
+  it('refuses an email that belongs to another account', async () => {
+    await expect((async () => new UsersService(fakeData()).updateProfile('emily@x.com', { email: 'admin@x.com' }))()).rejects.toThrow(BadRequestException);
   });
 });
 
 describe('password reset codes', () => {
   const service = () => new AuthService(fakeData(), {} as any);
-  it('does not return the code and does not accept 123456', () => {
+  it('does not return the code and does not accept 123456', async () => {
     const auth = service();
-    const res: any = auth.forgotPassword('emily@x.com');
+    const res: any = (await auth.forgotPassword('emily@x.com'));
     expect(res.otp).toBeUndefined();
     const real = (auth as any).otpStore.get('emily@x.com').otp;
-    if (real !== '123456') expect(() => auth.resetPassword({ email: 'emily@x.com', otp: '123456', newPassword: 'Secret@123' })).toThrow(BadRequestException);
+    if (real !== '123456') await expect((async () => (await auth.resetPassword({ email: 'emily@x.com', otp: '123456', newPassword: 'Secret@123' })))()).rejects.toThrow(BadRequestException);
   });
-  it('locks the code after 5 wrong attempts', () => {
+  it('locks the code after 5 wrong attempts', async () => {
     const auth = service();
-    auth.forgotPassword('emily@x.com');
+    (await auth.forgotPassword('emily@x.com'));
     const real = (auth as any).otpStore.get('emily@x.com').otp;
     const wrong = real === '000000' ? '111111' : '000000';
-    for (let i = 0; i < 5; i++) expect(() => auth.resetPassword({ email: 'emily@x.com', otp: wrong, newPassword: 'Secret@123' })).toThrow(BadRequestException);
-    expect(() => auth.resetPassword({ email: 'emily@x.com', otp: real, newPassword: 'Secret@123' })).toThrow(BadRequestException);
+    for (let i = 0; i < 5; i++) await expect((async () => (await auth.resetPassword({ email: 'emily@x.com', otp: wrong, newPassword: 'Secret@123' })))()).rejects.toThrow(BadRequestException);
+    await expect((async () => (await auth.resetPassword({ email: 'emily@x.com', otp: real, newPassword: 'Secret@123' })))()).rejects.toThrow(BadRequestException);
   });
-  it('accepts the right code once', () => {
+  it('accepts the right code once', async () => {
     const auth = service();
-    auth.forgotPassword('emily@x.com');
+    (await auth.forgotPassword('emily@x.com'));
     const real = (auth as any).otpStore.get('emily@x.com').otp;
-    expect(auth.resetPassword({ email: 'emily@x.com', otp: real, newPassword: 'Secret@123' })).toMatchObject({ success: true });
+    expect((await auth.resetPassword({ email: 'emily@x.com', otp: real, newPassword: 'Secret@123' }))).toMatchObject({ success: true });
   });
 });
 
 describe('PUT /state/:key allowlist', () => {
   const analytics = () => new AnalyticsService(fakeData());
-  it('blocks core collections for every role', () => {
-    expect(() => analytics().setStateKey('bookings', [], { role: 'admin' })).toThrow(ForbiddenException);
-    expect(() => analytics().setStateKey('users', [], { role: 'client' })).toThrow(ForbiddenException);
+  it('blocks core collections for every role', async () => {
+    await expect((async () => (await analytics().setStateKey('bookings', [], { role: 'admin' })))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await analytics().setStateKey('users', [], { role: 'client' })))()).rejects.toThrow(ForbiddenException);
   });
-  it('lets each role write only its own keys', () => {
-    expect(analytics().setStateKey('notifications', [], { role: 'client' })).toEqual([]);
-    expect(() => analytics().setStateKey('platformSettings', {}, { role: 'vendor' })).toThrow(ForbiddenException);
-    expect(analytics().setStateKey('recruitments', [], { role: 'admin' })).toEqual([]);
+  it('lets each role write only its own keys', async () => {
+    expect((await analytics().setStateKey('notifications', [], { role: 'client' }))).toEqual([]);
+    await expect((async () => (await analytics().setStateKey('platformSettings', {}, { role: 'vendor' })))()).rejects.toThrow(ForbiddenException);
+    expect((await analytics().setStateKey('recruitments', [], { role: 'admin' }))).toEqual([]);
   });
 });
 
 describe('client event ownership', () => {
   const events = (data = fakeData()) => ({ data, service: new EventsService(data) });
-  it('client cannot edit or delete another client\'s event', () => {
+  it('client cannot edit or delete another client\'s event', async () => {
     const { service } = events();
-    expect(() => service.update('EVT2', { notes: 'x' }, emily)).toThrow(ForbiddenException);
-    expect(() => service.remove('EVT2', emily)).toThrow(ForbiddenException);
+    await expect((async () => (await service.update('EVT2', { notes: 'x' }, emily)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await service.remove('EVT2', emily)))()).rejects.toThrow(ForbiddenException);
   });
-  it('client cannot set the status of their own event', () => {
-    expect(() => events().service.update('EVT1', { status: 'confirmed' }, emily)).toThrow(ForbiddenException);
+  it('client cannot set the status of their own event', async () => {
+    await expect((async () => events().service.update('EVT1', { status: 'confirmed' }, emily))()).rejects.toThrow(ForbiddenException);
   });
-  it('client can edit and delete their own event', () => {
+  it('client can edit and delete their own event', async () => {
     const { data, service } = events();
-    service.update('EVT1', { notes: 'hello' }, emily);
+    (await service.update('EVT1', { notes: 'hello' }, emily));
     expect(data.db.events[0].notes).toBe('hello');
-    service.remove('EVT1', emily);
+    (await service.remove('EVT1', emily));
     expect(data.db.events.find((e: any) => e.id === 'EVT1')).toBeUndefined();
   });
-  it('a new client event is always pending and owned by the caller', () => {
-    const created: any = events().service.create({ name: 'x', type: 'y', date: '2031-02-02', venue: 'v', status: 'confirmed', clientId: 'U008' } as any, emily);
+  it('a new client event is always pending and owned by the caller', async () => {
+    const created: any = await events().service.create({ name: 'x', type: 'y', date: '2031-02-02', venue: 'v', status: 'confirmed', clientId: 'U008' } as any, emily);
     expect(created).toMatchObject({ status: 'pending', clientId: 'U004' });
   });
-  it('vendors keep full access', () => {
+  it('vendors keep full access', async () => {
     const { data, service } = events();
-    service.update('EVT2', { status: 'waiting' } as any, { id: 'U002', role: 'vendor' });
+    (await service.update('EVT2', { status: 'waiting' } as any, { id: 'U002', role: 'vendor' }));
     expect(data.db.events[1].status).toBe('waiting');
   });
 });
 
 describe('staff record updates', () => {
   const staff = (data = fakeData()) => ({ data, service: new StaffService(data, {} as any) });
-  it('staff can update their own workload', () => {
+  it('staff can update their own workload', async () => {
     const { data, service } = staff();
-    service.update('S1', { workload: 40 }, mike);
+    (await service.update('S1', { workload: 40 }, mike));
     expect(data.db.staff[0].workload).toBe(40);
   });
-  it('staff cannot edit another staff record or their own role', () => {
+  it('staff cannot edit another staff record or their own role', async () => {
     const { service } = staff();
-    expect(() => service.update('S2', { workload: 10 }, mike)).toThrow(ForbiddenException);
-    expect(() => service.update('S1', { role: 'Boss' }, mike)).toThrow(ForbiddenException);
+    await expect((async () => (await service.update('S2', { workload: 10 }, mike)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await service.update('S1', { role: 'Boss' }, mike)))()).rejects.toThrow(ForbiddenException);
   });
 });

@@ -20,9 +20,9 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  login(dto: LoginDto) {
-    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
-    if (!user) this.explainVendorApplication(dto);
+  async login(dto: LoginDto) {
+    const user = (await this.data.collection('users')).find((row) => row.email.toLowerCase() === dto.email.toLowerCase());
+    if (!user) (await this.explainVendorApplication(dto));
     if (!user || !verifyPassword(dto.password, user.passwordHash)) {
       throw new UnauthorizedException('Invalid email or password.');
     }
@@ -32,16 +32,16 @@ export class AuthService {
     }
     // Old SHA-256 hash: we now know the right password, so store it as bcrypt
     if (needsRehash(user.passwordHash)) {
-      this.data.update('users', user.id, { passwordHash: hashPassword(dto.password) } as any);
+      await this.data.update('users', user.id, { passwordHash: hashPassword(dto.password) } as any);
     }
-    return this.session(user);
+    return await this.session(user);
   }
 
   // A vendor applicant has no account until approved. If the email + password
   // match their application, say where it stands (and the admin's reason when
   // rejected) instead of a bare "Invalid email or password".
-  private explainVendorApplication(dto: LoginDto) {
-    const app: any = this.data.collection('vendorApplications')
+  private async explainVendorApplication(dto: LoginDto) {
+    const app: any = (await this.data.collection('vendorApplications'))
       .filter((a) => String(a.email).toLowerCase() === dto.email.toLowerCase())
       .pop();
     if (!app || !app.passwordHash) return;
@@ -54,9 +54,9 @@ export class AuthService {
     if (app.status === 'pending') throw new UnauthorizedException('Your vendor application is still under review.');
   }
 
-  register(dto: RegisterDto) {
+  async register(dto: RegisterDto) {
     const cleanEmail = String(dto.email || '').trim().toLowerCase();
-    const existingUser = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    const existingUser = (await this.data.collection('users')).find((row) => row.email.toLowerCase() === cleanEmail);
     if (existingUser) {
       throw new BadRequestException('This email is already registered. Please sign in instead.');
     }
@@ -65,7 +65,7 @@ export class AuthService {
     if (dto.phone && String(dto.phone).trim()) {
       const cleanDigits = String(dto.phone).replace(/\D/g, '');
       if (cleanDigits.length >= 7) {
-        const matchingPhoneUsers = this.data.collection('users').filter((row) => {
+        const matchingPhoneUsers = (await this.data.collection('users')).filter((row) => {
           const rowDigits = String(row.phone || '').replace(/\D/g, '');
           if (!rowDigits) return false;
           return (
@@ -91,7 +91,7 @@ export class AuthService {
       role = 'Client';
     }
 
-    const user = this.data.create('users', 'U', {
+    const user = (await this.data.create('users', 'U', {
       name: dto.name.trim(),
       email: cleanEmail,
       phone: dto.phone ? dto.phone.trim() : '',
@@ -99,14 +99,14 @@ export class AuthService {
       status: 'Active',
       created: new Date().toISOString().slice(0, 10),
       passwordHash: hashPassword(dto.password),
-    });
+    }));
 
     // Auto-provision a Vendor entity if a Vendor signs up directly
     if (dto.role === 'Vendor') {
-      const vendors = this.data.collection('vendors');
+      const vendors = (await this.data.collection('vendors'));
       const vendorExists = vendors.some((v) => v.userId === user.id || v.name.toLowerCase() === dto.name.toLowerCase());
       if (!vendorExists) {
-        this.data.create('vendors', 'V', {
+        (await this.data.create('vendors', 'V', {
           userId: user.id,
           name: dto.name,
           businessName: dto.name,
@@ -114,16 +114,16 @@ export class AuthService {
           status: 'Approved',
           rating: 5.0,
           created: new Date().toISOString().slice(0, 10),
-        });
+        }));
       }
     }
 
-    return this.session(user);
+    return await this.session(user);
   }
 
-  forgotPassword(email: string) {
+  async forgotPassword(email: string) {
     const cleanEmail = String(email || '').trim().toLowerCase();
-    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    const user = (await this.data.collection('users')).find((row) => row.email.toLowerCase() === cleanEmail);
     if (!user) {
       throw new NotFoundException('No account found with this email address.');
     }
@@ -152,9 +152,9 @@ export class AuthService {
     };
   }
 
-  resetPassword(dto: ResetPasswordDto) {
+  async resetPassword(dto: ResetPasswordDto) {
     const cleanEmail = String(dto.email || '').trim().toLowerCase();
-    const user = this.data.collection('users').find((row) => row.email.toLowerCase() === cleanEmail);
+    const user = (await this.data.collection('users')).find((row) => row.email.toLowerCase() === cleanEmail);
     if (!user) {
       throw new NotFoundException('No account found with this email address.');
     }
@@ -177,7 +177,7 @@ export class AuthService {
     }
 
     const hashedPassword = hashPassword(dto.newPassword);
-    this.data.update('users', user.id, { passwordHash: hashedPassword });
+    await this.data.update('users', user.id, { passwordHash: hashedPassword });
     this.otpStore.delete(cleanEmail);
 
     return {
@@ -186,13 +186,13 @@ export class AuthService {
     };
   }
 
-  findAccount(phone: string) {
+  async findAccount(phone: string) {
     const cleanDigits = String(phone || '').replace(/\D/g, '');
     if (!cleanDigits || cleanDigits.length < 4) {
       throw new BadRequestException('Please enter at least 4 digits of your registered phone number.');
     }
 
-    const user = this.data.collection('users').find((row) => {
+    const user = (await this.data.collection('users')).find((row) => {
       const uDigits = String(row.phone || '').replace(/\D/g, '');
       return uDigits && (uDigits.includes(cleanDigits) || cleanDigits.includes(uDigits));
     });
@@ -219,14 +219,14 @@ export class AuthService {
   // Builds what the frontend keeps as the logged-in session. Strips the password
   // hash, then attaches the tenant id the portal needs (vendorId / staffId) so
   // pages can filter data down to "mine" without a second lookup.
-  private session(user: User) {
+  private async session(user: User) {
     // Destructure-and-drop: pull passwordHash out, keep everything else. This is
     // the idiom used throughout the codebase to avoid leaking the hash.
     const { passwordHash, ...safeUser } = user;
     const enrichedUser: any = { ...safeUser };
 
     if (user.role === 'Vendor') {
-      const vendors = this.data.collection('vendors');
+      const vendors = (await this.data.collection('vendors'));
       const vendor = vendors.find((v) => v.userId === user.id || v.name.toLowerCase() === user.name.toLowerCase() || (user.email && user.email.toLowerCase().includes(v.name.toLowerCase().split(' ')[0])));
       if (vendor) {
         enrichedUser.vendorId = vendor.id;
@@ -239,7 +239,7 @@ export class AuthService {
         enrichedUser.businessName = user.name;
       }
     } else if (user.role === 'Staff') {
-      const staff = this.data.collection('staff').find((s) => s.userId === user.id || (s.email && s.email.toLowerCase() === user.email.toLowerCase()));
+      const staff = (await this.data.collection('staff')).find((s) => s.userId === user.id || (s.email && s.email.toLowerCase() === user.email.toLowerCase()));
       if (staff) {
         enrichedUser.staffId = staff.id;
       }

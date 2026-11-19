@@ -36,6 +36,7 @@ import useClientTrackData from "../../components/client/useClientTrackData";
 // Modular Track Progress Subcomponents
 import TrackHeroCard from "../../components/client/TrackHeroCard";
 import TrackTimeline from "../../components/client/TrackTimeline";
+import { VendorFeedbackPanel, VendorRatingBadge } from "../../components/VendorRating";
 import TrackSidePanel from "../../components/client/TrackSidePanel";
 
 function TrackProgress() {
@@ -65,6 +66,13 @@ function TrackProgress() {
             {/* ── Component 1: Hero card with progress bar ── */}
             <TrackHeroCard event={event} progress={progress} />
 
+            {/* Vendor and their average client rating (view only) */}
+            {event.vendorId && (
+              <div className="cl-muted-text" style={{ margin: "8px 0" }}>
+                Vendor: <VendorRatingBadge vendorId={event.vendorId} name={event.vendor} />
+              </div>
+            )}
+
             <div className="cl-tp-grid">
               {/* ── Component 2: 5-step timeline ── */}
               <TrackTimeline event={event} progress={progress} />
@@ -72,6 +80,9 @@ function TrackProgress() {
               {/* ── Component 3: Service status + quick actions ── */}
               <TrackSidePanel event={event} progress={progress} />
             </div>
+
+            {/* ── Component 4: Rate the vendor (completed events only) ── */}
+            <VendorFeedbackPanel event={event} />
           </>
         )}
       </div>

@@ -5,18 +5,20 @@ const { BookingsService } = require('./back-end/dist/modules/bookings/bookings.s
 const { AnalyticsService } = require('./back-end/dist/modules/analytics/analytics.service');
 const { VendorsService } = require('./back-end/dist/modules/vendors/vendors.service');
 const { calculateCommissionSplit, DEFAULT_COMMISSION_RATE, VENDOR_SHARE_RATE } = require('./back-end/dist/common/constants/finance.constants');
+// SAFETY: these scripts run against the TEST PostgreSQL database (checkmate_test),
+// never the app's database. Each run empties it and re-seeds it first.
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://checkmate:checkmate_dev@localhost:5432/checkmate_test?schema=public';
+const { PrismaService } = require('./back-end/dist/database/prisma.service');
+const { seedData } = require('./back-end/dist/database/seed');
+const prisma = new PrismaService();
+
+(async () => {
 
 console.log('================================================================');
 console.log('EventPro Commission-Based Revenue Model End-to-End Test Suite');
 console.log('Platform Commission: 10% | Vendor Net Payout: 90%');
 console.log('================================================================\n');
 
-// SAFETY: these scripts used to DELETE back-end/data/database.json (the real
-// data). They now run against a throw-away folder via EMS_DATA_DIR, which
-// DataService reads, so the real database is never touched.
-process.env.EMS_DATA_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ems-script-'));
-const dataDir = process.env.EMS_DATA_DIR;
-const dbFile = path.join(dataDir, 'database.json');
 
 // --------------------------------------------------------------------------
 // TEST 1: Mathematical Accuracy of Commission Split Helper
@@ -46,10 +48,11 @@ console.log('[PASS] Test 1: All mathematical split edge cases passed with exact 
 // TEST 2: Cold Boot & Seed Data Commission Integrity
 // --------------------------------------------------------------------------
 console.log('\n[TEST 2] Testing Cold Boot & Seed Bookings Commission Normalization...');
-const ds = new DataService();
-ds.onModuleInit();
+const ds = new DataService(prisma);
+await ds.importAppData(structuredClone(seedData));
+await ds.onModuleInit();
 
-const seedBookings = ds.collection('bookings');
+const seedBookings = (await ds.collection('bookings'));
 if (seedBookings.length === 0) {
   throw new Error('FAILED: No seed bookings loaded.');
 }
@@ -74,7 +77,7 @@ console.log('[PASS] Test 2: Seed bookings verified with 10% platform commission 
 // TEST 3: Trigger 8 Auto-Booking Generation on Event Confirmation
 // --------------------------------------------------------------------------
 console.log('\n[TEST 3] Testing Trigger 8: Auto-Booking Generation on Event Confirmation...');
-const newEvent = ds.create('events', 'EVT', {
+const newEvent = (await ds.create('events', 'EVT', {
   name: 'International Tech Expo 2026',
   type: 'Conference',
   date: '2026-09-15',
@@ -86,18 +89,18 @@ const newEvent = ds.create('events', 'EVT', {
   vendor: 'Elite Events Co.',
   vendorId: 'V001',
   createdBy: 'client'
-});
+}));
 
-const bookingsCountBefore = ds.collection('bookings').length;
+const bookingsCountBefore = (await ds.collection('bookings')).length;
 // Confirm event to fire trigger
-ds.update('events', newEvent.id, { status: 'confirmed' });
+(await ds.update('events', newEvent.id, { status: 'confirmed' }));
 
-const bookingsCountAfter = ds.collection('bookings').length;
+const bookingsCountAfter = (await ds.collection('bookings')).length;
 if (bookingsCountAfter !== bookingsCountBefore + 1) {
   throw new Error('FAILED: Auto-booking was not generated on event confirmation.');
 }
 
-const autoBooking = ds.collection('bookings').find((b) => b.eventId === newEvent.id || b.eventName === newEvent.name);
+const autoBooking = (await ds.collection('bookings')).find((b) => b.eventId === newEvent.id || b.eventName === newEvent.name);
 if (!autoBooking) {
   throw new Error('FAILED: Could not find auto-generated booking.');
 }
@@ -116,7 +119,7 @@ console.log(`[PASS] Test 3: Trigger 8 generated Booking ${autoBooking.id}: Total
 // --------------------------------------------------------------------------
 console.log('\n[TEST 4] Testing Manual Booking Creation via BookingsService...');
 const bookingsService = new BookingsService(ds);
-const createdBooking = bookingsService.create({
+const createdBooking = (await bookingsService.create({
   eventName: 'Summer Charity Gala',
   client: 'Emily Carter',
   clientId: 'U004',
@@ -124,7 +127,7 @@ const createdBooking = bookingsService.create({
   vendorId: 'V002',
   cost: 35000,
   status: 'Confirmed'
-});
+}));
 
 if (createdBooking.commissionAmount !== 3500 || createdBooking.vendorPayoutAmount !== 31500 || createdBooking.payoutStatus !== 'pending') {
   throw new Error(`FAILED: Manual booking creation failed commission split: comm=$${createdBooking.commissionAmount}, vendor=$${createdBooking.vendorPayoutAmount}`);
@@ -135,7 +138,7 @@ console.log(`[PASS] Test 4: BookingsService created Booking ${createdBooking.id}
 // TEST 5: Commission Ledger Aggregations & Query Filters
 // --------------------------------------------------------------------------
 console.log('\n[TEST 5] Testing Commission Ledger Aggregations & Query Filters...');
-const fullLedger = bookingsService.findCommissions();
+const fullLedger = (await bookingsService.findCommissions());
 console.log('       Ledger Summary:', fullLedger.summary);
 
 if (fullLedger.summary.platformCommissionRate !== 0.10) {
@@ -151,7 +154,7 @@ if (fullLedger.summary.totalGrossVolume !== sumGross || fullLedger.summary.platf
 }
 
 // Test filter by pending payoutStatus
-const pendingLedger = bookingsService.findCommissions({ payoutStatus: 'pending' });
+const pendingLedger = (await bookingsService.findCommissions({ payoutStatus: 'pending' }));
 if (pendingLedger.items.some((b) => b.payoutStatus !== 'pending')) {
   throw new Error('FAILED: Pending filter returned non-pending bookings.');
 }
@@ -164,21 +167,21 @@ console.log('\n[TEST 6] Testing Admin Payout Settlement Action (Release Funds)..
 const bookingToSettle = createdBooking.id;
 // Current rule (REVENUE_MODEL.md): a payout is released only after the client
 // has paid in full AND the event is completed, so set both up first.
-bookingsService.update(bookingToSettle, { paymentStatus: 'paid', advancePaid: createdBooking.cost, status: 'Completed' });
-if (createdBooking.eventId && ds.collection('events').some((e) => e.id === createdBooking.eventId)) {
-  ds.update('events', createdBooking.eventId, { status: 'completed' });
+(await bookingsService.update(bookingToSettle, { paymentStatus: 'paid', advancePaid: createdBooking.cost, status: 'Completed' }));
+if (createdBooking.eventId && (await ds.collection('events')).some((e) => e.id === createdBooking.eventId)) {
+  (await ds.update('events', createdBooking.eventId, { status: 'completed' }));
 }
-const settledResult = bookingsService.settlePayout(bookingToSettle, {
+const settledResult = (await bookingsService.settlePayout(bookingToSettle, {
   settledBy: 'U001',
   note: 'Direct ACH payout transfer released by Admin'
-});
+}));
 
 if (settledResult.payoutStatus !== 'settled' || !settledResult.settledAt || settledResult.settledBy !== 'U001') {
   throw new Error(`FAILED: Payout settlement failed: status=${settledResult.payoutStatus}, settledAt=${settledResult.settledAt}, settledBy=${settledResult.settledBy}`);
 }
 
 // Check audit log entry
-const snapLogs = ds.snapshot().activityLogs;
+const snapLogs = (await ds.snapshot()).activityLogs;
 const payoutLog = snapLogs.find((l) => l.action === 'PAYOUT_SETTLED' && l.entityId === bookingToSettle);
 if (!payoutLog) {
   throw new Error('FAILED: PAYOUT_SETTLED audit log entry was not recorded.');
@@ -190,8 +193,8 @@ console.log(`[PASS] Test 6: Booking ${bookingToSettle} settled successfully at $
 // --------------------------------------------------------------------------
 console.log('\n[TEST 7] Testing AnalyticsService Executive Financial Summary...');
 const analyticsService = new AnalyticsService(ds);
-const analyticsSummary = analyticsService.summary();
-const finSummary = analyticsService.financialSummary();
+const analyticsSummary = (await analyticsService.summary());
+const finSummary = (await analyticsService.financialSummary());
 
 if (analyticsSummary.platformCommissionEarned <= 0 || analyticsSummary.totalVendorPayouts <= 0) {
   throw new Error('FAILED: AnalyticsService did not compute commission and vendor payout metrics.');
@@ -210,7 +213,7 @@ console.log(`[PASS] Test 7: AnalyticsService Financial Summary:
 // --------------------------------------------------------------------------
 console.log('\n[TEST 8] Testing Vendor-Scoped Payouts (VendorsService.getVendorPayouts)...');
 const vendorsService = new VendorsService(ds);
-const v001Payouts = vendorsService.getVendorPayouts('V001');
+const v001Payouts = (await vendorsService.getVendorPayouts('V001'));
 
 if (!v001Payouts || v001Payouts.vendorId !== 'V001') {
   throw new Error('FAILED: VendorsService.getVendorPayouts did not return V001 payouts.');
@@ -230,10 +233,10 @@ console.log(`[PASS] Test 8: Vendor V001 Financials:
 // TEST 9: Disk Persistence & Hot Restart Verification
 // --------------------------------------------------------------------------
 console.log('\n[TEST 9] Simulating Server Restart (Reading from database.json)...');
-const dsRestarted = new DataService();
-dsRestarted.onModuleInit();
+const dsRestarted = new DataService(prisma);
+await dsRestarted.onModuleInit();
 
-const restartedBooking = dsRestarted.find('bookings', bookingToSettle);
+const restartedBooking = (await dsRestarted.find('bookings', bookingToSettle));
 if (!restartedBooking || restartedBooking.payoutStatus !== 'settled' || restartedBooking.commissionAmount !== 3500) {
   throw new Error('FAILED: Settled booking commission data did not persist across DataService instances.');
 }
@@ -242,3 +245,11 @@ console.log(`[PASS] Test 9: Successfully verified persistent commission state fo
 console.log('\n================================================================');
 console.log('ALL COMMISSION REVENUE MODEL TESTS PASSED (9/9)!');
 console.log('================================================================');
+
+})()
+  .then(() => prisma.$disconnect())
+  .catch(async (err) => {
+    console.error(err);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

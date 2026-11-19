@@ -40,6 +40,22 @@ function fakeData() {
     getValue: (n: string) => db[n],
     setValue: (n: string, v: any) => (db[n] = v),
     save: () => undefined,
+    // Same methods the PostgreSQL data layer offers for chats (data.service.ts)
+    create: (n: string, _p: string, payload: any) => { db[n].push({ ...payload }); return { ...payload }; },
+    threadMessages: (threadId: string) => db.messages[threadId] || [],
+    addThreadMessage: (threadId: string, m: any) => {
+      const list = (db.messages[threadId] = db.messages[threadId] || []);
+      const row = { ...m, id: `MSG${String(list.length + 1).padStart(3, '0')}`, threadId };
+      list.push(row);
+      return row;
+    },
+    readsFor: (userId: string) => db.messageReads[userId] || {},
+    // A little after the newest message, so "opened now" is always later than it
+    markRead: (userId: string, key: string) => {
+      const at = new Date(Date.now() + 1000).toISOString();
+      db.messageReads[userId] = { ...(db.messageReads[userId] || {}), [key]: at };
+      return at;
+    },
   } as any;
 }
 
@@ -64,14 +80,14 @@ function fakeServer() {
 }
 
 describe('gateway authentication', () => {
-  it('a valid token joins only its own room', () => {
+  it('a valid token joins only its own room', async () => {
     const gw = new MessagesGateway(jwt, fakeData());
     const socket = fakeSocket(jwt.sign({ sub: 'U004' }));
-    gw.handleConnection(socket as any);
+    (await gw.handleConnection(socket as any));
     expect(socket.rooms).toEqual(['user:U004']);
     expect(socket.disconnected).toBe(false);
   });
-  it('no token, a forged token, an expired token or an inactive user is disconnected', () => {
+  it('no token, a forged token, an expired token or an inactive user is disconnected', async () => {
     const gw = new MessagesGateway(jwt, fakeData());
     const tokens = [
       undefined,
@@ -79,18 +95,18 @@ describe('gateway authentication', () => {
       jwt.sign({ sub: 'U004' }, { expiresIn: -10 }),
       jwt.sign({ sub: 'U009' }),
     ];
-    tokens.forEach((token) => {
+    for (const token of tokens) {
       const socket = fakeSocket(token);
-      gw.handleConnection(socket as any);
+      await gw.handleConnection(socket as any);
       expect(socket.disconnected).toBe(true);
       expect(socket.rooms).toEqual([]);
       expect(socket.emitted).toContain('auth:error');
-    });
+    }
   });
 });
 
 describe('gateway delivery', () => {
-  it('emitToUsers sends once per user room, skipping empty ids', () => {
+  it('emitToUsers sends once per user room, skipping empty ids', async () => {
     const gw = new MessagesGateway(jwt, fakeData());
     const server = fakeServer();
     gw.server = server as any;
@@ -100,23 +116,23 @@ describe('gateway delivery', () => {
       { room: 'user:U002', event: 'message:new' },
     ]);
   });
-  it('a client-thread message reaches the client + vendor rooms, never the staff room', () => {
+  it('a client-thread message reaches the client + vendor rooms, never the staff room', async () => {
     const data = fakeData();
     const gw = new MessagesGateway(jwt, data);
     const server = fakeServer();
     gw.server = server as any;
     const service = new MessagesService(data, gw);
-    service.create({ threadId: 'client-E1', text: 'hello' }, { id: 'U002', name: 'Sarah', role: 'vendor' });
+    (await service.create({ threadId: 'client-E1', text: 'hello' }, { id: 'U002', name: 'Sarah', role: 'vendor' }));
     const rooms = server.sent.map((s) => s.room).sort();
     expect(rooms).toEqual(['user:U002', 'user:U004']);
     expect(rooms).not.toContain('user:U003');
   });
-  it('a staff-thread message reaches the vendor + assigned staff, never the client', () => {
+  it('a staff-thread message reaches the vendor + assigned staff, never the client', async () => {
     const data = fakeData();
     const gw = new MessagesGateway(jwt, data);
     const server = fakeServer();
     gw.server = server as any;
-    new MessagesService(data, gw).create({ threadId: 'staff-E1', text: 'doors at 9' }, { id: 'U003', name: 'Mike', role: 'staff', email: 'mike@x.com' });
+    (await new MessagesService(data, gw).create({ threadId: 'staff-E1', text: 'doors at 9' }, { id: 'U003', name: 'Mike', role: 'staff', email: 'mike@x.com' }));
     expect(server.sent.map((s) => s.room).sort()).toEqual(['user:U002', 'user:U003']);
   });
 });

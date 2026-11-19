@@ -2,12 +2,50 @@
 
 ## Running the Full-Stack App
 
-Backend:
+### 1. Database setup (PostgreSQL)
+
+The backend stores everything in **PostgreSQL** through **Prisma** (schema:
+`back-end/prisma/schema.prisma`, tables explained in `Database/README.md`).
+Start a local Postgres one of two ways:
+
+**Option A — Docker** (any OS):
+
+```bash
+docker compose up -d            # from the repo root; uses docker-compose.yml
+```
+
+**Option B — Homebrew** (macOS, no Docker):
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+psql -d postgres -c "CREATE ROLE checkmate LOGIN PASSWORD 'checkmate_dev' CREATEDB;"
+createdb -O checkmate checkmate
+createdb -O checkmate checkmate_test     # used only by the Jest tests
+```
+
+Both give the connection string already in `back-end/.env.example`:
+`DATABASE_URL="postgresql://checkmate:checkmate_dev@localhost:5432/checkmate?schema=public"`
+
+Create the tables, then fill them (choose one):
 
 ```bash
 cd back-end
-npm install
-cp .env.example .env    # required — see below
+npm install                      # also runs "prisma generate"
+cp .env.example .env             # required — see below
+npm run db:migrate               # creates all tables (prisma/migrations)
+npm run db:seed                  # demo data + the 5 accounts below   — OR —
+npm run db:import -- data/database.backup-2026-11-19.json   # bring over data from the old JSON database
+```
+
+If the database is empty when the server starts, it seeds itself automatically.
+`npm run db:studio` opens Prisma Studio to browse the tables.
+Tests: `npx jest` runs against `checkmate_test` (set `TEST_DATABASE_URL` to change it).
+
+### 2. Backend
+
+```bash
+cd back-end
 npm run build
 npm run start
 ```
@@ -25,10 +63,16 @@ Swagger UI: `http://localhost:3000/api/docs`
 
 Generated Swagger JSON: `back-end/docs/swagger.json`
 
-Frontend:
+### 3. Frontend (React)
 
-The backend serves the frontend, so there is no second server to start. Sign in at
-`http://localhost:3000/front-end/pages/Login/signin.html`.
+```bash
+cd frontend-react
+npm install
+npm run dev                      # http://localhost:5173
+```
+
+(The original HTML pages are still served by the backend at
+`http://localhost:3000/front-end/pages/Login/signin.html`.)
 
 Authentication uses JWTs. Logging in returns a signed token that the frontend
 stores in `sessionStorage` and sends as `Authorization: Bearer <token>` on every

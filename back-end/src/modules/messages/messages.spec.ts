@@ -34,6 +34,22 @@ function fakeData() {
     getValue: (n: string) => db[n],
     setValue: (n: string, v: any) => (db[n] = v),
     save: () => undefined,
+    // Same methods the PostgreSQL data layer offers for chats (data.service.ts)
+    create: (n: string, _p: string, payload: any) => { db[n].push({ ...payload }); return { ...payload }; },
+    threadMessages: (threadId: string) => db.messages[threadId] || [],
+    addThreadMessage: (threadId: string, m: any) => {
+      const list = (db.messages[threadId] = db.messages[threadId] || []);
+      const row = { ...m, id: `MSG${String(list.length + 1).padStart(3, '0')}`, threadId };
+      list.push(row);
+      return row;
+    },
+    readsFor: (userId: string) => db.messageReads[userId] || {},
+    // A little after the newest message, so "opened now" is always later than it
+    markRead: (userId: string, key: string) => {
+      const at = new Date(Date.now() + 1000).toISOString();
+      db.messageReads[userId] = { ...(db.messageReads[userId] || {}), [key]: at };
+      return at;
+    },
   } as any;
 }
 
@@ -50,53 +66,53 @@ function setup() {
 }
 
 describe('live delivery goes only to the conversation', () => {
-  it('client chat -> client + vendor, never the staff', () => {
+  it('client chat -> client + vendor, never the staff', async () => {
     const { svc, pushed } = setup();
-    svc.create({ threadId: 'client-E1', text: 'hi' }, sarah);
+    (await svc.create({ threadId: 'client-E1', text: 'hi' }, sarah));
     expect(pushed[0].to.sort()).toEqual(['U002', 'U004']);
   });
-  it('staff chat -> vendor + assigned staff, never the client', () => {
+  it('staff chat -> vendor + assigned staff, never the client', async () => {
     const { svc, pushed } = setup();
-    svc.create({ threadId: 'staff-E1', text: 'doors at 9' }, sarah);
+    (await svc.create({ threadId: 'staff-E1', text: 'doors at 9' }, sarah));
     expect(pushed[0].to.sort()).toEqual(['U002', 'U003']);
   });
 });
 
 describe('admin chat', () => {
-  it('an admin reply must name its recipient', () => {
-    expect(() => setup().svc.postAdminChat({ text: 'hello' }, admin)).toThrow(BadRequestException);
+  it('an admin reply must name its recipient', async () => {
+    await expect((async () => setup().svc.postAdminChat({ text: 'hello' }, admin))()).rejects.toThrow(BadRequestException);
   });
-  it('each person sees only their own conversation; admins see all', () => {
+  it('each person sees only their own conversation; admins see all', async () => {
     const { svc } = setup();
-    svc.postAdminChat({ text: 'from mike' }, mike);
-    svc.postAdminChat({ text: 'to mike', recipientEmail: 'mike@x.com' }, admin);
-    svc.postAdminChat({ text: 'from emily' }, emily);
-    expect(svc.adminChat(mike).map((m: any) => m.text)).toEqual(['from mike', 'to mike']);
-    expect(svc.adminChat(emily).map((m: any) => m.text)).toEqual(['from emily']);
-    expect(svc.adminChat(admin)).toHaveLength(3);
+    (await svc.postAdminChat({ text: 'from mike' }, mike));
+    (await svc.postAdminChat({ text: 'to mike', recipientEmail: 'mike@x.com' }, admin));
+    (await svc.postAdminChat({ text: 'from emily' }, emily));
+    expect((await svc.adminChat(mike)).map((m: any) => m.text)).toEqual(['from mike', 'to mike']);
+    expect((await svc.adminChat(emily)).map((m: any) => m.text)).toEqual(['from emily']);
+    expect((await svc.adminChat(admin))).toHaveLength(3);
   });
-  it('a reply is pushed to the recipient and the admin team', () => {
+  it('a reply is pushed to the recipient and the admin team', async () => {
     const { svc, pushed } = setup();
-    svc.postAdminChat({ text: 'to mike', recipientEmail: 'mike@x.com' }, admin);
+    (await svc.postAdminChat({ text: 'to mike', recipientEmail: 'mike@x.com' }, admin));
     expect(pushed[0].to).toEqual(expect.arrayContaining(['U001', 'U003']));
     expect(pushed[0].to).not.toContain('U004');
   });
 });
 
 describe('unread counts', () => {
-  it('counts messages from others until the conversation is opened', () => {
+  it('counts messages from others until the conversation is opened', async () => {
     const { svc } = setup();
-    svc.create({ threadId: 'client-E1', text: 'one' }, sarah);
-    svc.create({ threadId: 'client-E1', text: 'two' }, sarah);
-    svc.create({ threadId: 'client-E1', text: 'mine' }, emily);
-    expect(svc.unread(emily).threads['client-E1']).toBe(2);
-    svc.markRead('client-E1', emily);
-    expect(svc.unread(emily).threads['client-E1']).toBeUndefined();
-    expect(svc.unread(mike).threads['client-E1']).toBeUndefined(); // not his conversation
+    (await svc.create({ threadId: 'client-E1', text: 'one' }, sarah));
+    (await svc.create({ threadId: 'client-E1', text: 'two' }, sarah));
+    (await svc.create({ threadId: 'client-E1', text: 'mine' }, emily));
+    expect((await svc.unread(emily)).threads['client-E1']).toBe(2);
+    (await svc.markRead('client-E1', emily));
+    expect((await svc.unread(emily)).threads['client-E1']).toBeUndefined();
+    expect((await svc.unread(mike)).threads['client-E1']).toBeUndefined(); // not his conversation
   });
-  it('admins get one count per person', () => {
+  it('admins get one count per person', async () => {
     const { svc } = setup();
-    svc.postAdminChat({ text: 'help' }, mike);
-    expect(svc.unread(admin).threads['admin-chat:mike@x.com']).toBe(1);
+    (await svc.postAdminChat({ text: 'help' }, mike));
+    expect((await svc.unread(admin)).threads['admin-chat:mike@x.com']).toBe(1);
   });
 });

@@ -22,6 +22,7 @@ function fakeData() {
       { id: 'A2', staffId: 'S2', staffName: 'Other', eventId: 'E2', eventName: 'Confirmed Gala', status: 'assigned' },
     ],
     resources: [], resourceAllocations: {}, notifications: [],
+    users: [], // no admins here, so only the vendor is notified
   };
   const find = (name: string, id: string) => {
     const row = db[name].find((r: any) => r.id === id);
@@ -42,21 +43,21 @@ const emily = { id: 'U004', name: 'Emily', role: 'client' };
 const mike = { id: 'U003', name: 'Mike', email: 'mike@x.com', role: 'staff' };
 
 describe('client cancel reasons', () => {
-  it('needs a reason', () => {
-    expect(() => new EventsService(fakeData()).cancel('E1', emily, '  ')).toThrow(BadRequestException);
+  it('needs a reason', async () => {
+    await expect((async () => new EventsService(fakeData()).cancel('E1', emily, '  '))()).rejects.toThrow(BadRequestException);
   });
-  it('saves reason + who cancelled and notifies the vendor', () => {
+  it('saves reason + who cancelled and notifies the vendor', async () => {
     const data = fakeData();
-    new EventsService(data).cancel('E1', emily, 'Budget issue');
+    (await new EventsService(data).cancel('E1', emily, 'Budget issue'));
     expect(data.db.events[0]).toMatchObject({ status: 'cancelled', cancellationReason: 'Budget issue', cancelledBy: { id: 'U004', role: 'client' } });
     expect(data.db.notifications).toEqual([expect.objectContaining({ userId: 'U002', message: expect.stringContaining('Budget issue') })]);
   });
 });
 
 describe('admin / superuser cancel', () => {
-  it('saves who cancelled and tells both client and vendor', () => {
+  it('saves who cancelled and tells both client and vendor', async () => {
     const data = fakeData();
-    new EventsService(data).updateStatus('E2', { status: 'cancelled', note: 'Schedule conflict' }, { id: 'U005', name: 'Nina', role: 'superuser' });
+    (await new EventsService(data).updateStatus('E2', { status: 'cancelled', note: 'Schedule conflict' }, { id: 'U005', name: 'Nina', role: 'superuser' }));
     expect(data.db.events[1]).toMatchObject({ cancellationReason: 'Schedule conflict', cancelledBy: { id: 'U005', role: 'superuser' } });
     const to = data.db.notifications.map((n: any) => n.userId).sort();
     expect(to).toEqual(['U002', 'U004']);
@@ -65,19 +66,19 @@ describe('admin / superuser cancel', () => {
 
 describe('staff decline reasons', () => {
   const service = (data = fakeData()) => ({ data, svc: new StaffService(data, {} as any) });
-  it('needs a reason', () => {
-    expect(() => service().svc.updateAssignment('A1', { status: 'rejected' }, mike)).toThrow(BadRequestException);
+  it('needs a reason', async () => {
+    await expect((async () => service().svc.updateAssignment('A1', { status: 'rejected' }, mike))()).rejects.toThrow(BadRequestException);
   });
-  it('only on their own assignment', () => {
-    expect(() => service().svc.updateAssignment('A2', { status: 'rejected', declineReason: 'x' }, mike)).toThrow(ForbiddenException);
+  it('only on their own assignment', async () => {
+    await expect((async () => service().svc.updateAssignment('A2', { status: 'rejected', declineReason: 'x' }, mike))()).rejects.toThrow(ForbiddenException);
   });
-  it('staff cannot reassign or complete an assignment', () => {
-    expect(() => service().svc.updateAssignment('A1', { staffId: 'S2' } as any, mike)).toThrow(ForbiddenException);
-    expect(() => service().svc.updateAssignment('A1', { status: 'completed' }, mike)).toThrow(ForbiddenException);
+  it('staff cannot reassign or complete an assignment', async () => {
+    await expect((async () => service().svc.updateAssignment('A1', { staffId: 'S2' } as any, mike))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => service().svc.updateAssignment('A1', { status: 'completed' }, mike))()).rejects.toThrow(ForbiddenException);
   });
-  it('saves the reason and notifies the vendor', () => {
+  it('saves the reason and notifies the vendor', async () => {
     const { data, svc } = service();
-    svc.updateAssignment('A1', { status: 'rejected', declineReason: 'Personal reason' }, mike);
+    (await svc.updateAssignment('A1', { status: 'rejected', declineReason: 'Personal reason' }, mike));
     expect(data.db.staffAssignments[0]).toMatchObject({ status: 'rejected', declineReason: 'Personal reason', declinedBy: { id: 'U003' } });
     expect(data.db.notifications[0]).toMatchObject({ userId: 'U002', message: expect.stringContaining('Personal reason') });
   });

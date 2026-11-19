@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class CreateBookingDto {
   @ApiPropertyOptional({ example: 'EVT001' }) @IsOptional() @IsString() eventId?: string;
@@ -34,4 +34,16 @@ export class SettlePayoutDto {
   @IsOptional()
   @IsString()
   note?: string;
+}
+
+/** POST /bookings/:id/checkout — start a (simulated) payment for the balance due. */
+export class CheckoutDto {
+  @ApiProperty({ enum: ['upi', 'card', 'netbanking'] }) @IsIn(['upi', 'card', 'netbanking']) method: 'upi' | 'card' | 'netbanking';
+  @ApiProperty({ example: 25000 }) @IsNumber() @Min(1) amount: number;
+  @ApiPropertyOptional({ example: 'Card •••• 4242' }) @IsOptional() @IsString() @MaxLength(60) methodLabel?: string;
+}
+
+/** POST /payments/:id/confirm — the simulated gateway's answer. */
+export class ConfirmPaymentDto {
+  @ApiProperty({ enum: ['success', 'failure'] }) @IsIn(['success', 'failure']) outcome: 'success' | 'failure';
 }

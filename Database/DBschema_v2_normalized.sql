@@ -1,3 +1,6 @@
+-- OUTDATED (kept for history): the app does not use this file.
+-- The real database is PostgreSQL via Prisma: see Database/README.md and Database/schema.sql.
+
 -- ============================================================================
 -- Event Management System (EMS) - Fully Normalized Relational Database Schema (3NF / BCNF)
 -- Engine: MySQL 8.0+ / MariaDB 10.5+ / InnoDB

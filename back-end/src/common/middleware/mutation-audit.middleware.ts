@@ -27,14 +27,10 @@ export class MutationAuditMiddleware implements NestMiddleware {
       };
 
       logger.info({ message: 'mutation audit', ...entry, kind: 'app' });
-      this.data.logActivity(
-        `${entry.method} ${entry.url}`,
-        'HTTP',
-        entry.requestId,
-        entry,
-        undefined,
-        entry.role,
-      );
+      // Saved in the background; a failure here must never break the request
+      this.data
+        .logActivity(`${entry.method} ${entry.url}`, 'HTTP', entry.requestId, entry, undefined, entry.role)
+        .catch((err: any) => logger.warn({ message: `audit log not saved: ${err.message}`, kind: 'app' }));
     });
 
     next();

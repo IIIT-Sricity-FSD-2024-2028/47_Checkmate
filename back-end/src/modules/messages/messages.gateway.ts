@@ -33,11 +33,11 @@ export class MessagesGateway implements OnGatewayConnection {
   ) {}
 
   // Runs for every new socket: no valid token -> disconnected straight away
-  handleConnection(socket: Socket) {
+  async handleConnection(socket: Socket) {
     try {
       const token = String(socket.handshake.auth?.token || '');
       const payload: any = this.jwt.verify(token);
-      const user = this.data.collection('users').find((u) => u.id === payload.sub);
+      const user = (await this.data.collection('users')).find((u) => u.id === payload.sub);
       if (!user || !['Active', 'active'].includes(user.status)) throw new Error('inactive');
       socket.data.userId = user.id;
       socket.join(`user:${user.id}`);

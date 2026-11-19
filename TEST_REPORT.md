@@ -905,3 +905,88 @@ The first run found a **real bug**, now fixed: a finished event's Track page sai
 | Regression | A crawl of every menu page for all 5 roles: crashes, failed API calls, `undefined`/`NaN` text | **49/49 clean** |
 
 New packages: `bcryptjs@2.4.3`, `@types/bcryptjs` (back-end).
+
+---
+
+## 10. Round 4 — stars, client feedback, cancellation, checkout, PostgreSQL (2026-11-19)
+Tested on an isolated copy (API :3001 / UI :5174, database `checkmate_e2e`) **and on the real ports 3000/5173 against a copy** (`checkmate_realcopy`), both imported from a backup of the owner's `database.json`. The real `database.json` was never changed (checksum verified). **Nothing committed or pushed** (owner's request).
+
+**Totals:**
+- Jest: **14 suites, 130 tests pass** (now on PostgreSQL)
+- Root node scripts: **6/6 pass**
+- Full workflow (Playwright): **30/30 on both stacks**
+- Problems 1–4 (Playwright): **17/17 on both stacks**
+- All-pages crawl, 5 roles: **49/49 clean**
+- `nest build` and `npm run build`: succeed
+
+### 10.1 Problem 1 — stars not visible
+**Root cause:** the data had **0 ratings**. Everyone was "New" by rule; the stars did render once a rating existed.
+
+**Fix:** demo ratings (`back-end/src/database/demo-ratings.ts`, every row marked `demo: true`) on the seed's completed events. A database with no ratings at all gets them once at start-up; real ratings are never overwritten. Result: Mike 4.5 (4 ratings), Elena 4.5 (2), Marcus 3.5 (2), Chloe 5.0 (2); David and Liam stay "New" with no stars. Shown on the wizard cards and popup (with half stars), the client Track page, vendor Manage Staff and Event Review. Clients can only view.
+
+### 10.2 Problem 2 — rating and feedback after the event
+- **Vendor → staff:** rating (from round 3) is editable; one rating per vendor + staff + event, now also a UNIQUE constraint in the database.
+- **NEW, client → vendor:**
+  - API: `POST`/`PATCH /api/events/:id/vendor-feedback` for the owning client on a completed event only (403 for other clients or roles, 400 before completion). `GET /api/vendors/:id/feedback` and `/vendors/feedback-summary` for everyone.
+  - Shown: the vendor's average and recent feedback on the vendor dashboard ("Client Feedback"), on client package cards and on the Track page.
+  - The vendor gets a notification on every rating or edit.
+  - Tests: `vendor-feedback.spec.ts` (6).
+
+### 10.3 Problem 3 — cancellation
+- **Who can cancel:** clients can now cancel **pending, waiting and confirmed** events when the event is **more than 3 days** away.
+- **Inside 3 days:** the "Cancel Event" button is disabled with "Cancellation is not allowed within 3 days of the event, contact admin." The backend returns 400 with the same text.
+- **What cancelling does:** the reason popup shows the cancellation fee %; the booking keeps the fee; resources and staff are released; the vendor **and every admin/superuser** are notified.
+- **Admins and superusers** can still cancel inside 3 days, with a reason.
+- **Tests:** exactly 3 days (blocked), 4 days (allowed), 2 days (blocked), a past event (blocked), live (never), the notifications, and admin inside 3 days, in `event-date-rules.spec.ts`.
+
+### 10.4 Problem 4 — checkout (SIMULATED gateway, labelled on screen)
+- **Flow:** Pay Now → bill (price, commission inside it, already paid, total) → UPI / Card / Net banking → "Processing..." → success with receipt (HTML download) or failure with "Try again".
+- **Records:** booking `unpaid → processing → paid / failed`, plus a `payments` row for every attempt.
+- **Blocked:** paying twice, paying while processing, the wrong amount, cancelled or rejected events, someone else's booking, and the old instant pay.
+- **Admin view:** "Client Payments" under Financial Payouts.
+- **Why not Razorpay:** test mode needs the owner's API keys, so it is not used (REVENUE_MODEL.md).
+- **Tests:** `payments.spec.ts` (7).
+
+### 10.5 Problem 5 — PostgreSQL + Prisma
+- **Schema** `back-end/prisma/schema.prisma`: 23 tables, foreign keys, and these constraints:
+  - UNIQUE: email, one booking per event, one rating per vendor/staff/event, one feedback per event
+  - CHECK: stars 1–5, amount > 0, quantity > 0
+
+  Migration `prisma/migrations/*_init`; `Database/schema.sql` and `Database/README.md` describe it.
+- **Data layer** `src/database/data.service.ts`: same method names, now async on Prisma. **The triggers run inside `prisma.$transaction`** (confirm → booking; finish → release + fee; application approved → vendor + login; workload), so a failing step rolls everything back (tested). A clash on a generated id retries; database errors become clear 400s.
+- **Scripts:**
+  - `npm run db:migrate`, `db:seed` (the 5 accounts + demo data), `db:import -- <backup.json>`, `db:studio`
+  - The import skips and lists broken links and fills and lists missing required values. On the owner's data: **nothing skipped**; 4 old admin-chat messages got `createdAt` from their own `timestamp`.
+- **Setup:** `docker-compose.yml` (Postgres 16 + test database) and a README "Database setup" (Docker or Homebrew). `.env.example` has `DATABASE_URL`.
+- **Tests:** Jest uses its own database `checkmate_test` (`test/jest.env.js`). `data.service.spec.ts` is now a real PostgreSQL integration test (9 tests: seed, round trip, triggers, rollback, DB constraints, import report).
+- **Bug caught during the migration:** `staff.service.ts` called the async vendor-ownership check **without `await`**, which would have let a vendor edit another vendor's staff. The Jest suite caught it; fixed. Then the TypeScript compiler API was used to list **every** un-awaited promise in the backend: only 4 remain, all intentional (scheduler timer, background audit log, app start, the swagger script).
+- **Switch-over:** the owner's backend on :3000 now runs on PostgreSQL with their data imported. `database.json` is untouched, kept as a fallback, with backups `data/database.backup-2026-11-19*.json` (git-ignored).
+
+### 10.6 Problem 6 — full workflow (30/30 on both stacks)
+1. create (the 7-day rule blocks a close date)
+2. Mike as a preference
+3. chat client↔vendor live (23 ms) with a sidebar badge
+4. vendor confirms Mike, allocates, confirms the venue, prices ₹25,000, approves → booking (commission ₹2,500, payout ₹22,500)
+5. **client pays through the checkout** (UPI, Processing..., receipt)
+6. staff accepts
+7. chat staff↔vendor and staff↔admin live
+8. live (status API, see below)
+9. vendor concludes the event
+10. vendor rates Mike 3★, then **edits** to 5★ (prefilled, no duplicate); other roles get 403
+11. **client rates the vendor 4★** (vendor notified)
+12. the client sees Mike's stars on the Track page, wizard card and popup; vendor staff card
+13. cancel and reject paths with reasons
+14. admin sees the ₹2,500 commission **and the payment record**
+15. socket blocked → "Refreshing every 3s" and the message still arrives
+
+**Honest notes:**
+- Step 8 uses the status API because the scheduler only moves an event to live at its real 2027 start time.
+- On the real-port copy, a first run of the Problem 1–4 test failed 2 checks, because the workflow test run just before had added a real 5th rating for Mike (4.6, not 4.5). On a fresh copy it passed 17/17.
+
+### 10.7 Still open
+- **Cancellation fee can't be paid:** a cancelled booking that owes a fee cannot be paid through the checkout ("block paying for cancelled/rejected events" was taken literally), so that fee's vendor payout can never be released. **Owner to decide.**
+- `/issues` and `/staff-assignments` are not role-scoped; `/vendor-applications` is readable by any vendor; the issue reporter comes from the request body.
+- Superuser Staff `status` is overwritten by assignment changes.
+- Events go live only via the scheduler at their real start time.
+- Payments are simulated (no Razorpay keys).
+- `docker-compose.yml` was not run here (no Docker on this Mac); the same setup was tested with Homebrew Postgres 16.

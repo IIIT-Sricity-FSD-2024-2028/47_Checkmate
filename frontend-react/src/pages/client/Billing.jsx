@@ -35,12 +35,14 @@ import useClientBillingData from "../../components/client/useClientBillingData";
 // Modular Billing Subcomponents
 import BillingStatsGrid from "../../components/client/BillingStatsGrid";
 import InvoiceTable from "../../components/client/InvoiceTable";
+import CheckoutModal from "../../components/client/CheckoutModal";
 
 function Billing() {
   const {
     loading, error, summary, filteredInvoices,
     searchTerm, setSearchTerm, statusFilter, setStatusFilter,
     payNow, payingId, toast, setToast,
+    checkoutInvoice, setCheckoutInvoice, handlePaid,
   } = useClientBillingData();
 
   return (
@@ -52,6 +54,9 @@ function Billing() {
 
         {/* ── Component 1: Payment feedback ── */}
         <EventsToastFeedback toast={toast} onClose={() => setToast(null)} />
+
+        {/* Pay Now -> checkout (simulated gateway) */}
+        <CheckoutModal invoice={checkoutInvoice} onClose={() => setCheckoutInvoice(null)} onPaid={handlePaid} />
 
         {/* ── Component 2: Summary cards ── */}
         <BillingStatsGrid summary={summary} loading={loading} />

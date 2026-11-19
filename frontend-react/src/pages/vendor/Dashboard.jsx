@@ -17,7 +17,7 @@
  * ============================================================================
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Central stylesheet
@@ -40,6 +40,8 @@ import VendorRecentActivitySection from "../../components/vendor/VendorRecentAct
 import VendorCriticalAlertsSection from "../../components/vendor/VendorCriticalAlertsSection";
 import VendorQuickActionsSection from "../../components/vendor/VendorQuickActionsSection";
 import VendorWidgetsSection from "../../components/vendor/VendorWidgetsSection";
+import { VendorFeedbackSummary } from "../../components/VendorRating";
+import { getVendors } from "../../services/vendorService";
 
 function VendorDashboard() {
   // Navigation hook to navigate between vendor submodules
@@ -48,6 +50,22 @@ function VendorDashboard() {
   // Retrieve current user session to personalize the welcome greeting
   const authSession = getAuthSession();
   const userName = authSession?.user?.name || "Vendor";
+
+  // This vendor's id (vendors row linked to the signed-in user), for the feedback card
+  const [myVendorId, setMyVendorId] = useState(authSession?.user?.vendorId || "");
+
+  // Looks the vendor id up once when the session does not carry it
+  useEffect(() => {
+    let isMounted = true;
+    if (myVendorId) return undefined;
+    getVendors()
+      .then((list) => {
+        const mine = (list || []).find((v) => v.userId === authSession?.user?.id);
+        if (isMounted && mine) setMyVendorId(mine.id);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [myVendorId, authSession?.user?.id]);
 
   // Connect to custom data hook handling all async queries and data computation
   const {
@@ -100,6 +118,9 @@ function VendorDashboard() {
 
           {/* Right Column: Alerts & Quick Action Navigation */}
           <div className="right-col">
+            {/* Component 4B: Average client rating + latest client feedback */}
+            <VendorFeedbackSummary vendorId={myVendorId} />
+
             {/* Component 5: Critical Operational Alerts Card */}
             <VendorCriticalAlertsSection
               alerts={alerts}

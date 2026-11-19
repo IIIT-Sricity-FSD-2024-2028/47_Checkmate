@@ -12,34 +12,35 @@ export class BookingsService {
 
   // Who may see a booking: admins/superusers all; a client their own; a vendor
   // the ones they supplied (directly or as one of several vendors).
-  private vendorIdOf(user?: Caller) {
-    return this.data.collection('vendors').find((v: any) => v.userId === user?.id)?.id;
+  private async vendorIdOf(user?: Caller) {
+    return (await this.data.collection('vendors')).find((v: any) => v.userId === user?.id)?.id;
   }
 
-  private canSee(booking: Booking, user?: Caller) {
+  // `vendorId` = the signed-in vendor's id, looked up once by the caller
+  private canSee(booking: Booking, user?: Caller, vendorId?: string) {
     const role = String(user?.role || '').toLowerCase();
     if (!user || ['admin', 'superuser'].includes(role)) return true;
     if (role === 'client') return booking.clientId === user.id;
     if (role === 'vendor') {
-      const vendorId = this.vendorIdOf(user);
       return Boolean(vendorId) && (booking.vendorId === vendorId || (booking.vendorSplits || []).some((s) => s.vendorId === vendorId));
     }
     return false;
   }
 
-  findAll(user?: Caller) {
-    return this.data.collection('bookings').filter((b) => this.canSee(b as Booking, user));
+  async findAll(user?: Caller) {
+    const vendorId = await this.vendorIdOf(user);
+    return (await this.data.collection('bookings')).filter((b) => this.canSee(b as Booking, user, vendorId));
   }
 
-  findOne(id: string, user?: Caller) {
-    const booking = this.data.find('bookings', id) as Booking;
-    if (!this.canSee(booking, user)) throw new ForbiddenException('You can only view your own bookings.');
+  async findOne(id: string, user?: Caller) {
+    const booking = (await this.data.find('bookings', id)) as Booking;
+    if (!this.canSee(booking, user, await this.vendorIdOf(user))) throw new ForbiddenException('You can only view your own bookings.');
     return booking;
   }
 
-  create(dto: CreateBookingDto) {
+  async create(dto: CreateBookingDto) {
     const cost = Number(dto.cost || 0);
-    const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : this.data.getCommissionRate();
+    const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : (await this.data.getCommissionRate());
     const split = calculateCommissionSplit(cost, rate);
 
     const payload: Partial<Booking> = {
@@ -53,11 +54,11 @@ export class BookingsService {
       created: dto.created || new Date().toISOString().slice(0, 10),
     };
 
-    return this.data.create('bookings', 'BK', payload as any);
+    return await this.data.create('bookings', 'BK', payload as any);
   }
 
-  update(id: string, dto: UpdateBookingDto) {
-    const existing = this.data.find('bookings', id);
+  async update(id: string, dto: UpdateBookingDto) {
+    const existing = (await this.data.find('bookings', id));
     if (dto.payoutStatus === 'settled' && existing.payoutStatus !== 'settled') {
       throw new BadRequestException('Payouts can only be released through the settlement action.');
     }
@@ -65,7 +66,7 @@ export class BookingsService {
 
     if (dto.cost !== undefined || dto.commissionRate !== undefined) {
       const cost = dto.cost !== undefined ? Number(dto.cost) : existing.cost;
-      const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : (existing.commissionRate ?? this.data.getCommissionRate());
+      const rate = dto.commissionRate !== undefined ? Number(dto.commissionRate) : (existing.commissionRate ?? (await this.data.getCommissionRate()));
       const split = calculateCommissionSplit(cost, rate);
 
       patch.cost = cost;
@@ -74,19 +75,20 @@ export class BookingsService {
       patch.vendorPayoutAmount = split.vendorPayoutAmount;
     }
 
-    return this.data.update('bookings', id, patch as any);
+    return await this.data.update('bookings', id, patch as any);
   }
 
-  remove(id: string) {
-    return this.data.remove('bookings', id);
+  async remove(id: string) {
+    return await this.data.remove('bookings', id);
   }
 
   /**
    * Returns filtered commission and settlement records with financial summaries
    */
   // A vendor always gets only their own ledger, whatever vendorId they ask for.
-  findCommissions(query?: { vendorId?: string; payoutStatus?: string; eventId?: string }, user?: Caller) {
-    let bookings = (this.data.collection('bookings') as Booking[]).filter((b) => this.canSee(b, user));
+  async findCommissions(query?: { vendorId?: string; payoutStatus?: string; eventId?: string }, user?: Caller) {
+    const vendorId = await this.vendorIdOf(user);
+    let bookings = ((await this.data.collection('bookings')) as Booking[]).filter((b) => this.canSee(b, user, vendorId));
 
     if (query?.vendorId) {
       const vId = query.vendorId.toLowerCase();
@@ -115,13 +117,13 @@ export class BookingsService {
       summary: {
         totalBookings: bookings.length,
         totalGrossVolume: totalGross,
-        platformCommissionRate: this.data.getCommissionRate(),
+        platformCommissionRate: (await this.data.getCommissionRate()),
         platformCommissionEarned: totalCommission,
         totalVendorPayoutObligations: totalVendorPayouts,
         pendingVendorPayouts,
         settledVendorPayouts,
       },
-      items: bookings.map((b) => ({ ...b, settleBlockReason: this.getSettleBlockReason(b) })),
+      items: await Promise.all(bookings.map(async (b) => ({ ...b, settleBlockReason: await this.getSettleBlockReason(b) }))),
     };
   }
 
@@ -131,12 +133,12 @@ export class BookingsService {
    */
   // A cancelled booking with a cancellation fee can also be paid out (the vendor's
   // share of the fee) once the client has paid that fee.
-  private getSettleBlockReason(booking: Booking): string | null {
+  private async getSettleBlockReason(booking: Booking): Promise<string | null> {
     if (booking.payoutStatus === 'settled') return 'Payout already settled';
     if (Number(booking.vendorPayoutAmount || 0) <= 0) return 'Nothing to pay out';
     if (booking.paymentStatus !== 'paid') return 'Client has not paid in full';
     if (booking.status === 'Cancelled') return null;
-    const event = this.data.collection('events').find((e) => e.id === booking.eventId);
+    const event = (await this.data.collection('events')).find((e) => e.id === booking.eventId);
     if (String(event?.status ?? booking.status).toLowerCase() !== 'completed') return 'Event is not completed';
     return null;
   }
@@ -144,36 +146,22 @@ export class BookingsService {
   /**
    * Records that the client who owns a booking has paid its full amount
    */
-  recordPayment(id: string, user?: { id: string }) {
-    const booking = this.data.find('bookings', id);
-    if (!booking) {
-      throw new NotFoundException(`Booking with ID ${id} not found.`);
-    }
-    if (!booking.clientId || booking.clientId !== user?.id) {
-      throw new ForbiddenException('You can only pay your own bookings.');
-    }
-    if (booking.paymentStatus === 'paid') {
-      throw new BadRequestException('This booking is already paid.');
-    }
-    if (Number(booking.cost || 0) <= 0) {
-      throw new BadRequestException('Nothing is due on this booking.');
-    }
-
-    const updated = this.data.update('bookings', id, { advancePaid: booking.cost, paymentStatus: 'paid' } as any);
-    this.data.logActivity('PAYMENT_RECORDED', 'BOOKING', id, { bookingId: id, eventName: booking.eventName, amount: booking.cost }, user.id, 'Client');
-    return updated;
+  // The old one-click "Pay Now" (marked a booking paid instantly). Replaced by
+  // the checkout in payments.service.ts, so it now explains where to go instead.
+  async recordPayment(_id: string, _user?: { id: string }) {
+    throw new BadRequestException('Please pay through the checkout (Billing → Pay Now).');
   }
 
   /**
    * Settles a pending payout to a vendor for a specific booking
    */
-  settlePayout(id: string, dto?: SettlePayoutDto, adminUserId?: string) {
-    const booking = this.data.find('bookings', id);
+  async settlePayout(id: string, dto?: SettlePayoutDto, adminUserId?: string) {
+    const booking = (await this.data.find('bookings', id));
     if (!booking) {
       throw new NotFoundException(`Booking with ID ${id} not found.`);
     }
 
-    const blockReason = this.getSettleBlockReason(booking);
+    const blockReason = (await this.getSettleBlockReason(booking));
     if (blockReason) {
       throw new BadRequestException(`Cannot release payout: ${blockReason}.`);
     }
@@ -181,13 +169,13 @@ export class BookingsService {
     const settledAt = new Date().toISOString();
     const settledBy = dto?.settledBy || adminUserId || 'U001';
 
-    const updated = this.data.update('bookings', id, {
+    const updated = (await this.data.update('bookings', id, {
       payoutStatus: 'settled',
       settledAt,
       settledBy,
-    } as any);
+    } as any));
 
-    this.data.logActivity(
+    (await this.data.logActivity(
       'PAYOUT_SETTLED',
       'BOOKING',
       id,
@@ -205,7 +193,7 @@ export class BookingsService {
       },
       settledBy,
       'Admin',
-    );
+    ));
 
     return updated;
   }

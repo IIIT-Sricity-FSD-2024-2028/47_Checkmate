@@ -15,8 +15,8 @@ export class AnalyticsService {
     this.resources = resources ?? new ResourcesService(data);
   }
 
-  summary() {
-    const snapshot = this.data.snapshot();
+  async summary() {
+    const snapshot = (await this.data.snapshot());
 
     // Bookings are the billable records. One is created automatically whenever an
     // event flips to confirmed/approved (see DataService.triggerEventUpdated),
@@ -74,7 +74,7 @@ export class AnalyticsService {
 
     // The platform's cut, driven by the rate an admin sets on the Global Settings
     // page. Stored under the generic state store, so fall back to 10% if unset.
-    const commissionPct = this.data.getCommissionRate() * 100;
+    const commissionPct = (await this.data.getCommissionRate()) * 100;
     const platformCommission = Number(((confirmedRevenue * commissionPct) / 100).toFixed(2));
     // What vendors are owed once the platform takes its share.
     const vendorPayout = Number((confirmedRevenue - platformCommission).toFixed(2));
@@ -94,7 +94,7 @@ export class AnalyticsService {
       totalRevenue,
       confirmedRevenue,
       pendingRevenue,
-      commissionRate: this.data.getCommissionRate(),
+      commissionRate: (await this.data.getCommissionRate()),
       platformCommissionEarned,
       confirmedCommissionEarned,
       commissionCollected,
@@ -109,8 +109,8 @@ export class AnalyticsService {
     };
   }
 
-  financialSummary() {
-    const sum = this.summary();
+  async financialSummary() {
+    const sum = (await this.summary());
     return {
       grossBookingVolume: sum.grossBookingVolume,
       platformCommissionRate: sum.commissionRate,
@@ -128,25 +128,25 @@ export class AnalyticsService {
   // The whole database in one response. The frontend DB layer (vendor_js/data.js)
   // calls this once on page load and caches it, instead of hitting 10 endpoints.
   // Credentials are stripped first -- this response goes to every signed-in role.
-  snapshot() {
-    return this.stripCredentials(this.data.snapshot());
+  async snapshot() {
+    return this.stripCredentials((await this.data.snapshot()));
   }
 
   // Generic key/value read+write, used for the loosely-structured collections
   // (chat threads, progress bars, allocations) that have no dedicated module.
-  stateKey(key: string, user?: { id?: string; role?: string }) {
+  async stateKey(key: string, user?: { id?: string; role?: string }) {
     this.assertNotPrivate(key);
     const readers = AnalyticsService.READ_RESTRICTED[this.normalizeKey(key)];
     if (readers && !readers.includes(String(user?.role || '').toLowerCase())) {
       throw new ForbiddenException(`Your role cannot read "${key}".`);
     }
     // Notifications: everyone but admins/superusers sees only their own
-    if (this.normalizeKey(key) === 'notifications' && !this.isAdmin(user)) {
-      const all = this.data.getValue('notifications');
+    if (this.normalizeKey(key) === 'notifications' && !(await this.isAdmin(user))) {
+      const all = (await this.data.getValue('notifications'));
       return (Array.isArray(all) ? all : []).filter((n: any) => n.userId === user?.id);
     }
     const name = this.normalizeKey(key);
-    return this.scrubCollection(name, this.data.getValue(name));
+    return this.scrubCollection(name, (await this.data.getValue(name)));
   }
 
   // Which loosely-structured keys each role may REPLACE through PUT /state/:key.
@@ -181,7 +181,7 @@ export class AnalyticsService {
     superuserEngineSettings: ['superuser', 'admin'],
   };
 
-  private isAdmin(user?: { role?: string }) {
+  private async isAdmin(user?: { role?: string }) {
     return ['admin', 'superuser'].includes(String(user?.role || '').toLowerCase());
   }
 
@@ -191,8 +191,8 @@ export class AnalyticsService {
   // caller's own rows are taken from the request, and brand-new rows (e.g. a
   // vendor notifying a client) are added. Nobody can edit or delete another
   // user's notifications.
-  private mergeNotifications(value: unknown, user?: { id?: string }) {
-    const current = this.data.getValue('notifications');
+  private async mergeNotifications(value: unknown, user?: { id?: string }) {
+    const current = (await this.data.getValue('notifications'));
     const stored: any[] = Array.isArray(current) ? current : [];
     const incoming: any[] = Array.isArray(value) ? value : [];
     const existingIds = new Set(stored.map((n) => n.id));
@@ -202,7 +202,7 @@ export class AnalyticsService {
     return [...others, ...mine, ...added];
   }
 
-  setStateKey(key: string, value: unknown, user?: { id?: string; role?: string }) {
+  async setStateKey(key: string, value: unknown, user?: { id?: string; role?: string }) {
     this.assertNotPrivate(key);
     const allowedRoles = AnalyticsService.WRITABLE_KEYS[this.normalizeKey(key)];
     if (!allowedRoles) {
@@ -214,13 +214,13 @@ export class AnalyticsService {
     // Allocations decide who gets stock, so they are checked against the
     // date-based availability rules before anything is saved (400 if not).
     if (this.normalizeKey(key) === 'resourceAllocations') {
-      this.resources.assertAllocationMapValid(value);
+      await this.resources.assertAllocationMapValid(value);
     }
-    if (this.normalizeKey(key) === 'notifications' && !this.isAdmin(user)) {
-      this.data.setValue('notifications', this.mergeNotifications(value, user));
-      return this.stateKey('notifications', user);
+    if (this.normalizeKey(key) === 'notifications' && !(await this.isAdmin(user))) {
+      await this.data.setValue('notifications', (await this.mergeNotifications(value, user)));
+      return await this.stateKey('notifications', user);
     }
-    return this.data.setValue(this.normalizeKey(key), value);
+    return await this.data.setValue(this.normalizeKey(key), value);
   }
 
   // These have their own routes with ownership checks.

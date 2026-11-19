@@ -1,0 +1,66 @@
+/* ══════════════════════════════════════════════════════════════
+   CHECKOUT MODAL (components/client/CheckoutModal.jsx)
+══════════════════════════════════════════════════════════════ */
+.co-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+}
+.co-step { display: flex; flex-direction: column; gap: 10px; }
+.co-center { align-items: center; text-align: center; }
+.co-center h3 { margin: 4px 0; }
+.co-center .co-row { width: 100%; }
+.co-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.co-sub { font-size: 12px; color: var(--text-secondary, #9b93b8); padding-left: 12px; }
+.co-total { padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 15px; }
+.co-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.co-method {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-size: 13px;
+}
+.co-method input { display: none; }
+.co-method--on { border-color: var(--pink, #e91e8c); background: rgba(233, 30, 140, 0.1); }
+.co-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #f0ecff);
+  font-family: inherit;
+}
+.co-card { display: flex; flex-direction: column; gap: 8px; }
+.co-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.co-hint { margin: 0; font-size: 11.5px; color: var(--text-secondary, #9b93b8); }
+.co-error { color: #f87171; font-size: 13px; }
+.co-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; width: 100%; }
+.co-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--pink, #e91e8c);
+  color: #fff;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.co-btn--ghost { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text-primary, #f0ecff); }
+.co-spin { animation: co-spin 1s linear infinite; color: var(--pink, #e91e8c); }
+@keyframes co-spin { to { transform: rotate(360deg); } }

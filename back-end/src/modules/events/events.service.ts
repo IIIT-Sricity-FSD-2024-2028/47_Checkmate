@@ -31,6 +31,8 @@ type Caller = { id?: string; role?: string; name?: string; email?: string } | un
 const actorOf = (user: Caller) => (user?.id ? { id: user.id, name: user.name || '', role: String(user.role || '').toLowerCase() } : undefined);
 const isClient = (user: Caller) => String(user?.role || '').toLowerCase() === 'client';
 const isStaff = (user: Caller) => String(user?.role || '').toLowerCase() === 'staff';
+// Statuses a client may cancel themselves (more than 3 days before the event)
+const CLIENT_CANCELLABLE = ['pending', 'waiting', 'confirmed', 'approved'];
 
 // Controllers handle HTTP; services hold the business rules. This one owns the
 // event lifecycle: pending -> approved/confirmed -> live -> completed.
@@ -47,9 +49,12 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     this.resources = resources ?? new ResourcesService(data);
   }
 
-  onModuleInit() {
-    this.runSchedule();
-    this.scheduleTimer = setInterval(() => this.runSchedule(), SCHEDULE_CHECK_MS);
+  async onModuleInit() {
+    await this.runSchedule();
+    // Every 30 s; a failed run is logged and the next one tries again
+    this.scheduleTimer = setInterval(() => {
+      this.runSchedule().catch((err) => this.logger.error(`Schedule run failed: ${err.message}`));
+    }, SCHEDULE_CHECK_MS);
     this.scheduleTimer.unref(); // Must not keep the process alive on its own
   }
 
@@ -78,37 +83,37 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
 
   // Approved events go live at their start time and finish at their end time.
   // Going through updateStatus means the usual notifications and stock release run.
-  runSchedule(now = new Date()) {
-    this.data.collection('events').forEach((event) => {
+  async runSchedule(now = new Date()) {
+    for (const event of await this.data.collection('events')) {
       const status = String(event.status).toLowerCase();
-      if (!['confirmed', 'approved', 'live'].includes(status)) return;
+      if (!['confirmed', 'approved', 'live'].includes(status)) continue;
       const schedule = this.scheduleOf(event);
-      if (!schedule) return;
+      if (!schedule) continue;
 
       try {
-        if (now >= schedule.end) this.updateStatus(event.id, { status: 'completed' });
-        else if (status !== 'live' && now >= schedule.start) this.updateStatus(event.id, { status: 'live' });
+        if (now >= schedule.end) await this.updateStatus(event.id, { status: 'completed' });
+        else if (status !== 'live' && now >= schedule.start) await this.updateStatus(event.id, { status: 'live' });
       } catch (err: any) {
         this.logger.error(`Could not update ${event.id} on schedule: ${err.message}`);
       }
-    });
+    }
   }
 
   // Clients get only their own events; staff only the events they are (or were)
   // assigned to. Vendors, admins and superusers keep the full list.
-  findAll(user?: Caller) {
-    const all = this.data.collection('events');
+  async findAll(user?: Caller) {
+    const all = (await this.data.collection('events'));
     if (isClient(user)) return all.filter((e) => e.clientId === user!.id);
     if (isStaff(user)) {
-      const mine = this.staffEventIds(user);
+      const mine = (await this.staffEventIds(user));
       return all.filter((e) => mine.has(e.id));
     }
     return all;
   }
-  findOne(id: string, user?: Caller) {
-    if (isClient(user)) this.assertClientOwns(id, user);
-    const event = this.data.find('events', id);
-    if (isStaff(user) && !this.staffEventIds(user).has(event.id)) {
+  async findOne(id: string, user?: Caller) {
+    if (isClient(user)) (await this.assertClientOwns(id, user));
+    const event = (await this.data.find('events', id));
+    if (isStaff(user) && !(await this.staffEventIds(user)).has(event.id)) {
       throw new ForbiddenException('You can only view events you are assigned to.');
     }
     return event;
@@ -116,14 +121,14 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
 
   // Ids of every event a staff member has an assignment on (any status, so a
   // declined or finished one can still be opened from their history)
-  private staffEventIds(user: Caller): Set<string> {
+  private async staffEventIds(user: Caller): Promise<Set<string>> {
     const email = String(user?.email || '').toLowerCase();
-    const member = this.data.collection('staff').find((s: any) => s.userId === user?.id || (email && String(s.email || '').toLowerCase() === email));
+    const member = (await this.data.collection('staff')).find((s: any) => s.userId === user?.id || (email && String(s.email || '').toLowerCase() === email));
     if (!member) return new Set();
-    return new Set(this.data.collection('staffAssignments').filter((a) => a.staffId === member.id).map((a) => a.eventId));
+    return new Set((await this.data.collection('staffAssignments')).filter((a) => a.staffId === member.id).map((a) => a.eventId));
   }
 
-  create(dto: CreateEventDto, user?: Caller) {
+  async create(dto: CreateEventDto, user?: Caller) {
     // Pull presetPackageId out of the payload; `...event` is everything else.
     const { presetPackageId, ...event } = dto;
     // A client always creates a PENDING request that belongs to themselves,
@@ -138,13 +143,13 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     this.assertEndDateValid(event);
     // A request for more units than are free on that date can never be met,
     // so it is turned away now with a clear message (400) instead of later.
-    this.resources.assertRequestFits(event.requestedResources, {
+    (await this.resources.assertRequestFits(event.requestedResources, {
       date: event.date,
       endDate: event.endDate,
       time: event.time,
       endTime: event.endTime,
-    });
-    return this.data.create('events', 'EVT', {
+    }));
+    return (await this.data.create('events', 'EVT', {
       // These defaults are listed BEFORE ...event on purpose: a value the client
       // actually sent overwrites the default, because later keys win.
       status: 'pending',
@@ -153,73 +158,87 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       ...event,
       // Accept either field name for the package the event was booked from.
       packageId: event.packageId || presetPackageId,
-    });
+    }));
   }
 
   // Moving an event to another date/time must not double-book the stock it
   // already holds, so the move is checked first. Its own allocations are
   // ignored, which is why re-saving an event never blocks itself.
-  update(id: string, dto: UpdateEventDto, user?: Caller) {
+  async update(id: string, dto: UpdateEventDto, user?: Caller) {
     // Clients may only edit their own events, and only the request details
     // (date, time, venue, guests, notes, requested items) -- never the status.
     if (isClient(user)) {
-      this.assertClientOwns(id, user);
+      await this.assertClientOwns(id, user);
       const locked = CLIENT_LOCKED_FIELDS.filter((field) => (dto as any)[field] !== undefined);
       if (locked.length) {
         throw new ForbiddenException(`Clients cannot change: ${locked.join(', ')}.`);
       }
       // Moving the date follows the same 7-day rule as a new request
-      if (dto.date !== undefined && dto.date !== this.data.find('events', id).date) assertBookingNotice(dto.date);
+      if (dto.date !== undefined && dto.date !== (await this.data.find('events', id)).date) assertBookingNotice(dto.date);
     }
     const scheduleFields = ['date', 'endDate', 'time', 'endTime'] as const;
     if (scheduleFields.some((field) => dto[field] !== undefined)) {
-      const current = this.data.find('events', id);
+      const current = (await this.data.find('events', id));
       this.assertEndDateValid({ ...current, ...dto });
-      this.resources.assertEventStillFits({ ...current, ...dto });
+      await this.resources.assertEventStillFits({ ...current, ...dto });
     }
     // A status change sent through the general edit (e.g. the superuser Events
     // form) goes through updateStatus too, so it gets the same timestamps and
     // client notification as the vendor's Approve / Reject buttons.
     const { status, ...details } = dto;
-    const current = this.data.find('events', id);
-    let updated: any = Object.keys(details).length ? this.data.update('events', id, details) : current;
+    const current = (await this.data.find('events', id));
+    let updated: any = Object.keys(details).length ? (await this.data.update('events', id, details)) : current;
     if (status !== undefined && String(status) !== String(current.status)) {
-      updated = this.updateStatus(id, { status: String(status), note: details.rejectionReason }, user);
+      updated = (await this.updateStatus(id, { status: String(status), note: details.rejectionReason }, user));
     }
     return updated;
   }
 
-  // A client can withdraw their own request until the vendor approves it. The
-  // reason and who cancelled are saved, and the vendor is told.
-  cancel(id: string, user?: Caller, reason = '') {
-    const event = this.data.find('events', id);
+  // A client can cancel their own pending, waiting or confirmed event while it is
+  // MORE than 3 days away (inside that, only an admin can). The reason and who
+  // cancelled are saved; the vendor and the admin team are told. Because the
+  // status becomes "cancelled", DataService then releases the resources and
+  // staff and turns the booking into the cancellation fee (booking-rules.ts).
+  async cancel(id: string, user?: Caller, reason = '') {
+    const event = (await this.data.find('events', id));
     if (!event.clientId || event.clientId !== user?.id) throw new ForbiddenException('You can only cancel your own events.');
-    if (!['pending', 'waiting'].includes(String(event.status).toLowerCase())) {
-      throw new BadRequestException('Only events awaiting approval can be cancelled.');
+    if (!CLIENT_CANCELLABLE.includes(String(event.status).toLowerCase())) {
+      throw new BadRequestException(`A ${event.status} event cannot be cancelled.`);
     }
     // Rule: inside 3 days only the admin can cancel (event-date-rules.ts)
     assertClientCanCancel(String(event.date));
     if (!String(reason).trim()) throw new BadRequestException('Please give a reason for cancelling.');
-    const updated: any = this.data.update('events', id, {
+    const updated: any = (await this.data.update('events', id, {
       status: 'cancelled',
       cancellationReason: String(reason).trim(),
       cancelledBy: actorOf(user),
       cancelledAt: new Date().toISOString(),
-    } as any);
-    this.data.notifyUser(
-      this.data.vendorUserId(updated.vendorId),
+    } as any));
+    (await this.data.notifyUser(
+      (await this.data.vendorUserId(updated.vendorId)),
       `${updated.name} Cancelled by Client`,
       `${user?.name || 'The client'} cancelled ${updated.name}. Reason: ${updated.cancellationReason}`,
       'error',
       `/vendor/events/${updated.id}/review`,
-    );
+    ));
+    // The admin team is told too (refunds / fees may need a look)
+    const admins = (await this.data.collection('users')).filter((u) => ['admin', 'superuser'].includes(String(u.role).toLowerCase()));
+    for (const admin of admins) {
+      await this.data.notifyUser(
+        admin.id,
+        `${updated.name} Cancelled by Client`,
+        `${user?.name || 'A client'} cancelled ${updated.name} (${updated.id}). Reason: ${updated.cancellationReason}`,
+        'info',
+        '/admin/events',
+      );
+    }
     return updated;
   }
 
   // Status changes also stamp the matching timestamp, so the timeline shown on
   // the monitoring pages is recorded rather than guessed.
   // `user` (optional) is who made the change; the scheduler passes none.
-  updateStatus(id: string, dto: StatusDto, user?: Caller) {
+  async updateStatus(id: string, dto: StatusDto, user?: Caller) {
     const patch: Record<string, unknown> = { status: dto.status };
     const now = new Date().toISOString();
     // Lowercase once: different portals send 'Confirmed' vs 'confirmed'.
@@ -248,25 +267,25 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
       if (dto.note) patch.waitingReason = dto.note;
     }
 
-    const updated: any = this.data.update('events', id, patch as any);
-    this.notifyClient(updated as any, s, dto.note, user);
+    const updated: any = (await this.data.update('events', id, patch as any));
+    await this.notifyClient(updated as any, s, dto.note, user);
     // An admin/superuser cancelling also tells the vendor who was running it
     if (s === 'cancelled' && user && ['admin', 'superuser'].includes(String(user.role).toLowerCase())) {
-      this.data.notifyUser(
-        this.data.vendorUserId(updated.vendorId),
+      (await this.data.notifyUser(
+        (await this.data.vendorUserId(updated.vendorId)),
         `${updated.name} Cancelled`,
         `${updated.name} was cancelled by ${user.name || 'an administrator'}. Reason: ${patch.cancellationReason}`,
         'error',
         `/vendor/events/${updated.id}/review`,
-      );
+      ));
     }
     return updated;
   }
 
   // Clients may only delete their own events; vendors/admins keep full access.
-  remove(id: string, user?: Caller) {
-    if (isClient(user)) this.assertClientOwns(id, user);
-    return this.data.remove('events', id);
+  async remove(id: string, user?: Caller) {
+    if (isClient(user)) (await this.assertClientOwns(id, user));
+    return await this.data.remove('events', id);
   }
 
   // An end date ("" = same day) must be a real YYYY-MM-DD on or after the start date
@@ -278,8 +297,8 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
   }
 
   // 403 unless the event's clientId is the signed-in client
-  private assertClientOwns(id: string, user: Caller) {
-    const event = this.data.find('events', id);
+  private async assertClientOwns(id: string, user: Caller) {
+    const event = (await this.data.find('events', id));
     if (!event.clientId || event.clientId !== user?.id) {
       throw new ForbiddenException('You can only change your own events.');
     }
@@ -288,7 +307,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
   // Client <-> vendor bridge: when the vendor changes an event's status, drop a
   // notification for the client who owns it. The client portal's bell reads
   // these from the `notifications` collection (filtered by userId).
-  private notifyClient(event: { id: string; name: string; clientId?: string; vendor?: string; quotedPrice?: number }, status: string, note?: string, user?: Caller) {
+  private async notifyClient(event: { id: string; name: string; clientId?: string; vendor?: string; quotedPrice?: number }, status: string, note?: string, user?: Caller) {
     if (!event?.clientId) return;
 
     const price = event.quotedPrice ? ` at ₹${Number(event.quotedPrice).toLocaleString('en-IN')}` : '';
@@ -304,12 +323,12 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     const text = messages[status];
     if (!text) return; // e.g. back to "pending" — nothing to tell the client
 
-    this.data.create('notifications', 'NOTIF', {
+    (await this.data.create('notifications', 'NOTIF', {
       userId: event.clientId,
       ...text,
       isRead: false,
       linkUrl: `/client/track/${event.id}`,
       createdAt: new Date().toISOString(),
-    });
+    }));
   }
 }

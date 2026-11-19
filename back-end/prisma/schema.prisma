@@ -1,0 +1,437 @@
+// =============================================================================
+// EventPro / Checkmate — PostgreSQL schema (Prisma)
+// =============================================================================
+// One file = the whole database. `npx prisma migrate dev` turns changes here
+// into SQL migrations (prisma/migrations/*/migration.sql).
+//
+// Conventions
+//   - Tables and columns are snake_case in Postgres (@@map / @map); the code
+//     uses camelCase. Ids keep the app's readable format (U001, EVT012, BK007).
+//   - Money is NUMERIC(12,2). Event days are DATE; moments are TIMESTAMPTZ.
+//   - `extra` (JSONB) keeps any additional field a record carries that has no
+//     column of its own (e.g. an event's vendorResponses), so nothing is lost.
+//   - Rules the database enforces itself: unique emails, one booking per event,
+//     one rating per vendor + staff member + event, one vendor feedback per
+//     event, stars between 1 and 5 (CHECK constraints in the first migration),
+//     and foreign keys so no row can point at something that does not exist.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id
+  name         String
+  email        String    @unique
+  phone        String?
+  role         String // Admin | Superuser | Vendor | Client | Staff
+  status       String    @default("Active")
+  passwordHash String?   @map("password_hash") // bcrypt
+  created      DateTime? @db.Date
+  extra        Json      @default("{}")
+
+  vendor        Vendor?
+  staff         Staff[]
+  notifications Notification[]
+  clientEvents  Event[]          @relation("ClientEvents")
+  payments      Payment[]
+  feedbackGiven VendorFeedback[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id           String    @id
+  name         String
+  businessName String?   @map("business_name")
+  category     String?
+  status       String?
+  userId       String?   @unique @map("user_id")
+  created      DateTime? @db.Date
+  extra        Json      @default("{}")
+
+  user         User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  staff        Staff[]
+  events       Event[]
+  resources    Resource[]
+  packages     Package[]
+  bookings     Booking[]
+  ratingsGiven StaffRating[]
+  feedback     VendorFeedback[]
+
+  @@map("vendors")
+}
+
+model VendorApplication {
+  id              String    @id
+  vendorName      String    @map("vendor_name")
+  businessName    String    @map("business_name")
+  email           String
+  phone           String?
+  category        String?
+  documents       Json      @default("[]")
+  status          String    @default("pending")
+  passwordHash    String?   @map("password_hash")
+  rejectionReason String?   @map("rejection_reason")
+  decidedBy       String?   @map("decided_by")
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
+  decidedAt       DateTime? @map("decided_at") @db.Timestamptz
+  extra           Json      @default("{}")
+
+  @@map("vendor_applications")
+}
+
+model StaffApplication {
+  id     String  @id
+  email  String?
+  status String  @default("pending")
+  extra  Json    @default("{}")
+
+  @@map("staff_applications")
+}
+
+model Staff {
+  id              String   @id
+  name            String
+  role            String
+  phone           String?
+  email           String?
+  vendorId        String?  @map("vendor_id")
+  userId          String?  @map("user_id")
+  status          String?
+  workload        Int?
+  experienceYears Int?     @map("experience_years")
+  skills          String[]
+  bio             String?
+  avatar          String?
+  extra           Json     @default("{}")
+
+  vendor      Vendor?           @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  assignments StaffAssignment[]
+  ratings     StaffRating[]
+
+  @@map("staff")
+}
+
+model Event {
+  id                 String    @id
+  name               String
+  type               String?
+  date               DateTime? @db.Date
+  endDate            DateTime? @map("end_date") @db.Date
+  time               String?
+  endTime            String?   @map("end_time")
+  venue              String?
+  guests             Int?
+  status             String    @default("pending")
+  clientId           String?   @map("client_id")
+  vendorId           String?   @map("vendor_id")
+  quotedPrice        Decimal?  @map("quoted_price") @db.Decimal(12, 2)
+  notes              String?
+  requestedResources Json?     @map("requested_resources")
+  requestedStaff     Json?     @map("requested_staff")
+  cancellationReason String?   @map("cancellation_reason")
+  cancelledBy        Json?     @map("cancelled_by")
+  rejectionReason    String?   @map("rejection_reason")
+  approvedAt         DateTime? @map("approved_at") @db.Timestamptz
+  startedAt          DateTime? @map("started_at") @db.Timestamptz
+  endedAt            DateTime? @map("ended_at") @db.Timestamptz
+  submittedAt        DateTime? @map("submitted_at") @db.Timestamptz
+  extra              Json      @default("{}")
+
+  client      User?             @relation("ClientEvents", fields: [clientId], references: [id], onDelete: SetNull)
+  vendor      Vendor?           @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  booking     Booking?
+  allocations Allocation[]
+  assignments StaffAssignment[]
+  ratings     StaffRating[]
+  feedback    VendorFeedback?
+  issues      Issue[]
+
+  @@index([clientId])
+  @@index([vendorId])
+  @@index([status])
+  @@map("events")
+}
+
+model Resource {
+  id              String   @id
+  name            String
+  category        String?
+  total           Int      @default(0)
+  price           Decimal? @db.Decimal(12, 2)
+  unit            String?
+  conditionStatus String?  @map("condition_status")
+  vendorId        String?  @map("vendor_id")
+  extra           Json     @default("{}")
+
+  vendor      Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  allocations Allocation[]
+
+  @@map("resources")
+}
+
+// One row per resource allocated to an event (was the resourceAllocations map)
+model Allocation {
+  id         Int       @id @default(autoincrement())
+  eventId    String    @map("event_id")
+  resourceId String    @map("resource_id")
+  quantity   Int
+  status     String    @default("allocated") // allocated | released
+  releasedAt DateTime? @map("released_at") @db.Timestamptz
+  extra      Json      @default("{}")
+
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("allocations")
+}
+
+model StaffAssignment {
+  id            String    @id
+  staffId       String    @map("staff_id")
+  eventId       String    @map("event_id")
+  role          String?
+  status        String    @default("assigned")
+  declineReason String?   @map("decline_reason")
+  tasks         Json?
+  respondedAt   DateTime? @map("responded_at") @db.Timestamptz
+  extra         Json      @default("{}")
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([eventId])
+  @@map("staff_assignments")
+}
+
+model Booking {
+  id                  String    @id
+  eventId             String?   @unique @map("event_id") // one booking per event
+  clientId            String?   @map("client_id")
+  vendorId            String?   @map("vendor_id")
+  status              String
+  cost                Decimal   @db.Decimal(12, 2)
+  originalCost        Decimal?  @map("original_cost") @db.Decimal(12, 2)
+  advancePaid         Decimal   @default(0) @map("advance_paid") @db.Decimal(12, 2)
+  paymentStatus       String    @default("unpaid") @map("payment_status")
+  commissionRate      Decimal?  @map("commission_rate") @db.Decimal(6, 4)
+  commissionAmount    Decimal?  @map("commission_amount") @db.Decimal(12, 2)
+  vendorPayoutAmount  Decimal?  @map("vendor_payout_amount") @db.Decimal(12, 2)
+  payoutStatus        String    @default("pending") @map("payout_status")
+  cancellationFeeRate Decimal?  @map("cancellation_fee_rate") @db.Decimal(6, 4)
+  refundAmount        Decimal?  @map("refund_amount") @db.Decimal(12, 2)
+  vendorSplits        Json?     @map("vendor_splits")
+  settledAt           DateTime? @map("settled_at") @db.Timestamptz
+  settledBy           String?   @map("settled_by")
+  created             DateTime? @db.Date
+  extra               Json      @default("{}")
+
+  event    Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor   Vendor?   @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  payments Payment[]
+
+  @@index([clientId])
+  @@map("bookings")
+}
+
+model Payment {
+  id            String    @id
+  bookingId     String    @map("booking_id")
+  clientId      String    @map("client_id")
+  amount        Decimal   @db.Decimal(12, 2)
+  method        String // upi | card | netbanking
+  methodLabel   String?   @map("method_label")
+  status        String // processing | paid | failed
+  gateway       String    @default("simulated")
+  gatewayRef    String?   @map("gateway_ref")
+  receiptNo     String?   @map("receipt_no")
+  failureReason String?   @map("failure_reason")
+  createdAt     DateTime  @map("created_at") @db.Timestamptz
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  extra         Json      @default("{}")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  client  User    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("payments")
+}
+
+model StaffRating {
+  id        String    @id
+  staffId   String    @map("staff_id")
+  eventId   String    @map("event_id")
+  vendorId  String    @map("vendor_id")
+  ratedBy   String?   @map("rated_by")
+  stars     Int // 1..5 (CHECK constraint)
+  comment   String?
+  createdAt DateTime  @map("created_at") @db.Timestamptz
+  updatedAt DateTime? @map("updated_at") @db.Timestamptz
+  extra     Json      @default("{}")
+
+  staff  Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, staffId, eventId]) // one rating per vendor + staff + event
+  @@map("staff_ratings")
+}
+
+model VendorFeedback {
+  id        String    @id
+  vendorId  String    @map("vendor_id")
+  eventId   String    @unique @map("event_id") // one feedback per event
+  clientId  String    @map("client_id")
+  stars     Int // 1..5 (CHECK constraint)
+  comment   String?
+  createdAt DateTime  @map("created_at") @db.Timestamptz
+  updatedAt DateTime? @map("updated_at") @db.Timestamptz
+  extra     Json      @default("{}")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  client User   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_feedback")
+}
+
+model Package {
+  id       String   @id
+  name     String
+  category String?
+  price    Decimal? @db.Decimal(12, 2)
+  status   String   @default("pending")
+  vendorId String?  @map("vendor_id")
+  extra    Json     @default("{}")
+
+  vendor Vendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  @@map("packages")
+}
+
+model Issue {
+  id        String    @id
+  eventId   String?   @map("event_id")
+  title     String?
+  category  String?
+  priority  String?
+  status    String?
+  target    String?
+  email     String?
+  createdAt DateTime? @map("created_at") @db.Timestamptz
+  extra     Json      @default("{}")
+
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@map("issues")
+}
+
+model Venue {
+  id       String  @id
+  name     String
+  vendorId String? @map("vendor_id")
+  capacity Int?
+  status   String?
+  extra    Json    @default("{}")
+
+  @@map("venues")
+}
+
+model StaffTask {
+  id      String  @id
+  staffId String? @map("staff_id")
+  eventId String? @map("event_id")
+  extra   Json    @default("{}")
+
+  @@map("staff_tasks")
+}
+
+// Event conversations (client-EVT001 / staff-EVT001 and older named threads)
+model Message {
+  id        Int      @id @default(autoincrement())
+  messageId String   @map("message_id") // MSG001 inside its thread
+  threadId  String   @map("thread_id")
+  senderId  String?  @map("sender_id")
+  sender    String?
+  text      String
+  createdAt DateTime @map("created_at") @db.Timestamptz
+  extra     Json     @default("{}")
+
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+model AdminChatMessage {
+  id             String   @id
+  senderId       String?  @map("sender_id")
+  senderEmail    String?  @map("sender_email")
+  recipientEmail String?  @map("recipient_email")
+  text           String
+  type           String?
+  createdAt      DateTime @map("created_at") @db.Timestamptz
+  extra          Json     @default("{}")
+
+  @@index([senderEmail])
+  @@index([recipientEmail])
+  @@map("admin_chat_messages")
+}
+
+// When each user last opened each conversation (unread counts)
+model MessageRead {
+  userId    String   @map("user_id")
+  threadKey String   @map("thread_key")
+  readAt    DateTime @map("read_at") @db.Timestamptz
+
+  @@id([userId, threadKey])
+  @@map("message_reads")
+}
+
+model Notification {
+  id        String    @id
+  userId    String?   @map("user_id")
+  title     String
+  message   String?
+  type      String?
+  isRead    Boolean   @default(false) @map("is_read")
+  linkUrl   String?   @map("link_url")
+  createdAt DateTime? @map("created_at") @db.Timestamptz
+  extra     Json      @default("{}")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id         String    @id
+  userId     String?   @map("user_id")
+  userRole   String?   @map("user_role")
+  action     String
+  entityType String?   @map("entity_type")
+  entityId   String?   @map("entity_id")
+  details    Json?
+  createdAt  DateTime? @map("created_at") @db.Timestamptz
+  extra      Json      @default("{}")
+
+  @@map("activity_logs")
+}
+
+// Loose key/value data: platformSettings (commission %, cancellation fee %),
+// monitorProgress, contingencyPlans, venueAllocations, recruitments, ...
+model Setting {
+  key   String @id
+  value Json
+
+  @@map("settings")
+}

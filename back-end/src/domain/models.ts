@@ -129,6 +129,41 @@ export interface StaffRating {
   updatedAt?: string;    // set when the vendor edits the rating
 }
 
+/**
+ * One payment attempt through the (simulated) gateway. Kept even when it fails,
+ * so the admin can see every attempt. See bookings/payments.ts.
+ */
+export interface PaymentRecord {
+  id: string;            // PAY001
+  bookingId: string;
+  eventId?: string;
+  clientId: string;
+  amount: number;        // must equal the balance due when it was started
+  method: 'upi' | 'card' | 'netbanking';
+  methodLabel?: string;  // e.g. "UPI emily@okbank" or "Card •••• 4242"
+  status: 'processing' | 'paid' | 'failed';
+  gateway: 'simulated';  // no real money moves
+  gatewayRef?: string;   // reference the "gateway" returns
+  receiptNo?: string;    // RCPT-PAY001 once paid
+  failureReason?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+/** A client's rating of the vendor for one completed event (1-5 stars). */
+export interface VendorFeedback {
+  id: string;
+  vendorId: string;
+  eventId: string;
+  eventName?: string;
+  clientId: string;
+  clientName?: string;
+  stars: number;         // 1..5
+  comment?: string;
+  createdAt: string;
+  updatedAt?: string;    // set when the client edits it
+}
+
 export interface PackageRecord {
   id: string;
   name: string;
@@ -263,7 +298,10 @@ export interface Booking {
   status: string;
   cost: number;
   advancePaid?: number;
-  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid' | 'refunded' | 'not_due';
+  // processing = a checkout is running; failed = the last attempt failed (can retry)
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'processing' | 'paid' | 'failed' | 'refunded' | 'not_due';
+  paidAt?: string;
+  lastPaymentId?: string;
   // ── Commission Revenue Model (10% platform commission / 90% vendor payout) ──
   commissionRate?: number;       // e.g. 0.10
   commissionAmount?: number;     // 10% platform commission
@@ -421,6 +459,8 @@ export interface AppData {
   staffRequests: Array<Record<string, unknown>>;
   staffTasks: Array<StaffTask>;
   staffRatings: StaffRating[];
+  vendorFeedback: VendorFeedback[];
+  payments: PaymentRecord[];
   vendorDocSubmission: VendorApplication | null;
   session: { id?: string; user: string; name?: string; email: string; role: string; vendorId?: string; vendorName?: string; businessName?: string; staffId?: string };
   liveEvents: Array<Record<string, unknown>>;

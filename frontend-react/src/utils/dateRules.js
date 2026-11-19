@@ -13,6 +13,10 @@
 
 export const MIN_BOOKING_NOTICE_DAYS = 7;
 export const CLIENT_CANCEL_CUTOFF_DAYS = 3;
+// Same text as the backend (event-date-rules.ts)
+export const CLIENT_CANCEL_BLOCKED_MESSAGE = "Cancellation is not allowed within 3 days of the event, contact admin.";
+// Statuses a client may cancel themselves (backend: CLIENT_CANCELLABLE)
+export const CLIENT_CANCELLABLE_STATUSES = ["pending", "waiting", "confirmed", "approved"];
 
 // Today's date as YYYY-MM-DD in the browser's local time
 export function todayString(now = new Date()) {

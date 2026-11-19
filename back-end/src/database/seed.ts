@@ -1,5 +1,6 @@
 import { AppData } from '../domain/models';
 import { hashPassword } from '../common/security/password';
+import { DEMO_ASSIGNMENTS, DEMO_STAFF_RATINGS, DEMO_VENDOR_FEEDBACK } from './demo-ratings';
 
 export const seedData: AppData = {
   users: [
@@ -235,6 +236,7 @@ export const seedData: AppData = {
     { id: 'A003', staffId: 'S001', staffName: 'Mike Johnson', eventId: 'EVT003', eventName: 'Annual Corporate Gala', eventDate: '2026-05-21', eventVenue: 'Skyline Ballroom', eventPeople: 320, role: 'Event Coordinator', status: 'accepted' },
     { id: 'A004', staffId: 'S002', staffName: 'Elena Rostova', eventId: 'EVT003', eventName: 'Annual Corporate Gala', eventDate: '2026-05-21', eventVenue: 'Skyline Ballroom', eventPeople: 320, role: 'Stage Manager', status: 'accepted' },
     { id: 'A005', staffId: 'S005', staffName: 'Chloe Bennett', eventId: 'EVT003', eventName: 'Annual Corporate Gala', eventDate: '2026-05-21', eventVenue: 'Skyline Ballroom', eventPeople: 320, role: 'Guest Relations Lead', status: 'accepted' },
+    ...DEMO_ASSIGNMENTS, // demo work on completed events (demo-ratings.ts)
   ],
   vendorApplications: [
     { id: 'VAPP001', vendorName: 'Priya Nair', businessName: 'Aurora Event Studio', email: 'priya@auroraevents.com', phone: '+1 555-0101', category: 'Event Planning', categoryClass: 'active', documents: [{ name: 'business-license.pdf', type: 'license' }, { name: 'insurance-certificate.pdf', type: 'insurance' }], status: 'approved', submittedAt: '2026-04-25T10:15:00.000Z' },
@@ -296,7 +298,9 @@ export const seedData: AppData = {
   staffApplications: [],
   staffRequests: [],
   staffTasks: [],
-  staffRatings: [],
+  staffRatings: [...DEMO_STAFF_RATINGS], // demo ratings so stars show (demo-ratings.ts)
+  vendorFeedback: [...DEMO_VENDOR_FEEDBACK], // demo client feedback about vendors
+  payments: [], // checkout attempts (bookings/payments.ts)
   vendorDocSubmission: null,
   session: { id: 'U004', user: 'Emily Carter', name: 'Emily Carter', email: 'emily.client@example.com', role: 'Client' },
   liveEvents: [],

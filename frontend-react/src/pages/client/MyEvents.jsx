@@ -19,7 +19,8 @@
  * ============================================================================
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getStateKey } from "../../services/stateService";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 
@@ -62,6 +63,24 @@ function MyEvents() {
     setCancelTarget,
     confirmCancel,
   } = useClientEventsData();
+
+  // Cancellation fee % from the admin's Global Settings (shown before a confirmed event is cancelled)
+  const [feePercent, setFeePercent] = useState(0);
+
+  // Loads the fee once
+  useEffect(() => {
+    let isMounted = true;
+    getStateKey("platformSettings")
+      .then((s) => { if (isMounted) setFeePercent(Number(s?.cancellationFeePercent || 0)); })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  // A confirmed event already has a price, so the fee applies to it
+  const isBooked = ["confirmed", "approved"].includes(String(cancelTarget?.status).toLowerCase());
+  const cancelHint = isBooked
+    ? `Your vendor and the admin will see this reason. A cancellation fee of ${feePercent}% of the price applies${feePercent ? "; the rest of anything you paid is refunded" : " (no charge)"}. This cannot be undone.`
+    : "Your vendor will see this reason. This cannot be undone.";
 
   // The rejected event whose reason popup is open (null = closed)
   const [reasonEvent, setReasonEvent] = useState(null);
@@ -111,7 +130,7 @@ function MyEvents() {
         <ReasonModal
           open={Boolean(cancelTarget)}
           title={cancelTarget ? `Cancel "${cancelTarget.name}"` : ""}
-          hint="Your vendor will see this reason. This cannot be undone."
+          hint={cancelHint}
           confirmLabel="Cancel Event"
           onClose={() => setCancelTarget(null)}
           onConfirm={confirmCancel}

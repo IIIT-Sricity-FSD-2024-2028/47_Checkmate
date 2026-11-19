@@ -1,5 +1,6 @@
 import React from "react";
 import { Zap } from "lucide-react";
+import { VendorRatingBadge } from "../VendorRating";
 
 /**
  * ClientPackageCard Component
@@ -37,6 +38,8 @@ function ClientPackageCard({ pkg, onQuickCreate }) {
       <div className="cl-pkg-card__body">
         <span className={`cl-type cl-type--${cat}`}>{pkg.category || "Package"}</span>
         <h3>{pkg.name}</h3>
+        {/* Who provides it and how clients rated them */}
+        {pkg.vendorId && <VendorRatingBadge vendorId={pkg.vendorId} name={pkg.vendorName} />}
         <p className="cl-pkg-card__desc">{pkg.desc}</p>
 
         <div className="cl-pkg-card__lists">

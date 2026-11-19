@@ -203,3 +203,20 @@ const bookingService = {
 };
 
 export default bookingService;
+
+/* ── Checkout (SIMULATED gateway: no real money moves) ─────────────────────── */
+
+/** Step 1: start paying the balance due -> payment record "processing". */
+export async function startCheckout(bookingId, { method, amount, methodLabel }, options = {}) {
+  return post(`/bookings/${encodeURIComponent(bookingId)}/checkout`, { method, amount, methodLabel }, options);
+}
+
+/** Step 2: the gateway's answer ("success" | "failure") -> payment "paid" | "failed". */
+export async function confirmPayment(paymentId, outcome, options = {}) {
+  return post(`/payments/${encodeURIComponent(paymentId)}/confirm`, { outcome }, options);
+}
+
+/** Payment records: a client's own, a vendor's bookings, or all for admins. */
+export async function getPayments(options = {}) {
+  return get('/payments', options);
+}

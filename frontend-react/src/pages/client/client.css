@@ -1540,3 +1540,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 @media (max-width: 720px) {
   .cl-form-grid--3, .cl-form-grid--4 { grid-template-columns: 1fr; }
 }
+
+/* "Cancel Event" disabled within 3 days of the event */
+.cl-btn-sm:disabled { opacity: 0.45; cursor: not-allowed; }
+.cl-cancel-blocked { margin-top: 4px; font-size: 11px; color: #f87171; max-width: 220px; margin-left: auto; }

@@ -89,3 +89,30 @@ const vendorService = {
 };
 
 export default vendorService;
+
+/* ── Client feedback about vendors (after completed events) ── */
+
+/** Every vendor's { rating, ratingCount, recent[] } keyed by vendor id (all roles may read). */
+export async function getVendorFeedbackSummaries(options = {}) {
+  return get('/vendors/feedback-summary', options);
+}
+
+/** One vendor's rating summary + recent feedback. */
+export async function getVendorFeedback(vendorId, options = {}) {
+  return get(`/vendors/${encodeURIComponent(vendorId)}/feedback`, options);
+}
+
+/** The feedback already given for one event (null if none yet). */
+export async function getEventVendorFeedback(eventId, options = {}) {
+  return get(`/events/${encodeURIComponent(eventId)}/vendor-feedback`, options);
+}
+
+/** Client rates the vendor of a completed event (rating again edits it). */
+export async function giveVendorFeedback(eventId, { stars, comment }, options = {}) {
+  return post(`/events/${encodeURIComponent(eventId)}/vendor-feedback`, { stars, comment }, options);
+}
+
+/** Client edits their earlier feedback for that event. */
+export async function editVendorFeedback(eventId, { stars, comment }, options = {}) {
+  return patch(`/events/${encodeURIComponent(eventId)}/vendor-feedback`, { stars, comment }, options);
+}

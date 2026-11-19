@@ -10,7 +10,8 @@
  *   2. Computes the 3 summary numbers: outstanding balance (+ next due date),
  *      total paid, and how many invoices still have a balance.
  *   3. Search (invoice #, event, status) and a Paid / Unpaid filter.
- *   4. "Pay Now": a simulated gateway; the payment itself is saved on the booking.
+ *   4. "Pay Now": opens the checkout (CheckoutModal, SIMULATED gateway) which
+ *      creates a payment record and marks the booking paid / failed.
  *   5. "Invoice" download: builds a text invoice in the browser.
  *
  * Connected Backend Endpoints:
@@ -20,7 +21,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { getMyBookings, payBooking } from "../../services/bookingService";
+import { getMyBookings } from "../../services/bookingService";
 import { getMyEvents } from "../../services/eventService";
 import { describeError, formatDate, getCurrentUser, money } from "../../utils/clientHelpers";
 
@@ -40,6 +41,9 @@ function toInvoice(booking) {
     paid,
     balance: Math.max(0, amount - paid),
     cancelled: booking.status === "Cancelled",
+    commission: Number(booking.commissionAmount || 0),
+    commissionRate: Number(booking.commissionRate || 0),
+    paymentStatus: booking.paymentStatus || "unpaid",
     originalAmount: Number(booking.originalCost || amount),
     refund: Number(booking.refundAmount || 0),
   };
@@ -53,6 +57,8 @@ export function invoiceStatus(invoice) {
   if (invoice.cancelled && invoice.balance > 0) return { text: "Cancellation Fee Due", cls: "pending" };
   if (invoice.cancelled) return { text: "Cancelled · Fee Paid", cls: "rejected" };
   if (invoice.balance === 0) return { text: "Paid in Full", cls: "approved" };
+  if (invoice.paymentStatus === "processing") return { text: "Processing", cls: "pending" };
+  if (invoice.paymentStatus === "failed") return { text: "Payment Failed · Retry", cls: "rejected" };
   if (invoice.paid > 0) return { text: "Partially Paid", cls: "pending" };
   return { text: "Pending Payment", cls: "pending" };
 }
@@ -154,32 +160,30 @@ export function useClientBillingData() {
   }, [invoices, searchTerm, statusFilter]);
 
   // --------------------------------------------------------------------------
-  // 4. PAY NOW
+  // 4. PAY NOW -> CHECKOUT
   // FACULTY MAY ASK: Is the payment saved to the backend?
-  // HOW TO CHANGE: Yes, the booking is marked paid, which the admin needs before
-  // releasing the vendor payout. No real gateway is charged: a real version would
-  // record the payment from a gateway webhook on the server instead.
+  // HOW TO CHANGE: Yes. Pay Now opens the checkout (CheckoutModal). It creates a
+  // payment record (POST /bookings/:id/checkout, "processing"), then the
+  // SIMULATED gateway answers (POST /payments/:id/confirm -> paid / failed).
+  // No real money moves; a real gateway (e.g. Razorpay) would replace step 2.
   // --------------------------------------------------------------------------
-  const payNow = async (invoice) => {
-    setPayingId(invoice.id);
-    setToast({ type: "info", text: `Processing payment of ${money(invoice.balance)}...` });
+  // The invoice whose checkout popup is open (null = closed)
+  const [checkoutInvoice, setCheckoutInvoice] = useState(null);
 
-    try {
-      await payBooking(invoice.id);
-      setInvoices((current) => current.map((i) => (i.id === invoice.id ? { ...i, paid: i.amount, balance: 0 } : i)));
-      setToast({ type: "success", text: "Payment Successful! Thank you." });
-      setTimeout(() => setToast(null), 3500);
-    } catch (err) {
-      setToast({ type: "error", text: describeError(err) });
-    } finally {
-      setPayingId(null);
-    }
+  const payNow = (invoice) => setCheckoutInvoice(invoice);
+
+  // Called by the checkout when the gateway says "paid"
+  const handlePaid = (payment) => {
+    setInvoices((current) => current.map((i) => (i.id === payment.bookingId ? { ...i, paid: i.paid + payment.amount, balance: 0, paymentStatus: "paid" } : i)));
+    setToast({ type: "success", text: `Payment successful · receipt ${payment.receiptNo}` });
+    setTimeout(() => setToast(null), 3500);
   };
 
   return {
     loading, error, summary, filteredInvoices,
     searchTerm, setSearchTerm, statusFilter, setStatusFilter,
     payNow, payingId, toast, setToast,
+    checkoutInvoice, setCheckoutInvoice, handlePaid,
   };
 }
 

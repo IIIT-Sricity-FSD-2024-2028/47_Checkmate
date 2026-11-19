@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class CreateVendorApplicationDto {
   @ApiProperty({ example: 'Priya Nair' }) @IsString() vendorName: string;
@@ -20,3 +20,9 @@ export class CreateVendorDto {
   @ApiProperty({ enum: ['Approved', 'Pending', 'Rejected'] }) @IsIn(['Approved', 'Pending', 'Rejected']) status: 'Approved' | 'Pending' | 'Rejected';
 }
 export class UpdateVendorDto extends PartialType(CreateVendorDto) {}
+
+/** A client's feedback about the vendor after a completed event. */
+export class VendorFeedbackDto {
+  @ApiProperty({ example: 5, minimum: 1, maximum: 5 }) @IsInt() @Min(1) @Max(5) stars: number;
+  @ApiPropertyOptional({ example: 'Everything was perfect.' }) @IsOptional() @IsString() @MaxLength(500) comment?: string;
+}

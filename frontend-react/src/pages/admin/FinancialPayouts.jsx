@@ -3,7 +3,7 @@ import {
   IndianRupee, CheckCircle2, Clock, Search, 
   ArrowUpRight, RefreshCcw, ShieldCheck, AlertCircle, Eye, X
 } from 'lucide-react';
-import { getBookingsCommissions, settleBookingPayout } from '../../services/bookingService';
+import { getBookingsCommissions, getPayments, settleBookingPayout } from '../../services/bookingService';
 import '../../styles/admin.css';
 
 export default function FinancialPayouts() {
@@ -15,12 +15,17 @@ export default function FinancialPayouts() {
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
+  // Payment records from the checkout (newest first in the table)
+  const [payments, setPayments] = useState([]);
+
   const fetchPayouts = async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await getBookingsCommissions();
       setData(res || { items: [], summary: {} });
+      // Every checkout attempt (simulated gateway): paid, failed or processing
+      setPayments(await getPayments().catch(() => []));
     } catch (err) {
       console.error('Failed to load payout data:', err);
       setError('Failed to fetch financial commissions.');
@@ -429,6 +434,35 @@ export default function FinancialPayouts() {
           </div>
         </div>
       )}
+      {/* Payment records: every checkout attempt through the simulated gateway */}
+      <div id="paymentRecords" style={{ marginTop: '24px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ padding: '14px 16px', fontWeight: 600, color: '#fff', borderBottom: '1px solid var(--border)' }}>
+          Client Payments ({payments.length}) <span style={{ fontSize: '11px', color: '#facc15', fontWeight: 400 }}>· simulated gateway, no real money</span>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ color: 'var(--text-muted)' }}>
+              {['Payment', 'Booking', 'Amount', 'Method', 'Status', 'Time', 'Receipt'].map((h) => <th key={h} style={{ padding: '10px 16px' }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {payments.length === 0 && (
+              <tr><td colSpan="7" style={{ padding: '20px 16px', color: 'var(--text-muted)' }}>No payments yet.</td></tr>
+            )}
+            {[...payments].reverse().map((p) => (
+              <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 16px', color: '#fff' }}>{p.id}</td>
+                <td style={{ padding: '10px 16px' }}>{p.bookingId}</td>
+                <td style={{ padding: '10px 16px', color: '#fff' }}>₹{Number(p.amount || 0).toLocaleString('en-IN')}</td>
+                <td style={{ padding: '10px 16px' }}>{p.methodLabel || p.method}</td>
+                <td style={{ padding: '10px 16px', color: p.status === 'paid' ? '#00e676' : p.status === 'failed' ? '#f87171' : '#f59e0b' }}>{p.status}</td>
+                <td style={{ padding: '10px 16px' }}>{new Date(p.completedAt || p.createdAt).toLocaleString()}</td>
+                <td style={{ padding: '10px 16px' }}>{p.receiptNo || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

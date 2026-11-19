@@ -26,8 +26,8 @@ export class StaffOnboardingController {
 
   // Documents stay outside public/, so this signed-in route is the only way to them.
   @Get('staff-applications/:id/documents/:docId') @Roles('vendor', 'admin', 'superuser')
-  document(@Param('id') id: string, @Param('docId') docId: string, @Req() req: any, @Res() res: Response) {
-    const doc = this.service.document(id, docId, req.user);
+  async document(@Param('id') id: string, @Param('docId') docId: string, @Req() req: any, @Res() res: Response) {
+    const doc = await this.service.document(id, docId, req.user);
     res.type(doc.mimeType);
     res.download(doc.path, doc.name);
   }

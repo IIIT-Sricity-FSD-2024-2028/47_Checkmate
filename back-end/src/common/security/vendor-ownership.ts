@@ -10,28 +10,29 @@
 import { ForbiddenException } from '@nestjs/common';
 
 type Caller = { id?: string; role?: string } | undefined;
-type DataLike = { collection: (name: any) => any[] };
+// Works with the real DataService (async) and with the tests' in-memory fakes
+type DataLike = { collection: (name: any) => any[] | Promise<any[]> };
 
 const isVendor = (user: Caller) => String(user?.role || '').toLowerCase() === 'vendor';
 
 /** The vendor id of the signed-in vendor (undefined for other roles / no vendor row). */
-export function vendorIdOf(data: DataLike, user: Caller): string | undefined {
-  return data.collection('vendors').find((v: any) => v.userId === user?.id)?.id;
+export async function vendorIdOf(data: DataLike, user: Caller): Promise<string | undefined> {
+  return (await data.collection('vendors')).find((v: any) => v.userId === user?.id)?.id;
 }
 
 /** 403 when a vendor touches a row of another vendor, or tries to move it to another vendor. */
-export function assertVendorOwns(data: DataLike, user: Caller, row: { vendorId?: string } | undefined, what: string, newVendorId?: string) {
+export async function assertVendorOwns(data: DataLike, user: Caller, row: { vendorId?: string } | undefined, what: string, newVendorId?: string) {
   if (!isVendor(user)) return;
-  const own = vendorIdOf(data, user);
+  const own = await vendorIdOf(data, user);
   if (!own) throw new ForbiddenException('Your account is not linked to a vendor.');
   if (row?.vendorId && row.vendorId !== own) throw new ForbiddenException(`You can only change your own ${what}.`);
   if (newVendorId && newVendorId !== own) throw new ForbiddenException(`You cannot give a ${what} to another vendor.`);
 }
 
 /** A vendor's new row is always theirs, whatever vendorId the request body says. */
-export function stampOwnVendor<T extends { vendorId?: string }>(data: DataLike, user: Caller, dto: T): T {
+export async function stampOwnVendor<T extends { vendorId?: string }>(data: DataLike, user: Caller, dto: T): Promise<T> {
   if (!isVendor(user)) return dto;
-  const own = vendorIdOf(data, user);
+  const own = await vendorIdOf(data, user);
   if (!own) throw new ForbiddenException('Your account is not linked to a vendor.');
   return { ...dto, vendorId: own };
 }

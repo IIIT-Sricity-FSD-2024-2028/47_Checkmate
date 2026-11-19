@@ -3,13 +3,22 @@ import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto, SettlePayoutDto, UpdateBookingDto } from './dto';
+import { CheckoutDto, ConfirmPaymentDto, CreateBookingDto, SettlePayoutDto, UpdateBookingDto } from './dto';
+import { PaymentsService } from './payments.service';
 
 @ApiTags('bookings')
 @ApiHeader({ name: 'x-role', description: 'Admins/superusers manage bookings; vendors and clients may read.', required: true })
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly service: BookingsService) {}
+  constructor(private readonly service: BookingsService, private readonly payments: PaymentsService) {}
+
+  // Step 1 of the checkout: the client starts paying the balance due (simulated gateway)
+  @Post(':id/checkout')
+  @Roles('client')
+  @ApiOperation({ summary: 'Start a checkout (simulated gateway) for the balance due' })
+  checkout(@Param() { id }: IdParamDto, @Body() dto: CheckoutDto, @Req() req: any) {
+    return this.payments.startCheckout(id, dto, req.user);
+  }
 
   @Get('commissions')
   @Roles('admin', 'superuser', 'vendor')
@@ -79,5 +88,24 @@ export class BookingsController {
   @Roles('admin', 'superuser')
   remove(@Param() { id }: IdParamDto) {
     return this.service.remove(id);
+  }
+}
+
+// Payment records: step 2 of the checkout and the payment history
+@ApiTags('payments')
+@Controller('payments')
+export class PaymentsController {
+  constructor(private readonly payments: PaymentsService) {}
+
+  @Get()
+  @Roles('admin', 'superuser', 'vendor', 'client')
+  list(@Req() req: any) {
+    return this.payments.list(req.user);
+  }
+
+  @Post(':id/confirm')
+  @Roles('client')
+  confirm(@Param() { id }: IdParamDto, @Body() dto: ConfirmPaymentDto, @Req() req: any) {
+    return this.payments.confirm(id, dto.outcome, req.user);
   }
 }

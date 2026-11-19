@@ -59,7 +59,7 @@ const mike = { id: 'U003', email: 'mike@x.com', role: 'staff' };
 const sarah = { id: 'U002', role: 'vendor' };
 
 describe('bcrypt passwords', () => {
-  it('new hashes are bcrypt with a random salt and verify', () => {
+  it('new hashes are bcrypt with a random salt and verify', async () => {
     const a = hashPassword('Secret@123');
     const b = hashPassword('Secret@123');
     expect(isBcryptHash(a)).toBe(true);
@@ -67,72 +67,72 @@ describe('bcrypt passwords', () => {
     expect(verifyPassword('Secret@123', a)).toBe(true);
     expect(verifyPassword('wrong', a)).toBe(false);
   });
-  it('old SHA-256 hashes still verify and are flagged for upgrade', () => {
+  it('old SHA-256 hashes still verify and are flagged for upgrade', async () => {
     expect(verifyPassword('Emily@2026', legacy('Emily@2026'))).toBe(true);
     expect(needsRehash(legacy('Emily@2026'))).toBe(true);
     expect(needsRehash(hashPassword('x'))).toBe(false);
   });
-  it('a successful login upgrades the stored hash to bcrypt', () => {
+  it('a successful login upgrades the stored hash to bcrypt', async () => {
     const data = fakeData();
-    new AuthService(data, { sign: () => 'token' } as any).login({ email: 'emily@x.com', password: 'Emily@2026' });
+    await new AuthService(data, { sign: () => 'token' } as any).login({ email: 'emily@x.com', password: 'Emily@2026' });
     expect(isBcryptHash(data.db.users[0].passwordHash)).toBe(true);
     expect(verifyPassword('Emily@2026', data.db.users[0].passwordHash)).toBe(true);
   });
 });
 
 describe('notifications per user', () => {
-  it('a client reads only their own', () => {
-    expect(new AnalyticsService(fakeData()).stateKey('notifications', emily)).toEqual([expect.objectContaining({ id: 'N1' })]);
+  it('a client reads only their own', async () => {
+    expect(await new AnalyticsService(fakeData()).stateKey('notifications', emily)).toEqual([expect.objectContaining({ id: 'N1' })]);
   });
-  it('saving the list keeps other users rows untouched and adds new ones', () => {
+  it('saving the list keeps other users rows untouched and adds new ones', async () => {
     const data = fakeData();
     const svc = new AnalyticsService(data);
     // Emily marks hers read, tries to delete David's (absent) and to add one for David
-    svc.setStateKey('notifications', [{ id: 'N1', userId: 'U004', title: 'for Emily', isRead: true }, { id: 'N9', userId: 'U002', title: 'new for vendor' }], emily);
+    (await svc.setStateKey('notifications', [{ id: 'N1', userId: 'U004', title: 'for Emily', isRead: true }, { id: 'N9', userId: 'U002', title: 'new for vendor' }], emily));
     expect(data.db.notifications.find((n: any) => n.id === 'N1').isRead).toBe(true);
     expect(data.db.notifications.find((n: any) => n.id === 'N2')).toMatchObject({ userId: 'U008', isRead: false });
     expect(data.db.notifications.find((n: any) => n.id === 'N9')).toBeDefined();
   });
-  it("cannot change another user's existing notification", () => {
+  it("cannot change another user's existing notification", async () => {
     const data = fakeData();
-    new AnalyticsService(data).setStateKey('notifications', [{ id: 'N2', userId: 'U008', title: 'hacked', isRead: true }], emily);
+    (await new AnalyticsService(data).setStateKey('notifications', [{ id: 'N2', userId: 'U008', title: 'hacked', isRead: true }], emily));
     expect(data.db.notifications.find((n: any) => n.id === 'N2')).toMatchObject({ title: 'for David', isRead: false });
   });
 });
 
 describe('staff see only assigned events', () => {
-  it('list and single event', () => {
+  it('list and single event', async () => {
     const svc = new EventsService(fakeData());
-    expect(svc.findAll(mike).map((e: any) => e.id)).toEqual(['E1']);
-    expect(svc.findOne('E1', mike)).toMatchObject({ id: 'E1' });
-    expect(() => svc.findOne('E2', mike)).toThrow(ForbiddenException);
-    expect(svc.findAll(sarah)).toHaveLength(2); // vendors unchanged
+    expect((await svc.findAll(mike)).map((e: any) => e.id)).toEqual(['E1']);
+    expect((await svc.findOne('E1', mike))).toMatchObject({ id: 'E1' });
+    await expect((async () => (await svc.findOne('E2', mike)))()).rejects.toThrow(ForbiddenException);
+    expect((await svc.findAll(sarah))).toHaveLength(2); // vendors unchanged
   });
 });
 
 describe('vendor ownership', () => {
-  it('packages: own ok, other vendor 403, new ones are pending and stamped', () => {
+  it('packages: own ok, other vendor 403, new ones are pending and stamped', async () => {
     const data = fakeData();
     const svc = new PackagesService(data);
-    svc.update('P1', { name: 'Renamed' } as any, sarah);
-    expect(() => svc.update('P2', { name: 'x' } as any, sarah)).toThrow(ForbiddenException);
-    expect(() => svc.remove('P2', sarah)).toThrow(ForbiddenException);
-    const created: any = svc.create({ name: 'New', vendorId: 'V003', status: 'approved' } as any, sarah);
+    (await svc.update('P1', { name: 'Renamed' } as any, sarah));
+    await expect((async () => (await svc.update('P2', { name: 'x' } as any, sarah)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await svc.remove('P2', sarah)))()).rejects.toThrow(ForbiddenException);
+    const created: any = (await svc.create({ name: 'New', vendorId: 'V003', status: 'approved' } as any, sarah));
     expect(created).toMatchObject({ vendorId: 'V001', status: 'pending' });
-    svc.update('P1', { status: 'approved' } as any, sarah);
+    (await svc.update('P1', { status: 'approved' } as any, sarah));
     expect(data.db.packages[0].status).toBe('approved'); // unchanged: vendors cannot set status
   });
-  it('resources: other vendor 403; cannot move own resource to another vendor', () => {
+  it('resources: other vendor 403; cannot move own resource to another vendor', async () => {
     const svc = new ResourcesService(fakeData());
-    expect(() => svc.update('R2', { total: 1 } as any, sarah)).toThrow(ForbiddenException);
-    expect(() => svc.remove('R2', sarah)).toThrow(ForbiddenException);
-    expect(() => svc.update('R1', { vendorId: 'V003' } as any, sarah)).toThrow(ForbiddenException);
-    expect(svc.update('R1', { total: 9 } as any, sarah)).toMatchObject({ total: 9 });
+    await expect((async () => (await svc.update('R2', { total: 1 } as any, sarah)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await svc.remove('R2', sarah)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await svc.update('R1', { vendorId: 'V003' } as any, sarah)))()).rejects.toThrow(ForbiddenException);
+    expect((await svc.update('R1', { total: 9 } as any, sarah))).toMatchObject({ total: 9 });
   });
-  it('staff: a vendor cannot edit or delete another vendor\'s staff; admins can', () => {
+  it('staff: a vendor cannot edit or delete another vendor\'s staff; admins can', async () => {
     const svc = new StaffService(fakeData(), {} as any);
-    expect(() => svc.update('S6', { role: 'x' } as any, sarah)).toThrow(ForbiddenException);
-    expect(() => svc.remove('S6', sarah)).toThrow(ForbiddenException);
-    expect(svc.update('S6', { role: 'x' } as any, { id: 'U001', role: 'admin' })).toMatchObject({ role: 'x' });
+    await expect((async () => (await svc.update('S6', { role: 'x' } as any, sarah)))()).rejects.toThrow(ForbiddenException);
+    await expect((async () => (await svc.remove('S6', sarah)))()).rejects.toThrow(ForbiddenException);
+    expect((await svc.update('S6', { role: 'x' } as any, { id: 'U001', role: 'admin' }))).toMatchObject({ role: 'x' });
   });
 });

@@ -72,7 +72,8 @@ function InvoiceTable({ invoices, loading, searchTerm, onSearchChange, statusFil
           <button type="button" className="cl-btn-sm cl-btn-ghost" onClick={() => downloadInvoice(row)}>
             <Download size={14} /> Invoice
           </button>
-          {row.balance > 0 && (
+          {/* No paying for cancelled events (backend blocks it too) or while one is processing */}
+          {row.balance > 0 && !row.cancelled && row.paymentStatus !== "processing" && (
             <button type="button" className="cl-btn-sm cl-btn-pink" disabled={payingId !== null} onClick={() => onPay(row)}>
               <CreditCard size={14} /> Pay Now
             </button>

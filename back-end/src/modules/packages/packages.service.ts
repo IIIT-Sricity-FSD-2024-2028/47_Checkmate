@@ -13,22 +13,22 @@ export class PackagesService {
   findOne(id: string) { return this.data.find('packages', id); }
   // A vendor's package is always theirs and always starts "pending" (only an
   // admin approves it on Service Moderation).
-  create(dto: CreatePackageDto, user?: Caller) {
-    const row = stampOwnVendor(this.data, user, dto);
+  async create(dto: CreatePackageDto, user?: Caller) {
+    const row = await stampOwnVendor(this.data, user, dto);
     if (!row.status || isVendor(user)) row.status = 'pending';
     return this.data.create('packages', 'P', row);
   }
   // Vendors may edit only their own packages, and never the approval status
-  update(id: string, dto: UpdatePackageDto, user?: Caller) {
-    assertVendorOwns(this.data, user, this.data.find('packages', id), 'package', dto.vendorId);
+  async update(id: string, dto: UpdatePackageDto, user?: Caller) {
+    await assertVendorOwns(this.data, user, await this.data.find('packages', id), 'package', dto.vendorId);
     if (isVendor(user) && dto.status !== undefined) delete (dto as any).status;
     return this.data.update('packages', id, dto);
   }
   decidePackage(id: string, decision: { status: 'pending' | 'approved' | 'rejected' }) {
     return this.data.update('packages', id, { status: decision.status });
   }
-  remove(id: string, user?: Caller) {
-    assertVendorOwns(this.data, user, this.data.find('packages', id), 'package');
+  async remove(id: string, user?: Caller) {
+    await assertVendorOwns(this.data, user, await this.data.find('packages', id), 'package');
     return this.data.remove('packages', id);
   }
 }

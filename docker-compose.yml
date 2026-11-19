@@ -1,0 +1,26 @@
+# PostgreSQL for EventPro / Checkmate (local development).
+#   docker compose up -d        start it (data is kept in the "pgdata" volume)
+#   docker compose down         stop it (add -v to also delete the data)
+# The values match DATABASE_URL in back-end/.env.example.
+services:
+  postgres:
+    image: postgres:16.4
+    container_name: checkmate-postgres
+    environment:
+      POSTGRES_USER: checkmate
+      POSTGRES_PASSWORD: checkmate_dev
+      POSTGRES_DB: checkmate
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Also creates the separate database the Jest tests use
+      - ./Database/docker-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U checkmate -d checkmate"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

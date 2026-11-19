@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { canClientCancel } from "../../utils/dateRules";
+import { canClientCancel, CLIENT_CANCEL_BLOCKED_MESSAGE, CLIENT_CANCELLABLE_STATUSES } from "../../utils/dateRules";
 import { AlertCircle, CheckCircle2, Hourglass, LineChart } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatDate } from "../../utils/clientHelpers";
@@ -43,7 +43,10 @@ function ActionButton({ event, onViewReason }) {
 }
 
 function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
+  // Edit: only before the vendor approves. Cancel: also after approval (confirmed).
   const canChange = event.status === "pending" || event.status === "waiting";
+  const canCancelStatus = CLIENT_CANCELLABLE_STATUSES.includes(String(event.status).toLowerCase());
+  const cancelAllowed = canClientCancel(event.date);
   const reason = event.rejectionReason || "";
 
   return (
@@ -83,19 +86,24 @@ function ClientEventTableRow({ event, onViewReason, onEdit, onCancel }) {
         {canChange && (
           <>
             {" "}
-            <button type="button" className="cl-btn-sm cl-btn-ghost" onClick={() => onEdit(event)}>Edit</button>{" "}
-            {/* Rule: clients cancel only more than 3 days ahead; after that the admin does it */}
-            {canClientCancel(event.date) ? (
-              <button type="button" className="cl-btn-sm cl-btn-danger" onClick={() => onCancel(event)}>Cancel</button>
-            ) : (
-              <Link
-                to="/client/report-issue"
-                className="cl-btn-sm cl-btn-ghost"
-                title="This event is 3 days away or less. Please contact the admin to cancel it."
-              >
-                Contact Admin to Cancel
-              </Link>
-            )}
+            <button type="button" className="cl-btn-sm cl-btn-ghost" onClick={() => onEdit(event)}>Edit</button>
+          </>
+        )}
+        {/* Rule: clients cancel pending / waiting / confirmed events only MORE than
+            3 days ahead; inside that the button is disabled and they contact admin */}
+        {canCancelStatus && (
+          <>
+            {" "}
+            <button
+              type="button"
+              className="cl-btn-sm cl-btn-danger"
+              disabled={!cancelAllowed}
+              title={cancelAllowed ? "Cancel this event" : CLIENT_CANCEL_BLOCKED_MESSAGE}
+              onClick={() => cancelAllowed && onCancel(event)}
+            >
+              Cancel Event
+            </button>
+            {!cancelAllowed && <div className="cl-cancel-blocked">{CLIENT_CANCEL_BLOCKED_MESSAGE}</div>}
           </>
         )}
       </td>

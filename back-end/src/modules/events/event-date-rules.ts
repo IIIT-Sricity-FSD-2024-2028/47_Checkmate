@@ -13,6 +13,7 @@ import { BadRequestException } from '@nestjs/common';
 
 export const MIN_BOOKING_NOTICE_DAYS = 7;
 export const CLIENT_CANCEL_CUTOFF_DAYS = 3;
+export const CLIENT_CANCEL_BLOCKED_MESSAGE = 'Cancellation is not allowed within 3 days of the event, contact admin.';
 
 /** Today's date as YYYY-MM-DD in the server's local time. */
 export function todayString(now = new Date()): string {
@@ -51,9 +52,7 @@ export function assertBookingNotice(date: string, today = todayString()) {
 export function assertClientCanCancel(date: string, today = todayString()) {
   const days = daysUntil(date, today);
   if (!Number.isNaN(days) && days <= CLIENT_CANCEL_CUTOFF_DAYS) {
-    const when = days < 0 ? 'has already started' : days === 0 ? 'is today' : `is only ${days} day${days === 1 ? '' : 's'} away`;
-    throw new BadRequestException(
-      `This event ${when}. Events can only be cancelled more than ${CLIENT_CANCEL_CUTOFF_DAYS} days in advance — please contact the admin to cancel it.`,
-    );
+    // Wording chosen by the owner; the frontend shows the same text
+    throw new BadRequestException(CLIENT_CANCEL_BLOCKED_MESSAGE);
   }
 }

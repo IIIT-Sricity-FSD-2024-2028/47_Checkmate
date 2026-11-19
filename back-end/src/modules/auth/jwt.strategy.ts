@@ -22,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // a deleted or deactivated account stops working immediately, instead of
   // staying valid until the token expires.
   async validate(payload: any) {
-    const user = this.dataService.collection('users').find((u) => u.id === payload.sub);
+    const user = (await this.dataService.collection('users')).find((u) => u.id === payload.sub);
     if (!user) throw new UnauthorizedException('Invalid token');
     if (!['Active', 'active'].includes(user.status)) {
       throw new UnauthorizedException('This account is not active.');

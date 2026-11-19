@@ -40,18 +40,18 @@ function buildData(): AvailabilityData {
 }
 
 describe('resource availability by event date', () => {
-  it('no overlap: stock booked on another date is fully free', () => {
+  it('no overlap: stock booked on another date is fully free', async () => {
     const data = buildData();
     expect(getAvailableQuantity(data, 'R1', '2026-04-16')).toBe(5);
     expect(getAvailableQuantity(data, 'R1', '2026-04-14')).toBe(5);
   });
 
-  it('same-day overlap: units held that day are subtracted', () => {
+  it('same-day overlap: units held that day are subtracted', async () => {
     const result = getAvailability(buildData(), 'R1', { date: '2026-04-15' });
     expect(result).toMatchObject({ total: 5, allocated: 3, available: 2 });
   });
 
-  it('partial time overlap counts; back-to-back slots do not', () => {
+  it('partial time overlap counts; back-to-back slots do not', async () => {
     const data = buildData();
     // E_MORNING runs 09:00-13:00 on 2026-04-20
     expect(getAvailableQuantity(data, 'R1', { date: '2026-04-20', time: '12:00', endTime: '16:00' })).toBe(3);
@@ -60,7 +60,7 @@ describe('resource availability by event date', () => {
     expect(getAvailableQuantity(data, 'R1', { date: '2026-04-20', time: '06:00', endTime: '09:00' })).toBe(5);
   });
 
-  it('multi-day overlap: any shared day counts, both directions', () => {
+  it('multi-day overlap: any shared day counts, both directions', async () => {
     const data = buildData();
     // E_MULTI holds 4 units from 2026-05-01 to 2026-05-03
     expect(getAvailableQuantity(data, 'R1', '2026-05-02')).toBe(1);
@@ -71,7 +71,7 @@ describe('resource availability by event date', () => {
     expect(getAvailability(data, 'R1', { date: '2026-04-15', endDate: '2026-05-02' })?.allocated).toBe(9);
   });
 
-  it('cancelled, rejected and released allocations are ignored', () => {
+  it('cancelled, rejected and released allocations are ignored', async () => {
     const data = buildData();
     // Only E_SAME_DAY (3 units) holds stock on 2026-04-15
     expect(getAvailability(data, 'R1', { date: '2026-04-15' })?.allocated).toBe(3);
@@ -79,26 +79,26 @@ describe('resource availability by event date', () => {
     expect(getAvailableQuantity(data, 'R1', '2026-04-15')).toBe(5);
   });
 
-  it('editing the same event: its own allocation does not block it', () => {
+  it('editing the same event: its own allocation does not block it', async () => {
     const data = buildData();
     expect(getAvailableQuantity(data, 'R1', '2026-04-15')).toBe(2);
     expect(getAvailableQuantity(data, 'R1', '2026-04-15', 'E_SAME_DAY')).toBe(5);
     expect(findOverAllocations(data, [{ resourceId: 'R1', quantity: 5 }], { date: '2026-04-15' }, 'E_SAME_DAY')).toEqual([]);
   });
 
-  it('quantity exceeded: returns a clear message naming the date', () => {
+  it('quantity exceeded: returns a clear message naming the date', async () => {
     const problems = findOverAllocations(buildData(), [{ resourceId: 'R1', quantity: 2 }, { resourceId: 'R1', quantity: 2 }], { date: '2026-04-15' });
     expect(problems).toEqual(['Only 2 of 5 Projectors are free on 2026-04-15 (requested 4).']);
   });
 
-  it('damaged stock and unknown resources have nothing free', () => {
+  it('damaged stock and unknown resources have nothing free', async () => {
     const data = buildData();
     expect(getAvailableQuantity(data, 'R2', '2026-09-01')).toBe(0);
     expect(getAvailableQuantity(data, 'NOPE', '2026-09-01')).toBe(0);
     expect(findOverAllocations(data, [{ resourceId: 'NOPE', quantity: 1 }], { date: '2026-09-01' })[0]).toMatch(/does not exist/);
   });
 
-  it('parses 12h and 24h times and handles events past midnight', () => {
+  it('parses 12h and 24h times and handles events past midnight', async () => {
     expect(parseMinutes('6:30 PM')).toBe(18 * 60 + 30);
     expect(parseMinutes('12:00 AM')).toBe(0);
     expect(parseMinutes('18:30')).toBe(18 * 60 + 30);
@@ -124,52 +124,52 @@ describe('ResourcesService availability checks', () => {
     return new ResourcesService(fakeDataService);
   }
 
-  it('getAvailableQuantity(resourceId, eventDate, excludeEventId)', () => {
+  it('getAvailableQuantity(resourceId, eventDate, excludeEventId)', async () => {
     const service = buildService();
-    expect(service.getAvailableQuantity('R1', '2026-04-15')).toBe(2);
-    expect(service.getAvailableQuantity('R1', '2026-04-15', 'E_SAME_DAY')).toBe(5);
+    expect((await service.getAvailableQuantity('R1', '2026-04-15'))).toBe(2);
+    expect((await service.getAvailableQuantity('R1', '2026-04-15', 'E_SAME_DAY'))).toBe(5);
   });
 
-  it('availability report by eventId uses that event window and excludes it', () => {
-    const report = buildService().availabilityReport({ eventId: 'E_SAME_DAY' });
+  it('availability report by eventId uses that event window and excludes it', async () => {
+    const report = (await buildService().availabilityReport({ eventId: 'E_SAME_DAY' }));
     expect(report.find((r) => r.resourceId === 'R1')).toMatchObject({ date: '2026-04-15', available: 5 });
   });
 
-  it('availability report rejects a missing or invalid date', () => {
-    expect(() => buildService().availabilityReport({})).toThrow(BadRequestException);
-    expect(() => buildService().availabilityReport({ date: '2026-02-30' })).toThrow(BadRequestException);
+  it('availability report rejects a missing or invalid date', async () => {
+    await expect((async () => (await buildService().availabilityReport({})))()).rejects.toThrow(BadRequestException);
+    await expect((async () => (await buildService().availabilityReport({ date: '2026-02-30' })))()).rejects.toThrow(BadRequestException);
   });
 
-  it('allocation map: same resource bookable on two different dates', () => {
+  it('allocation map: same resource bookable on two different dates', async () => {
     const data = buildData();
     data.events.push({ id: 'E_NEW', status: 'pending', date: '2026-04-16' });
     const next = { ...data.resourceAllocations, E_NEW: [{ resourceId: 'R1', quantity: 5 }] };
-    expect(() => buildService(data).assertAllocationMapValid(next)).not.toThrow();
+    await expect((async () => (await buildService(data).assertAllocationMapValid(next)))()).resolves.not.toThrow();
   });
 
-  it('allocation map: over-allocation on the same date is a 400 with a helpful message', () => {
+  it('allocation map: over-allocation on the same date is a 400 with a helpful message', async () => {
     const data = buildData();
     data.events.push({ id: 'E_NEW', status: 'pending', date: '2026-04-15' });
     const next = { ...data.resourceAllocations, E_NEW: [{ resourceId: 'R1', quantity: 3 }] };
-    expect(() => buildService(data).assertAllocationMapValid(next)).toThrow('E_NEW: Only 2 of 5 Projectors are free on 2026-04-15 (requested 3).');
+    await expect((async () => (await buildService(data).assertAllocationMapValid(next)))()).rejects.toThrow('E_NEW: Only 2 of 5 Projectors are free on 2026-04-15 (requested 3).');
   });
 
-  it('allocation map: unchanged lists are not re-checked, bad shapes are rejected', () => {
+  it('allocation map: unchanged lists are not re-checked, bad shapes are rejected', async () => {
     const data = buildData();
     // Legacy over-booking already saved must not block an unrelated save
     data.resourceAllocations.E_SAME_DAY = [{ resourceId: 'R1', quantity: 9 }];
-    expect(() => buildService(data).assertAllocationMapValid({ ...data.resourceAllocations })).not.toThrow();
-    expect(() => buildService(data).assertAllocationMapValid([])).toThrow(BadRequestException);
-    expect(() => buildService(data).assertAllocationMapValid({ E_SAME_DAY: [{ resourceId: 'R1', quantity: -1 }] })).toThrow(BadRequestException);
-    expect(() => buildService(data).assertAllocationMapValid({ GHOST: [{ resourceId: 'R1', quantity: 1 }] })).toThrow('unknown event GHOST');
+    await expect((async () => (await buildService(data).assertAllocationMapValid({ ...data.resourceAllocations })))()).resolves.not.toThrow();
+    await expect((async () => (await buildService(data).assertAllocationMapValid([])))()).rejects.toThrow(BadRequestException);
+    await expect((async () => (await buildService(data).assertAllocationMapValid({ E_SAME_DAY: [{ resourceId: 'R1', quantity: -1 }] })))()).rejects.toThrow(BadRequestException);
+    await expect((async () => (await buildService(data).assertAllocationMapValid({ GHOST: [{ resourceId: 'R1', quantity: 1 }] })))()).rejects.toThrow('unknown event GHOST');
   });
 
-  it('moving an event onto a busy date is refused; re-saving in place is fine', () => {
+  it('moving an event onto a busy date is refused; re-saving in place is fine', async () => {
     const data = buildData();
     const service = buildService(data);
     const multi = data.events.find((e) => e.id === 'E_MULTI')!;
-    expect(() => service.assertEventStillFits({ ...multi })).not.toThrow();
+    await expect((async () => (await service.assertEventStillFits({ ...multi })))()).resolves.not.toThrow();
     // 4 units on 2026-04-15 where only 2 are free
-    expect(() => service.assertEventStillFits({ ...multi, date: '2026-04-15', endDate: undefined })).toThrow(/Only 2 of 5 Projectors/);
+    await expect((async () => (await service.assertEventStillFits({ ...multi, date: '2026-04-15', endDate: undefined })))()).rejects.toThrow(/Only 2 of 5 Projectors/);
   });
 });

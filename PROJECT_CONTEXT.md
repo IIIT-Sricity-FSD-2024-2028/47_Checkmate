@@ -87,7 +87,7 @@ Seed events are dated May–July 2026, which is now in the past, so the backend 
 
 Tests / builds:
 ```bash
-cd back-end && npx jest            # 12 suites, 108 tests, all passing (never touches data/database.json)
+cd back-end && npx jest            # 14 suites, 130 tests on PostgreSQL (uses the checkmate_test database)
 cd back-end && npx nest build
 cd frontend-react && npm run build
 ```
@@ -168,18 +168,18 @@ Full results in `TEST_REPORT.md`: 94 endpoints × 6 callers role-guard matrix (a
 
 Owner decisions: cancellation fee = % of price split like normal revenue; client cancel only pending/waiting; 7-day rule clients only; Socket.IO allowed.
 
-## 7. Still open (not fixed yet)
-1. `/issues` and `/staff-assignments` are readable by every role (not scoped); `/vendor-applications` readable by any vendor.
-2. Issue reporter name/email come from the request body.
-3. Superuser Staff page `status` is overwritten by assignment changes.
-4. Events go live only by the scheduler at their real start time (tests use the status API to simulate it).
-5. Staff and clients never chat directly (by design: each talks to the vendor).
-6. SQL schema in `Database/` is out of date; Dependabot alerts on `main`.
-7. Old HTML pages in `front-end/` can no longer use `/snapshot`, `/state/users`, `/state/adminChatMessages`.
-8. Payments, refunds and payouts are simulated.
+## 6c. Round 4 (2026-11-19, NOT committed — owner said don't commit until asked; commit with NO Claude co-author)
+- **Database is now PostgreSQL + Prisma** (`back-end/prisma/schema.prisma`, `Database/README.md`). DataService keeps its method names but is async; triggers run in `prisma.$transaction`. Local Postgres via Homebrew (`brew services start postgresql@16`), role `checkmate` / `checkmate_dev`, databases `checkmate` (app), `checkmate_test` (Jest), `checkmate_e2e` / `checkmate_realcopy` (test copies). `docker-compose.yml` for teammates.
+- The owner's real data was imported into `checkmate`; `back-end/data/database.json` is untouched (fallback) + backups `data/database.backup-2026-11-19*.json`.
+- Demo staff ratings + client→vendor feedback (`demo-ratings.ts`), client feedback about vendors, cancellation for confirmed events (>3 days), simulated checkout with payment records + receipt.
 
-Round 3 (2026-11-19, NOT committed — owner said don't commit): chat root cause + fixes (vendor "Active Events", sidebar unread badges, live/polling pill), rating stars everywhere + vendor Edit rating, Track page team fix, bcrypt, per-user notifications, staff event scoping, vendor ownership. See TEST_REPORT.md §9.
-Testing tip: log in each role in a SEPARATE browser / incognito window (one browser shares the login across tabs).
+## 7. Still open (not fixed yet)
+1. A cancelled booking with a cancellation fee cannot be paid through the checkout (owner to decide), so that fee payout is never releasable.
+2. `/issues` and `/staff-assignments` not role-scoped; `/vendor-applications` readable by any vendor; issue reporter from request body.
+3. Superuser Staff page `status` overwritten by assignment changes.
+4. Events go live only by the scheduler at their real start time.
+5. Payments simulated (no Razorpay keys); docker-compose untested here (no Docker on the Mac).
+6. Old HTML pages in `front-end/` can no longer use `/snapshot`, `/state/users`, `/state/adminChatMessages`.
 
 ## 8. Useful facts for debugging
 
@@ -190,6 +190,6 @@ Testing tip: log in each role in a SEPARATE browser / incognito window (one brow
 - Allocations live in the `resourceAllocations` map (eventId → items) inside `database.json`, written through `PUT /api/state/resourceAllocations` (vendor/admin/superuser only, validated by the availability rule).
 - Staff accounts are created when a vendor approves a staff application (`/join-staff` page → vendor "Staff Onboarding").
 - Max 2 accounts per phone number on register / staff apply.
-- `EMS_DATA_DIR` env var points DataService at another data folder (tests and root scripts use a temp folder). Never run a script that opens DataService without it.
+- Tests and root scripts use the PostgreSQL database `checkmate_test` (DATABASE_URL / TEST_DATABASE_URL). Never point a test at `checkmate`.
 - Socket.IO runs on the same port as the API (path `/socket.io`); CORS comes from `CORS_ORIGINS`.
 - Testing trick used in Phase 2: an isolated copy of the backend on :3001 (own data folder) + `VITE_API_BASE_URL=http://localhost:3001/api npx vite --port 5174`, so the owner's servers/data are never touched.

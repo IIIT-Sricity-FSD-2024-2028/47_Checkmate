@@ -4,7 +4,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { DecisionDto } from '../../common/dto/action.dto';
 import { IdParamDto } from '../../common/dto/id-param.dto';
-import { CreateVendorApplicationDto, CreateVendorDto, UpdateVendorApplicationDto, UpdateVendorDto } from './dto';
+import { CreateVendorApplicationDto, CreateVendorDto, UpdateVendorApplicationDto, UpdateVendorDto, VendorFeedbackDto } from './dto';
 import { VendorsService } from './vendors.service';
 
 @ApiTags('vendors')
@@ -17,6 +17,38 @@ export class VendorsController {
   @Roles('admin', 'superuser', 'vendor', 'client')
   vendors() {
     return this.service.vendors();
+  }
+
+  // Client feedback about vendors: everyone may READ the summaries; only the
+  // client who owns a completed event may give or edit it (checked in the service)
+  @Get('vendors/feedback-summary')
+  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  feedbackSummaries() {
+    return this.service.feedbackSummaries();
+  }
+
+  @Get('vendors/:id/feedback')
+  @Roles('admin', 'superuser', 'vendor', 'client', 'staff')
+  feedbackSummary(@Param() { id }: IdParamDto) {
+    return this.service.feedbackSummary(id);
+  }
+
+  @Get('events/:id/vendor-feedback')
+  @Roles('admin', 'superuser', 'vendor', 'client')
+  eventFeedback(@Param() { id }: IdParamDto) {
+    return this.service.eventFeedback(id);
+  }
+
+  @Post('events/:id/vendor-feedback')
+  @Roles('client')
+  giveFeedback(@Param() { id }: IdParamDto, @Body() dto: VendorFeedbackDto, @Req() req: any) {
+    return this.service.giveFeedback(id, dto, req.user);
+  }
+
+  @Patch('events/:id/vendor-feedback')
+  @Roles('client')
+  editFeedback(@Param() { id }: IdParamDto, @Body() dto: VendorFeedbackDto, @Req() req: any) {
+    return this.service.editFeedback(id, dto, req.user);
   }
 
   @Get('vendors/:id/payouts')
