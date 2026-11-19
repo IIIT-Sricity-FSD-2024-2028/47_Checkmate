@@ -6,8 +6,8 @@ import { useLiveChat } from "./useLiveChat";
  * vendor pages already use it; the work is done by useLiveChat.
  */
 export function useThreadChat(threadId) {
-  const { messages, error, send } = useLiveChat({ kind: "thread", threadId });
-  return { messages, error, send };
+  const { messages, error, send, connected } = useLiveChat({ kind: "thread", threadId });
+  return { messages, error, send, connected };
 }
 
 export default useThreadChat;

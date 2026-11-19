@@ -56,6 +56,7 @@ import EventExtraStaffModal from "../../components/vendor/EventExtraStaffModal";
 import EventKeepWaitingModal from "../../components/vendor/EventKeepWaitingModal";
 import RejectReasonModal from "../../components/vendor/RejectReasonModal";
 import StaffRatingCard from "../../components/vendor/StaffRatingCard";
+import { getStaffProfiles } from "../../services/staffService";
 import { eventsOverlap } from "../../utils/eventWindow";
 
 // Backend API services
@@ -142,6 +143,23 @@ function EventReview() {
   const [allEvents, setAllEvents] = useState([]);
   const [resources, setResources] = useState([]);
   const [staffList, setStaffList] = useState([]);
+
+  // Public staff profiles by id (rating / "New" badge in the staff table)
+  const [profilesById, setProfilesById] = useState({});
+
+  // Loads the profiles once
+  useEffect(() => {
+    let isMounted = true;
+    getStaffProfiles()
+      .then((list) => {
+        if (!isMounted || !Array.isArray(list)) return;
+        const byId = {};
+        list.forEach((p) => { byId[p.id] = p; });
+        setProfilesById(byId);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   const [assignments, setAssignments] = useState([]);
   const [resourceAllocations, setLocalResourceAllocations] = useState({});
   // Free units per resource in this event's window, from the backend ({ resourceId: units }).
@@ -1649,6 +1667,7 @@ function EventReview() {
         {/* ── Section 6: Staff Requirements Table & Direct Assign ── */}
         <EventStaffRequirementsTable
           requirements={staffRequirements}
+          profilesById={profilesById}
           onAssign={handleAssignStaff}
           onUnassign={canAllocateResources ? handleUnassignStaff : undefined}
           onReplace={setReplacingStaff}

@@ -31,7 +31,7 @@
  * ============================================================================
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
@@ -50,6 +50,7 @@ import StaffStatsGrid from "../../components/vendor/StaffStatsGrid";
 import StaffToolbar from "../../components/vendor/StaffToolbar";
 import StaffGrid from "../../components/vendor/StaffGrid";
 import StaffProfileModal from "../../components/StaffProfileModal";
+import { getStaffProfiles } from "../../services/staffService";
 import StaffFormModal from "../../components/vendor/StaffFormModal";
 import StaffAssignModal from "../../components/vendor/StaffAssignModal";
 import StaffScheduleModal from "../../components/vendor/StaffScheduleModal";
@@ -67,6 +68,23 @@ function ManageStaff() {
 
   // Which staff profile is open in the modal (null = closed)
   const [profileStaffId, setProfileStaffId] = useState(null);
+
+  // Public profiles by staff id, for the rating / "New" badge on each card
+  const [profilesById, setProfilesById] = useState({});
+
+  // Loads the profiles (ratings change only when an event is rated)
+  useEffect(() => {
+    let isMounted = true;
+    getStaffProfiles()
+      .then((list) => {
+        if (!isMounted || !Array.isArray(list)) return;
+        const byId = {};
+        list.forEach((p) => { byId[p.id] = p; });
+        setProfilesById(byId);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const {
     // Primary Data State
@@ -200,6 +218,7 @@ function ManageStaff() {
           onEdit={handleOpenEditModal}
           onDelete={handleOpenDeleteModal}
           onProfile={(member) => setProfileStaffId(member.id)}
+          profilesById={profilesById}
         />
       </div>
 

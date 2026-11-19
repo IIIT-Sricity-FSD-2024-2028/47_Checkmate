@@ -373,7 +373,12 @@ export default function StaffMessages() {
                     {activeTab === 'vendor' ? 'Vendor Channel' : 'Client Channel'}
                   </span>
                 </div>
-                <div className="chat-status">● Live Coordination Active</div>
+                {/* Live = socket; "Refreshing every 3s" = the polling fallback has taken over */}
+                <div className="chat-status">
+                  <span className={`chat-live-pill ${chat.connected ? '' : 'chat-live-pill--off'}`}>
+                    {chat.connected ? 'Live' : 'Refreshing every 3s'}
+                  </span>
+                </div>
               </div>
             </div>
 

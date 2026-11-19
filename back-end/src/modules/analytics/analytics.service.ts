@@ -134,11 +134,16 @@ export class AnalyticsService {
 
   // Generic key/value read+write, used for the loosely-structured collections
   // (chat threads, progress bars, allocations) that have no dedicated module.
-  stateKey(key: string, user?: { role?: string }) {
+  stateKey(key: string, user?: { id?: string; role?: string }) {
     this.assertNotPrivate(key);
     const readers = AnalyticsService.READ_RESTRICTED[this.normalizeKey(key)];
     if (readers && !readers.includes(String(user?.role || '').toLowerCase())) {
       throw new ForbiddenException(`Your role cannot read "${key}".`);
+    }
+    // Notifications: everyone but admins/superusers sees only their own
+    if (this.normalizeKey(key) === 'notifications' && !this.isAdmin(user)) {
+      const all = this.data.getValue('notifications');
+      return (Array.isArray(all) ? all : []).filter((n: any) => n.userId === user?.id);
     }
     const name = this.normalizeKey(key);
     return this.scrubCollection(name, this.data.getValue(name));
@@ -176,7 +181,28 @@ export class AnalyticsService {
     superuserEngineSettings: ['superuser', 'admin'],
   };
 
-  setStateKey(key: string, value: unknown, user?: { role?: string }) {
+  private isAdmin(user?: { role?: string }) {
+    return ['admin', 'superuser'].includes(String(user?.role || '').toLowerCase());
+  }
+
+  // The pages save the WHOLE notifications list back (e.g. after "mark as read"),
+  // but a non-admin only ever received their own rows. So for them the saved list
+  // is merged: other people's existing rows stay exactly as they were, the
+  // caller's own rows are taken from the request, and brand-new rows (e.g. a
+  // vendor notifying a client) are added. Nobody can edit or delete another
+  // user's notifications.
+  private mergeNotifications(value: unknown, user?: { id?: string }) {
+    const current = this.data.getValue('notifications');
+    const stored: any[] = Array.isArray(current) ? current : [];
+    const incoming: any[] = Array.isArray(value) ? value : [];
+    const existingIds = new Set(stored.map((n) => n.id));
+    const others = stored.filter((n) => n.userId !== user?.id);
+    const mine = incoming.filter((n) => n && n.userId === user?.id);
+    const added = incoming.filter((n) => n && n.userId !== user?.id && !existingIds.has(n.id));
+    return [...others, ...mine, ...added];
+  }
+
+  setStateKey(key: string, value: unknown, user?: { id?: string; role?: string }) {
     this.assertNotPrivate(key);
     const allowedRoles = AnalyticsService.WRITABLE_KEYS[this.normalizeKey(key)];
     if (!allowedRoles) {
@@ -189,6 +215,10 @@ export class AnalyticsService {
     // date-based availability rules before anything is saved (400 if not).
     if (this.normalizeKey(key) === 'resourceAllocations') {
       this.resources.assertAllocationMapValid(value);
+    }
+    if (this.normalizeKey(key) === 'notifications' && !this.isAdmin(user)) {
+      this.data.setValue('notifications', this.mergeNotifications(value, user));
+      return this.stateKey('notifications', user);
     }
     return this.data.setValue(this.normalizeKey(key), value);
   }

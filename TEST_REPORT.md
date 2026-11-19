@@ -835,3 +835,73 @@ New packages: `@nestjs/websockets@11.1.19` and `@nestjs/platform-socket.io@11.1.
 **Safety incident (found and fixed during this step).** Four root scripts (`test-auth-flow.js`, `test-commission-revenue-model.js`, `test-persistence-integrity.js`, `test-client-event-flow.js`) **deleted or wrote to the real `back-end/data/database.json`**. I ran two of them before reading them closely. The data was restored by making the running backend rewrite the file from memory, and it was verified identical (0 diff lines) to the backup taken before testing. All of them now run against a temp folder (`EMS_DATA_DIR`). A checksum check confirms the real file stays untouched across Jest, all root scripts and the browser tests.
 
 **Regression:** after step 7, the browser tests of steps 1–6 all pass again (19, 21, 8, 24, 13, 24). Two tests had to be updated for the newer rules: Cancel & Refund now needs a reason, and the rating test now uses a fresh completed event because "one rating per event" correctly blocked a re-run.
+
+---
+
+## 9. Round 3 — chat fix, ratings, full workflow (2026-11-19)
+Tested on an isolated copy (API :3001 / UI :5174) **and once on the real ports 3000/5173** (the owner's servers were stopped and restarted afterwards). In both cases the data was a **copy** of `database.json`. A checksum confirms the real file was never opened by the tests. Jest: **12 suites, 108 tests pass**; `nest build` and `npm run build` succeed. Nothing was committed (owner's request).
+
+### 9.1 Problem 1 — "real-time chat not working": root cause
+Reproduced from the owner's own backend logs and data. At 05:35 Mike (staff) sent "hi" in `staff-EVT008` and Emily (client) sent "hi" in `client-EVT008`.
+- **The socket was fine:** handshake, CORS (`CORS_ORIGINS`), JWT in `auth.token`, server-root URL, per-user room. Probe on the real :3000 connected over websocket and polling, and a client↔vendor message arrived in 25 ms.
+- **Root cause 1:** the vendor hub listed staff conversations **only for LIVE events**. EVT008 is *confirmed*, so Mike's message had no screen to appear on for the vendor.
+- **Root cause 2:** staff and clients never share a conversation. Each talks to the vendor (`staff-EVT` / `client-EVT`), so Emily's "hi" could never reach Mike. This is by design; the vendor coordinates both sides.
+- **Root cause 3:** new messages were invisible unless the chat page was already open (no sidebar badge). The polling fallback was only visible on 2 pages.
+- **Side finding:** 54 × 403 in the owner's log where a superuser page sent Mike's token. That is several roles logged in within one browser. Use separate browsers or incognito windows per role.
+
+**Fixes:**
+- The vendor hub "Active Events" tab covers confirmed, approved and live events, with unread badges on the tab and on Staff Team / Client.
+- An unread badge on the sidebar chat item for every role (live).
+- The "Live / Refreshing every 3s" pill on every chat (vendor, staff, staff-admin, client, admin).
+- New `messages.gateway.spec.ts` (5 tests):
+  - a valid token joins only `user:<id>`
+  - no, forged, expired or inactive-user tokens are disconnected
+  - `emitToUsers` sends once per room
+  - client-thread messages reach client + vendor only; staff-thread messages reach vendor + staff only
+
+### 9.2 Problems 2 + 3 — stars for clients, vendors can edit ratings
+- **Badge:** "4.5 ★★★★½ (12 ratings)" with half stars, on:
+  - client Create Event staff cards and profile popup
+  - client Track page (new)
+  - vendor Manage Staff cards (new)
+  - vendor Event Review staff table (new)
+- **"New" and no stars** when someone has no completed events or no ratings.
+- **Clients can only view:** no rating controls appear for them; the API returns 403.
+- **Vendors can edit:** rating again edits the existing rating (one per vendor, staff member and event, never a duplicate). `PATCH /api/staff/:id/ratings` edits explicitly; with no rating yet it returns 404.
+- **Edit rating button:** the popup is prefilled with the old stars and comment. The average is recalculated every time.
+- **Ownership:** the vendor must run the event **and** own the staff member, otherwise 403.
+- **Tests** (`staff-profile.spec.ts`, now 15): rate, edit (upsert + PATCH), wrong role, wrong vendor (event and staff), before completion, average after an edit.
+
+### 9.3 Problem 4 — full workflow, end to end (Playwright, 28/28 on BOTH stacks)
+| # | Step | 3001/5174 | 3000/5173 |
+|---|---|---|---|
+| 1 | Wizard blocks a date 3 days out (7-day rule) | PASS | PASS |
+| 2 | Client creates a 2027 event with a venue, 1 resource, Mike as a preference | PASS | PASS |
+| 3 | Chat while pending: client → vendor live, vendor sidebar badge on another page; reply arrives in 25 ms / 6 ms | PASS | PASS |
+| 4a–b | Vendor sees "Client preference" + rating badge; Confirm Mike | PASS | PASS |
+| 4c–e | Allocate the resource, confirm the venue, price ₹25,000, Approve → booking (commission ₹2,500, payout ₹22,500) | PASS | PASS |
+| 5 | Client Pay Now → paid | PASS | PASS |
+| 6 | Staff accepts | PASS | PASS |
+| 7 | Chat while confirmed: staff → vendor in "Active Events" (**the reported bug**), vendor reply reaches staff in 7 ms | PASS | PASS |
+| 7b | Staff → admin and admin reply back, live | PASS | PASS |
+| 8 | Event goes live — **simulated through the status API** (the scheduler would do this at the 2027 start time) | PASS | PASS |
+| 9 | Vendor Live Monitoring → Conclude Event → completed | PASS | PASS |
+| 10a–c | Vendor rates 3★, Edit rating → 5★ (prefilled, no duplicate); client/staff/admin rate or edit → 403 | PASS | PASS |
+| 11a–c | Client Track page and wizard card/popup show the stars; Liam shows "New" without stars; vendor staff card shows the stars | PASS | PASS |
+| 12a–b | Client cancel with a reason (vendor sees who + why); vendor reject with a reason (client sees it) | PASS | PASS |
+| 13 | Admin event modal and Financial Payouts show ₹2,500 commission | PASS | PASS |
+| 14 | Socket blocked → "Refreshing every 3s" and the message still arrives | PASS | PASS |
+| — | No page errors (client, vendor, staff, admin) | PASS | PASS |
+
+The first run found a **real bug**, now fixed: a finished event's Track page said "Coordinator assigning staff" and showed no team, because completed assignments were not counted (`utils/clientHelpers.js getEventProgress`). Two failures in the first run were in the test itself (it clicked the wrong "Allocate" button); I fixed the test and re-ran.
+
+### 9.4 Open items fixed
+| Item | Fix | Check |
+|---|---|---|
+| Passwords | **bcrypt** (`bcryptjs`, 10 rounds, a salt per password). Old SHA-256 hashes still log in and are upgraded to bcrypt on that login. | unit tests + 5 test accounts upgraded after logging in — PASS |
+| Notifications | Non-admins read only their own. Saving the whole list can only change your own rows or add new ones, never edit or delete someone else's. | 24 → 24 rows kept — PASS |
+| Staff reading every event | `GET /events` returns only the events the staff member is assigned to; any other → 403 | 7 of 19 — PASS |
+| Vendor ownership | A vendor can only edit or delete their own packages, resources and staff; new rows are stamped with their vendorId. A vendor can no longer create an "approved" package or change a package's status. | 403 / 200 / pending — PASS |
+| Regression | A crawl of every menu page for all 5 roles: crashes, failed API calls, `undefined`/`NaN` text | **49/49 clean** |
+
+New packages: `bcryptjs@2.4.3`, `@types/bcryptjs` (back-end).

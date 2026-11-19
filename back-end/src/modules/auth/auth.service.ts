@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { hashPassword, verifyPassword } from '../../common/security/password';
+import { hashPassword, needsRehash, verifyPassword } from '../../common/security/password';
 import { DataService } from '../../database/data.service';
 import { User } from '../../domain/models';
 import { LoginDto, RegisterDto, ResetPasswordDto } from './dto';
@@ -29,6 +29,10 @@ export class AuthService {
     // A deactivated account must not be able to sign in even with the right password.
     if (!['Active', 'active'].includes(user.status)) {
       throw new UnauthorizedException('This account is not active.');
+    }
+    // Old SHA-256 hash: we now know the right password, so store it as bcrypt
+    if (needsRehash(user.passwordHash)) {
+      this.data.update('users', user.id, { passwordHash: hashPassword(dto.password) } as any);
     }
     return this.session(user);
   }

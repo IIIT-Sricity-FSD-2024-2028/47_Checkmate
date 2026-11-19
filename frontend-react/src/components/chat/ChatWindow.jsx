@@ -17,6 +17,7 @@
  *   @param {string} title - Header name
  *   @param {string} subtitle - Header line after "Online"
  *   @param {boolean} showOnline - Show the green online line
+ *   @param {boolean} connected - true = live (socket), false = polling every 3 s, undefined = no pill
  *   @param {Array} messages - Messages to display
  *   @param {string} emptyText - Shown when there are no messages
  *   @param {Function} isMine - (message) => true when the current user sent it
@@ -30,6 +31,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Send } from "lucide-react";
 import { initials } from "../../utils/clientHelpers";
 import { formatMessageTime } from "../../hooks/useLiveChat";
+import "../../styles/chat-live.css";
 
 // One chat bubble. Our own messages sit on the right in pink.
 function Bubble({ message, mine }) {
@@ -62,7 +64,7 @@ function SystemMessage({ message, onView }) {
 
 const SYSTEM_TYPES = ["issue", "contingency", "issue-report"];
 
-function ChatWindow({ title, subtitle, showOnline, messages = [], emptyText, isMine, onViewIssue, disabled, onSend }) {
+function ChatWindow({ title, subtitle, showOnline, connected, messages = [], emptyText, isMine, onViewIssue, disabled, onSend }) {
   const [draft, setDraft] = useState("");
 
   // FACULTY MAY ASK: What is useRef for here?
@@ -87,7 +89,13 @@ function ChatWindow({ title, subtitle, showOnline, messages = [], emptyText, isM
       <div className="cl-chat-header">
         <div className="cl-avatar">{initials(title)}</div>
         <div>
-          <h4>{title}</h4>
+          <h4>
+            {title}{" "}
+            {/* Shows when the polling fallback has taken over from the socket */}
+            {connected !== undefined && (
+              <span className={`chat-live-pill ${connected ? "" : "chat-live-pill--off"}`}>{connected ? "Live" : "Refreshing every 3s"}</span>
+            )}
+          </h4>
           {showOnline && (
             <p className="cl-chat-online"><span className="cl-online-dot" /> Online{subtitle ? ` • ${subtitle}` : ""}</p>
           )}

@@ -6,7 +6,11 @@
  *
  * Purpose:
  *   Client Enquiries: talk to clients about events that have not started.
- *   Live Events: for each live event, talk to its staff team or its client.
+ *   Active Events: for each confirmed / approved / live event, talk to its
+ *   staff team or its client. (It used to list LIVE events only, so a staff
+ *   member writing about a confirmed event was never seen by the vendor.)
+ *   Admin Support: the vendor's own conversation with the admin team.
+ *   Messages arrive live (socket); unread counts show on every row and tab.
  *   Clients and staff see the same conversations in their own portals.
  * ============================================================================
  */
@@ -30,6 +34,8 @@ import '../client/client.css';
 
 const REFRESH_MS = 5000;
 const ENQUIRY_STATUSES = ['pending', 'waiting', 'confirmed', 'approved'];
+// Events whose staff team the vendor can talk to (staff are assigned from approval on)
+const ACTIVE_STATUSES = ['confirmed', 'approved', 'live'];
 const CLOSED_ASSIGNMENTS = ['rejected', 'declined'];
 
 const statusOf = (event) => String(event.status || '').toLowerCase();
@@ -72,7 +78,7 @@ export default function Coordination() {
   const isAdminSection = section === 'admin';
 
   const isLiveSection = section === 'live';
-  const liveEvents = useMemo(() => events.filter((e) => statusOf(e) === 'live'), [events]);
+  const liveEvents = useMemo(() => events.filter((e) => ACTIVE_STATUSES.includes(statusOf(e))), [events]);
   const enquiryEvents = useMemo(() => events.filter((e) => ENQUIRY_STATUSES.includes(statusOf(e))), [events]);
 
   const sectionEvents = isLiveSection ? liveEvents : enquiryEvents;
@@ -96,7 +102,7 @@ export default function Coordination() {
 
   const emptyText = !event
     ? isLiveSection
-      ? 'No events are live right now.'
+      ? 'No confirmed or live events right now.'
       : 'No client enquiries right now.'
     : isStaffChat
     ? 'No messages yet. Say hello to the team.'
@@ -128,7 +134,10 @@ export default function Coordination() {
             onClick={() => setSection('live')}
           >
             <Radio size={16} />
-            <span>Live Events ({liveEvents.length})</span>
+            <span>Active Events ({liveEvents.length})</span>
+            {liveEvents.reduce((n, e) => n + (unread.threads[`staff-${e.id}`] || 0), 0) > 0 && (
+              <span className="chat-unread-badge">{liveEvents.reduce((n, e) => n + (unread.threads[`staff-${e.id}`] || 0), 0)}</span>
+            )}
           </button>
           <button
             type="button"
@@ -156,6 +165,7 @@ export default function Coordination() {
                 onClick={() => setAudience('staff')}
               >
                 <Users size={13} /> Staff Team ({team.length})
+                {unread.threads[`staff-${event.id}`] > 0 && <span className="chat-unread-badge">{unread.threads[`staff-${event.id}`]}</span>}
               </button>
               <button
                 type="button"
@@ -165,6 +175,7 @@ export default function Coordination() {
                 onClick={() => setAudience('client')}
               >
                 <User size={13} /> Client
+                {unread.threads[`client-${event.id}`] > 0 && <span className="chat-unread-badge">{unread.threads[`client-${event.id}`]}</span>}
               </button>
             </div>
             {isStaffChat && (
@@ -183,6 +194,7 @@ export default function Coordination() {
               subtitle="Questions about payouts, accounts or the platform"
               showOnline
               messages={adminChat.messages}
+              connected={adminChat.connected}
               emptyText="No messages yet. Ask the admin team anything."
               isMine={(m) => String(m.senderEmail || '').toLowerCase() === String(user?.email || '').toLowerCase()}
               onSend={adminChat.send}
@@ -204,6 +216,7 @@ export default function Coordination() {
             subtitle={event?.name}
             showOnline={Boolean(event)}
             messages={chat.messages}
+            connected={chat.connected}
             emptyText={emptyText}
             isMine={(m) => m.senderId === user?.id || m.sender === user?.name}
             disabled={!event}

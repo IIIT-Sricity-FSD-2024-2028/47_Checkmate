@@ -20,7 +20,9 @@
  * ============================================================================
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getStaffProfiles } from "../../services/staffService";
+import StaffProfileModal, { RatingBadge } from "../StaffProfileModal";
 import { Check, CheckCircle2, Clock, Package, Radio, X, XCircle } from "lucide-react";
 import { formatClock, formatDate, initials } from "../../utils/clientHelpers";
 
@@ -53,6 +55,26 @@ function Step({ number, state, icon, title, desc, isLast, children }) {
 
 function TrackTimeline({ event, progress }) {
   const { isApproved, hasResources, hasStaff, eventAllocations, assignedStaff } = progress;
+
+  // Public staff profiles by id (for the rating next to each name)
+  const [profilesById, setProfilesById] = useState({});
+
+  // Which staff profile popup is open (null = closed); clients can only view it
+  const [profileId, setProfileId] = useState(null);
+
+  // Loads the profiles once (GET /api/staff-profiles; ratings are view-only here)
+  useEffect(() => {
+    let isMounted = true;
+    getStaffProfiles()
+      .then((list) => {
+        if (!isMounted || !Array.isArray(list)) return;
+        const byId = {};
+        list.forEach((p) => { byId[p.id] = p; });
+        setProfilesById(byId);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   const isRejected = event.status === "rejected";
   const isLive = event.status === "live";
   const isCompleted = event.status === "completed";
@@ -137,10 +159,12 @@ function TrackTimeline({ event, progress }) {
             <>
               <Tag color="green" icon={<CheckCircle2 size={13} />}>{assignedStaff.length} staff member(s) assigned</Tag>
               <div className="cl-tp-list">
+                {/* Each person's vendor rating (view only); click to open the profile */}
                 {assignedStaff.map((s) => (
-                  <div className="cl-tp-list__item cl-tp-list__item--purple" key={s.id}>
+                  <div className="cl-tp-list__item cl-tp-list__item--purple" key={s.id} onClick={() => setProfileId(s.staffId)} style={{ cursor: "pointer" }}>
                     <div className="cl-avatar cl-avatar--sm">{initials(s.staffName)}</div>
                     <span>{s.staffName}</span>
+                    <RatingBadge profile={profilesById[s.staffId]} />
                     <span className="cl-tp-list__meta">{s.role || s.staffRole}</span>
                   </div>
                 ))}
@@ -173,6 +197,7 @@ function TrackTimeline({ event, progress }) {
           )}
         </Step>
       </div>
+      <StaffProfileModal staffId={profileId} onClose={() => setProfileId(null)} />
     </div>
   );
 }

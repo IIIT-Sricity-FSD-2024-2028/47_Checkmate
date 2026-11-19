@@ -112,10 +112,10 @@ Ratings: **H** = wrong money, data leak or a broken core flow · **M** = a wrong
 | F5 | Staff "Dispatch Request" was posted to a thread nobody reads | M | Fixed |
 | F6 | Completing an event marked *declined* assignments as completed (inflated "events completed") | M | Fixed |
 | F7 | Clients had no admin chat page; admin hub replies had no recipient | H | Fixed (step 6) |
-| F8 | **Every user's notifications** are readable through `GET /state/notifications`, and pages save the whole list back (`PUT`) | M | **Open**: needs a per-user notifications endpoint |
-| F9 | Passwords are hashed with SHA-256 and one fixed salt for everyone (`common/security/password.ts`) | M | **Open**: should move to scrypt/bcrypt with a per-user salt |
-| F10 | Any vendor can still edit or delete another vendor's packages, resources and staff (C3) | M | **Open** |
-| F11 | Staff still receive every event through `GET /events` (D6); `/issues` and `/staff-assignments` are not scoped by role | M | **Open** |
+| F8 | **Every user's notifications** were readable through `GET /state/notifications`, and pages save the whole list back (`PUT`) | M | Fixed (round 3): per-user read + safe merge on write |
+| F9 | Passwords were hashed with SHA-256 and one fixed salt for everyone | M | Fixed (round 3): bcrypt; old hashes upgraded on login |
+| F10 | Any vendor could edit or delete another vendor's packages, resources and staff (C3) | M | Fixed (round 3) |
+| F11 | Staff received every event through `GET /events` (D6); `/issues` and `/staff-assignments` are not scoped by role | M | Events fixed (round 3); issues / assignments still **Open** |
 | F12 | `GET /vendor-applications` is open to every vendor (other applicants' contact details) | M | **Open** |
 
 ## 9. Status of every item after Phase 2
@@ -123,7 +123,7 @@ Ratings: **H** = wrong money, data leak or a broken core flow · **M** = a wrong
 | Item | Status | Item | Status |
 |---|---|---|---|
 | A1–A3 money / refund | Fixed (step 1) | C1–C2 booking + status bypass | Fixed (step 1) |
-| A4 date-less "Unavailable" | Fixed (step 2) | C3 vendor ownership | **Open** (F10) |
+| A4 date-less "Unavailable" | Fixed (step 2) | C3 vendor ownership | Fixed (round 3) |
 | A5 admin replies | Fixed (step 6) | C4 settledBy spoofing | Fixed (step 1) |
 | A6 Conclude Event | Fixed (step 7) | C5 package DTO | Fixed (step 7) |
 | A7 Schedule Day/Week | Fixed (step 7) | C6 overnight dates | Fixed (step 7) |
@@ -133,8 +133,13 @@ Ratings: **H** = wrong money, data leak or a broken core flow · **M** = a wrong
 | B2 preferences | Fixed (step 3) | D3 admin chat leak | Fixed (step 6) |
 | B3 reasons | Fixed (step 4) | D4 vendor payouts | Fixed (step 7) |
 | B4 cancellation fee | Fixed (step 1) | D5 staff assignments | Fixed (step 4) |
-| B5 date rules | Fixed (step 5) | D6 staff read all events | **Open** (F11) |
-| B6 live chat + unread | Fixed (step 6) | D7 spoofable issue reporter | **Open** |
+| B5 date rules | Fixed (step 5) | D6 staff read all events | Fixed (round 3) |
+| B6 live chat + unread | Fixed (step 6 + round 3) | D7 spoofable issue reporter | **Open** |
 | B7 real payments | Out of scope (simulated) | D8 legacy HTML /state writes | Expected |
 | E1–E3 UX | Fixed (steps 1, 2, 6) | D9 Dependabot on `main` | **Open** (`main` is read-only) |
 | E4–E6 UX | **Open** (low) | | |
+
+## 10. Round 3 (2026-11-19)
+- Chat "not working": the socket was fine. The vendor hub showed staff chats only for LIVE events, staff↔client have no shared thread (by design), and there was no unread signal outside the chat page. Fixed; see TEST_REPORT.md §9.1.
+- Found and fixed: the client Track page showed "assigning staff" and no team for every finished event.
+- Closed: F8, F9, F10, D6 (above).

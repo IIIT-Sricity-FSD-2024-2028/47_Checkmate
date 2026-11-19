@@ -40,6 +40,7 @@ function fakeData() {
     db, find,
     collection: (name: string) => db[name],
     create: (name: string, _p: string, payload: any) => { const row = { id: `R${db[name].length + 1}`, ...payload }; db[name].push(row); return row; },
+    update: (name: string, id: string, patch: any) => Object.assign(find(name, id), patch),
   } as any;
 }
 
@@ -91,16 +92,45 @@ describe('vendor ratings', () => {
   it('rejects staff who declined / did not work the event', () => {
     expect(() => service().svc.rate('S001', { eventId: 'E3', stars: 5 }, sarah)).toThrow(BadRequestException);
   });
-  it('rejects a second rating for the same event', () => {
+  it('rating the same staff + event again EDITS it (no duplicate) and the average follows', () => {
+    const { data, svc } = service();
+    svc.rate('S001', { eventId: 'E1', stars: 2 }, sarah);
+    const profile: any = svc.rate('S001', { eventId: 'E1', stars: 5, comment: 'Changed my mind' }, sarah);
+    expect(data.db.staffRatings).toHaveLength(1);
+    expect(data.db.staffRatings[0]).toMatchObject({ stars: 5, comment: 'Changed my mind', updatedAt: expect.any(String) });
+    expect(profile).toMatchObject({ rating: 5, ratingCount: 1 });
+  });
+  it('PATCH edit changes stars/comment; editing with no rating yet -> 404', () => {
+    const { data, svc } = service();
+    expect(() => svc.editRating('S001', { eventId: 'E1', stars: 3 }, sarah)).toThrow(NotFoundException);
+    svc.rate('S001', { eventId: 'E1', stars: 4 }, sarah);
+    svc.editRating('S001', { eventId: 'E1', stars: 1, comment: 'late' }, sarah);
+    expect(data.db.staffRatings[0]).toMatchObject({ stars: 1, comment: 'late' });
+  });
+  it('editing is blocked for another vendor (403)', () => {
     const { svc } = service();
     svc.rate('S001', { eventId: 'E1', stars: 4 }, sarah);
-    expect(() => svc.rate('S001', { eventId: 'E1', stars: 5 }, sarah)).toThrow(BadRequestException);
+    expect(() => svc.editRating('S001', { eventId: 'E1', stars: 1 }, otherVendor)).toThrow(ForbiddenException);
+  });
+  it("a vendor cannot rate another vendor's staff member (403)", () => {
+    const data = fakeData();
+    data.db.staffAssignments.push({ id: 'A9', staffId: 'S006', eventId: 'E1', status: 'completed' });
+    expect(() => new StaffService(data, {} as any).rate('S006', { eventId: 'E1', stars: 5 }, sarah)).toThrow(ForbiddenException);
+  });
+  it('average = mean of all ratings, recalculated after an edit', () => {
+    const data = fakeData();
+    data.db.events.push({ id: 'E4', name: 'Second Gala', status: 'completed', vendorId: 'V001' });
+    data.db.staffAssignments.push({ id: 'A4', staffId: 'S001', eventId: 'E4', status: 'completed' });
+    const svc = new StaffService(data, {} as any);
+    svc.rate('S001', { eventId: 'E1', stars: 5 }, sarah);
+    expect(svc.rate('S001', { eventId: 'E4', stars: 4 }, sarah)).toMatchObject({ rating: 4.5, ratingCount: 2 });
+    expect(svc.editRating('S001', { eventId: 'E4', stars: 2 }, sarah)).toMatchObject({ rating: 3.5, ratingCount: 2 });
   });
   it('rejects a vendor rating someone else\'s event', () => {
     expect(() => service().svc.rate('S001', { eventId: 'E1', stars: 5 }, otherVendor)).toThrow(ForbiddenException);
   });
-  it('only the vendor role is allowed on the route (others get 403 from RolesGuard)', () => {
-    const roles = Reflect.getMetadata(ROLES_KEY, StaffController.prototype.rate);
-    expect(roles).toEqual(['vendor']);
+  it('only the vendor role is allowed to rate or edit (others get 403 from RolesGuard)', () => {
+    expect(Reflect.getMetadata(ROLES_KEY, StaffController.prototype.rate)).toEqual(['vendor']);
+    expect(Reflect.getMetadata(ROLES_KEY, StaffController.prototype.editRating)).toEqual(['vendor']);
   });
 });

@@ -16,14 +16,16 @@ export class StaffController {
   @Get('staff-profiles/:id') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') profile(@Param() { id }: IdParamDto) { return this.service.profile(id); }
   // Ratings: vendors only (every other role gets 403 from the RolesGuard)
   @Post('staff/:id/ratings') @Roles('vendor') rate(@Param() { id }: IdParamDto, @Body() dto: RateStaffDto, @Req() req: any) { return this.service.rate(id, dto, req.user); }
+  // Edit your own rating for that staff member + event (vendor only)
+  @Patch('staff/:id/ratings') @Roles('vendor') editRating(@Param() { id }: IdParamDto, @Body() dto: RateStaffDto, @Req() req: any) { return this.service.editRating(id, dto, req.user); }
   @Get('events/:id/staff-ratings') @Roles('vendor', 'admin', 'superuser') ratingsForEvent(@Param() { id }: IdParamDto) { return this.service.ratingsForEvent(id); }
 
   @Get('staff') @Roles('admin', 'superuser', 'vendor', 'staff') findAll() { return this.service.findAll(); }
   @Get('staff/:id') @Roles('admin', 'superuser', 'vendor', 'staff') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
   @Post('staff') @Roles('admin', 'superuser') create(@Body() dto: CreateStaffDto) { return this.service.create(dto); }
-  @Put('staff/:id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto) { return this.service.update(id, dto); }
+  @Put('staff/:id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
   @Patch('staff/:id') @Roles('vendor', 'admin', 'superuser', 'staff') update(@Param() { id }: IdParamDto, @Body() dto: UpdateStaffDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
-  @Delete('staff/:id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+  @Delete('staff/:id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 
   @Post('staff/login') @Public() login(@Body() dto: StaffLoginDto) { return this.service.login(dto); }
   @Get('staff/profile/:email') @Roles('admin', 'superuser', 'vendor', 'staff') getProfile(@Param('email') email: string) { return this.service.getProfile(email); }

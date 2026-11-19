@@ -22,12 +22,14 @@
 import "../../styles/reason-modal.css";
 import React from "react";
 import { Users, Plus } from "lucide-react";
+import { RatingBadge } from "../StaffProfileModal";
 
 function EventStaffRequirementsTable({
   requirements = [],
   onAssign,
   onUnassign,
   onReplace,
+  profilesById = {},
   onOpenExtraModal,
 }) {
   return (
@@ -81,7 +83,8 @@ function EventStaffRequirementsTable({
                   <tr key={st.id || index}>
                     {/* Staff Name + client preference / vendor decision */}
                     <td>
-                      {st.name}
+                      {st.name}{" "}
+                      <RatingBadge profile={profilesById[st.staffId]} />
                       {st.isPreference && <div className="er-pref-tag">Client preference{st.vendorStatus === "confirmed" ? " · confirmed" : ""}</div>}
                       {st.vendorStatus === "replaced" && <div className="er-pref-tag er-pref-tag--replaced">Replaced {st.replacedName || "client preference"}</div>}
                       {st.declineReason && !st.isAssigned && <div className="reason-line">Declined: {st.declineReason}</div>}

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataService } from '../../database/data.service';
 import { AvailabilityQueryDto, CreateResourceDto, UpdateResourceDto } from './dto';
+import { assertVendorOwns, stampOwnVendor } from '../../common/security/vendor-ownership';
 import {
   AvailabilityData,
   AvailabilityResult,
@@ -18,9 +19,18 @@ export class ResourcesService {
   constructor(private readonly data: DataService) {}
   findAll() { return this.data.collection('resources'); }
   findOne(id: string) { return this.data.find('resources', id); }
-  create(dto: CreateResourceDto) { return this.data.create('resources', 'R', { unit: 'day', ...dto }); }
-  update(id: string, dto: UpdateResourceDto) { return this.data.update('resources', id, dto); }
-  remove(id: string) { return this.data.remove('resources', id); }
+  // Vendors create, edit and delete only their own inventory (vendor-ownership.ts)
+  create(dto: CreateResourceDto, user?: { id?: string; role?: string }) {
+    return this.data.create('resources', 'R', { unit: 'day', ...stampOwnVendor(this.data, user, dto) });
+  }
+  update(id: string, dto: UpdateResourceDto, user?: { id?: string; role?: string }) {
+    assertVendorOwns(this.data, user, this.data.find('resources', id), 'resource', dto.vendorId);
+    return this.data.update('resources', id, dto);
+  }
+  remove(id: string, user?: { id?: string; role?: string }) {
+    assertVendorOwns(this.data, user, this.data.find('resources', id), 'resource');
+    return this.data.remove('resources', id);
+  }
 
   // --------------------------------------------------------------------------
   // DATE-BASED AVAILABILITY (rules live in resource-availability.ts)

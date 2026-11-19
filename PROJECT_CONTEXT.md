@@ -87,7 +87,7 @@ Seed events are dated May–July 2026, which is now in the past, so the backend 
 
 Tests / builds:
 ```bash
-cd back-end && npx jest            # 11 suites, 89 tests, all passing (never touches data/database.json)
+cd back-end && npx jest            # 12 suites, 108 tests, all passing (never touches data/database.json)
 cd back-end && npx nest build
 cd frontend-react && npm run build
 ```
@@ -169,15 +169,17 @@ Full results in `TEST_REPORT.md`: 94 endpoints × 6 callers role-guard matrix (a
 Owner decisions: cancellation fee = % of price split like normal revenue; client cancel only pending/waiting; 7-day rule clients only; Socket.IO allowed.
 
 ## 7. Still open (not fixed yet)
-1. Notifications: everyone can read all via `GET /state/notifications`, and pages PUT the whole list (needs a per-user endpoint).
-2. Password hashing is SHA-256 with one global salt (`common/security/password.ts`).
-3. A vendor can edit/delete another vendor's packages, resources, staff, issues.
-4. Staff still get every event via `GET /events`; `/issues`, `/staff-assignments` not role-scoped; `/vendor-applications` readable by any vendor.
-5. Issue reporter name/email come from the request body.
-6. Superuser Staff page `status` is overwritten by assignment changes.
-7. SQL schema in `Database/` is out of date; 49 Dependabot alerts on `main`.
-8. Old HTML pages in `front-end/` can no longer use `/snapshot`, `/state/users`, `/state/adminChatMessages` (React app unaffected).
-9. Payments, refunds and payouts are simulated (no gateway).
+1. `/issues` and `/staff-assignments` are readable by every role (not scoped); `/vendor-applications` readable by any vendor.
+2. Issue reporter name/email come from the request body.
+3. Superuser Staff page `status` is overwritten by assignment changes.
+4. Events go live only by the scheduler at their real start time (tests use the status API to simulate it).
+5. Staff and clients never chat directly (by design: each talks to the vendor).
+6. SQL schema in `Database/` is out of date; Dependabot alerts on `main`.
+7. Old HTML pages in `front-end/` can no longer use `/snapshot`, `/state/users`, `/state/adminChatMessages`.
+8. Payments, refunds and payouts are simulated.
+
+Round 3 (2026-11-19, NOT committed — owner said don't commit): chat root cause + fixes (vendor "Active Events", sidebar unread badges, live/polling pill), rating stars everywhere + vendor Edit rating, Track page team fix, bcrypt, per-user notifications, staff event scoping, vendor ownership. See TEST_REPORT.md §9.
+Testing tip: log in each role in a SEPARATE browser / incognito window (one browser shares the login across tabs).
 
 ## 8. Useful facts for debugging
 

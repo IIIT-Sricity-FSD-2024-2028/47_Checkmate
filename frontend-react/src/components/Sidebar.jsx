@@ -5,6 +5,8 @@ import { CalendarCheck, ChevronDown, LogOut } from "lucide-react";
 import "../styles/sidebar.css";
 import { clearAuthSession, getAuthSession } from "../services/auth/authStorage";
 import { closeRealtime } from "../services/realtime";
+import useUnreadCounts from "../hooks/useUnreadCounts";
+import "../styles/chat-live.css";
 
 const ROLE_SUBTITLES = {
   vendor: "Event Coordinator",
@@ -42,6 +44,20 @@ function Sidebar({ role, menuItems = [], userName, userEmail: propUserEmail }) {
   ).toUpperCase();
 
   const displayRole = ROLE_SUBTITLES[role?.toLowerCase()] || role || "User";
+
+  // Unread messages (live): shown as a badge on the chat menu items, so a new
+  // message is noticed on any page, not only when the chat is open
+  const unread = useUnreadCounts();
+
+  // How many unread messages belong to a menu item's chat page (0 = no badge)
+  const unreadFor = (path) => {
+    if (path === "/staff/messages") {
+      return Object.entries(unread.threads).filter(([k]) => k.startsWith("staff-")).reduce((n, [, v]) => n + v, 0);
+    }
+    if (path === "/staff/admin-messages") return unread.threads["admin-chat"] || 0;
+    if (["/client/messages", "/vendor/coordination", "/admin/coordination"].includes(path)) return unread.total;
+    return 0;
+  };
 
   const toggleGroup = (label) => {
     setOpenGroups((prev) => ({
@@ -124,6 +140,7 @@ function Sidebar({ role, menuItems = [], userName, userEmail: propUserEmail }) {
             >
               {renderIcon(item.icon)}
               <span>{item.label}</span>
+              {unreadFor(item.path) > 0 && <span className="chat-unread-badge nav-unread">{unreadFor(item.path)}</span>}
             </NavLink>
           );
         })}

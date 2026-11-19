@@ -89,8 +89,11 @@ export function money(amount) {
  */
 export function getEventProgress(event, allocations, assignments) {
     const eventAllocations = (allocations || {})[event.id] || [];
+    // Staff who said yes. When the event finishes their assignment becomes
+    // "completed", so that counts too (it used to show "assigning staff" on
+    // every finished event).
     const assignedStaff = (assignments || []).filter(
-        (a) => a.eventId === event.id && a.status === "accepted"
+        (a) => a.eventId === event.id && ["accepted", "in_progress", "completed"].includes(String(a.status).toLowerCase())
     );
 
     const isApproved = APPROVED_STATUSES.includes(event.status);

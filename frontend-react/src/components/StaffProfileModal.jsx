@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { Award, Briefcase, CalendarCheck, Star, X } from "lucide-react";
+import { Award, Briefcase, CalendarCheck, Star, StarHalf, X } from "lucide-react";
 import { getStaffProfileById } from "../services/staffService";
 import "../styles/staff-profile.css";
 
@@ -37,26 +37,42 @@ const AVATAR_GRADIENTS = {
   orange: "linear-gradient(135deg, #f97316, #ef4444)",
 };
 
-// Five star icons, filled up to `value` (rounded to the nearest whole star)
+// Five star icons for a value like 4.5: full stars, then a half star when the
+// value is at least .5 over a whole number, then empty stars
 export function StarRow({ value = 0, size = 14 }) {
-  const filled = Math.round(Number(value) || 0);
+  const v = Number(value) || 0;
   return (
-    <span className="sp-stars" aria-label={`${value} out of 5 stars`}>
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} size={size} className={n <= filled ? "sp-star sp-star--on" : "sp-star"} />
-      ))}
+    <span className="sp-stars" aria-label={`${v} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((n) =>
+        v >= n ? (
+          <Star key={n} size={size} className="sp-star sp-star--on" />
+        ) : v >= n - 0.5 ? (
+          <span key={n} className="sp-star-half">
+            <Star size={size} className="sp-star" />
+            <StarHalf size={size} className="sp-star sp-star--on" />
+          </span>
+        ) : (
+          <Star key={n} size={size} className="sp-star" />
+        )
+      )}
     </span>
   );
 }
 
-// Small badge used on cards too: "New" or "★ 4.5 (3)"
+// True when there is nothing to average yet: no completed events or no ratings.
+// Such staff show a "New" badge and NO stars (owner's rule).
+export function isNewStaff(profile) {
+  return !profile || profile.isNew || !profile.ratingCount || profile.rating === null || profile.rating === undefined;
+}
+
+// Badge used on every staff card: "New", or "4.5 ★★★★½ (12 ratings)". View only.
 export function RatingBadge({ profile }) {
   if (!profile) return null;
-  if (profile.isNew) return <span className="sp-badge sp-badge--new">New</span>;
-  if (profile.rating === null || profile.rating === undefined) return <span className="sp-badge">Not rated yet</span>;
+  if (isNewStaff(profile)) return <span className="sp-badge sp-badge--new">New</span>;
   return (
-    <span className="sp-badge sp-badge--rating">
-      <Star size={11} /> {profile.rating.toFixed(1)} <span className="sp-badge__count">({profile.ratingCount})</span>
+    <span className="sp-badge sp-badge--rating" title={`Average of ${profile.ratingCount} vendor rating${profile.ratingCount === 1 ? "" : "s"}`}>
+      <strong>{profile.rating.toFixed(1)}</strong> <StarRow value={profile.rating} size={11} />{" "}
+      <span className="sp-badge__count">({profile.ratingCount} rating{profile.ratingCount === 1 ? "" : "s"})</span>
     </span>
   );
 }
@@ -109,14 +125,12 @@ function StaffProfileModal({ staffId, onClose, busyOn = null, actionLabel = "", 
                 <h3 className="sp-name">{profile.name}</h3>
                 <div className="sp-role">{profile.role}{profile.vendor ? ` · ${profile.vendor}` : ""}</div>
                 <div className="sp-rating-line">
-                  {profile.isNew ? (
+                  {isNewStaff(profile) ? (
                     <span className="sp-badge sp-badge--new">New</span>
-                  ) : profile.rating === null ? (
-                    <span className="sp-muted">Not rated yet</span>
                   ) : (
                     <>
-                      <StarRow value={profile.rating} />
                       <strong>{profile.rating.toFixed(1)}</strong>
+                      <StarRow value={profile.rating} />
                       <span className="sp-muted">({profile.ratingCount} rating{profile.ratingCount === 1 ? "" : "s"})</span>
                     </>
                   )}
@@ -132,7 +146,7 @@ function StaffProfileModal({ staffId, onClose, busyOn = null, actionLabel = "", 
             <div className="sp-facts">
               <div className="sp-fact"><Briefcase size={16} /><strong>{profile.experienceYears}</strong><span>yrs experience</span></div>
               <div className="sp-fact"><CalendarCheck size={16} /><strong>{profile.eventsCompleted}</strong><span>events completed</span></div>
-              <div className="sp-fact"><Award size={16} /><strong>{profile.isNew ? "New" : profile.rating?.toFixed(1) ?? "—"}</strong><span>rating</span></div>
+              <div className="sp-fact"><Award size={16} /><strong>{isNewStaff(profile) ? "New" : profile.rating.toFixed(1)}</strong><span>rating</span></div>
             </div>
 
             {profile.bio && <p className="sp-bio">{profile.bio}</p>}

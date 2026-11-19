@@ -28,10 +28,12 @@
  *   @param {Function} props.onEdit - Callback when clicking Edit
  *   @param {Function} props.onDelete - Callback when clicking Delete
  *   @param {Function} props.onProfile - Callback when clicking the avatar / name (opens the profile)
+ *   @param {Object} props.profile - Public profile (rating / "New" badge under the role)
  * ============================================================================
  */
 
 import React from "react";
+import { RatingBadge } from "../StaffProfileModal";
 import {
   Phone,
   Mail,
@@ -52,6 +54,7 @@ function StaffCard({
   onEdit,
   onDelete,
   onProfile,
+  profile,
 }) {
   const {
     name = "Staff Member",
@@ -113,6 +116,7 @@ function StaffCard({
           <div>
             <div className="staff-name">{name}</div>
             <div className="staff-role">{role}</div>
+            <RatingBadge profile={profile} />
           </div>
         </div>
         <span className={`staff-status ${normalizedStatus}`}>

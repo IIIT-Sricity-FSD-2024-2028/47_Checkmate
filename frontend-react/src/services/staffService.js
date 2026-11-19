@@ -317,6 +317,14 @@ export async function rateStaff(staffId, { eventId, stars, comment }, options = 
   return post(`/staff/${encodeURIComponent(staffId)}/ratings`, { eventId, stars, comment }, options);
 }
 
+/**
+ * Vendor edits their own earlier rating for that staff member + event.
+ * 404 if there is no rating yet, 403 for another vendor or any other role.
+ */
+export async function editStaffRating(staffId, { eventId, stars, comment }, options = {}) {
+  return patch(`/staff/${encodeURIComponent(staffId)}/ratings`, { eventId, stars, comment }, options);
+}
+
 /** Ratings already given on one event: { staffId: { stars, comment } } */
 export async function getEventStaffRatings(eventId, options = {}) {
   return get(`/events/${encodeURIComponent(eventId)}/staff-ratings`, options);

@@ -30,6 +30,7 @@ type Caller = { id?: string; role?: string; name?: string; email?: string } | un
 // "who did it", saved on the event next to the reason
 const actorOf = (user: Caller) => (user?.id ? { id: user.id, name: user.name || '', role: String(user.role || '').toLowerCase() } : undefined);
 const isClient = (user: Caller) => String(user?.role || '').toLowerCase() === 'client';
+const isStaff = (user: Caller) => String(user?.role || '').toLowerCase() === 'staff';
 
 // Controllers handle HTTP; services hold the business rules. This one owns the
 // event lifecycle: pending -> approved/confirmed -> live -> completed.
@@ -93,13 +94,33 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  // Clients get only their own events; staff only the events they are (or were)
+  // assigned to. Vendors, admins and superusers keep the full list.
   findAll(user?: Caller) {
     const all = this.data.collection('events');
-    return isClient(user) ? all.filter((e) => e.clientId === user!.id) : all;
+    if (isClient(user)) return all.filter((e) => e.clientId === user!.id);
+    if (isStaff(user)) {
+      const mine = this.staffEventIds(user);
+      return all.filter((e) => mine.has(e.id));
+    }
+    return all;
   }
   findOne(id: string, user?: Caller) {
     if (isClient(user)) this.assertClientOwns(id, user);
-    return this.data.find('events', id);
+    const event = this.data.find('events', id);
+    if (isStaff(user) && !this.staffEventIds(user).has(event.id)) {
+      throw new ForbiddenException('You can only view events you are assigned to.');
+    }
+    return event;
+  }
+
+  // Ids of every event a staff member has an assignment on (any status, so a
+  // declined or finished one can still be opened from their history)
+  private staffEventIds(user: Caller): Set<string> {
+    const email = String(user?.email || '').toLowerCase();
+    const member = this.data.collection('staff').find((s: any) => s.userId === user?.id || (email && String(s.email || '').toLowerCase() === email));
+    if (!member) return new Set();
+    return new Set(this.data.collection('staffAssignments').filter((a) => a.staffId === member.id).map((a) => a.eventId));
   }
 
   create(dto: CreateEventDto, user?: Caller) {

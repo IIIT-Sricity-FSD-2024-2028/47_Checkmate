@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { IdParamDto } from '../../common/dto/id-param.dto';
@@ -22,8 +22,8 @@ export class ResourcesController {
   availabilityOne(@Param() { id }: IdParamDto, @Query() query: AvailabilityQueryDto) { return this.service.availabilityFor(id, query); }
 
   @Get(':id') @Roles('admin', 'superuser', 'vendor', 'client', 'staff') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
-  @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreateResourceDto) { return this.service.create(dto); }
-  @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateResourceDto) { return this.service.update(id, dto); }
-  @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateResourceDto) { return this.service.update(id, dto); }
-  @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+  @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreateResourceDto, @Req() req: any) { return this.service.create(dto, req.user); }
+  @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdateResourceDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdateResourceDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 }

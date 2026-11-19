@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { DecisionDto } from '../../common/dto/action.dto';
@@ -13,12 +13,12 @@ export class PackagesController {
   constructor(private readonly service: PackagesService) {}
   @Get() @Roles('admin', 'superuser', 'vendor', 'client') findAll() { return this.service.findAll(); }
   @Get(':id') @Roles('admin', 'superuser', 'vendor', 'client') findOne(@Param() { id }: IdParamDto) { return this.service.findOne(id); }
-  @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreatePackageDto) { return this.service.create(dto); }
-  @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
-  @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto) { return this.service.update(id, dto); }
+  @Post() @Roles('vendor', 'admin', 'superuser') create(@Body() dto: CreatePackageDto, @Req() req: any) { return this.service.create(dto, req.user); }
+  @Put(':id') @Roles('vendor', 'admin', 'superuser') updatePut(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
+  @Patch(':id') @Roles('vendor', 'admin', 'superuser') update(@Param() { id }: IdParamDto, @Body() dto: UpdatePackageDto, @Req() req: any) { return this.service.update(id, dto, req.user); }
   // DecisionDto: status must be 'approved' or 'rejected' (400 otherwise)
   @Patch(':id/decision') @Roles('admin', 'superuser') decide(@Param() { id }: IdParamDto, @Body() body: DecisionDto) {
     return this.service.decidePackage(id, body);
   }
-  @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto) { return this.service.remove(id); }
+  @Delete(':id') @Roles('vendor', 'admin', 'superuser') remove(@Param() { id }: IdParamDto, @Req() req: any) { return this.service.remove(id, req.user); }
 }

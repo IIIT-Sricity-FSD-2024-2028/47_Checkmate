@@ -176,3 +176,13 @@
   color: #f472b6;
 }
 .er-pref-tag--replaced { background: rgba(59, 130, 246, 0.14); color: #93c5fd; }
+
+/* Half star: an empty star with the filled half drawn on top */
+.sp-star-half { position: relative; display: inline-flex; }
+.sp-star-half > svg:last-child { position: absolute; left: 0; top: 0; }
+.sp-badge--rating .sp-stars { margin: 0 2px; }
+
+/* "Edit rating" button + popup */
+.sr-edit { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text-primary, #f0e8ff); }
+.sr-edit-body { display: flex; flex-direction: column; gap: 12px; }
+.sr-edit-comment { width: 100%; box-sizing: border-box; }

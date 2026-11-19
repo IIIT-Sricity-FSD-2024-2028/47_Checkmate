@@ -52,6 +52,7 @@ function StaffGrid({
   onEdit,
   onDelete,
   onProfile,
+  profilesById = {},
 }) {
   return (
     <>
@@ -72,6 +73,7 @@ function StaffGrid({
               onEdit={onEdit}
               onDelete={onDelete}
               onProfile={onProfile}
+              profile={profilesById[staff.id]}
             />
           ))}
         </div>

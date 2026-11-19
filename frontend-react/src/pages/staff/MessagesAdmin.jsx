@@ -19,6 +19,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/staff.css';
+import '../../styles/chat-live.css';
 import { getSessionUser } from '../../services/staffApi';
 import useLiveChat, { formatMessageTime } from '../../hooks/useLiveChat';
 
@@ -96,7 +97,12 @@ export default function StaffMessagesAdmin() {
                 <div className="chat-name">
                   Admin Support <span className="chat-role-tag">Platform</span>
                 </div>
-                <div className="chat-status">● Online</div>
+                {/* Live = socket; "Refreshing every 3s" = polling fallback */}
+                <div className="chat-status">
+                  <span className={`chat-live-pill ${chat.connected ? '' : 'chat-live-pill--off'}`}>
+                    {chat.connected ? 'Live' : 'Refreshing every 3s'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="chat-header-right">

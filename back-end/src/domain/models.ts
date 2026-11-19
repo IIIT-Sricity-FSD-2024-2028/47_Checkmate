@@ -126,6 +126,7 @@ export interface StaffRating {
   stars: number;         // 1..5
   comment?: string;
   createdAt: string;
+  updatedAt?: string;    // set when the vendor edits the rating
 }
 
 export interface PackageRecord {

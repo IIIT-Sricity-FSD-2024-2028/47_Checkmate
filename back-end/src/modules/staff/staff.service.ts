@@ -1,9 +1,10 @@
 import { Injectable, BadRequestException, ForbiddenException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DataService } from '../../database/data.service';
-import { hashPassword, verifyPassword } from '../../common/security/password';
+import { hashPassword, needsRehash, verifyPassword } from '../../common/security/password';
 import { CreateStaffAssignmentDto, CreateStaffDto, RateStaffDto, StaffProfilesQueryDto, StaffProgressDto, UpdateStaffAssignmentDto, UpdateStaffDto } from './dto';
 import { buildPublicProfile, busyEventFor, completedEventIds } from './staff-profile';
+import { assertVendorOwns, stampOwnVendor } from '../../common/security/vendor-ownership';
 import { eventWindow } from '../resources/resource-availability';
 // Fields a staff member may change on their own staff record
 const STAFF_SELF_FIELDS = ['workload'];
@@ -38,9 +39,14 @@ export class StaffService {
       const notAllowed = Object.keys(dto).filter((field) => !STAFF_SELF_FIELDS.includes(field));
       if (notAllowed.length) throw new ForbiddenException(`Staff cannot change: ${notAllowed.join(', ')}.`);
     }
+    // A vendor may only edit their own team (vendor-ownership.ts)
+    assertVendorOwns(this.data, user, this.data.find('staff', id), 'staff member', dto.vendorId);
     return this.data.update('staff', id, dto);
   }
-  remove(id: string) { return this.data.remove('staff', id); }
+  remove(id: string, user?: { id?: string; role?: string }) {
+    assertVendorOwns(this.data, user, this.data.find('staff', id), 'staff member');
+    return this.data.remove('staff', id);
+  }
   
   // Separate from /auth/login so a non-staff account cannot sign in through the
   // staff portal -- note the explicit role !== 'Staff' check below.
@@ -50,6 +56,8 @@ export class StaffService {
       throw new UnauthorizedException('Invalid staff credentials.');
     }
     if (!['Active', 'active'].includes(user.status)) throw new UnauthorizedException('This account is not active.');
+    // Old SHA-256 hash: upgrade it to bcrypt now that the password is known
+    if (needsRehash(user.passwordHash)) this.data.update('users', user.id, { passwordHash: hashPassword(dto.password) } as any);
 
     const { passwordHash, ...safeUser } = user;
     return { user: safeUser, role: 'staff', token: this.issueToken(user) };
@@ -95,24 +103,39 @@ export class StaffService {
     return this.profiles().find((p) => p.id === member.id);
   }
 
-  // Only the vendor who ran the event may rate, only after it is completed,
-  // only staff who worked it, and only once per staff member per event.
-  // (Other roles never get here: the controller allows 'vendor' only.)
-  rate(staffId: string, dto: RateStaffDto, user: { id: string; name?: string }) {
+  // Rules for rating (checked for both a new rating and an edit):
+  //   - vendors only (other roles never reach here: the controller allows 'vendor')
+  //   - the vendor must run the event AND the staff member must be theirs -> else 403
+  //   - only after the event is completed, and only staff who worked it -> else 400
+  // One rating per vendor per staff member per event: rating again EDITS it.
+  // The average shown everywhere is recomputed from all ratings on every read
+  // (staff-profile.ts ratingSummary), so it is always up to date after an edit.
+  private assertCanRate(staffId: string, eventId: string, user: { id: string }) {
     const member = this.data.find('staff', staffId);
-    const event = this.data.find('events', dto.eventId);
+    const event = this.data.find('events', eventId);
     const vendor = this.data.collection('vendors').find((v: any) => v.userId === user.id);
     if (!vendor) throw new ForbiddenException('Only a vendor account can rate staff.');
     const ownsEvent = event.vendorId ? event.vendorId === vendor.id || (event.vendorIds || []).includes(vendor.id) : member.vendorId === vendor.id;
-    if (!ownsEvent) throw new ForbiddenException('You can only rate staff on your own events.');
+    const ownsStaff = !member.vendorId || member.vendorId === vendor.id;
+    if (!ownsEvent || !ownsStaff) throw new ForbiddenException('You can only rate your own staff on your own events.');
     if (String(event.status).toLowerCase() !== 'completed') {
       throw new BadRequestException('Staff can be rated only after the event is completed.');
     }
     const worked = completedEventIds(member.id, this.data.collection('staffAssignments') as any, [event as any]);
     if (!worked.length) throw new BadRequestException(`${member.name} did not work on ${event.name}.`);
-    const already = this.data.collection('staffRatings').some((r) => r.staffId === member.id && r.eventId === event.id);
-    if (already) throw new BadRequestException(`${member.name} was already rated for ${event.name}.`);
+    return { member, event, vendor };
+  }
 
+  // The rating this vendor already gave this staff member for this event, if any
+  private findOwnRating(staffId: string, eventId: string, vendorId: string) {
+    return this.data.collection('staffRatings').find((r) => r.staffId === staffId && r.eventId === eventId && (r.vendorId === vendorId || !r.vendorId));
+  }
+
+  // POST: create the rating, or edit it if this vendor already rated (no duplicates)
+  rate(staffId: string, dto: RateStaffDto, user: { id: string; name?: string }) {
+    const { member, event, vendor } = this.assertCanRate(staffId, dto.eventId, user);
+    const existing = this.findOwnRating(member.id, event.id, vendor.id);
+    if (existing) return this.editRating(staffId, dto, user);
     this.data.create('staffRatings', 'RT', {
       staffId: member.id,
       eventId: event.id,
@@ -127,11 +150,25 @@ export class StaffService {
     return this.profile(member.id);
   }
 
-  /** Ratings this vendor already gave on one event: { staffId: stars } */
+  // PATCH: change stars / comment of this vendor's existing rating (404 if none yet)
+  editRating(staffId: string, dto: RateStaffDto, user: { id: string; name?: string }) {
+    const { member, event, vendor } = this.assertCanRate(staffId, dto.eventId, user);
+    const existing = this.findOwnRating(member.id, event.id, vendor.id);
+    if (!existing) throw new NotFoundException(`${member.name} has no rating for ${event.name} yet.`);
+    this.data.update('staffRatings', existing.id, {
+      stars: dto.stars,
+      comment: dto.comment?.trim() || '',
+      vendorId: vendor.id,
+      updatedAt: new Date().toISOString(),
+    } as any);
+    return this.profile(member.id);
+  }
+
+  /** Ratings already given on one event: { staffId: { stars, comment, updatedAt } } */
   ratingsForEvent(eventId: string) {
-    const result: Record<string, { stars: number; comment: string }> = {};
-    this.data.collection('staffRatings').filter((r) => r.eventId === eventId).forEach((r) => {
-      result[r.staffId] = { stars: r.stars, comment: r.comment || '' };
+    const result: Record<string, { stars: number; comment: string; updatedAt?: string }> = {};
+    this.data.collection('staffRatings').filter((r) => r.eventId === eventId).forEach((r: any) => {
+      result[r.staffId] = { stars: r.stars, comment: r.comment || '', updatedAt: r.updatedAt };
     });
     return result;
   }
